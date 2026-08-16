@@ -66,7 +66,7 @@ private fun FoundationsPlaceholder() {
             modifier = Modifier.padding(top = 20.dp),
         )
         Text(
-            text = "Version ${BuildConfig.VERSION_NAME} by Kamsiob",
+            text = "Version ${BuildConfig.VERSION_NAME} · by Kamsiob",
             style = type.caption,
             color = colors.inkTertiary,
             modifier = Modifier.padding(top = 6.dp),

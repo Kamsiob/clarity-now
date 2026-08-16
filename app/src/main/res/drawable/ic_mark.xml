@@ -9,8 +9,7 @@
     android:width="100dp"
     android:height="100dp"
     android:viewportWidth="100"
-    android:viewportHeight="100"
-    android:tint="?android:attr/colorForeground">
+    android:viewportHeight="100">
 
     <path
         android:fillAlpha="0.26"
