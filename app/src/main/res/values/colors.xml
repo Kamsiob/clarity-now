@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Launch window and app icon only. Every in-app color lives in ui.theme. -->
+    <color name="ic_launcher_background">#141A2E</color>
+    <color name="launch_canvas">#F1F1F6</color>
+</resources>

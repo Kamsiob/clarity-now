@@ -1,0 +1,801 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "2a05339b3daab000cb38c139270dadf3",
+    "entities": [
+      {
+        "tableName": "clarity_event",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `schemaVersion` INTEGER NOT NULL, `type` TEXT NOT NULL, `wallClock` INTEGER NOT NULL, `lamport` INTEGER NOT NULL, `originId` TEXT NOT NULL, `payload` TEXT NOT NULL, `entityId` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "schemaVersion",
+            "columnName": "schemaVersion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "wallClock",
+            "columnName": "wallClock",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lamport",
+            "columnName": "lamport",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "originId",
+            "columnName": "originId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "payload",
+            "columnName": "payload",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entityId",
+            "columnName": "entityId",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_clarity_event_lamport",
+            "unique": false,
+            "columnNames": [
+              "lamport"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_clarity_event_lamport` ON `${TABLE_NAME}` (`lamport`)"
+          },
+          {
+            "name": "index_clarity_event_type",
+            "unique": false,
+            "columnNames": [
+              "type"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_clarity_event_type` ON `${TABLE_NAME}` (`type`)"
+          },
+          {
+            "name": "index_clarity_event_entityId",
+            "unique": false,
+            "columnNames": [
+              "entityId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_clarity_event_entityId` ON `${TABLE_NAME}` (`entityId`)"
+          },
+          {
+            "name": "index_clarity_event_wallClock",
+            "unique": false,
+            "columnNames": [
+              "wallClock"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_clarity_event_wallClock` ON `${TABLE_NAME}` (`wallClock`)"
+          }
+        ]
+      },
+      {
+        "tableName": "clarity_area",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `colorHex` TEXT NOT NULL, `orderKey` TEXT NOT NULL, `archived` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `deletedAt` INTEGER, `lastEventLamport` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "colorHex",
+            "columnName": "colorHex",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "orderKey",
+            "columnName": "orderKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "archived",
+            "columnName": "archived",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deletedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastEventLamport",
+            "columnName": "lastEventLamport",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_clarity_area_orderKey",
+            "unique": false,
+            "columnNames": [
+              "orderKey"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_clarity_area_orderKey` ON `${TABLE_NAME}` (`orderKey`)"
+          }
+        ]
+      },
+      {
+        "tableName": "clarity_item",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `areaId` TEXT NOT NULL, `title` TEXT NOT NULL, `note` TEXT, `orderKey` TEXT NOT NULL, `status` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `activeSince` INTEGER, `completedAt` INTEGER, `deletedAt` INTEGER, `lastEventLamport` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "areaId",
+            "columnName": "areaId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "orderKey",
+            "columnName": "orderKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activeSince",
+            "columnName": "activeSince",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "completedAt",
+            "columnName": "completedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deletedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastEventLamport",
+            "columnName": "lastEventLamport",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_clarity_item_areaId",
+            "unique": false,
+            "columnNames": [
+              "areaId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_clarity_item_areaId` ON `${TABLE_NAME}` (`areaId`)"
+          },
+          {
+            "name": "index_clarity_item_status",
+            "unique": false,
+            "columnNames": [
+              "status"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_clarity_item_status` ON `${TABLE_NAME}` (`status`)"
+          },
+          {
+            "name": "index_clarity_item_orderKey",
+            "unique": false,
+            "columnNames": [
+              "orderKey"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_clarity_item_orderKey` ON `${TABLE_NAME}` (`orderKey`)"
+          }
+        ]
+      },
+      {
+        "tableName": "clarity_focus_session",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `areaId` TEXT NOT NULL, `itemId` TEXT NOT NULL, `plannedSeconds` INTEGER NOT NULL, `startedAt` INTEGER NOT NULL, `endedAt` INTEGER, `actualSeconds` INTEGER, `outcome` TEXT NOT NULL, `deletedAt` INTEGER, `lastEventLamport` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "areaId",
+            "columnName": "areaId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "itemId",
+            "columnName": "itemId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "plannedSeconds",
+            "columnName": "plannedSeconds",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startedAt",
+            "columnName": "startedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endedAt",
+            "columnName": "endedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "actualSeconds",
+            "columnName": "actualSeconds",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "outcome",
+            "columnName": "outcome",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deletedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastEventLamport",
+            "columnName": "lastEventLamport",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_clarity_focus_session_areaId",
+            "unique": false,
+            "columnNames": [
+              "areaId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_clarity_focus_session_areaId` ON `${TABLE_NAME}` (`areaId`)"
+          },
+          {
+            "name": "index_clarity_focus_session_startedAt",
+            "unique": false,
+            "columnNames": [
+              "startedAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_clarity_focus_session_startedAt` ON `${TABLE_NAME}` (`startedAt`)"
+          }
+        ]
+      },
+      {
+        "tableName": "clarity_pulse_entry",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `dateKey` TEXT NOT NULL, `family` TEXT NOT NULL, `stage` INTEGER NOT NULL, `register` TEXT NOT NULL, `variantKey` TEXT NOT NULL, `observation` TEXT NOT NULL, `question` TEXT, `factSnapshot` TEXT NOT NULL, `reflectionPeriod` TEXT NOT NULL, `generatedAt` INTEGER NOT NULL, `responseKey` TEXT, `responseLabel` TEXT, `responseIsPositive` INTEGER, `answeredAt` INTEGER, `deletedAt` INTEGER, `lastEventLamport` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dateKey",
+            "columnName": "dateKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "family",
+            "columnName": "family",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stage",
+            "columnName": "stage",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "register",
+            "columnName": "register",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "variantKey",
+            "columnName": "variantKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "observation",
+            "columnName": "observation",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "question",
+            "columnName": "question",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "factSnapshot",
+            "columnName": "factSnapshot",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reflectionPeriod",
+            "columnName": "reflectionPeriod",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "generatedAt",
+            "columnName": "generatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "responseKey",
+            "columnName": "responseKey",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "responseLabel",
+            "columnName": "responseLabel",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "responseIsPositive",
+            "columnName": "responseIsPositive",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "answeredAt",
+            "columnName": "answeredAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deletedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastEventLamport",
+            "columnName": "lastEventLamport",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_clarity_pulse_entry_dateKey",
+            "unique": true,
+            "columnNames": [
+              "dateKey"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_clarity_pulse_entry_dateKey` ON `${TABLE_NAME}` (`dateKey`)"
+          }
+        ]
+      },
+      {
+        "tableName": "clarity_report",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `weekStartKey` TEXT NOT NULL, `headlineKey` TEXT NOT NULL, `sections` TEXT NOT NULL, `factSnapshot` TEXT NOT NULL, `generatedAt` INTEGER NOT NULL, `deletedAt` INTEGER, `lastEventLamport` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weekStartKey",
+            "columnName": "weekStartKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "headlineKey",
+            "columnName": "headlineKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sections",
+            "columnName": "sections",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "factSnapshot",
+            "columnName": "factSnapshot",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "generatedAt",
+            "columnName": "generatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deletedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastEventLamport",
+            "columnName": "lastEventLamport",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_clarity_report_weekStartKey",
+            "unique": true,
+            "columnNames": [
+              "weekStartKey"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_clarity_report_weekStartKey` ON `${TABLE_NAME}` (`weekStartKey`)"
+          }
+        ]
+      },
+      {
+        "tableName": "clarity_week_snapshot",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`weekStartKey` TEXT NOT NULL, `takenAt` INTEGER NOT NULL, `lamport` INTEGER NOT NULL, `positionJson` TEXT NOT NULL, `stateJson` TEXT NOT NULL, PRIMARY KEY(`weekStartKey`))",
+        "fields": [
+          {
+            "fieldPath": "weekStartKey",
+            "columnName": "weekStartKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "takenAt",
+            "columnName": "takenAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lamport",
+            "columnName": "lamport",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "positionJson",
+            "columnName": "positionJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stateJson",
+            "columnName": "stateJson",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "weekStartKey"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_clarity_week_snapshot_weekStartKey",
+            "unique": true,
+            "columnNames": [
+              "weekStartKey"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_clarity_week_snapshot_weekStartKey` ON `${TABLE_NAME}` (`weekStartKey`)"
+          }
+        ]
+      },
+      {
+        "tableName": "clarity_plan",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `weekStartKey` TEXT NOT NULL, `frameKey` TEXT NOT NULL, `cueKey` TEXT NOT NULL, `actionKey` TEXT NOT NULL, `familyKey` TEXT NOT NULL, `subjectId` TEXT, `offeredLine` TEXT NOT NULL, `committedLine` TEXT NOT NULL, `resolutionCategory` TEXT NOT NULL, `resolutionPath` TEXT NOT NULL, `offeredAt` INTEGER NOT NULL, `acceptedAt` INTEGER, `resolvedAt` INTEGER, `resolvedValue` TEXT, `deletedAt` INTEGER, `lastEventLamport` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weekStartKey",
+            "columnName": "weekStartKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "frameKey",
+            "columnName": "frameKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cueKey",
+            "columnName": "cueKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actionKey",
+            "columnName": "actionKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "familyKey",
+            "columnName": "familyKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "subjectId",
+            "columnName": "subjectId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "offeredLine",
+            "columnName": "offeredLine",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "committedLine",
+            "columnName": "committedLine",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "resolutionCategory",
+            "columnName": "resolutionCategory",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "resolutionPath",
+            "columnName": "resolutionPath",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "offeredAt",
+            "columnName": "offeredAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "acceptedAt",
+            "columnName": "acceptedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "resolvedAt",
+            "columnName": "resolvedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "resolvedValue",
+            "columnName": "resolvedValue",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "deletedAt",
+            "columnName": "deletedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastEventLamport",
+            "columnName": "lastEventLamport",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_clarity_plan_weekStartKey",
+            "unique": false,
+            "columnNames": [
+              "weekStartKey"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_clarity_plan_weekStartKey` ON `${TABLE_NAME}` (`weekStartKey`)"
+          }
+        ]
+      },
+      {
+        "tableName": "clarity_conflict",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `kind` TEXT NOT NULL, `winnerId` TEXT NOT NULL, `loserId` TEXT NOT NULL, `areaId` TEXT, `areaNameSnapshot` TEXT, `winnerTitleSnapshot` TEXT, `loserTitleSnapshot` TEXT, `detectedAtLamport` INTEGER NOT NULL, `dismissedAt` INTEGER, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "winnerId",
+            "columnName": "winnerId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "loserId",
+            "columnName": "loserId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "areaId",
+            "columnName": "areaId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "areaNameSnapshot",
+            "columnName": "areaNameSnapshot",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "winnerTitleSnapshot",
+            "columnName": "winnerTitleSnapshot",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "loserTitleSnapshot",
+            "columnName": "loserTitleSnapshot",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "detectedAtLamport",
+            "columnName": "detectedAtLamport",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dismissedAt",
+            "columnName": "dismissedAt",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2a05339b3daab000cb38c139270dadf3')"
+    ]
+  }
+}

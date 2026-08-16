@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+        There is no INTERNET permission here and there never will be. It is stated
+        to users as a fact their phone enforces, so it is checked rather than
+        trusted: verifyNoInternetPermission fails the build if the merged manifest
+        ever contains one, whether it came from here or from a dependency.
+
+        WorkManager declares ACCESS_NETWORK_STATE so that callers can schedule work
+        behind a network constraint. This app schedules two pieces of work, a Pulse
+        reminder and a widget refresh, and neither has a network constraint because
+        neither could use one. The permission is removed rather than shipped, since
+        a permission the app cannot make use of still shows up in the app info
+        screen a person is invited to go and check.
+    -->
+    <uses-permission
+        android:name="android.permission.ACCESS_NETWORK_STATE"
+        tools:node="remove" />
+
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:name=".ClarityApp"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="${appLabel}"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="false"
+        android:theme="@style/Theme.ClarityNow"
+        tools:targetApi="31">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.ClarityNow"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

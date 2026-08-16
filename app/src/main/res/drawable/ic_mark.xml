@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The Clarity Now mark, design-v3.md section 4.1.
+    A queue seen face on: one solid card in front, two narrower cards peeking
+    out behind it at decreasing opacity. The proportions are load bearing.
+    Depth is carried by opacity, not hue, so the mark survives one value.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100"
+    android:tint="?android:attr/colorForeground">
+
+    <path
+        android:fillAlpha="0.26"
+        android:fillColor="#FFFFFF"
+        android:pathData="M35.5,14 H64.5 A5.5,5.5 0 0 1 64.5,25 H35.5 A5.5,5.5 0 0 1 35.5,14 Z" />
+    <path
+        android:fillAlpha="0.50"
+        android:fillColor="#FFFFFF"
+        android:pathData="M28,29 H72 A6,6 0 0 1 72,41 H28 A6,6 0 0 1 28,29 Z" />
+    <path
+        android:fillAlpha="1.0"
+        android:fillColor="#FFFFFF"
+        android:pathData="M25,46 H75 A11,11 0 0 1 86,57 V75 A11,11 0 0 1 75,86 H25 A11,11 0 0 1 14,75 V57 A11,11 0 0 1 25,46 Z" />
+</vector>

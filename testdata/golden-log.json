@@ -1,0 +1,797 @@
+[
+  {
+    "id": "evt-001",
+    "schemaVersion": 1,
+    "type": "AREA_CREATED",
+    "wallClock": 1767517200000,
+    "lamport": 1,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "area-work",
+    "payload": {
+      "areaId": "area-work",
+      "name": "Work",
+      "colorHex": "#2D7FF9",
+      "orderKey": "a0mr"
+    }
+  },
+  {
+    "id": "evt-002",
+    "schemaVersion": 1,
+    "type": "AREA_CREATED",
+    "wallClock": 1767517200000,
+    "lamport": 2,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "area-personal",
+    "payload": {
+      "areaId": "area-personal",
+      "name": "Personal",
+      "colorHex": "#6366F1",
+      "orderKey": "a1"
+    }
+  },
+  {
+    "id": "evt-003",
+    "schemaVersion": 1,
+    "type": "AREA_CREATED",
+    "wallClock": 1767517200000,
+    "lamport": 3,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "area-health",
+    "payload": {
+      "areaId": "area-health",
+      "name": "Health",
+      "colorHex": "#22C55E",
+      "orderKey": "a2"
+    }
+  },
+  {
+    "id": "evt-004",
+    "schemaVersion": 1,
+    "type": "AREA_CREATED",
+    "wallClock": 1767520800000,
+    "lamport": 4,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "area-scratch",
+    "payload": {
+      "areaId": "area-scratch",
+      "name": "Side Project",
+      "colorHex": "#F59E0B",
+      "orderKey": "a3"
+    }
+  },
+  {
+    "id": "evt-005",
+    "schemaVersion": 1,
+    "type": "ITEM_ADDED",
+    "wallClock": 1767520800000,
+    "lamport": 5,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-proposal",
+    "payload": {
+      "itemId": "item-proposal",
+      "areaId": "area-work",
+      "title": "Rewrite the proposal intro",
+      "note": null,
+      "orderKey": "a0",
+      "areaNameSnapshot": "Work"
+    }
+  },
+  {
+    "id": "evt-006",
+    "schemaVersion": 1,
+    "type": "ITEM_PROMOTED",
+    "wallClock": 1767520800000,
+    "lamport": 6,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-proposal",
+    "payload": {
+      "itemId": "item-proposal",
+      "areaId": "area-work",
+      "previousStatus": "QUEUED",
+      "demotedItemId": null,
+      "demotedToOrderKey": null,
+      "titleSnapshot": "Rewrite the proposal intro",
+      "areaNameSnapshot": "Work"
+    }
+  },
+  {
+    "id": "evt-007",
+    "schemaVersion": 1,
+    "type": "ITEM_ADDED",
+    "wallClock": 1767520800000,
+    "lamport": 7,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-printer",
+    "payload": {
+      "itemId": "item-printer",
+      "areaId": "area-work",
+      "title": "Call the printer",
+      "note": "before five",
+      "orderKey": "a1",
+      "areaNameSnapshot": "Work"
+    }
+  },
+  {
+    "id": "evt-008",
+    "schemaVersion": 1,
+    "type": "ITEM_ADDED",
+    "wallClock": 1767524400000,
+    "lamport": 8,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-notes",
+    "payload": {
+      "itemId": "item-notes",
+      "areaId": "area-work",
+      "title": "Draft the release notes",
+      "note": null,
+      "orderKey": "a2",
+      "areaNameSnapshot": "Work"
+    }
+  },
+  {
+    "id": "evt-009",
+    "schemaVersion": 1,
+    "type": "ITEM_ADDED",
+    "wallClock": 1767524400000,
+    "lamport": 9,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-dentist",
+    "payload": {
+      "itemId": "item-dentist",
+      "areaId": "area-personal",
+      "title": "Book the dentist",
+      "note": null,
+      "orderKey": "a0",
+      "areaNameSnapshot": "Personal"
+    }
+  },
+  {
+    "id": "evt-010",
+    "schemaVersion": 1,
+    "type": "ITEM_PROMOTED",
+    "wallClock": 1767524400000,
+    "lamport": 10,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-dentist",
+    "payload": {
+      "itemId": "item-dentist",
+      "areaId": "area-personal",
+      "previousStatus": "QUEUED",
+      "demotedItemId": null,
+      "demotedToOrderKey": null,
+      "titleSnapshot": "Book the dentist",
+      "areaNameSnapshot": "Personal"
+    }
+  },
+  {
+    "id": "evt-011",
+    "schemaVersion": 1,
+    "type": "ITEM_ADDED",
+    "wallClock": 1767528000000,
+    "lamport": 11,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-tap",
+    "payload": {
+      "itemId": "item-tap",
+      "areaId": "area-personal",
+      "title": "Fix the leaking tap",
+      "note": null,
+      "orderKey": "a1",
+      "areaNameSnapshot": "Personal"
+    }
+  },
+  {
+    "id": "evt-012",
+    "schemaVersion": 1,
+    "type": "ITEM_ADDED",
+    "wallClock": 1767600000000,
+    "lamport": 12,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-walk",
+    "payload": {
+      "itemId": "item-walk",
+      "areaId": "area-health",
+      "title": "Walk before breakfast",
+      "note": null,
+      "orderKey": "a0",
+      "areaNameSnapshot": "Health"
+    }
+  },
+  {
+    "id": "evt-013",
+    "schemaVersion": 1,
+    "type": "ITEM_PROMOTED",
+    "wallClock": 1767600000000,
+    "lamport": 13,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-walk",
+    "payload": {
+      "itemId": "item-walk",
+      "areaId": "area-health",
+      "previousStatus": "QUEUED",
+      "demotedItemId": null,
+      "demotedToOrderKey": null,
+      "titleSnapshot": "Walk before breakfast",
+      "areaNameSnapshot": "Health"
+    }
+  },
+  {
+    "id": "evt-014",
+    "schemaVersion": 1,
+    "type": "FOCUS_STARTED",
+    "wallClock": 1767621600000,
+    "lamport": 14,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "focus-1",
+    "payload": {
+      "sessionId": "focus-1",
+      "areaId": "area-work",
+      "itemId": "item-proposal",
+      "plannedSeconds": 1500
+    }
+  },
+  {
+    "id": "evt-015",
+    "schemaVersion": 1,
+    "type": "FOCUS_COMPLETED",
+    "wallClock": 1767625200000,
+    "lamport": 15,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "focus-1",
+    "payload": {
+      "sessionId": "focus-1",
+      "actualSeconds": 1500
+    }
+  },
+  {
+    "id": "evt-016",
+    "schemaVersion": 1,
+    "type": "PULSE_GENERATED",
+    "wallClock": 1767690000000,
+    "lamport": 16,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "pulse-1",
+    "payload": {
+      "pulseId": "pulse-1",
+      "dateKey": "2026-01-06",
+      "family": "persistence",
+      "escalationStage": 1,
+      "register": "OBSERVATIONAL",
+      "variantKey": "persistence.s1.04",
+      "renderedObservation": "Rewrite the proposal intro has been active for two days.",
+      "renderedQuestion": "Still the right thing?",
+      "factSnapshot": {
+        "activeItemAgeDays": "2"
+      },
+      "reflectionPeriod": "YESTERDAY"
+    }
+  },
+  {
+    "id": "evt-017",
+    "schemaVersion": 1,
+    "type": "PULSE_ANSWERED",
+    "wallClock": 1767690000000,
+    "lamport": 17,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "pulse-1",
+    "payload": {
+      "pulseId": "pulse-1",
+      "responseKey": "yes",
+      "responseLabel": "Still the right thing",
+      "responseIsPositive": true
+    }
+  },
+  {
+    "id": "evt-018",
+    "schemaVersion": 1,
+    "type": "ITEM_COMPLETED",
+    "wallClock": 1767718800000,
+    "lamport": 18,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-dentist",
+    "payload": {
+      "itemId": "item-dentist",
+      "areaId": "area-personal",
+      "titleSnapshot": "Book the dentist",
+      "areaNameSnapshot": "Personal",
+      "activeDurationDays": 2
+    }
+  },
+  {
+    "id": "evt-019",
+    "schemaVersion": 1,
+    "type": "ITEM_PROMOTED",
+    "wallClock": 1767718800000,
+    "lamport": 19,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-tap",
+    "payload": {
+      "itemId": "item-tap",
+      "areaId": "area-personal",
+      "previousStatus": "QUEUED",
+      "demotedItemId": null,
+      "demotedToOrderKey": null,
+      "titleSnapshot": "Fix the leaking tap",
+      "areaNameSnapshot": "Personal"
+    }
+  },
+  {
+    "id": "evt-020",
+    "schemaVersion": 1,
+    "type": "ITEM_EDITED",
+    "wallClock": 1767780000000,
+    "lamport": 20,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-printer",
+    "payload": {
+      "itemId": "item-printer",
+      "previousTitle": "Call the printer",
+      "newTitle": "Call the printer about the covers",
+      "previousNote": "before five",
+      "newNote": "before five, ask for Dan"
+    }
+  },
+  {
+    "id": "evt-021",
+    "schemaVersion": 1,
+    "type": "ITEM_REORDERED",
+    "wallClock": 1767783600000,
+    "lamport": 21,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-notes",
+    "payload": {
+      "itemId": "item-notes",
+      "areaId": "area-work",
+      "previousOrderKey": "a2",
+      "newOrderKey": "a0Vmr"
+    }
+  },
+  {
+    "id": "evt-022",
+    "schemaVersion": 1,
+    "type": "FOCUS_STARTED",
+    "wallClock": 1767862800000,
+    "lamport": 22,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "focus-2",
+    "payload": {
+      "sessionId": "focus-2",
+      "areaId": "area-work",
+      "itemId": "item-proposal",
+      "plannedSeconds": 1500
+    }
+  },
+  {
+    "id": "evt-023",
+    "schemaVersion": 1,
+    "type": "FOCUS_ABANDONED",
+    "wallClock": 1767862800000,
+    "lamport": 23,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "focus-2",
+    "payload": {
+      "sessionId": "focus-2",
+      "actualSeconds": 320
+    }
+  },
+  {
+    "id": "evt-024",
+    "schemaVersion": 1,
+    "type": "SETTING_CHANGED",
+    "wallClock": 1767988800000,
+    "lamport": 24,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "afterCompleting",
+    "payload": {
+      "key": "afterCompleting",
+      "previousValue": "AUTO_PROMOTE",
+      "newValue": "CHOOSE_FROM_QUEUE"
+    }
+  },
+  {
+    "id": "evt-025",
+    "schemaVersion": 1,
+    "type": "AREA_RECOLORED",
+    "wallClock": 1768035600000,
+    "lamport": 25,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "area-health",
+    "payload": {
+      "areaId": "area-health",
+      "previousHex": "#22C55E",
+      "newHex": "#10B981"
+    }
+  },
+  {
+    "id": "evt-026",
+    "schemaVersion": 1,
+    "type": "ITEM_PROMOTED",
+    "wallClock": 1768122000000,
+    "lamport": 26,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-printer",
+    "payload": {
+      "itemId": "item-printer",
+      "areaId": "area-work",
+      "previousStatus": "QUEUED",
+      "demotedItemId": "item-proposal",
+      "demotedToOrderKey": "Zzmr",
+      "titleSnapshot": "Call the printer about the covers",
+      "areaNameSnapshot": "Work"
+    }
+  },
+  {
+    "id": "evt-027",
+    "schemaVersion": 1,
+    "type": "ITEM_COMPLETED",
+    "wallClock": 1768147200000,
+    "lamport": 27,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-printer",
+    "payload": {
+      "itemId": "item-printer",
+      "areaId": "area-work",
+      "titleSnapshot": "Call the printer about the covers",
+      "areaNameSnapshot": "Work",
+      "activeDurationDays": 1
+    }
+  },
+  {
+    "id": "evt-028",
+    "schemaVersion": 1,
+    "type": "ITEM_PROMOTED",
+    "wallClock": 1768147200000,
+    "lamport": 28,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-proposal",
+    "payload": {
+      "itemId": "item-proposal",
+      "areaId": "area-work",
+      "previousStatus": "QUEUED",
+      "demotedItemId": null,
+      "demotedToOrderKey": null,
+      "titleSnapshot": "Rewrite the proposal intro",
+      "areaNameSnapshot": "Work"
+    }
+  },
+  {
+    "id": "evt-029",
+    "schemaVersion": 1,
+    "type": "AREA_RENAMED",
+    "wallClock": 1768212000000,
+    "lamport": 29,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "area-scratch",
+    "payload": {
+      "areaId": "area-scratch",
+      "previousName": "Side Project",
+      "newName": "Workshop"
+    }
+  },
+  {
+    "id": "evt-030",
+    "schemaVersion": 1,
+    "type": "AREA_REORDERED",
+    "wallClock": 1768212000000,
+    "lamport": 30,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "area-scratch",
+    "payload": {
+      "areaId": "area-scratch",
+      "previousOrderKey": "a3",
+      "newOrderKey": "a0Vmr"
+    }
+  },
+  {
+    "id": "evt-031",
+    "schemaVersion": 1,
+    "type": "AREA_ARCHIVED",
+    "wallClock": 1768215600000,
+    "lamport": 31,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "area-scratch",
+    "payload": {
+      "areaId": "area-scratch",
+      "nameSnapshot": "Workshop"
+    }
+  },
+  {
+    "id": "evt-032",
+    "schemaVersion": 1,
+    "type": "ITEM_DELETED",
+    "wallClock": 1768294800000,
+    "lamport": 32,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-notes",
+    "payload": {
+      "itemId": "item-notes",
+      "areaId": "area-work",
+      "titleSnapshot": "Draft the release notes"
+    }
+  },
+  {
+    "id": "evt-033",
+    "schemaVersion": 1,
+    "type": "ITEM_REOPENED",
+    "wallClock": 1768305600000,
+    "lamport": 33,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-dentist",
+    "payload": {
+      "itemId": "item-dentist",
+      "areaId": "area-personal",
+      "targetOrderKey": "Zzmr"
+    }
+  },
+  {
+    "id": "evt-034",
+    "schemaVersion": 1,
+    "type": "ITEM_COMPLETED",
+    "wallClock": 1768377600000,
+    "lamport": 34,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-walk",
+    "payload": {
+      "itemId": "item-walk",
+      "areaId": "area-health",
+      "titleSnapshot": "Walk before breakfast",
+      "areaNameSnapshot": "Health",
+      "activeDurationDays": 9
+    }
+  },
+  {
+    "id": "evt-035",
+    "schemaVersion": 1,
+    "type": "ITEM_ADDED",
+    "wallClock": 1768377600000,
+    "lamport": 35,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-swim",
+    "payload": {
+      "itemId": "item-swim",
+      "areaId": "area-health",
+      "title": "Swim on Thursday",
+      "note": null,
+      "orderKey": "a1",
+      "areaNameSnapshot": "Health"
+    }
+  },
+  {
+    "id": "evt-036",
+    "schemaVersion": 1,
+    "type": "ITEM_PROMOTED",
+    "wallClock": 1768377600000,
+    "lamport": 36,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-swim",
+    "payload": {
+      "itemId": "item-swim",
+      "areaId": "area-health",
+      "previousStatus": "QUEUED",
+      "demotedItemId": null,
+      "demotedToOrderKey": null,
+      "titleSnapshot": "Swim on Thursday",
+      "areaNameSnapshot": "Health"
+    }
+  },
+  {
+    "id": "evt-037",
+    "schemaVersion": 1,
+    "type": "AREA_UNARCHIVED",
+    "wallClock": 1768467600000,
+    "lamport": 37,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "area-scratch",
+    "payload": {
+      "areaId": "area-scratch",
+      "nameSnapshot": "Workshop"
+    }
+  },
+  {
+    "id": "evt-038",
+    "schemaVersion": 1,
+    "type": "AREA_ARCHIVED",
+    "wallClock": 1768467600000,
+    "lamport": 38,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "area-scratch",
+    "payload": {
+      "areaId": "area-scratch",
+      "nameSnapshot": "Workshop"
+    }
+  },
+  {
+    "id": "evt-039",
+    "schemaVersion": 1,
+    "type": "AREA_DELETED",
+    "wallClock": 1768471200000,
+    "lamport": 39,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "area-scratch",
+    "payload": {
+      "areaId": "area-scratch",
+      "nameSnapshot": "Workshop"
+    }
+  },
+  {
+    "id": "evt-040",
+    "schemaVersion": 1,
+    "type": "ITEM_ADDED",
+    "wallClock": 1768554000000,
+    "lamport": 40,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-letter",
+    "payload": {
+      "itemId": "item-letter",
+      "areaId": "area-personal",
+      "title": "Write the landlord a letter",
+      "note": null,
+      "orderKey": "a2",
+      "areaNameSnapshot": "Personal"
+    }
+  },
+  {
+    "id": "evt-041",
+    "schemaVersion": 1,
+    "type": "ITEM_QUEUED",
+    "wallClock": 1768597200000,
+    "lamport": 41,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-swim",
+    "payload": {
+      "itemId": "item-swim",
+      "areaId": "area-health",
+      "orderKey": "a0mr",
+      "previousStatus": "ACTIVE"
+    }
+  },
+  {
+    "id": "evt-042",
+    "schemaVersion": 1,
+    "type": "REPORT_GENERATED",
+    "wallClock": 1768636800000,
+    "lamport": 42,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "report-1",
+    "payload": {
+      "reportId": "report-1",
+      "weekStartKey": "2026-01-11",
+      "headlineKey": "steadyPace",
+      "renderedSections": [
+        {
+          "sectionKey": "observations",
+          "sidehead": "Your week, honestly",
+          "text": "Three things left Work this week and two arrived."
+        },
+        {
+          "sectionKey": "focus",
+          "sidehead": "Focus",
+          "text": "You protected 25 minutes on Monday."
+        }
+      ],
+      "factSnapshot": {
+        "completions": "3",
+        "additions": "2",
+        "focusMinutes": "25"
+      }
+    }
+  },
+  {
+    "id": "evt-043",
+    "schemaVersion": 1,
+    "type": "PLAN_OFFERED",
+    "wallClock": 1768636800000,
+    "lamport": 43,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "plan-1",
+    "payload": {
+      "planId": "plan-1",
+      "weekStartKey": "2026-01-11",
+      "frameKey": "frm.03",
+      "cueKey": "cue.band.02",
+      "actionKey": "act.neg.05",
+      "familyKey": "neglectedArea",
+      "subjectId": "area-personal",
+      "offeredLine": "One option for Wednesday morning: ten minutes in Personal before you open Work.",
+      "committedLine": "If it is Wednesday morning, I will spend ten minutes in Personal before opening Work.",
+      "resolutionFactRef": {
+        "category": "area",
+        "path": "eventsInWindow"
+      }
+    }
+  },
+  {
+    "id": "evt-044",
+    "schemaVersion": 1,
+    "type": "PLAN_ACCEPTED",
+    "wallClock": 1768636800000,
+    "lamport": 44,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "plan-1",
+    "payload": {
+      "planId": "plan-1"
+    }
+  },
+  {
+    "id": "evt-045",
+    "schemaVersion": 1,
+    "type": "ITEM_PROMOTED",
+    "wallClock": 1768726800000,
+    "lamport": 45,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-letter",
+    "payload": {
+      "itemId": "item-letter",
+      "areaId": "area-personal",
+      "previousStatus": "QUEUED",
+      "demotedItemId": "item-tap",
+      "demotedToOrderKey": "Zz",
+      "titleSnapshot": "Write the landlord a letter",
+      "areaNameSnapshot": "Personal"
+    }
+  },
+  {
+    "id": "evt-046",
+    "schemaVersion": 1,
+    "type": "ITEM_PROMOTED",
+    "wallClock": 1768726800000,
+    "lamport": 45,
+    "originId": "01947b3f-0000-4000-8000-000000000002",
+    "entityId": "item-dentist",
+    "payload": {
+      "itemId": "item-dentist",
+      "areaId": "area-personal",
+      "previousStatus": "QUEUED",
+      "demotedItemId": "item-tap",
+      "demotedToOrderKey": "Zymr",
+      "titleSnapshot": "Book the dentist",
+      "areaNameSnapshot": "Personal"
+    }
+  },
+  {
+    "id": "evt-047",
+    "schemaVersion": 1,
+    "type": "PULSE_GENERATED",
+    "wallClock": 1768766400000,
+    "lamport": 46,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "pulse-2-phone",
+    "payload": {
+      "pulseId": "pulse-2-phone",
+      "dateKey": "2026-01-18",
+      "family": "switching",
+      "escalationStage": 1,
+      "register": "PLAIN",
+      "variantKey": "switching.s1.02",
+      "renderedObservation": "Personal changed hands today.",
+      "renderedQuestion": "New priority, or second thoughts?",
+      "factSnapshot": {
+        "swaps": "1"
+      },
+      "reflectionPeriod": "TODAY_SO_FAR"
+    }
+  },
+  {
+    "id": "evt-048",
+    "schemaVersion": 1,
+    "type": "PULSE_GENERATED",
+    "wallClock": 1768766400000,
+    "lamport": 46,
+    "originId": "01947b3f-0000-4000-8000-000000000002",
+    "entityId": "pulse-2-laptop",
+    "payload": {
+      "pulseId": "pulse-2-laptop",
+      "dateKey": "2026-01-18",
+      "family": "switching",
+      "escalationStage": 1,
+      "register": "PLAIN",
+      "variantKey": "switching.s1.07",
+      "renderedObservation": "Something in Personal moved aside today.",
+      "renderedQuestion": "New priority, or second thoughts?",
+      "factSnapshot": {
+        "swaps": "1"
+      },
+      "reflectionPeriod": "TODAY_SO_FAR"
+    }
+  }
+]

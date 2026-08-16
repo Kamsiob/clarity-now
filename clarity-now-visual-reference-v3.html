@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clarity Now by Kamsiob, visual reference v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Hanken+Grotesk:wght@300..800&display=swap" rel="stylesheet">
+<!--
+  CLARITY NOW BY KAMSIOB, VISUAL REFERENCE V3
+
+  CHANGES FROM V2
+  · A2 slim cards LOCKED. A1 dissolved rows retired.
+  · New app mark. The gradient square and check are gone.
+  · Swipe gestures fully specified: complete, swap, delete.
+  · Area color picker redesigned as two stage: mood, then color.
+  · Appearance picker redesigned as real miniatures.
+  · US spelling throughout. color, license, behavior, prioritize.
+
+  Screens not shown here are unchanged from v2.
+  design-v3.md is the source of truth for every dimension. Do not measure this file.
+-->
+<style>
+:root{
+  --canvas:#F1F1F6; --card:#FFFFFF; --raise:#FAFAFC;
+  --ink1:#17171C; --ink2:rgba(23,23,28,.60); --ink3:rgba(23,23,28,.38);
+  --hair:rgba(23,23,28,.08);
+  --blue:#2D7FF9; --green:#22C55E; --amber:#F59E0B; --parch:#EFEEE2;
+  --d-canvas:#0E0E13; --d-card:#191921;
+  --d-ink1:#F0EEF1; --d-ink2:rgba(240,238,241,.62); --d-ink3:rgba(240,238,241,.38);
+  --deep:#0B0B10; --surf:#14141C;
+  --tb:#F3F1EC; --td:rgba(243,241,236,.55); --tf:rgba(243,241,236,.32);
+  --gold:#D4B16A; --goldtx:#EDE9DF; --amb:#E8A15C;
+  --work:#1B6ACB; --health:#10B981; --side:#B45309; --personal:#7C3AED;
+  --mark-bg:#141A2E; --mark-fg:#F3F1EC;
+  --disp:'Newsreader',Georgia,serif; --text:'Newsreader',Georgia,serif;
+  --ui:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+  --lift:0 1px 3px rgba(23,23,28,.04), 0 6px 20px rgba(23,23,28,.05);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#141418;color:#E7E5E9;font-family:var(--ui);-webkit-font-smoothing:antialiased;padding:44px 24px 90px}
+.page{max-width:1180px;margin:0 auto}
+.mast{margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:26px}
+.mast h1{font-family:var(--disp);font-variation-settings:'opsz' 66;font-size:42px;font-weight:400}
+.mast p{color:rgba(231,229,233,.5);font-size:13.5px;margin-top:10px;max-width:680px;line-height:1.65}
+.v3{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.14em;color:#9BE3BF;border:1px solid rgba(155,227,191,.3);padding:3px 8px;border-radius:4px;vertical-align:14px;margin-left:10px}
+.sect{margin-top:58px;margin-bottom:24px;display:flex;align-items:baseline;gap:14px}
+.sect h2{font-size:12px;font-weight:700;letter-spacing:.15em;color:rgba(231,229,233,.85)}
+.sect .ln{flex:1;height:1px;background:rgba(255,255,255,.09)}
+.sect .n{font-size:11px;color:rgba(231,229,233,.3)}
+.note{background:rgba(155,227,191,.06);border-top:1px solid rgba(155,227,191,.22);padding:14px 16px;margin-bottom:26px;
+      font-size:12.5px;line-height:1.7;color:rgba(231,229,233,.72);border-radius:0 0 8px 8px}
+.note b{color:#9BE3BF;font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:40px 30px}
+@media(max-width:1080px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.cell{display:flex;flex-direction:column;align-items:center;gap:13px}
+.cap{font-size:11.5px;color:rgba(231,229,233,.42);text-align:center;line-height:1.55;max-width:320px}
+.cap b{color:rgba(231,229,233,.86);font-weight:700}
+.cap em{color:#9BE3BF;font-style:normal}
+
+.phone{width:340px;height:736px;border-radius:38px;padding:5px;flex:0 0 auto;
+  background:linear-gradient(160deg,#3a3a42,#1c1c22 55%,#2e2e36);
+  box-shadow:0 24px 60px rgba(0,0,0,.5),0 3px 10px rgba(0,0,0,.4)}
+.screen{width:100%;height:100%;border-radius:33px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.sb{height:36px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-size:11px;font-weight:600}
+.sb i{display:block;width:15px;height:8px;border-radius:2px;border:1.2px solid currentColor;opacity:.7}
+.sb .dots{display:flex;gap:4px;align-items:center}
+.body{flex:1;overflow:hidden;padding:0 17px;position:relative}
+.light{background:var(--canvas);color:var(--ink1)}
+.night{background:var(--deep);color:var(--tb);position:relative}
+
+.hdr{display:flex;align-items:flex-end;justify-content:space-between;padding:8px 0 15px}
+.hdr h2{font-family:var(--disp);font-variation-settings:'opsz' 48;font-size:26px;font-weight:400;line-height:1;letter-spacing:-.005em}
+.hdr .tools{display:flex;gap:15px;opacity:.55;padding-bottom:3px}
+.icon{width:17px;height:17px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.icon.sm{width:13px;height:13px}.icon.xs{width:11px;height:11px}
+
+.chips{display:flex;gap:9px;margin-bottom:15px}
+.chip{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:33px;border-radius:99px;
+  background:var(--card);font-size:11.5px;font-weight:600;position:relative;box-shadow:var(--lift)}
+.chip .pip{position:absolute;top:5px;right:11px;width:6px;height:6px;border-radius:50%;background:var(--amber)}
+.banner{background:var(--parch);border-radius:14px;padding:11px 13px 12px;margin-bottom:16px}
+.banner .s{font-size:12.5px;font-weight:600;letter-spacing:-.005em}
+.banner .c{font-size:10px;color:var(--ink2);margin-top:3px}
+
+.acard{background:var(--card);border-radius:18px;padding:14px 15px;margin-bottom:9px;
+       box-shadow:var(--lift);position:relative;overflow:hidden}
+.acard .wash{position:absolute;inset:0;pointer-events:none}
+.acard .r1{display:flex;align-items:center;gap:6px;margin-bottom:5px;position:relative}
+.acard .t{font-size:17.5px;font-weight:650;letter-spacing:-.022em;line-height:1.2;position:relative}
+.acard .s{font-size:9.8px;color:var(--ink2);margin-top:5px;position:relative;display:flex;align-items:center;gap:5px}
+.acard.idle .t{color:var(--ink3);font-weight:500}
+.dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.an{font-size:10.3px;font-weight:700;letter-spacing:.012em}
+
+/* swipe */
+.swipewrap{position:relative;margin-bottom:9px;border-radius:18px;overflow:hidden}
+.swipebg{position:absolute;inset:0;display:flex;align-items:center}
+.swipebg.r{justify-content:flex-start;background:rgba(34,197,94,.18);padding-left:20px}
+.swipebg.l{justify-content:flex-end;background:rgba(23,23,28,.05)}
+.swact{display:flex;flex-direction:column;align-items:center;gap:4px;width:66px;height:100%;justify-content:center}
+.swact .lb{font-size:8.6px;font-weight:700}
+.swipewrap .acard{margin-bottom:0;position:relative}
+
+.tabs{position:absolute;left:17px;right:17px;bottom:14px;height:50px;border-radius:99px;background:var(--card);
+  box-shadow:0 2px 10px rgba(23,23,28,.07),0 10px 30px rgba(23,23,28,.08);display:flex;align-items:center;padding:0 6px;gap:2px}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:8.6px;font-weight:600;color:var(--ink2);padding:7px 0;border-radius:99px}
+.tab.on{background:rgba(45,127,249,.10);color:var(--blue)}
+.fab{position:absolute;right:19px;bottom:76px;width:48px;height:48px;border-radius:50%;background:var(--blue);
+  display:flex;align-items:center;justify-content:center;box-shadow:0 5px 16px rgba(45,127,249,.4)}
+.fab .icon{stroke:#fff;width:20px;height:20px;stroke-width:2.2}
+
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.42)}
+.sheet{position:absolute;left:0;right:0;bottom:0;border-radius:24px 24px 0 0;background:var(--canvas);
+  padding:0 17px 18px;box-shadow:0 -8px 40px rgba(0,0,0,.28);overflow:hidden}
+.handle{width:34px;height:4px;border-radius:99px;background:rgba(23,23,28,.18);margin:9px auto 15px}
+.side{display:flex;align-items:center;gap:9px;margin:0 0 9px}
+.side .lb{font-size:10.5px;font-weight:700;color:var(--ink2);flex:0 0 auto}
+.side .rl{flex:1;height:1px;background:var(--hair)}
+.btn{height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:700}
+.btn.pri{background:var(--blue);color:#fff}
+.btn.sec{background:rgba(23,23,28,.05);color:var(--ink1)}
+.qitem{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:11px;padding:10px 12px;margin-bottom:6px;box-shadow:var(--lift)}
+.qitem .n{width:15px;font-size:10px;color:var(--ink3)}
+.qitem .t{font-size:12.4px;font-weight:600;flex:1;letter-spacing:-.01em}
+
+.gt{font-size:10.5px;font-weight:700;color:var(--ink2);margin:20px 0 3px 1px}
+.grow{display:flex;align-items:center;gap:11px;padding:11px 2px;border-bottom:1px solid var(--hair)}
+.grow:last-child{border-bottom:none}
+.badge{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.grow .t{font-size:12.6px;font-weight:600;flex:1;letter-spacing:-.01em}
+.grow .v{font-size:11px;color:var(--ink3)}
+.sw2{width:35px;height:20px;border-radius:99px;background:var(--green);position:relative;flex:0 0 auto}
+.sw2 i{position:absolute;right:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff}
+
+/* NEW appearance tiles */
+.thm2{display:flex;gap:9px;margin:10px 0 4px}
+.thmT{flex:1}
+.thmT .frame{border-radius:12px;height:84px;overflow:hidden;position:relative;padding:8px 7px}
+.thmT.on .frame{box-shadow:0 0 0 2px var(--blue)}
+.thmT .ttl{height:6px;width:44px;border-radius:2px;margin-bottom:7px}
+.thmT .rowm{height:15px;border-radius:5px;margin-bottom:5px;display:flex;align-items:center;padding:0 5px;gap:4px}
+.thmT .rowm i{width:4px;height:4px;border-radius:50%;flex:0 0 auto}
+.thmT .rowm b{height:4px;border-radius:2px;flex:1}
+.thmT .lb{font-size:9.5px;font-weight:600;text-align:center;margin-top:7px;color:var(--ink2)}
+.thmT.on .lb{color:var(--blue);font-weight:700}
+.thmT .chk{position:absolute;top:6px;right:6px;width:14px;height:14px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center}
+
+/* NEW color picker */
+.moodstrip{display:flex;gap:7px;overflow:hidden;margin-bottom:20px}
+.moodpill{flex:0 0 auto;width:46px}
+.moodpill .band{height:26px;border-radius:8px;display:flex;overflow:hidden}
+.moodpill .band i{flex:1}
+.moodpill.on .band{box-shadow:0 0 0 2px var(--canvas),0 0 0 3.5px var(--ink1)}
+.moodpill .nm{font-size:8.4px;font-weight:600;color:var(--ink3);text-align:center;margin-top:5px}
+.moodpill.on .nm{color:var(--ink1);font-weight:700}
+.swgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.swbig{aspect-ratio:1;border-radius:16px;position:relative}
+.swbig.on{transform:scale(1.06);box-shadow:0 0 0 3px var(--canvas),0 0 0 5.5px rgba(27,106,203,.5)}
+.swbig .tick{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+
+.support{border-radius:14px;padding:15px;background:linear-gradient(150deg,#FBF6EC,#F4ECDE)}
+.linkrow{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--hair);font-size:12.2px;font-weight:600}
+.linkrow:last-child{border-bottom:none}
+.linkrow .u{margin-left:auto;font-size:10px;color:var(--ink3);font-weight:500}
+
+/* logo lab */
+.lab{background:#1B1B21;border-radius:20px;padding:30px;display:flex;flex-direction:column;gap:26px;width:340px}
+.lrow{display:flex;align-items:center;gap:20px}
+.appicon{border-radius:22%;background:var(--mark-bg);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.labcap{font-size:10.5px;color:rgba(231,229,233,.45);line-height:1.6}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></symbol>
+<symbol id="i-out" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></symbol>
+<symbol id="i-art" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h8M8 17h5"/></symbol>
+<symbol id="i-hist" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4v4h4"/><path d="M12 8v4.4l3 1.8"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5z" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-wave" viewBox="0 0 24 24"><path d="M4 10v4M8.5 6.5v11M13 9v6M17.5 5v14M21 11v2"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.2a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-2.8-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3.4 15a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.1-2.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 4.4a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7 2 2 0 1 1 0 4h-.2z"/></symbol>
+<symbol id="i-box" viewBox="0 0 24 24"><path d="M3 8h18v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><rect x="2.5" y="3.5" width="19" height="4.5" rx="1.4"/><path d="M10 12h4"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5 10 17.5 19 7"/></symbol>
+<symbol id="i-ref" viewBox="0 0 24 24"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 4v4h-4"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></symbol>
+<symbol id="i-back" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></symbol>
+<symbol id="i-drag" viewBox="0 0 24 24"><path d="M6 9h12M6 15h12"/></symbol>
+<symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 4v14M3.5 7.5 7 4l3.5 3.5M17 20V6M13.5 16.5 17 20l3.5-3.5"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 6.5h16M9.5 6.5V4.5h5v2M6.5 6.5 7.5 20h9l1-13.5"/></symbol>
+<symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 10v3.5l2.3 1.4M9.5 2.5h5"/></symbol>
+<symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M4.5 19.5h15"/></symbol>
+<symbol id="i-ul" viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M4.5 19.5h15"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.4 3 7.6 7 9 4-1.4 7-4.6 7-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+<symbol id="i-yt" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="3.5"/><path d="M10.5 9.5 15 12l-4.5 2.5z" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-gh" viewBox="0 0 24 24"><path d="M9 19c-4 1.2-4-2.2-5.5-2.7M15 21v-3.4c0-1 .1-1.4-.5-2 2.4-.3 4.6-1.2 4.6-5.2a4 4 0 0 0-1.1-2.8 3.7 3.7 0 0 0-.1-2.8s-.9-.3-3 1.1a10 10 0 0 0-5.2 0C7.6 3.8 6.7 4.1 6.7 4.1a3.7 3.7 0 0 0-.1 2.8 4 4 0 0 0-1.1 2.8c0 4 2.2 4.9 4.6 5.2-.5.5-.5 1-.5 1.7V21"/></symbol>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.3 2.4 3.4 5.4 3.4 8.5S14.3 18.1 12 20.5c-2.3-2.4-3.4-5.4-3.4-8.5S9.7 5.9 12 3.5z"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M21 4 3 11l7 3 3 7z"/><path d="M21 4 10 14"/></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3.8 7 12 13l8.2-6"/></symbol>
+<symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7.5-4.7-7.5-9.6A4.4 4.4 0 0 1 12 7.7a4.4 4.4 0 0 1 7.5 2.7C19.5 15.3 12 20 12 20z"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M4 4.5h6a3 3 0 0 1 3 3V20a2.4 2.4 0 0 0-2.4-2.4H4z"/><path d="M20 4.5h-6a3 3 0 0 0-3 3V20a2.4 2.4 0 0 1 2.4-2.4H20z"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 4.5 1.5 5.8 1.5 5.8h-15S6 13.5 6 9z"/><path d="M10 18.5a2.2 2.2 0 0 0 4 0"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.5a2.4 2.4 0 1 1 3.2 2.3c-.6.3-.9.8-.9 1.5v.4"/><circle cx="12" cy="16.8" r=".9" fill="currentColor" stroke="none"/></symbol>
+
+<!-- THE MARK: a queue seen face on. One card in front, two waiting behind. -->
+<symbol id="mark" viewBox="0 0 100 100">
+  <rect x="30" y="14" width="40" height="11" rx="5.5" fill="currentColor" opacity=".26"/>
+  <rect x="22" y="29" width="56" height="12" rx="6" fill="currentColor" opacity=".5"/>
+  <rect x="14" y="46" width="72" height="40" rx="11" fill="currentColor"/>
+</symbol>
+</defs></svg>
+
+<div class="page">
+
+<div class="mast">
+  <h1>Clarity Now <span style="opacity:.4">by Kamsiob</span><span class="v3">V3</span></h1>
+  <p>A2 slim cards locked. New app mark, swipe gestures specified, color picker and appearance picker rebuilt. US spelling throughout. Screens not shown here are unchanged from v2.</p>
+</div>
+
+<!-- ============ A: THE MARK ============ -->
+<div class="sect"><span class="n">A</span><h2>THE MARK</h2><span class="ln"></span></div>
+<div class="note"><b>The gradient square and the check are gone.</b> A check mark says "to do list," which is the category the app is arguing against, and a gradient is on the tell list. The new mark is the app's actual idea: one thing at the front, the rest waiting behind it. Flat background, no gradient, two values of one color. It reads as a stack of cards seen face on, and at 24px it still reads as "one solid thing with things behind it."</div>
+<div class="grid">
+
+<div class="cell">
+  <div class="lab">
+    <div class="lrow">
+      <div class="appicon" style="width:96px;height:96px"><svg style="width:56px;height:56px;color:var(--mark-fg)"><use href="#mark"/></svg></div>
+      <div class="labcap"><b style="color:#E7E5E9">App icon</b><br>Flat #141A2E, mark in #F3F1EC.<br>No gradient. Two colors total.</div>
+    </div>
+    <div class="lrow" style="align-items:flex-end">
+      <div class="appicon" style="width:64px;height:64px"><svg style="width:37px;height:37px;color:var(--mark-fg)"><use href="#mark"/></svg></div>
+      <div class="appicon" style="width:44px;height:44px"><svg style="width:26px;height:26px;color:var(--mark-fg)"><use href="#mark"/></svg></div>
+      <div class="appicon" style="width:30px;height:30px"><svg style="width:18px;height:18px;color:var(--mark-fg)"><use href="#mark"/></svg></div>
+      <div class="appicon" style="width:22px;height:22px"><svg style="width:13px;height:13px;color:var(--mark-fg)"><use href="#mark"/></svg></div>
+    </div>
+    <div class="labcap">Holds down to 22px. The two waiting cards merge into a single suggestion of depth rather than disappearing.</div>
+  </div>
+  <div class="cap"><b>A1 · App icon</b><br><em>One in front, two behind.</em> The queue, which is the whole product</div>
+</div>
+
+<div class="cell">
+  <div class="lab">
+    <div class="lrow">
+      <div class="appicon" style="width:80px;height:80px;background:#F1F1F6"><svg style="width:47px;height:47px;color:#17171C"><use href="#mark"/></svg></div>
+      <div class="appicon" style="width:80px;height:80px;background:#1B6ACB"><svg style="width:47px;height:47px;color:#FFFFFF"><use href="#mark"/></svg></div>
+    </div>
+    <div class="labcap"><b style="color:#E7E5E9">Monochrome and inverse</b><br>For the notification icon, the widget header, the settings row and any single color context. The mark survives being reduced to one value because the depth is carried by opacity, not by hue.</div>
+    <div class="lrow" style="gap:14px;align-items:center">
+      <svg style="width:26px;height:26px;color:#E7E5E9"><use href="#mark"/></svg>
+      <svg style="width:19px;height:19px;color:#E7E5E9"><use href="#mark"/></svg>
+      <svg style="width:14px;height:14px;color:#9AA0A8"><use href="#mark"/></svg>
+      <span class="labcap" style="margin-left:6px">status bar, widget, notification</span>
+    </div>
+  </div>
+  <div class="cap"><b>A2 · Variants</b><br>works flat on light, on brand blue, and as a single color glyph</div>
+</div>
+
+<div class="cell">
+  <div class="lab">
+    <div class="labcap" style="font-size:11.5px;line-height:1.75">
+      <b style="color:#E7E5E9">What it is not</b><br><br>
+      <span style="color:#E88">✕</span> a check mark, which says to do list<br>
+      <span style="color:#E88">✕</span> a gradient square, on the 2026 tell list<br>
+      <span style="color:#E88">✕</span> an orb with rings, which is Kam AI<br>
+      <span style="color:#E88">✕</span> a letter C, which is the obvious answer<br>
+      <span style="color:#E88">✕</span> three equal bars, which reads as a menu<br><br>
+      <b style="color:#9BE3BF">Why the proportions matter.</b> The front card is 72 wide and 40 tall. The two behind are 56 and 40 wide and only 12 and 11 tall, so they read as edges rather than as cards in their own right. Equal sizes would read as a list. Unequal sizes with the largest in front reads as depth.
+    </div>
+  </div>
+  <div class="cap"><b>A3 · Rationale</b><br>the mark has to survive being obvious in hindsight</div>
+</div>
+
+</div>
+
+<!-- ============ B: SWIPE ============ -->
+<div class="sect"><span class="n">B</span><h2>SWIPE GESTURES</h2><span class="ln"></span></div>
+<div class="note"><b>Three actions, two directions, and delete is never a full swipe.</b> Right reveals Complete and a full swipe commits it. Left reveals Swap and Delete side by side; a full swipe left commits <b>Swap</b>, the safe one. Delete requires an explicit tap on the revealed button and then goes through the five second undo. Destructive actions should never be reachable by momentum.</div>
+<div class="grid">
+
+<!-- B1 SWIPE RIGHT -->
+<div class="cell"><div class="phone"><div class="screen light">
+  <div class="sb"><span>9:41</span><span class="dots"><svg class="icon xs" style="stroke-width:2.4"><use href="#i-wave"/></svg><i></i></span></div>
+  <div class="body">
+    <div class="hdr"><h2>Clarity Now</h2><div class="tools"><svg class="icon"><use href="#i-box"/></svg><svg class="icon"><use href="#i-gear"/></svg></div></div>
+    <div class="chips"><div class="chip"><svg class="icon sm"><use href="#i-play"/></svg>Focus</div><div class="chip"><svg class="icon sm"><use href="#i-wave"/></svg>Pulse<span class="pip"></span></div></div>
+    <div class="banner"><div class="s">A steady week so far.</div><div class="c">6 completed, 3 of 4 areas active</div></div>
+
+    <div class="swipewrap">
+      <div class="swipebg r">
+        <div class="swact" style="color:#15803D"><svg class="icon" style="stroke:#15803D;stroke-width:2.2"><use href="#i-check"/></svg><span class="lb">Complete</span></div></div>
+      <div class="acard" style="transform:translateX(78px)">
+        <div class="wash" style="background:radial-gradient(110% 90% at 100% 0%,rgba(27,106,203,.07),transparent 60%)"></div>
+        <div class="r1"><span class="dot" style="background:var(--work)"></span><span class="an" style="color:var(--work)">Work</span></div>
+        <div class="t">Rewrite the proposal intro</div></div>
+    </div>
+
+    <div class="acard"><div class="wash" style="background:radial-gradient(110% 90% at 0% 100%,rgba(16,185,129,.07),transparent 60%)"></div>
+      <div class="r1"><span class="dot" style="background:var(--health)"></span><span class="an" style="color:#0B8A63">Health</span></div>
+      <div class="t">Book the dentist</div></div>
+    <div class="acard"><div class="wash" style="background:radial-gradient(110% 90% at 100% 100%,rgba(180,83,9,.065),transparent 60%)"></div>
+      <div class="r1"><span class="dot" style="background:var(--side)"></span><span class="an" style="color:var(--side)">Side Project</span></div>
+      <div class="t">Finish the export screen</div></div>
+    <div class="acard idle"><div class="r1"><span class="dot" style="background:var(--personal);opacity:.45"></span><span class="an" style="color:rgba(124,58,237,.6)">Personal</span></div>
+      <div class="t">Add your first item</div><div class="s" style="opacity:.75">Last active 21 days ago</div></div>
+
+    <div class="fab"><svg class="icon"><use href="#i-plus"/></svg></div>
+    <div class="tabs"><div class="tab on"><svg class="icon sm"><use href="#i-home"/></svg>Areas</div><div class="tab"><svg class="icon sm"><use href="#i-out"/></svg>Momentum</div><div class="tab"><svg class="icon sm"><use href="#i-art"/></svg>Report</div><div class="tab"><svg class="icon sm"><use href="#i-hist"/></svg>Trail</div></div>
+  </div>
+</div></div><div class="cap"><b>B1 · Swipe right</b><br><em>Complete.</em> Reveals at 25%, commits at 55%, haptic tick at the threshold</div></div>
+
+<!-- B2 SWIPE LEFT -->
+<div class="cell"><div class="phone"><div class="screen light">
+  <div class="sb"><span>9:41</span><span class="dots"><svg class="icon xs" style="stroke-width:2.4"><use href="#i-wave"/></svg><i></i></span></div>
+  <div class="body">
+    <div class="hdr"><h2>Clarity Now</h2><div class="tools"><svg class="icon"><use href="#i-box"/></svg><svg class="icon"><use href="#i-gear"/></svg></div></div>
+    <div class="chips"><div class="chip"><svg class="icon sm"><use href="#i-play"/></svg>Focus</div><div class="chip"><svg class="icon sm"><use href="#i-wave"/></svg>Pulse<span class="pip"></span></div></div>
+    <div class="banner"><div class="s">A steady week so far.</div><div class="c">6 completed, 3 of 4 areas active</div></div>
+
+    <div class="swipewrap">
+      <div class="swipebg l">
+        <div class="swact" style="color:var(--work);background:rgba(27,106,203,.12);height:100%"><svg class="icon" style="stroke:var(--work);stroke-width:2"><use href="#i-swap"/></svg><span class="lb">Swap</span></div>
+        <div class="swact" style="color:#8A5A5A;background:rgba(138,90,90,.13);height:100%"><svg class="icon" style="stroke:#8A5A5A;stroke-width:2"><use href="#i-trash"/></svg><span class="lb">Delete</span></div></div>
+      <div class="acard" style="transform:translateX(-132px)">
+        <div class="wash" style="background:radial-gradient(110% 90% at 100% 0%,rgba(27,106,203,.07),transparent 60%)"></div>
+        <div class="r1"><span class="dot" style="background:var(--work)"></span><span class="an" style="color:var(--work)">Work</span></div>
+        <div class="t">Rewrite the proposal intro</div></div>
+    </div>
+
+    <div class="acard"><div class="wash" style="background:radial-gradient(110% 90% at 0% 100%,rgba(16,185,129,.07),transparent 60%)"></div>
+      <div class="r1"><span class="dot" style="background:var(--health)"></span><span class="an" style="color:#0B8A63">Health</span></div>
+      <div class="t">Book the dentist</div></div>
+    <div class="acard"><div class="wash" style="background:radial-gradient(110% 90% at 100% 100%,rgba(180,83,9,.065),transparent 60%)"></div>
+      <div class="r1"><span class="dot" style="background:var(--side)"></span><span class="an" style="color:var(--side)">Side Project</span></div>
+      <div class="t">Finish the export screen</div></div>
+    <div class="acard idle"><div class="r1"><span class="dot" style="background:var(--personal);opacity:.45"></span><span class="an" style="color:rgba(124,58,237,.6)">Personal</span></div>
+      <div class="t">Add your first item</div><div class="s" style="opacity:.75">Last active 21 days ago</div></div>
+
+    <div class="fab"><svg class="icon"><use href="#i-plus"/></svg></div>
+    <div class="tabs"><div class="tab on"><svg class="icon sm"><use href="#i-home"/></svg>Areas</div><div class="tab"><svg class="icon sm"><use href="#i-out"/></svg>Momentum</div><div class="tab"><svg class="icon sm"><use href="#i-art"/></svg>Report</div><div class="tab"><svg class="icon sm"><use href="#i-hist"/></svg>Trail</div></div>
+  </div>
+</div></div><div class="cap"><b>B2 · Swipe left</b><br><em>Swap and Delete.</em> Full swipe commits Swap only. Delete is tap-only, then undo</div></div>
+
+<!-- B3 SWAP CHOOSER -->
+<div class="cell"><div class="phone"><div class="screen light">
+  <div class="sb"><span>9:41</span><span class="dots"><svg class="icon xs" style="stroke-width:2.4"><use href="#i-wave"/></svg><i></i></span></div>
+  <div class="body" style="filter:blur(.4px)">
+    <div class="hdr"><h2>Clarity Now</h2><div class="tools"><svg class="icon"><use href="#i-gear"/></svg></div></div>
+    <div class="chips"><div class="chip"><svg class="icon sm"><use href="#i-play"/></svg>Focus</div><div class="chip"><svg class="icon sm"><use href="#i-wave"/></svg>Pulse</div></div>
+  </div>
+  <div class="scrim"></div>
+  <div class="sheet" style="height:56%">
+    <div class="handle"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span class="dot" style="width:9px;height:9px;background:var(--work)"></span>
+      <span style="font-size:15.5px;font-weight:700;letter-spacing:-.015em">What goes to the front?</span></div>
+    <div style="font-size:11.5px;color:var(--ink2);line-height:1.55;margin-bottom:18px">
+      Rewrite the proposal intro moves back to the top of the queue.</div>
+
+    <div class="side"><span class="lb">Queue</span><span class="rl"></span></div>
+    <div class="qitem"><span class="n">1</span><span class="t">Send Tuesday's follow-ups</span><svg class="icon sm" style="opacity:.3"><use href="#i-chev"/></svg></div>
+    <div class="qitem"><span class="n">2</span><span class="t">Book the venue deposit</span><svg class="icon sm" style="opacity:.3"><use href="#i-chev"/></svg></div>
+    <div class="qitem"><span class="n">3</span><span class="t">Draft the Q3 summary</span><svg class="icon sm" style="opacity:.3"><use href="#i-chev"/></svg></div>
+
+    <div class="btn sec" style="margin-top:16px">Never mind</div>
+  </div>
+</div></div><div class="cap"><b>B3 · Swap chooser</b><br>the old item is named so nothing disappears silently. Swaps carry no warning tone</div></div>
+
+</div>
+
+<!-- ============ C: PICKERS ============ -->
+<div class="sect"><span class="n">C</span><h2>THE PICKERS, REBUILT</h2><span class="ln"></span></div>
+<div class="note"><b>Color: two stages instead of eight rows.</b> Pick a mood, then a color inside it. The mood strip makes the eight groups mean something instead of being grey labels, and the swatches get big enough to actually see. <b>Appearance: real miniatures.</b> Each tile renders a small honest version of the Areas screen in that theme, with real area dots, rather than grey bars.</div>
+<div class="grid">
+
+<!-- C1 COLOR PICKER -->
+<div class="cell"><div class="phone"><div class="screen light">
+  <div class="sb"><span>9:41</span><span class="dots"><svg class="icon xs" style="stroke-width:2.4"><use href="#i-wave"/></svg><i></i></span></div>
+  <div class="body" style="filter:blur(.4px)"><div class="hdr"><h2>Clarity Now</h2><div class="tools"><svg class="icon"><use href="#i-gear"/></svg></div></div></div>
+  <div class="scrim"></div>
+  <div class="sheet" style="height:78%">
+    <div class="handle"></div>
+    <div style="font-size:15.5px;font-weight:700;margin-bottom:16px;letter-spacing:-.015em">Area color</div>
+
+    <div class="acard" style="margin-bottom:22px">
+      <div class="wash" style="background:radial-gradient(110% 90% at 100% 0%,rgba(27,106,203,.07),transparent 60%)"></div>
+      <div class="r1"><span class="dot" style="background:var(--work)"></span><span class="an" style="color:var(--work)">Work</span></div>
+      <div class="t">Rewrite the proposal intro</div>
+      <div class="s">Active for 9 days</div></div>
+
+    <div class="moodstrip">
+      <div class="moodpill on"><div class="band"><i style="background:#2D7FF9"></i><i style="background:#4DA3FF"></i><i style="background:#18BFFF"></i><i style="background:#1B6ACB"></i><i style="background:#3B82F6"></i><i style="background:#06B6D4"></i></div><div class="nm">Ocean</div></div>
+      <div class="moodpill"><div class="band"><i style="background:#6366F1"></i><i style="background:#4F46E5"></i><i style="background:#7C3AED"></i><i style="background:#8B5CF6"></i><i style="background:#A855F7"></i><i style="background:#C084FC"></i></div><div class="nm">Twilight</div></div>
+      <div class="moodpill"><div class="band"><i style="background:#D946EF"></i><i style="background:#EC4899"></i><i style="background:#F472B6"></i><i style="background:#E11D48"></i><i style="background:#BE185D"></i><i style="background:#DC2626"></i></div><div class="nm">Berry</div></div>
+      <div class="moodpill"><div class="band"><i style="background:#EF4444"></i><i style="background:#F97316"></i><i style="background:#FB923C"></i><i style="background:#F59E0B"></i><i style="background:#FBBF24"></i><i style="background:#EAB308"></i></div><div class="nm">Ember</div></div>
+      <div class="moodpill"><div class="band"><i style="background:#22C55E"></i><i style="background:#16A34A"></i><i style="background:#4ADE80"></i><i style="background:#10B981"></i><i style="background:#059669"></i><i style="background:#14B8A6"></i></div><div class="nm">Meadow</div></div>
+      <div class="moodpill"><div class="band"><i style="background:#CA8A04"></i><i style="background:#92400E"></i><i style="background:#A16207"></i><i style="background:#B45309"></i><i style="background:#D97706"></i><i style="background:#8B7355"></i></div><div class="nm">Earth</div></div>
+    </div>
+
+    <div class="swgrid">
+      <div class="swbig" style="background:#2D7FF9"></div>
+      <div class="swbig" style="background:#4DA3FF"></div>
+      <div class="swbig" style="background:#18BFFF"></div>
+      <div class="swbig on" style="background:#1B6ACB"><div class="tick"><svg class="icon" style="stroke:#fff;stroke-width:2.4;width:20px;height:20px"><use href="#i-check"/></svg></div></div>
+      <div class="swbig" style="background:#3B82F6"></div>
+      <div class="swbig" style="background:#06B6D4"></div>
+    </div>
+
+    <div class="btn pri" style="margin-top:20px">Save</div>
+  </div>
+</div></div><div class="cap"><b>C1 · Area color</b><br><em>Mood, then color.</em> Six large swatches instead of forty eight small ones. Preview updates live</div></div>
+
+<!-- C2 APPEARANCE -->
+<div class="cell"><div class="phone"><div class="screen light">
+  <div class="sb"><span>9:41</span><span class="dots"><svg class="icon xs" style="stroke-width:2.4"><use href="#i-wave"/></svg><i></i></span></div>
+  <div class="body">
+    <div style="display:flex;align-items:center;gap:12px;padding:8px 0 6px">
+      <svg class="icon sm" style="opacity:.45"><use href="#i-back"/></svg>
+      <span style="font-family:var(--disp);font-variation-settings:'opsz' 48;font-size:25px">Settings</span></div>
+
+    <div class="gt">Appearance</div>
+    <div class="thm2">
+      <div class="thmT">
+        <div class="frame" style="background:#F1F1F6">
+          <div class="ttl" style="background:rgba(23,23,28,.32)"></div>
+          <div class="rowm" style="background:#fff"><i style="background:#1B6ACB"></i><b style="background:rgba(23,23,28,.2)"></b></div>
+          <div class="rowm" style="background:#fff"><i style="background:#10B981"></i><b style="background:rgba(23,23,28,.2)"></b></div>
+          <div class="rowm" style="background:#fff"><i style="background:#B45309"></i><b style="background:rgba(23,23,28,.2)"></b></div></div>
+        <div class="lb">Light</div></div>
+
+      <div class="thmT">
+        <div class="frame" style="background:#0E0E13">
+          <div class="ttl" style="background:rgba(240,238,241,.35)"></div>
+          <div class="rowm" style="background:#191921"><i style="background:#4D93E8"></i><b style="background:rgba(240,238,241,.22)"></b></div>
+          <div class="rowm" style="background:#191921"><i style="background:#2FD79E"></i><b style="background:rgba(240,238,241,.22)"></b></div>
+          <div class="rowm" style="background:#191921"><i style="background:#E08A2B"></i><b style="background:rgba(240,238,241,.22)"></b></div></div>
+        <div class="lb">Dark</div></div>
+
+      <div class="thmT on">
+        <div class="frame" style="background:linear-gradient(103deg,#F1F1F6 0 50%,#0E0E13 50% 100%)">
+          <div class="chk"><svg class="icon" style="stroke:#fff;stroke-width:3;width:9px;height:9px"><use href="#i-check"/></svg></div>
+          <div class="ttl" style="background:rgba(23,23,28,.32)"></div>
+          <div class="rowm" style="background:linear-gradient(103deg,#fff 0 50%,#191921 50% 100%)"><i style="background:#1B6ACB"></i><b style="background:rgba(120,120,130,.35)"></b></div>
+          <div class="rowm" style="background:linear-gradient(103deg,#fff 0 50%,#191921 50% 100%)"><i style="background:#10B981"></i><b style="background:rgba(120,120,130,.35)"></b></div>
+          <div class="rowm" style="background:linear-gradient(103deg,#fff 0 50%,#191921 50% 100%)"><i style="background:#B45309"></i><b style="background:rgba(120,120,130,.35)"></b></div></div>
+        <div class="lb">System</div></div>
+    </div>
+    <div style="font-size:10.2px;color:var(--ink3);line-height:1.5;margin-top:8px">Focus, Pulse and Report are always dark by design.</div>
+
+    <div class="gt">Your data</div>
+    <div class="grow"><span class="badge" style="background:rgba(34,197,94,.12)"><svg class="icon sm" style="stroke:#15803D"><use href="#i-dl"/></svg></span><span class="t">Export everything</span><span class="v">last: Jul 19</span></div>
+    <div class="grow"><span class="badge" style="background:rgba(34,197,94,.12)"><svg class="icon sm" style="stroke:#15803D"><use href="#i-ul"/></svg></span><span class="t">Import from a file</span><svg class="icon xs" style="opacity:.28"><use href="#i-chev"/></svg></div>
+    <div class="grow"><span class="badge" style="background:rgba(23,23,28,.05)"><svg class="icon sm" style="stroke:var(--ink2)"><use href="#i-trash"/></svg></span><span class="t">Erase all data</span><svg class="icon xs" style="opacity:.28"><use href="#i-chev"/></svg></div>
+
+    <div class="gt">Privacy</div>
+    <div class="grow"><span class="badge" style="background:rgba(45,127,249,.11)"><svg class="icon sm" style="stroke:var(--blue)"><use href="#i-shield"/></svg></span><span class="t">Privacy policy</span><svg class="icon xs" style="opacity:.28"><use href="#i-chev"/></svg></div>
+    <div class="grow"><span class="badge" style="background:rgba(45,127,249,.11)"><svg class="icon sm" style="stroke:var(--blue)"><use href="#i-book"/></svg></span><span class="t">Open source licenses</span><svg class="icon xs" style="opacity:.28"><use href="#i-chev"/></svg></div>
+    <div style="background:rgba(45,127,249,.055);border-radius:12px;padding:12px 13px;margin-top:12px">
+      <div style="font-size:11.4px;font-weight:700;margin-bottom:5px">This app has no internet permission.</div>
+      <div style="font-size:10.5px;color:var(--ink2);line-height:1.55">Not a promise, a fact your phone enforces. Clarity Now cannot open a network connection even if it wanted to. Check it in Android settings.</div></div>
+  </div>
+</div></div><div class="cap"><b>C2 · Appearance</b><br><em>Real miniatures.</em> Actual canvas colors, actual area dots, split diagonally for System</div></div>
+
+<!-- C3 ABOUT WITH NEW MARK -->
+<div class="cell"><div class="phone"><div class="screen light">
+  <div class="sb"><span>9:41</span><span class="dots"><svg class="icon xs" style="stroke-width:2.4"><use href="#i-wave"/></svg><i></i></span></div>
+  <div class="body">
+    <div style="display:flex;align-items:center;gap:12px;padding:8px 0 24px">
+      <svg class="icon sm" style="opacity:.45"><use href="#i-back"/></svg>
+      <span style="font-family:var(--disp);font-variation-settings:'opsz' 48;font-size:25px">About</span></div>
+
+    <div style="text-align:center;margin-bottom:26px">
+      <div style="width:62px;height:62px;border-radius:16px;margin:0 auto 14px;background:var(--mark-bg);display:flex;align-items:center;justify-content:center">
+        <svg style="width:36px;height:36px;color:var(--mark-fg)"><use href="#mark"/></svg></div>
+      <div style="font-family:var(--disp);font-variation-settings:'opsz' 56;font-size:28px;line-height:1.1">Clarity Now</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:6px">Version 1.0.0 · by Kamsiob</div></div>
+
+    <div style="font-family:var(--text);font-variation-settings:'opsz' 16;font-size:13.5px;line-height:1.68;color:var(--ink2);margin-bottom:24px">
+      One active item per area. Everything else waits its turn. No account, no cloud, no subscription, no ads, and nothing collected. Your history lives in one file on this phone until you delete it.</div>
+
+    <div class="gt" style="margin-top:0">Elsewhere</div>
+    <div class="linkrow"><svg class="icon sm" style="opacity:.5"><use href="#i-yt"/></svg>YouTube<span class="u">@kamsiob</span></div>
+    <div class="linkrow"><svg class="icon sm" style="opacity:.5"><use href="#i-gh"/></svg>Source code<span class="u">github.com/kamsiob</span></div>
+    <div class="linkrow"><svg class="icon sm" style="opacity:.5"><use href="#i-globe"/></svg>Website<span class="u">kamsiob.com</span></div>
+    <div class="linkrow"><svg class="icon sm" style="opacity:.5"><use href="#i-send"/></svg>Kamsiob Lab<span class="u">telegram</span></div>
+    <div class="linkrow"><svg class="icon sm" style="opacity:.5"><use href="#i-mail"/></svg>Feedback<span class="u">hello@kamsiob.com</span></div>
+
+    <div class="support" style="margin-top:20px">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">
+        <svg class="icon sm" style="stroke:var(--side)"><use href="#i-heart"/></svg>
+        <span style="font-size:12.4px;font-weight:700">Support this work</span></div>
+      <div style="font-size:10.7px;color:var(--ink2);line-height:1.62;margin-bottom:13px">Built and carried by one person. If software made this way matters to you, there is a place to stand behind it. Either way, it is yours.</div>
+      <div style="height:37px;border-radius:11px;background:#B45309;color:#FFF6EA;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">Support this work</div></div>
+
+    <div style="text-align:center;font-size:9.6px;color:var(--ink3);margin-top:16px;line-height:1.7">
+      AGPL-3.0. The license keeps it open.<br>Newsreader and Hanken Grotesk under the SIL Open Font License.</div>
+  </div>
+</div></div><div class="cap"><b>C3 · About</b><br>the new mark in place. US spelling: ads, license, color</div></div>
+
+</div>
+
+<div style="margin-top:64px;padding-top:26px;border-top:1px solid rgba(255,255,255,.08);font-size:11.5px;color:rgba(231,229,233,.35);line-height:1.85">
+  Clarity Now by Kamsiob · visual reference v3 · nothing here is shipping code.<br>
+  A2 slim cards locked. Screens not shown are unchanged from v2.<br>
+  design-v3.md is the source of truth for every dimension. Do not measure this file.
+</div>
+
+</div>
+</body>
+</html>

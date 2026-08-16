@@ -1,0 +1,292 @@
+{
+  "areas": {
+    "area-health": {
+      "id": "area-health",
+      "name": "Health",
+      "colorHex": "#10B981",
+      "orderKey": "a2",
+      "archived": false,
+      "deletedAt": null,
+      "createdAt": 1767517200000,
+      "lastEventLamport": 25
+    },
+    "area-personal": {
+      "id": "area-personal",
+      "name": "Personal",
+      "colorHex": "#6366F1",
+      "orderKey": "a1",
+      "archived": false,
+      "deletedAt": null,
+      "createdAt": 1767517200000,
+      "lastEventLamport": 2
+    },
+    "area-scratch": {
+      "id": "area-scratch",
+      "name": "Workshop",
+      "colorHex": "#F59E0B",
+      "orderKey": "a0Vmr",
+      "archived": true,
+      "deletedAt": 1768471200000,
+      "createdAt": 1767520800000,
+      "lastEventLamport": 39
+    },
+    "area-work": {
+      "id": "area-work",
+      "name": "Work",
+      "colorHex": "#2D7FF9",
+      "orderKey": "a0mr",
+      "archived": false,
+      "deletedAt": null,
+      "createdAt": 1767517200000,
+      "lastEventLamport": 1
+    }
+  },
+  "items": {
+    "item-dentist": {
+      "id": "item-dentist",
+      "areaId": "area-personal",
+      "title": "Book the dentist",
+      "note": null,
+      "orderKey": "Zzmr",
+      "status": "ACTIVE",
+      "createdAt": 1767524400000,
+      "activeSince": 1768726800000,
+      "completedAt": null,
+      "deletedAt": null,
+      "lastEventLamport": 45
+    },
+    "item-letter": {
+      "id": "item-letter",
+      "areaId": "area-personal",
+      "title": "Write the landlord a letter",
+      "note": null,
+      "orderKey": "Zy4M",
+      "status": "QUEUED",
+      "createdAt": 1768554000000,
+      "activeSince": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "lastEventLamport": 45
+    },
+    "item-notes": {
+      "id": "item-notes",
+      "areaId": "area-work",
+      "title": "Draft the release notes",
+      "note": null,
+      "orderKey": "a0Vmr",
+      "status": "QUEUED",
+      "createdAt": 1767524400000,
+      "activeSince": null,
+      "completedAt": null,
+      "deletedAt": 1768294800000,
+      "lastEventLamport": 32
+    },
+    "item-printer": {
+      "id": "item-printer",
+      "areaId": "area-work",
+      "title": "Call the printer about the covers",
+      "note": "before five, ask for Dan",
+      "orderKey": "a1",
+      "status": "COMPLETED",
+      "createdAt": 1767520800000,
+      "activeSince": null,
+      "completedAt": 1768147200000,
+      "deletedAt": null,
+      "lastEventLamport": 27
+    },
+    "item-proposal": {
+      "id": "item-proposal",
+      "areaId": "area-work",
+      "title": "Rewrite the proposal intro",
+      "note": null,
+      "orderKey": "Zzmr",
+      "status": "ACTIVE",
+      "createdAt": 1767520800000,
+      "activeSince": 1768147200000,
+      "completedAt": null,
+      "deletedAt": null,
+      "lastEventLamport": 28
+    },
+    "item-swim": {
+      "id": "item-swim",
+      "areaId": "area-health",
+      "title": "Swim on Thursday",
+      "note": null,
+      "orderKey": "a0mr",
+      "status": "QUEUED",
+      "createdAt": 1768377600000,
+      "activeSince": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "lastEventLamport": 41
+    },
+    "item-tap": {
+      "id": "item-tap",
+      "areaId": "area-personal",
+      "title": "Fix the leaking tap",
+      "note": null,
+      "orderKey": "Zz",
+      "status": "QUEUED",
+      "createdAt": 1767528000000,
+      "activeSince": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "lastEventLamport": 45
+    },
+    "item-walk": {
+      "id": "item-walk",
+      "areaId": "area-health",
+      "title": "Walk before breakfast",
+      "note": null,
+      "orderKey": "a0",
+      "status": "COMPLETED",
+      "createdAt": 1767600000000,
+      "activeSince": null,
+      "completedAt": 1768377600000,
+      "deletedAt": null,
+      "lastEventLamport": 34
+    }
+  },
+  "focusSessions": {
+    "focus-1": {
+      "id": "focus-1",
+      "areaId": "area-work",
+      "itemId": "item-proposal",
+      "plannedSeconds": 1500,
+      "startedAt": 1767621600000,
+      "endedAt": 1767625200000,
+      "actualSeconds": 1500,
+      "outcome": "COMPLETED",
+      "lastEventLamport": 15
+    },
+    "focus-2": {
+      "id": "focus-2",
+      "areaId": "area-work",
+      "itemId": "item-proposal",
+      "plannedSeconds": 1500,
+      "startedAt": 1767862800000,
+      "endedAt": 1767862800000,
+      "actualSeconds": 320,
+      "outcome": "ABANDONED",
+      "lastEventLamport": 23
+    }
+  },
+  "pulses": {
+    "2026-01-06": {
+      "id": "pulse-1",
+      "dateKey": "2026-01-06",
+      "family": "persistence",
+      "stage": 1,
+      "register": "OBSERVATIONAL",
+      "variantKey": "persistence.s1.04",
+      "observation": "Rewrite the proposal intro has been active for two days.",
+      "question": "Still the right thing?",
+      "factSnapshot": {
+        "activeItemAgeDays": "2"
+      },
+      "reflectionPeriod": "YESTERDAY",
+      "generatedAt": 1767690000000,
+      "responseKey": "yes",
+      "responseLabel": "Still the right thing",
+      "responseIsPositive": true,
+      "answeredAt": 1767690000000,
+      "lastEventLamport": 17
+    },
+    "2026-01-18": {
+      "id": "pulse-2-laptop",
+      "dateKey": "2026-01-18",
+      "family": "switching",
+      "stage": 1,
+      "register": "PLAIN",
+      "variantKey": "switching.s1.07",
+      "observation": "Something in Personal moved aside today.",
+      "question": "New priority, or second thoughts?",
+      "factSnapshot": {
+        "swaps": "1"
+      },
+      "reflectionPeriod": "TODAY_SO_FAR",
+      "generatedAt": 1768766400000,
+      "responseKey": null,
+      "responseLabel": null,
+      "responseIsPositive": null,
+      "answeredAt": null,
+      "lastEventLamport": 46
+    }
+  },
+  "reports": {
+    "2026-01-11": {
+      "id": "report-1",
+      "weekStartKey": "2026-01-11",
+      "headlineKey": "steadyPace",
+      "sections": [
+        {
+          "sectionKey": "observations",
+          "sidehead": "Your week, honestly",
+          "text": "Three things left Work this week and two arrived."
+        },
+        {
+          "sectionKey": "focus",
+          "sidehead": "Focus",
+          "text": "You protected 25 minutes on Monday."
+        }
+      ],
+      "factSnapshot": {
+        "completions": "3",
+        "additions": "2",
+        "focusMinutes": "25"
+      },
+      "generatedAt": 1768636800000,
+      "lastEventLamport": 42
+    }
+  },
+  "plans": {
+    "plan-1": {
+      "id": "plan-1",
+      "weekStartKey": "2026-01-11",
+      "frameKey": "frm.03",
+      "cueKey": "cue.band.02",
+      "actionKey": "act.neg.05",
+      "familyKey": "neglectedArea",
+      "subjectId": "area-personal",
+      "offeredLine": "One option for Wednesday morning: ten minutes in Personal before you open Work.",
+      "committedLine": "If it is Wednesday morning, I will spend ten minutes in Personal before opening Work.",
+      "resolutionFactRef": {
+        "category": "area",
+        "path": "eventsInWindow"
+      },
+      "offeredAt": 1768636800000,
+      "acceptedAt": 1768636800000,
+      "lastEventLamport": 44
+    }
+  },
+  "settings": {
+    "afterCompleting": "CHOOSE_FROM_QUEUE"
+  },
+  "conflicts": [
+    {
+      "id": "conflict:evt-046:two-active",
+      "kind": "TWO_ACTIVE_IN_AREA",
+      "winnerId": "item-dentist",
+      "loserId": "item-letter",
+      "areaId": "area-personal",
+      "areaNameSnapshot": "Personal",
+      "winnerTitleSnapshot": "Book the dentist",
+      "loserTitleSnapshot": "Write the landlord a letter",
+      "detectedAtLamport": 45
+    },
+    {
+      "id": "conflict:evt-048:duplicate-pulse",
+      "kind": "DUPLICATE_DATE_KEY",
+      "winnerId": "pulse-2-laptop",
+      "loserId": "pulse-2-phone",
+      "areaId": null,
+      "areaNameSnapshot": null,
+      "winnerTitleSnapshot": null,
+      "loserTitleSnapshot": null,
+      "detectedAtLamport": 46
+    }
+  ],
+  "diagnostics": [],
+  "lastLamport": 46,
+  "eventsApplied": 48
+}
