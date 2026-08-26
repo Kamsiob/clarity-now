@@ -89,6 +89,13 @@ data class AreaState(
     val archived: Boolean = false,
     val deletedAt: Long? = null,
     val createdAt: Long,
+    /**
+     * The wall clock of the most recent event concerning this area or anything in
+     * it. Display only, like every other wall clock in the log, and never used for
+     * ordering. The area card's `Last active` line reads this rather than running a
+     * query, so the number on screen and the number in the state cannot disagree.
+     */
+    val lastEventAt: Long,
     val lastEventLamport: Long,
 )
 

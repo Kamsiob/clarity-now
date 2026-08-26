@@ -8,6 +8,7 @@
       "archived": false,
       "deletedAt": null,
       "createdAt": 1767517200000,
+      "lastEventAt": 1768597200000,
       "lastEventLamport": 25
     },
     "area-personal": {
@@ -18,6 +19,7 @@
       "archived": false,
       "deletedAt": null,
       "createdAt": 1767517200000,
+      "lastEventAt": 1768726800000,
       "lastEventLamport": 2
     },
     "area-scratch": {
@@ -28,6 +30,7 @@
       "archived": true,
       "deletedAt": 1768471200000,
       "createdAt": 1767520800000,
+      "lastEventAt": 1768471200000,
       "lastEventLamport": 39
     },
     "area-work": {
@@ -38,6 +41,7 @@
       "archived": false,
       "deletedAt": null,
       "createdAt": 1767517200000,
+      "lastEventAt": 1768294800000,
       "lastEventLamport": 1
     }
   },

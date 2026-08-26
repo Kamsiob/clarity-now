@@ -5,6 +5,8 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.kamsiob.claritynow.data.event.ClarityEventDao
 
 /**
@@ -15,7 +17,7 @@ import com.kamsiob.claritynow.data.event.ClarityEventDao
  * fail loudly during development rather than quietly wipe a year of events.
  */
 @Database(
-    version = 1,
+    version = 2,
     exportSchema = true,
     entities = [
         ClarityEventRow::class,
@@ -38,8 +40,21 @@ abstract class ClarityDatabase : RoomDatabase() {
     companion object {
         const val NAME = "clarity.db"
 
+        /**
+         * Adds the area's last activity stamp. Existing rows get zero and are
+         * corrected the first time the cache is rebuilt from the log, which is
+         * lossless because every value here is derived.
+         */
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE clarity_area ADD COLUMN lastEventAt INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         fun build(context: Context): ClarityDatabase =
-            Room.databaseBuilder(context, ClarityDatabase::class.java, NAME).build()
+            Room.databaseBuilder(context, ClarityDatabase::class.java, NAME)
+                .addMigrations(MIGRATION_1_2)
+                .build()
 
         /** For the replay harness and the rebuild proof. Never touches disk. */
         fun inMemory(context: Context): ClarityDatabase =

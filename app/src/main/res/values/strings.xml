@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Fixed interface strings only.
+
+    Nothing here is an observation about a person's behavior. Every sentence about
+    what someone did comes from a corpus file through the engine layers in order,
+    per MASTER_BUILD_PROMPT section 11. The lines below are labels, actions and
+    direct readouts of a queried number, which the design document specifies
+    verbatim and which carry no interpretation.
+-->
+<resources>
+
+    <!-- Root destinations, design-v3.md 10.15 -->
+    <string name="tab_areas">Areas</string>
+    <string name="tab_momentum">Momentum</string>
+    <string name="tab_report">Report</string>
+    <string name="tab_trail">Trail</string>
+    <string name="under_construction">This screen arrives in a later build.</string>
+
+    <!-- Areas -->
+    <string name="areas_title">Areas</string>
+    <string name="areas_chip_focus">Focus</string>
+    <string name="areas_chip_pulse">Pulse</string>
+    <string name="areas_open_settings">Settings</string>
+    <string name="areas_open_archive">Archived areas</string>
+    <string name="areas_empty_title">No areas yet</string>
+    <string name="areas_empty_body">An area is a part of your life you want to keep track of.</string>
+    <string name="areas_empty_action">Create an area</string>
+    <string name="area_idle_title">Add your first item</string>
+    <string name="area_add_item">Add an item</string>
+    <string name="fab_add_item">Add an item</string>
+    <string name="fab_add_area">Create an area</string>
+
+    <!-- Card status lines, design-v3.md 10.3 -->
+    <plurals name="area_last_active_days">
+        <item quantity="one">Last active %d day ago</item>
+        <item quantity="other">Last active %d days ago</item>
+    </plurals>
+    <string name="area_last_active_today">Last active today</string>
+    <string name="area_never_active">Nothing here yet</string>
+    <plurals name="area_in_focus_minutes">
+        <item quantity="one">In focus, %d minute left</item>
+        <item quantity="other">In focus, %d minutes left</item>
+    </plurals>
+
+    <!-- Swipe and row actions, design-v3.md 10.3.1 -->
+    <string name="action_complete">Complete</string>
+    <string name="action_swap">Swap</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_archive">Archive</string>
+    <string name="action_unarchive">Unarchive</string>
+    <string name="action_move_to_front">Move to front</string>
+    <string name="action_reopen">Reopen</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_add">Add</string>
+    <string name="action_done">Done</string>
+    <string name="action_never_mind">Never mind</string>
+    <string name="action_undo">Undo</string>
+    <string name="action_close">Close</string>
+    <string name="action_back">Back</string>
+
+    <!-- Sheets -->
+    <string name="sheet_add_item_title">Add an item</string>
+    <string name="sheet_edit_item_title">Edit item</string>
+    <string name="sheet_new_area_title">New area</string>
+    <string name="sheet_edit_area_title">Edit area</string>
+    <string name="sheet_color_title">Area color</string>
+    <string name="sheet_swap_title">Swap</string>
+    <string name="sheet_queue_choice_title">What is next</string>
+    <string name="sheet_delete_area_title">Delete this area?</string>
+
+    <string name="field_title">Title</string>
+    <string name="field_note">Note</string>
+    <string name="field_note_optional">Note, optional</string>
+    <string name="field_area_name">Name</string>
+    <string name="field_area">Area</string>
+
+    <string name="add_item_lands_active">This becomes the active item right away.</string>
+    <string name="add_item_lands_queue">This joins the queue.</string>
+
+    <string name="sidehead_active">Active</string>
+    <string name="sidehead_queue">Queue</string>
+    <string name="sidehead_completed">Completed</string>
+    <string name="sidehead_color">Color</string>
+    <string name="sidehead_mood">Mood</string>
+    <string name="sidehead_preview">Preview</string>
+    <string name="sidehead_area_actions">Area</string>
+
+    <string name="queue_empty">Nothing waiting.</string>
+    <string name="completed_empty">Nothing completed yet.</string>
+    <string name="swap_demoting">This goes back to the top of the queue</string>
+    <string name="queue_choice_dismiss">Leave it idle</string>
+
+    <!-- Archive and delete -->
+    <string name="archive_empty_title">Nothing archived</string>
+    <string name="archive_empty_body">Archiving an area hides it without losing its history.</string>
+    <string name="delete_area_body">This removes the area and everything in it from every screen. Its history stays in your Trail. This cannot be undone.</string>
+    <string name="delete_area_confirm_hint">Type DELETE to confirm</string>
+    <string name="delete_area_confirm_word">DELETE</string>
+    <string name="delete_area_keep">Keep this area</string>
+    <string name="undo_item_deleted">Item deleted</string>
+    <string name="undo_area_archived">Area archived</string>
+
+    <!-- Content descriptions -->
+    <string name="cd_area_color_dot">Area color</string>
+    <string name="cd_edit_area">Edit this area</string>
+    <string name="cd_reorder">Reorder</string>
+    <string name="cd_more_actions">More actions</string>
+
+    <!-- Conflict card, MASTER_BUILD_PROMPT 6.3 -->
+    <string name="conflict_dismiss">Got it</string>
+    <string name="conflict_two_active">While you were away, two things became active in %1$s. %2$s is active. %3$s is back at the top of the queue.</string>
+
+</resources>

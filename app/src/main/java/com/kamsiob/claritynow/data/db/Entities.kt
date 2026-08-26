@@ -82,6 +82,7 @@ data class AreaRow(
     val orderKey: String,
     val archived: Boolean,
     val createdAt: Long,
+    val lastEventAt: Long,
     val deletedAt: Long?,
     val lastEventLamport: Long,
 )
@@ -205,6 +206,7 @@ fun AreaState.toRow() = AreaRow(
     orderKey = orderKey,
     archived = archived,
     createdAt = createdAt,
+    lastEventAt = lastEventAt,
     deletedAt = deletedAt,
     lastEventLamport = lastEventLamport,
 )
@@ -217,6 +219,7 @@ fun AreaRow.toState() = AreaState(
     archived = archived,
     deletedAt = deletedAt,
     createdAt = createdAt,
+    lastEventAt = lastEventAt,
     lastEventLamport = lastEventLamport,
 )
 

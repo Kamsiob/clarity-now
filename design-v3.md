@@ -568,9 +568,9 @@ This exists because v1 was highly specified and still produced six independently
 
 In practice: when something is not pinned down here, identify what the obvious answer would be and then deliberately choose something else that serves the brief as well or better. If the obvious answer is genuinely best, use it and record why in the changelog.
 
-### 15.1 The current tell list, dated July 2026
+### 15.1 The current tell list, dated August 2026
 
-Checked before every release. **Expect this list to change.** Treat it as a dependency needing updates, not a rule that stays true.
+Checked before every release. **Expect this list to change.** Treat it as a dependency needing updates, not a rule that stays true. The research behind each entry is logged in `docs/DESIGN_RESEARCH.md`.
 
 - A colored 3 to 4px border or stripe on one side of a card
 - Inter as the interface typeface
@@ -590,6 +590,13 @@ Checked before every release. **Expect this list to change.** Treat it as a depe
 - Sparkle or magic-wand iconography
 - Dark mode with low contrast body text
 - A gradient rounded square with a check mark as an app icon
+- A blue to purple gradient, the single loudest tell of 2026
+- A purple to cyan gradient
+- Glassmorphism combined with a neon glow
+- Six identical cards in a row
+- A bounce on every hover or press, rather than overshoot reserved for weight
+- Weightless headline copy, the `Build faster. Ship smarter.` register
+- Interchangeable thin line icons with no relationship to the product
 
 ### 15.2 Release gate
 

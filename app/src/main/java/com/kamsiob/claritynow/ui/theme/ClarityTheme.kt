@@ -75,6 +75,7 @@ fun ClarityTheme(
     ) {
         MaterialTheme(
             colorScheme = materialSchemeFor(colors, dark),
+            shapes = materialShapesFor(ClarityShapeScale),
             typography = materialTypographyFor(ClarityTypeScale),
             content = content,
         )
@@ -108,6 +109,7 @@ fun ContemplativeTheme(content: @Composable () -> Unit) {
                 surface = contemplative.surfaceRaised,
                 onSurface = contemplative.textBright,
             ),
+            shapes = materialShapesFor(ClarityShapeScale),
             typography = materialTypographyFor(ClarityTypeScale),
             content = content,
         )
@@ -139,6 +141,18 @@ private fun materialSchemeFor(colors: ClarityColors, dark: Boolean) = if (dark) 
         outline = colors.hairline,
     )
 }
+
+/**
+ * Material's own shape scale, filled from the Clarity radii so an expressive
+ * component that reaches for a corner size lands on one this design already uses.
+ */
+private fun materialShapesFor(shapes: ClarityShapes) = androidx.compose.material3.Shapes(
+    extraSmall = shapes.settingsBadge,
+    small = shapes.widgetInner,
+    medium = shapes.momentumTile,
+    large = shapes.card,
+    extraLarge = shapes.sheet,
+)
 
 /**
  * Material components that reach for a text style get one of ours rather than

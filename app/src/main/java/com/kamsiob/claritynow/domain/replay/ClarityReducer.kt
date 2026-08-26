@@ -44,6 +44,50 @@ object ClarityReducer {
             lastLamport = maxOf(state.lastLamport, event.lamport),
             eventsApplied = state.eventsApplied + 1,
         )
+        return touchArea(reduce(advanced, event), event)
+    }
+
+    /**
+     * Stamps the area an event concerned with the event's wall clock.
+     *
+     * Done in one place rather than in twenty branches, so a new event type cannot
+     * quietly forget to keep the area's last activity honest. An event that
+     * concerns no area, such as a Pulse or a setting, stamps nothing.
+     */
+    private fun touchArea(state: ClarityState, event: ClarityEvent): ClarityState {
+        val areaId = affectedAreaId(state, event) ?: return state
+        val area = state.areas[areaId] ?: return state
+        if (area.lastEventAt >= event.wallClock) return state
+        return state.copy(areas = state.areas + (areaId to area.copy(lastEventAt = event.wallClock)))
+    }
+
+    private fun affectedAreaId(state: ClarityState, event: ClarityEvent): String? =
+        when (val payload = event.payload) {
+            is AreaCreated -> payload.areaId
+            is AreaRenamed -> payload.areaId
+            is AreaRecolored -> payload.areaId
+            is AreaReordered -> payload.areaId
+            is AreaArchived -> payload.areaId
+            is AreaUnarchived -> payload.areaId
+            is AreaDeleted -> payload.areaId
+            is ItemAdded -> payload.areaId
+            is ItemQueued -> payload.areaId
+            is ItemPromoted -> payload.areaId
+            is ItemCompleted -> payload.areaId
+            is ItemReopened -> payload.areaId
+            is ItemReordered -> payload.areaId
+            is ItemDeleted -> payload.areaId
+            is ItemEdited -> state.items[payload.itemId]?.areaId
+            is FocusStarted -> payload.areaId
+            is FocusCompleted -> state.focusSessions[payload.sessionId]?.areaId
+            is FocusAbandoned -> state.focusSessions[payload.sessionId]?.areaId
+            is PulseGenerated, is PulseAnswered, is ReportGenerated,
+            is PlanOffered, is PlanAccepted, is SettingChanged,
+            -> null
+        }
+
+    private fun reduce(state: ClarityState, event: ClarityEvent): ClarityState {
+        val advanced = state
         return when (val payload = event.payload) {
             is AreaCreated -> areaCreated(advanced, event, payload)
             is AreaRenamed -> withLiveArea(advanced, event, payload.areaId) { area ->
@@ -122,6 +166,7 @@ object ClarityReducer {
             colorHex = payload.colorHex,
             orderKey = payload.orderKey,
             createdAt = event.wallClock,
+            lastEventAt = event.wallClock,
             lastEventLamport = event.lamport,
         )
         return state.copy(areas = state.areas + (area.id to area))

@@ -189,6 +189,22 @@ val ClarityTypeScale = ClarityTypography(
 )
 
 /**
+ * Cap height trimming, for a label that sits inside a contained control.
+ *
+ * A line box reserves room for descenders whether or not the string has any, so a
+ * button label centered by layout sits visibly low. Trimming to the cap height and
+ * the baseline centers what the eye actually sees. Applied to buttons, chips, the
+ * tab bar and swipe labels, and never to running prose, where the reserved space is
+ * what keeps successive lines apart.
+ */
+fun TextStyle.opticallyCentered(): TextStyle = copy(
+    lineHeightStyle = LineHeightStyle(
+        alignment = LineHeightStyle.Alignment.Center,
+        trim = LineHeightStyle.Trim.Both,
+    ),
+)
+
+/**
  * Hanken Grotesk ships no `tnum` feature, which the build time check in
  * design-v3.md 5.2 anticipated. Its default figures are already uniform in advance
  * width at the default instance, but the font carries HVAR, so advance widths do

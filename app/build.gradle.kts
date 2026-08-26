@@ -11,7 +11,7 @@ plugins {
 // Semantic version, chosen per MASTER_BUILD_PROMPT 16.7.
 // versionCode is derived as major * 10000 + minor * 100 + patch.
 val versionMajor = 0
-val versionMinor = 1
+val versionMinor = 2
 val versionPatch = 0
 
 android {
@@ -161,6 +161,7 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
+    implementation(libs.androidx.graphics.shapes)
     implementation(libs.compose.ui.tooling.preview)
     debugImplementation(libs.compose.ui.tooling)
 

@@ -103,12 +103,19 @@ class AndroidClarityHaptics(context: Context) : ClarityHaptics {
         .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
         .build()
 
+    /**
+     * Haptics are feedback, never function. Anything that goes wrong here is
+     * swallowed rather than propagated: a missing permission or an unsupported
+     * effect must degrade to silence, not take a screen down with it.
+     */
     @Suppress("DEPRECATION")
     private fun Vibrator.play(effect: VibrationEffect) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            vibrate(effect, VibrationAttributes.createForUsage(VibrationAttributes.USAGE_TOUCH))
-        } else {
-            vibrate(effect, touchFeedbackAudio)
+        runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                vibrate(effect, VibrationAttributes.createForUsage(VibrationAttributes.USAGE_TOUCH))
+            } else {
+                vibrate(effect, touchFeedbackAudio)
+            }
         }
     }
 

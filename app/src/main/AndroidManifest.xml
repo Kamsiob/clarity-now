@@ -21,6 +21,13 @@
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!--
+        Required by design-v3.md section 9, which specifies sixteen haptic events.
+        A normal permission: it is granted at install, shows no prompt, and gives
+        access to nothing but the vibrator on this device.
+    -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <application
         android:name=".ClarityApp"
         android:allowBackup="false"
