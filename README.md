@@ -40,13 +40,16 @@ so does uninstalling.
 
 ## Build state
 
-The app is being built in thirteen phases. This is **phase 1 of 13**.
+The app is being built in thirteen phases. This is **phase 2 of 13**.
+
+Current state, in detail: `docs/BUILD_STATE.md`. Remaining work, with acceptance
+criteria on every ticket: the [issue board](https://github.com/kamsiob/clarity-now/issues).
 
 | phase | what it delivers | state |
 |---|---|---|
 | 1 | Foundations: theme, fonts, event log, reducer, replay harness, golden fixture | done |
-| 2 | Areas, items, the queue, swipe gestures, the promotion animation | next |
-| 3 | Trail | |
+| 2 | Areas, items, the queue, swipe gestures, the promotion animation | done |
+| 3 | Trail | next |
 | 4 | Focus sessions | |
 | 5 | The logic engine skeleton and the simulator | |
 | 6 | Pulse | |
@@ -59,8 +62,9 @@ The app is being built in thirteen phases. This is **phase 1 of 13**.
 | 12 | Widgets and notifications | |
 | 13 | Baseline profile, accessibility pass, release | |
 
-Phase 1 ships an installable app that shows the mark, the type system and the theme.
-The screens arrive in phase 2.
+Phase 2 ships a usable app. You can create areas, add items, complete them, swap,
+reorder and delete, with the whole event log and replay machinery underneath. The
+three reflective features and their language engine arrive in phases 5 through 9.
 
 ---
 
@@ -101,10 +105,14 @@ so a warning is a failed build.
 ## Repository layout
 
 ```
-app/                    the Android application, one module
-docs/EVENT_FORMAT.md    the event log contract, in prose
-testdata/               the golden log and the exact state it must produce
-rationale/              review panels and superseded drafts, not needed to build
+app/                      the Android application, one module
+CLAUDE.md                 how to work on this repository, read first
+docs/BUILD_STATE.md       what is done, what is half done, what is known broken
+docs/ARCHITECTURE.md      the code map and the layering rules
+docs/EVENT_FORMAT.md      the event log contract, in prose
+docs/DESIGN_RESEARCH.md   the standing design review behind the visual decisions
+testdata/                 the golden log and the exact state it must produce
+rationale/                review panels and superseded drafts, not needed to build
 ```
 
 The specification lives in the repository alongside the code, because the app is
