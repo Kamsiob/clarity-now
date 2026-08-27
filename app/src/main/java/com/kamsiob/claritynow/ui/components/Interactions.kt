@@ -1,24 +1,29 @@
 package com.kamsiob.claritynow.ui.components
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.InteractionSource
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.offset
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.kamsiob.claritynow.ui.theme.LocalClarityColors
-import com.kamsiob.claritynow.ui.theme.clarityMotion
-import androidx.compose.ui.composed
-import androidx.compose.ui.semantics.Role
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
+import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityHaptics
+import com.kamsiob.claritynow.ui.theme.clarityMotion
 
 /**
  * Every tappable thing in the app goes through here.
@@ -28,6 +33,35 @@ import com.kamsiob.claritynow.ui.theme.LocalClarityHaptics
  * treatment on the same gesture. The haptic fires once per action, never on the
  * way in and again on the way out.
  */
+/**
+ * The press scale from design-v3.md 8.2 item 2: 0.97 on `springStandard`.
+ *
+ * A modifier rather than a copied block, because it was written twice inside
+ * `Buttons.kt` and then not written at all on the area card, which is the largest
+ * tap target in the app. `clarityClickable` passes `indication = null` on purpose,
+ * so nothing supplies feedback unless a caller asks for it, and the card was asking
+ * for nothing while every button around it scaled.
+ *
+ * Never an overshoot. design-v3.md 15.1 lists "a bounce on every hover or press,
+ * rather than overshoot reserved for weight" as a tell, and 8.1 assigns this the
+ * standard spring for the same reason.
+ */
+@Composable
+fun Modifier.clarityPressScale(
+    interaction: InteractionSource,
+    enabled: Boolean = true,
+    label: String = "press",
+): Modifier {
+    val motion = clarityMotion()
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed && enabled) 0.97f else 1f,
+        animationSpec = motion.springStandard(),
+        label = label,
+    )
+    return scale(scale)
+}
+
 fun Modifier.clarityClickable(
     enabled: Boolean = true,
     interactionSource: MutableInteractionSource? = null,

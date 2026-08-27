@@ -167,9 +167,18 @@ fun SwipeableRow(
     val reveal = (progress / REVEAL_FRACTION).coerceIn(0f, 1f)
     val deepened = progress >= COMMIT_FRACTION
 
+    // **The clip is on the action layer, never here.** It used to sit on this Box,
+    // whose only measured child is the card, and the clip rect and the card bounds
+    // are the same rounded rectangle, so it removed the whole of the card's shadow.
+    // The card was then the only element on the Areas screen with no separation
+    // device at all, while the tab bar, the FAB and the chips all kept theirs, which
+    // inverted the depth order: the chrome floated and the content it framed did not.
+    // Measured on a device capture before the fix, the card's bottom edge stepped
+    // from #FFFFFF straight to the canvas in one pixel, against fourteen pixels of
+    // decay under the tab bar. design-v3.md 6.1 gives a light mode card a paired
+    // shadow and it has to survive being swipeable.
     Box(
         modifier = modifier
-            .clip(shape)
             .onSizeChanged { rowWidth = it.width }
             .semantics {
                 // Swipe is invisible to a screen reader and is only ever an
@@ -186,7 +195,7 @@ fun SwipeableRow(
         // so a revealed action is the full height of the row and is clipped by the
         // card's own radius. matchParentSize does not feed back into the parent's
         // measurement, which is what keeps the card the thing that sets the height.
-        Box(modifier = Modifier.matchParentSize()) {
+        Box(modifier = Modifier.matchParentSize().clip(shape)) {
             if (liveOffset > 0f && actions.onComplete != null) {
                 SwipeActionSlot(
                     modifier = Modifier.align(Alignment.CenterStart),

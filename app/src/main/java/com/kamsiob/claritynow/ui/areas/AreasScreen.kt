@@ -9,23 +9,24 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -66,9 +67,11 @@ import com.kamsiob.claritynow.ui.components.SwipeCoordinator
 import com.kamsiob.claritynow.ui.components.SwipeableRow
 import com.kamsiob.claritynow.ui.components.TabBarHeight
 import com.kamsiob.claritynow.ui.components.clarityClickable
+import com.kamsiob.claritynow.ui.components.clarityPressScale
 import com.kamsiob.claritynow.ui.components.rememberReorderState
 import com.kamsiob.claritynow.ui.components.rememberSwipeCoordinator
 import com.kamsiob.claritynow.ui.components.reorderableItem
+import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.clarityEntrance
@@ -274,13 +277,23 @@ private fun AreaRow(
         accent = parseAreaColor(area.colorHex),
         shape = shape,
     ) {
+        // design-v3.md 8.2 item 2 gives a card the same 0.97 press as a button, and
+        // section 9 gives a card press the tap haptic. The largest target in the app
+        // had neither: `clarityClickable` sets `indication = null` deliberately, and
+        // nothing had been put in its place.
+        val cardInteraction = remember { MutableInteractionSource() }
         ClarityCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .then(reorderModifier)
-                .clarityClickable(haptic = null, onClick = {
-                    if (swipe.hasOpenRow) swipe.close() else onOpen()
-                }),
+                .clarityPressScale(cardInteraction, label = "areaCardPress")
+                .clarityClickable(
+                    interactionSource = cardInteraction,
+                    haptic = ClarityHapticEvent.TAP,
+                    onClick = {
+                        if (swipe.hasOpenRow) swipe.close() else onOpen()
+                    },
+                ),
             shape = shape,
             colors = colors,
         ) {

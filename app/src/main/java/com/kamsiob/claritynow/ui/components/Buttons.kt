@@ -139,7 +139,14 @@ fun ClarityFab(
         modifier = modifier
             .scale(scale)
             .size(48.dp)
-            .clarityShadow(ClarityElevation.fab(colors.actionBlue), CircleShape, enabled = true)
+            // design-v3.md 6.1: "Dark and Contemplative worlds: elevation is
+            // lightness only. No shadows at all." Every other clarityShadow call
+            // site guards on this; the FAB was drawing its colored glow in dark.
+            .clarityShadow(
+                ClarityElevation.fab(colors.actionBlue),
+                CircleShape,
+                enabled = !colors.isDark,
+            )
             .clip(CircleShape)
             .background(colors.actionBlue)
             .clarityFocusRing(interaction, CircleShape)
