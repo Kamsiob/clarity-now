@@ -2,20 +2,26 @@
 
 Where the build actually is. Updated at the end of every phase.
 
-**Last updated:** August 27, 2026, end of phase 5.
-**Phase 4 and phase 5 are both built and both awaiting the check that closes them**, so
-everything this file says about focus sessions and about the engine is true of the source
-and is not yet true of anything installed.
-**Version:** 0.6.0, versionCode 600.
+**Last updated:** August 27, 2026, end of phase 6.
+**Phases 4, 5 and 6 are all built and all awaiting the check that closes them.**
+Everything this file says about focus sessions, about the engine and about the Pulse is
+true of the source and is not yet true of anything installed.
+**Version:** 0.7.0, versionCode 700.
 **Installed and verified on:** Pixel 8 (`shiba`), over USB, last at the end of phase 3c.
 
-**A note on the five lines above**, because two successive edits have left them
-misleading. The closing commit for phase 3c replaced the first line of each paragraph and
-left the continuation lines behind, so the header claimed phase 3c was awaiting a check it
-had already passed. The repair recorded here at the end of phase 4 fixed the prose and not
-the lines, so the orphans survived another phase and the file read as three sentences
-missing their first halves. Actually repaired now. **A status line stitched from two states
-is worse than either of them**, and the way to edit these is to replace the whole block.
+**The device check for phase 6 has not run, and it did not fail: it was not attempted.**
+The Pixel was in use by another session for the whole of this phase, and no `adb` command
+was issued from it. The orchestrator runs the closing build, install and device pass, so
+every claim in the phase 6 section below is a claim about source and unit tests. **Three
+integration gaps are listed there that the closing build will find on its own**, one of
+which stops the app compiling, and they are named in advance so nobody spends the build
+diagnosing them.
+
+**A note on the format of the lines above**, kept because it keeps being needed. Two
+successive edits once left this block stitched from two states, with each paragraph's
+first line replaced and its continuation lines orphaned, and the file then claimed a phase
+was awaiting a check it had already passed. **A status line stitched from two states is
+worse than either of them**, and the way to edit these is to replace the whole block.
 
 ---
 
@@ -30,7 +36,7 @@ is worse than either of them**, and the way to edit these is to replace the whol
 | 3c. Design foundations, the polish pass | done | closed |
 | 4. Focus sessions | built, awaiting the device check | #2 |
 | 5. Engine skeleton and simulator | built, awaiting the closing build and install | #3 |
-| 6. Pulse | not started | #4 |
+| 6. Pulse | built, awaiting the device check and three integration gaps | #4 |
 | 7. Momentum | not started | #5 |
 | 8. Snapshots and the Report | not started | #6 |
 | 9. Corpus | not started | #7 |
@@ -98,6 +104,40 @@ than by reasoning both pass.
 - The Trail rendered all three focus rows, and each resolved its item title. That is
   the dangling preposition defect adversarial review found in phase 3 and which was
   fixed before any focus event existed to expose it
+
+---
+
+## What the device check found in phase 6
+
+Run on the Pixel 8 at 0.7.0, logcat clean.
+
+**The engine spoke, and what it said was true.** On the first foreground of the day it
+generated from the `concentration` family and wrote `PULSE_GENERATED`. The sheet read:
+
+> Everything yesterday was Work by.
+> On purpose, or it just happened?
+
+Yesterday's activity really was all in that one area, which is the only area, so the
+observation is correct rather than merely plausible. That sentence traces the whole
+path the project was built around: `TrailQueries` to the fact extractor, the catalog,
+the selector, the realizer, the validator, then the log, then the screen. Every number
+from a query and every word from a corpus.
+
+- Two response options, not three, because this is not `quietDay`
+- The chip carried the amber dot **and** the changed label `Today's Pulse`, which is
+  design-v3.md 13's rule that color is never the only signal
+- After answering, the chip reads `Pulse` with no dot, so the ready state cleared on
+  both signals rather than one
+- Ambient mode showed the 14 day rhythm row with today filled amber and the earlier
+  days faint, the retained observation, `You answered A push`, and the History entry
+
+**One blocker was found and fixed before it could ship.** The three corpus files were
+never packaged into the APK, so the catalog would have parsed nothing and the Pulse
+would have been silent forever on a real device while every unit test passed. They are
+now copied into the assets by a build step rather than duplicated into the source tree,
+because a second copy is two corpora that drift and the shipped one would not be the
+one anybody reviewed. It goes through AGP's Variant API, since the source set API
+refuses a provider and a plain `srcDir` would not carry the task dependency.
 
 ---
 
@@ -264,7 +304,33 @@ Each of these is a phase, not an oversight. See the linked issue for why.
   permission and the no internet gate passes on both variants. But
   `MASTER_BUILD_PROMPT` section 18 says no permission beyond notifications is in
   scope for v1, and WorkManager is required by section 3 for the Pulse reminder and
-  the widget refresh. **This is the builder's call at phase 12.**
+  the widget refresh. **Open since phase 2, and phase 6 is the first thing that
+  really uses it.** The merged manifest, debug and release, today declares six
+  permissions in total: `POST_NOTIFICATIONS`, `POST_PROMOTED_NOTIFICATIONS`,
+  `VIBRATE`, `FOREGROUND_SERVICE`, `WAKE_LOCK` and `RECEIVE_BOOT_COMPLETED`.
+  `ACCESS_NETWORK_STATE`, which work-runtime also declares, is removed with
+  `tools:node="remove"` and appears in neither. Phase 6 checked that removal against
+  work-runtime 2.11.2 rather than assuming it: a request with no constraints never
+  reaches the network tracker, so **adding any constraint to any work request in this
+  app means putting that permission back**, which changes what the privacy policy
+  invites people to verify. **Still the owner's call, and it is now due at phase 11**,
+  where the privacy sheet and the permission card have to show this list to a person.
+  `DECISIONS.md` carries it as open with the recommendation stated and not taken.
+- **The re-entry surface is not built and has no phase.** `MASTER_BUILD_PROMPT.md`
+  14b.4 and `design-v3.md` 11.2 assigned it to phase 6, phase 6 built the two engine
+  side rules that follow it and did not build the screen. Both documents now say so at
+  the point a session would otherwise read them as shipped. A person returning after a
+  fortnight today sees the ordinary Areas screen and a Pulse that stays quiet for two
+  days: nothing measures their absence, and nothing greets them. **Assigning it is the
+  owner's call.** The two candidates are a phase of its own, since it is one screen and
+  it is finished when it works, or phase 10, which already owns the first thing a person
+  sees.
+- **Three integration gaps from phase 6, one of which stops the build.** `ClarityShell`
+  does not pass the `onOpenPulse` callback that `AreasRoute` now requires, `MainActivity`
+  does not route `PulseIntents.opensPulse`, and the three corpus files are not packaged
+  into `assets/corpus/`, which would make every day come back `Unavailable` on the
+  device. All three are described in the phase 6 section below, with where each call
+  goes.
 - `VIBRATE` is declared, and has to be, because `design-v3.md` section 9 specifies
   sixteen haptic events. It is a normal permission with no prompt.
 - Material's `MotionScheme` is internal in material3 1.5.0-alpha26, so Clarity's
@@ -342,6 +408,161 @@ Each of these is a phase, not an oversight. See the linked issue for why.
   `queueDrain`, across eleven simulated years. Either the personas do not produce the
   shape, or the criteria are tighter than the corpus stage headers they were built from.
   Phase 9 has to know which before it grows those benches.
+
+---
+
+## Phase 6 delivered
+
+The Pulse, issue #4. `MASTER_BUILD_PROMPT.md` 11.3, 11.6 and 12.1, `design-v3.md` 11 and
+10.1, `CLARITY_LOGIC_ENGINE.md` 6.1 and 6.2, and `CORPUS_1_PULSE.md`.
+
+**This is the first screen in the app that renders a sentence the engine wrote about a
+person's own life.** Everything shipped before it was a fixed label or a readout of a
+number the app had just counted. Nothing in this phase composes a sentence, shortens one,
+reformats one or supplies one when the engine had nothing to say: the observation, the
+question, the response labels and the acknowledgment are all corpus lines, selected,
+realized and validated by the engine and stored on the event, and a silent day shows two
+fixed lines that describe how the Pulse works and say nothing whatever about the person's
+week.
+
+- **The generation lifecycle**, `domain/pulse/PulseGenerator.kt`. The eight steps of 11.3
+  with their numbers as comments, plus one added step numbered 2b rather than hidden, for
+  the re-entry suppression in 14b.4, which postdates the sequence. **It has no clock and
+  no way to write**: the instant arrives as a parameter and it returns a decision the
+  caller commits, so there is no path by which a silent day, a suppressed day or an
+  already answered day can leave a row behind.
+- **The plumbing around it**, `domain/pulse/PulseCoordinator.kt`. The catalog is built once
+  and held, per 11.7, and the firing history is rebuilt inside the generator on every
+  invocation and never cached, because it derives from a log that merges. The corpus is
+  read through a `CorpusSource` seam, from packaged assets on the phone and from the
+  committed files in tests, so the file an author edits is the file the app reads.
+- **Two writes and one read on the repository.** `recordPulseGenerated` takes the check
+  and the append under one lock, so a second entry for one date key cannot be produced by
+  two foregrounds racing at launch. `answerPulse` stores `responseLabel` **verbatim** off
+  the whole `ResponseOption`, so a label reworded in a later release cannot rewrite what an
+  old answer said.
+- **The sheet**, `ui/pulse/`. The amber night behind it, the observation in `readSerif`
+  centered, the question in `body` at `textDim`, stacked response pills that fill with
+  amber from the tap point over 220ms while the unselected pill fades to 30 percent and
+  drops 4dp, the acknowledgment after a 250ms hold, then the settle into ambient mode: the
+  14 day rhythm row, today's answered card, and a History entry.
+- **The chip**, `ui/areas/PulseChip.kt`. The 6dp `warnAmber` dot from `design-v3.md` 10.1,
+  and the changed label beside it, because 13 says color is never the only signal. It reads
+  `Pulse` at rest and `Today's Pulse` when one is waiting.
+- **The reminder**, `work/` and `notifications/PulseReminderPoster.kt`. A chain of one time
+  requests, each arming the next against the clock and its zone, rather than a periodic
+  request whose period is a duration and not a wall clock hour. **It is silent, and it
+  cannot post on a silent day**: the poster takes a token whose constructor is private and
+  whose only factory returns null unless the day's entry exists and is unanswered.
+- **40 tests across five new test classes**, plus a shared fixture that runs a month of
+  ordinary use through the real engine and the real corpus one foreground a day, because a
+  test that hand wrote a `PulseGenerated` would only prove the code can read a literal.
+
+### The two risks issue #4 named, and what holds each
+
+**Generating twice in a day, or not at all, across a timezone change.** One clock, one
+explicit zone, and the date key and the reflection period fall out of the same reading.
+`PulseScheduleTest` stands on both sides of a spring forward and a fall back and asserts
+one date key per calendar day and one reflection period across each, that the morning after
+a spring forward reflects on a twenty three hour yesterday, that the morning after a fall
+back reflects on a twenty five hour one, and that the hour which happens twice is one day.
+`PulseGenerationTest` asserts at most one entry per local day and that an entry already in
+the log stops the sequence before it reads anything.
+
+**Posting a reminder on a silent day.** Made unreachable rather than checked.
+`PulseReminderDue` has a private constructor and one factory that returns null for an IDLE
+day and for an answered one, and `PulseReminderPoster.post` takes nothing else.
+`PulseReminderDueTest` walks all three states. A second collector cancels the reminder when
+the day is answered some other way, and it can only cancel: there is exactly one thing in
+this app that can post it.
+
+### Three integration gaps the closing build will find
+
+**None of these is a design question and all three are small.** They are recorded here
+because the phase was built in slices and the shell was not one of them, and because a
+session that hits the first one at the compiler will not know the other two are waiting.
+
+- **`ClarityShell` does not pass `onOpenPulse`, so the app does not compile.**
+  `AreasRoute` now requires it and deliberately has no default, because a default of `{}`
+  would compile everywhere and ship a chip that opens nothing. The shell has to host
+  `PulseRoute` the way it already hosts the Focus surface, and hand the chip the callback
+  that opens it.
+- **`MainActivity` does not route the reminder's intent.** `PulseIntents.opensPulse` is
+  written as the contract and nothing calls it, so tapping the notification opens the app
+  at whatever tab it was on. The call goes in `onCreate` and in `onNewIntent`, beside the
+  `FocusIntents.opensFocusSession` call that is already there.
+- **The corpus is not packaged.** `ClarityApp.AssetCorpus` reads `assets/corpus/`, there is
+  no `app/src/main/assets` directory and no Gradle task copying the three committed
+  markdown files into one, so on the device every day would come back
+  `PulseOutcome.Unavailable` and the Pulse would never generate. **This one is invisible
+  without logcat**, which is why the outcome is a state of its own and why `ClarityApp`
+  logs it as a warning: an app producing no Pulse for a month because an asset was missing
+  looks exactly like a quiet month. `adb logcat -s ClarityPulse` is the whole diagnostic.
+
+### Twelve decisions where the obvious answer was rejected
+
+All are written up in `DECISIONS.md` with the losing option named. In short: the response
+pills are stacked rather than set side by side, because the left position reads as a
+recommendation and side by side does not survive `quietDay`; the room is a fixed 520dp band
+rather than a sheet that wraps its content; the amber tint reaches 45 percent of the height
+and stops rather than crossing the whole surface; the chip's second signal is
+`Today's Pulse` rather than `Pulse ready` or a count; history rows carry absolute dates
+including today's rather than inheriting the Trail's relative labels; the acknowledgment is
+held 1,100ms and the hold survives reduce motion, because a hold is not motion; the
+reminder is a chain of one hop at a time rather than a periodic request; the permission
+prompt fires on a false to true transition rather than on the first composition, because
+the preference defaults to true; the reminder is gated by a token rather than by an `if`;
+the rhythm row has three marks and today carries no ring; the corpus ships as an asset
+rather than as a Kotlin constant; and generation runs after the presence marker rather than
+before it, because the re-entry rule cannot otherwise see the day it is about.
+
+### What is deliberately not in this phase
+
+- **The re-entry surface**, 14b.4 and `design-v3.md` 11.2, which phase 6 owned and did not
+  carry. This is the one item in this list that is a gap rather than a plan. The two engine
+  side rules that follow that screen are built and tested; the screen is not, and it now
+  has no phase. See the open questions above.
+- **The reminder switch and its hour picker**, 14.1, which are phase 11. The two
+  preferences exist, default to enabled at 20:00, and are honored: the scheduler follows
+  them for the life of the process and needs nothing from a Settings row. The contextual
+  `POST_NOTIFICATIONS` request is written as
+  `NotificationPermissionOnReminderEnabled` and is waiting for that row to place it, so
+  **nothing asks for the permission today**, which is correct rather than a gap.
+- **`PulseCoordinator` living on `ClarityGraph`.** It is a process scoped singleton built
+  from the graph's own repository and clock, which is exactly what the graph holds, and it
+  is on `ClarityApp` instead because the slice that built it could not edit that file. The
+  move is one lazy binding and `AssetCorpus` going with it, and `ClarityViewModelFactory`
+  says so at the function that works around it.
+- **Momentum and the Report**, phases 7 and 8, which call the same engine through the same
+  shape. The Pulse is the worked example.
+
+### What the device check still has to find
+
+**It has not run.** The Pixel was in use by another session for the whole of this phase and
+no `adb` command was issued. What the phone can prove that a unit test cannot:
+
+- **That the app launches at all**, once the three gaps above are closed. That is the first
+  question and it is not rhetorical: this phase adds a coroutine to the first foreground
+  path that reads the whole log, builds a catalog out of three markdown files and appends
+  an event.
+- **`adb logcat -s ClarityPulse` after the first launch**, which prints one line saying what
+  the Pulse did. Three of its four outcomes are silence, and silence is indistinguishable
+  from breakage from the outside. A line reading `no Pulse:` is the packaging gap above.
+- **Whether the amber night reads as a room**, and whether the dawn and evening tints are
+  distinguishable from midday at low brightness, which is the failure mode of choosing quiet.
+- **Whether the three marks in the rhythm row are distinguishable at arm's length**, which
+  is the one thing the 3.0 to one floor cannot settle on its own.
+- **The answer animation end to end**: the fill from the tap point, the unselected pill
+  dropping, the acknowledgment, the settle. Four timed steps in a row is where a jank shows.
+- **Whether the reminder arrives at the hour it was armed for**, which needs a device, a
+  night, and the reminder hour moved to something reachable. WorkManager may run it late and
+  Doze can hold it, and `DECISIONS.md` records that as the honest limit of what this app can
+  promise without an exact alarm.
+- **TalkBack over the sheet and the rhythm row.** The acknowledgment is a polite live region
+  hidden until it is visible, the row is one node that names itself and tallies nothing, and
+  neither has been heard.
+- **Font scale 200 percent on the sheet**, where a long observation has to scroll inside the
+  room rather than grow it.
 
 ---
 

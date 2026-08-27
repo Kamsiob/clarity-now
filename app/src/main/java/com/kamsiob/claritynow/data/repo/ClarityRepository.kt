@@ -31,11 +31,14 @@ import com.kamsiob.claritynow.data.event.ItemPromoted
 import com.kamsiob.claritynow.data.event.ItemReopened
 import com.kamsiob.claritynow.data.event.ItemReordered
 import com.kamsiob.claritynow.data.event.ItemStatus
+import com.kamsiob.claritynow.data.event.PulseAnswered
+import com.kamsiob.claritynow.data.event.PulseGenerated
 import com.kamsiob.claritynow.data.prefs.AfterCompleting
 import com.kamsiob.claritynow.data.prefs.ClarityPreferences
 import com.kamsiob.claritynow.domain.ClarityClock
 import com.kamsiob.claritynow.domain.dateKey
 import com.kamsiob.claritynow.domain.daysBetween
+import com.kamsiob.claritynow.domain.engine.catalog.ResponseOption
 import com.kamsiob.claritynow.domain.replay.AreaState
 import com.kamsiob.claritynow.domain.replay.ClarityCheckpoint
 import com.kamsiob.claritynow.domain.replay.ClarityConflict
@@ -46,6 +49,7 @@ import com.kamsiob.claritynow.domain.replay.FocusOutcome
 import com.kamsiob.claritynow.domain.replay.FocusSessionState
 import com.kamsiob.claritynow.domain.replay.ItemState
 import com.kamsiob.claritynow.domain.replay.OrderKey
+import com.kamsiob.claritynow.domain.replay.PulseEntryState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -1007,6 +1011,95 @@ class ClarityRepository(
             commitLocked(AppOpened(dateKey = today))
         }
     }
+
+    // Pulse -------------------------------------------------------------------
+    //
+    // Two writes and one read, and between them they are the whole of the Pulse's
+    // access to the log. The decision about whether there is anything to say is not
+    // here: it is `domain.pulse.PulseGenerator`, which is a pure function of the log,
+    // can therefore be tested, and has no way to write. This end holds the writes and
+    // enforces the two rules that have to hold against a race rather than merely
+    // against a slow caller.
+
+    /**
+     * The Pulse entry for [dateKey], or null when the day is IDLE.
+     *
+     * Read from the in memory projection, which is the authority, per section 4. A
+     * silent day has no row, so null here is a real state and not a miss.
+     */
+    fun pulseFor(dateKey: String): PulseEntryState? = _state.value.pulses[dateKey]
+
+    /**
+     * Appends `PULSE_GENERATED` unless the day already has an entry, and answers the
+     * entry that stands either way. MASTER_BUILD_PROMPT 11.3 step 2 and 12.1.
+     *
+     * **At most one per calendar day, and immutable once written.** The check and the
+     * append are taken under one lock, through [commitLocked], for the same reason
+     * [recordAppOpened] is: two foregrounds racing at launch would otherwise both read
+     * an empty answer and both write, and here that is not harmless. A second entry for
+     * one date key is a second observation about the same day, and the reducer would
+     * record it as a `DUPLICATE_DATE_KEY` conflict, which is the shape reserved for two
+     * devices disagreeing after a merge rather than for one device disagreeing with
+     * itself.
+     *
+     * The caller does the expensive part outside this lock. Extracting facts and
+     * rebuilding the firing history read the whole log, and holding the write lock
+     * across them would block every other write in the app on the first foreground of
+     * the day.
+     */
+    suspend fun recordPulseGenerated(payload: PulseGenerated): PulseEntryState = mutex.withLock {
+        val existing = _state.value.pulses[payload.dateKey]
+        if (existing != null) return@withLock existing
+        commitLocked(payload)
+        requireNotNull(_state.value.pulses[payload.dateKey]) {
+            "the reducer did not file the Pulse for ${payload.dateKey}"
+        }
+    }
+
+    /**
+     * Appends `PULSE_ANSWERED` for [dateKey], storing [option]'s label **verbatim**.
+     *
+     * Null when there is no entry for the day. The entry unchanged when it has already
+     * been answered: a second answer is a double tap or a stale screen, and neither is
+     * an error worth telling anyone about. The reducer ignores it too, so the two agree.
+     *
+     * **The whole [ResponseOption] travels rather than three strings**, so the label,
+     * the key and the polarity cannot be assembled from different places. A callback
+     * quotes what the person actually saw, per CLARITY_LOGIC_ENGINE.md 3.1, and that is
+     * only true if the string stored here is the string the pill carried. A label
+     * reworded in a later release must not rewrite what an old answer said.
+     *
+     * **The subject is denormalized off the `PULSE_GENERATED` this answers**, read back
+     * by one seek of the `entityId` index rather than joined at read time. The payload
+     * documents why: `selfReportVsData` is the family CORPUS_2_REPORT.md calls the
+     * flagship of the whole engine and it sets what somebody said about an area against
+     * what they did in it, so it must not depend on a join that can miss. The
+     * projection cannot supply it, because `PulseEntryState` carries no subject.
+     */
+    suspend fun answerPulse(dateKey: String, option: ResponseOption): PulseEntryState? =
+        mutex.withLock {
+            val entry = _state.value.pulses[dateKey] ?: return@withLock null
+            if (entry.isAnswered) return@withLock entry
+            val generated = pulseGeneratedPayload(entry.id)
+            commitLocked(
+                PulseAnswered(
+                    pulseId = entry.id,
+                    responseKey = option.key,
+                    responseLabel = option.label,
+                    responseIsPositive = option.isPositive,
+                    subjectId = generated?.subjectId,
+                    subjectKind = generated?.subjectKind,
+                ),
+            )
+            _state.value.pulses[dateKey]
+        }
+
+    /** The event a Pulse entry was built from. `PulseGenerated` uses its id as its entity id. */
+    private suspend fun pulseGeneratedPayload(pulseId: String): PulseGenerated? =
+        events.forEntity(pulseId)
+            .asSequence()
+            .mapNotNull { it.toEvent()?.payload as? PulseGenerated }
+            .firstOrNull()
 
     // Conflicts ---------------------------------------------------------------
 

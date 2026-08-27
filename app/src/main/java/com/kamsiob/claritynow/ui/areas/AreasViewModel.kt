@@ -8,7 +8,9 @@ import com.kamsiob.claritynow.data.repo.ClarityRepository
 import com.kamsiob.claritynow.data.repo.CompletionOutcome
 import com.kamsiob.claritynow.data.repo.FocusCountdown
 import com.kamsiob.claritynow.domain.ClarityClock
+import com.kamsiob.claritynow.domain.dateKey
 import com.kamsiob.claritynow.domain.daysBetween
+import com.kamsiob.claritynow.domain.pulse.PulseDayState
 import com.kamsiob.claritynow.domain.replay.ClarityConflict
 import com.kamsiob.claritynow.domain.replay.ClarityState
 import com.kamsiob.claritynow.domain.replay.ItemState
@@ -84,6 +86,15 @@ data class PromotionCue(val id: Long, val previousTitle: String)
  *
  * Zero means there is no entry point at all rather than a chip reading `Inbox 0`. An
  * empty inbox needs no door, and the next unfiled capture brings the chip back.
+ *
+ * [pulseReady] is the whole of what this screen knows about the Pulse: one boolean,
+ * true only on a day whose entry exists and has not been answered. design-v3.md 10.1
+ * puts a dot on the chip in exactly that state and 13 adds the changed label beside it.
+ *
+ * **The observation itself is deliberately not here.** The header has no business
+ * holding a sentence the engine wrote, and a model that carried one would be an
+ * invitation to render it in the chip. The Pulse surface reads the entry when it opens,
+ * the same way the queue and the inbox read their items.
  */
 @Immutable
 data class AreasUiState(
@@ -92,6 +103,7 @@ data class AreasUiState(
     val conflicts: List<ConflictCardModel> = emptyList(),
     val promotions: Map<String, PromotionCue> = emptyMap(),
     val unfiledCount: Int = 0,
+    val pulseReady: Boolean = false,
 ) {
     val isEmpty: Boolean get() = !loading && areas.isEmpty()
 }
@@ -184,6 +196,20 @@ class AreasViewModel(
                 conflicts = conflicts.mapNotNull { it.toCardModel() },
                 promotions = cues,
                 unfiledCount = state.unfiledItems.size,
+                // MASTER_BUILD_PROMPT 12.1's three states, decided in one place for
+                // the whole app: PulseDayState.of is what the reminder asks too, so
+                // the chip's dot and the notification can never disagree about what
+                // READY means. Derived from the projection rather than from a second
+                // flow, because the projection is already in this combine and it is
+                // what changes when the day's entry is written or answered.
+                //
+                // The day is read from the clock on each emission. A screen left open
+                // across midnight keeps yesterday's answer until the next thing
+                // changes, and the next thing is the first foreground of the new day,
+                // which is when generation runs at all. There is no ticker here for
+                // the same reason design-v3.md 8.2 item 7 puts one in the whole app.
+                pulseReady = PulseDayState.of(state.pulses[clock.dateKey()]) ==
+                    PulseDayState.READY,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AreasUiState())
 

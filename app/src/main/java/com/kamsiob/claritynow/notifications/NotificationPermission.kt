@@ -10,7 +10,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.kamsiob.claritynow.data.repo.FocusCountdown
@@ -137,6 +140,43 @@ fun NotificationPermissionOnFocusStart(countdown: FocusCountdown?) {
         val session = countdown ?: return@LaunchedEffect
         if (session.elapsedSeconds > JUST_STARTED_SECONDS) return@LaunchedEffect
         permission.requestFor(NotificationMoment.FocusSessionStarted(session.sessionId))
+    }
+}
+
+/**
+ * Asks, once, at the moment the Pulse reminder is switched on, and never at launch.
+ * MASTER_BUILD_PROMPT 13.4, issue #4.
+ *
+ * Drop it in the Settings screen beside the reminder switch and hand it the value the
+ * switch is showing. There is nothing to place carefully and nothing to remember to
+ * call in an `onCheckedChange`: the moment is derived from the setting changing rather
+ * than announced by whoever changed it, which is what stops it drifting into the wrong
+ * place later.
+ *
+ * **It fires on a transition and never on the first composition, and that is the whole
+ * of this function.** `pulseRemindersEnabled` defaults to true, per
+ * MASTER_BUILD_PROMPT 14b.12, so a `LaunchedEffect` keyed on the value would ask every
+ * person who has never touched the switch, the moment they first opened Settings. That
+ * is not quite launch, and it is close enough to be the same defect: a permission
+ * prompt for something they did not just do. Remembering the previous value and firing
+ * only on false to true means the prompt follows a hand on a switch.
+ *
+ * **A person who leaves the default alone is never asked here**, and that is correct
+ * rather than a gap. They may have granted the permission when they started their first
+ * focus session, in which case the reminder posts; if they have not, the reminder does
+ * not post and nothing anywhere mentions it, per design-v3.md 11.4. The app does not
+ * collect permissions it has not been given a reason to ask for.
+ */
+@Composable
+fun NotificationPermissionOnReminderEnabled(enabled: Boolean) {
+    val permission = rememberNotificationPermission()
+    // Seeded with the value the switch first showed, so the first composition is a
+    // reading rather than a change, whatever that value is.
+    var wasEnabled by remember { mutableStateOf(enabled) }
+    LaunchedEffect(enabled) {
+        val turnedOn = enabled && !wasEnabled
+        wasEnabled = enabled
+        if (turnedOn) permission.requestFor(NotificationMoment.PulseReminderEnabled)
     }
 }
 

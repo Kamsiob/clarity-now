@@ -443,7 +443,9 @@ All engine reads go through `TrailQueries`, a pure facade with functions such as
 
 **This section exists because the engine and the corpora are the easiest part of this project to misuse, and misuse is not detectable by looking at the screen.**
 
-**Layers 1 to 5 are built, as of phase 5.** What follows describes an engine that exists and that you call, not one you are about to design. Layer 6 is phase 9b and is the last thing built. `CLARITY_LOGIC_ENGINE.md` remains the authority on every layer; 11.7 below is the short version of where the code is.
+**Layers 1 to 5 are built, as of phase 5, and the Pulse is their first caller, as of phase 6.** What follows describes an engine that exists and that you call, not one you are about to design. Layer 6 is phase 9b and is the last thing built. `CLARITY_LOGIC_ENGINE.md` remains the authority on every layer; 11.7 below is the short version of where the code is.
+
+**The Pulse half of 11.3 is built and every rule in 11.4 held.** Read `domain/pulse/PulseGenerator.kt` before writing the Report's caller: it is the sequence below with its steps numbered in the code, it has no way to write, and the instant arrives as a parameter so that a test can stand on either side of 17:00 and on either side of a daylight saving boundary. What it added to the sequence is one step, numbered 2b rather than hidden, for the re-entry suppression in 14b.4, which postdates the eight steps below.
 
 ### 11.1 The one rule everything follows from
 
@@ -467,7 +469,7 @@ There is no second path. Not for empty states, not for errors, not for edge case
 
 ### 11.3 The invocation sequence, exactly
 
-**Pulse, once per calendar day on first foreground:**
+**Pulse, once per calendar day on first foreground. Built, phase 6**, in `domain/pulse/PulseGenerator.decide`, which carries these eight numbers as comments so that a later edit has to notice which step it is changing:
 
 ```
 1. Compute dateKey from ClarityClock with an explicit zone
@@ -526,7 +528,7 @@ Run it through `SimulatorTest`, which builds the catalog from the three committe
 
 ### 11.6 The Pulse response format, settled
 
-**Two options, always, except `quietDay` which needs three.** Do not add a universal third.
+**Two options, always, except `quietDay` which needs three.** Do not add a universal third. **Built, phase 6**, and held by a test that walks every stage of every family in `CORPUS_1_PULSE.md` and asserts two, except `quietDay` which asserts three. The pills are stacked rather than set side by side, so the three option case is the same layout as the two option case and neither position reads as a recommendation; `DECISIONS.md` holds the argument.
 
 A third path already exists: **not answering**. Dismissing the sheet is a fully supported state with its own representation, the hollow amber ring in the ambient rhythm row. Never chased, never counted against the user, never mentioned.
 
@@ -550,7 +552,7 @@ Phase 5 built layers 1 to 5 and the simulator. This is where they are.
 **Four things phase 5 deliberately did not build**, so that nobody looks for them:
 
 - **Layer 6.** `GuidanceComposer`, plans, cues in use, the nominal offer frame. Phase 9b, and `CLARITY_LOGIC_ENGINE.md` 10 calls it the last thing built. `CueFacts` is extracted and confidence gated already, and nothing reads it
-- **The Pulse, Momentum and Report screens**, and the generation lifecycle in 11.3. Phases 6, 7 and 8. Phase 5 built the engine those screens call, and no caller
+- **The Pulse, Momentum and Report screens**, and the generation lifecycle in 11.3. Phases 6, 7 and 8. Phase 5 built the engine those screens call, and no caller. **The Pulse third of this landed in phase 6**, so the lifecycle now has one worked example; Momentum and the Report are still unwritten
 - **The corpus at its target size.** Phase 9. The benches are the size they were authored at, which is why six of the ten simulator checks are deferred rather than passing
 - **Rules for every family the corpus has language for.** Nine families and three single stages have authored lines and no rule, because the fact their trigger names is not declared in `CLARITY_LOGIC_ENGINE.md` 3.1. Each one is listed in code with the fact it needs and the corpus line that needs it, and a catalog test fails if a family goes quiet without being listed. **Do not approximate one of them.** A near enough criterion fires a family on a shape it does not describe, and the sentence that comes out is arithmetic nobody can fault and a claim that is not true
 
@@ -560,15 +562,17 @@ Phase 5 built layers 1 to 5 and the simulator. This is where they are.
 
 ### 12.1 Pulse
 
+**Built, phase 6, and awaiting the device check that closes it.** Issue #4.
+
 Once per day, one behavioral observation, one question, two or three answers. Data capture, not advice.
 
-**States** IDLE, READY, PRESENTED, ANSWERED. At most one per calendar day, keyed by `dateKey`. Generated per 11.3, immutable once written.
+**States** IDLE, READY, PRESENTED, ANSWERED. At most one per calendar day, keyed by `dateKey`. Generated per 11.3, immutable once written. **`PulseDayState.of` is the one definition of those states in the app**, read by the chip's dot, by the rhythm row and by the reminder, so a notification and a dot have no way to disagree about what READY means.
 
-**The sheet.** The observation in readSerif centered, the question in body at textDim, then response pills. After answering, a neutral acknowledgment fades in, then ambient mode: a 14 day rhythm row, today's answered card, and a History entry. Filled amber means answered, a hollow ring means generated but unanswered, faint means a silent day.
+**The sheet.** The observation in readSerif centered, the question in body at textDim, then response pills. After answering, a neutral acknowledgment fades in, then ambient mode: a 14 day rhythm row, today's answered card, and a History entry. Filled amber means answered, a hollow ring means generated but unanswered, faint means a silent day. **Built, phase 6.** Every one of those strings came out of a corpus through the engine and off the event; the response label is stored verbatim on `PULSE_ANSWERED` so that a later callback quotes what the person actually saw rather than what the label says by then.
 
-**Reminders.** When enabled, WorkManager schedules a daily notification at the chosen hour, **posted only if that day's entry exists and is unanswered.** Never posted when IDLE.
+**Reminders.** When enabled, WorkManager schedules a daily notification at the chosen hour, **posted only if that day's entry exists and is unanswered.** Never posted when IDLE. **Built, phase 6**, as a chain of one time requests that each arm the next rather than as a periodic request, because a period is a duration and this is a wall clock hour. The rule about IDLE is a type rather than a check: the poster takes a token that can only be produced from an entry that exists and is unanswered, so there is no code path that posts on a silent day. **The switch and the hour picker that turn it on are phase 11**, with the preferences behind them built and honored, and the contextual `POST_NOTIFICATIONS` request written and waiting for the Settings row to place it.
 
-**Pending, phase 6.** Pulse generates nothing for the first two days after a return from a long absence, which makes those days IDLE and posts no reminder. See 14b.4.
+**Pending, phase 6.** Pulse generates nothing for the first two days after a return from a long absence, which makes those days IDLE and posts no reminder. See 14b.4. **Built, phase 6**, as step 2b of the sequence in 11.3, ahead of fact extraction so that the facts of an absence are never read at all.
 
 ### 12.2 Momentum
 
@@ -815,7 +819,11 @@ An optional estimate in minutes on an item, carried on `ITEM_ADDED` as `estimate
 
 ### 14b.4 Re-entry after an absence
 
-**Detection built in phase 3b. The surface is pending, phase 6.** From Addendum 01 4d.
+**Detection built in phase 3b. The two engine side consequences built in phase 6. The surface itself is not built, and has no phase.** From Addendum 01 4d.
+
+**Read that again before building anything near this section.** Phase 6 was the phase that owned the surface and phase 6 did not carry it. What phase 6 did build is the pair of rules that follow the screen: the Pulse writes nothing for the first two days back, as step 2b of the sequence in 11.3, and `TrailQueries.lastReEntryOnOrBefore` is now called in anger for the first time. What does not exist is the screen described below: the two choices, the demotion by `ITEM_QUEUED`, the once per gap dismissal, the Daylight treatment in `design-v3.md` 11.2. **A person who comes back after a fortnight today sees the ordinary Areas screen and a quiet Pulse**, which is not wrong and is not what this section asks for.
+
+The consequence worth stating plainly: the suppression rules exist without the screen they were written to protect, so nothing today can greet a returning person with a measurement of their absence, and nothing greets them at all. **Assigning it a phase is the owner's call** and `docs/BUILD_STATE.md` records it as open. The two candidates are a phase of its own, because it is one screen and it is finished when it works, or phase 10, which already owns the first thing a person sees.
 
 **This is the highest stakes screen in the app.** It is also the one screen nobody building or testing the app daily will ever see, which is exactly why it has to be specified rather than discovered.
 
@@ -1156,7 +1164,7 @@ Phrasing of this shape: `Built for people who find long lists paralyzing. Design
 - Reducer determinism, divergence merge, idempotency, checkpoint equivalence, reset virginity
 - One active item per area under concurrent completes; promotion order; order key insertion and rebalance
 - Golden fixture replays to the exact committed state
-- Pulse selection: no-repeat rule, silence case, 17:00 boundary, escalation monotonicity, DST boundaries
+- Pulse selection: no-repeat rule, silence case, 17:00 boundary, escalation monotonicity, DST boundaries. **Phase 6 closed the lifecycle half of this line.** `PulseScheduleTest` walks the 17:00 boundary minute by minute and both daylight saving transitions in each direction, asserting one date key per calendar day and one reflection period across each; `PulseGenerationTest` holds at most one entry per local day, an existing entry stopping the sequence, and the two day suppression after a return. The selection half, the no-repeat rule and escalation monotonicity, is phase 5's and is tested there
 - Report integrity vetoes, with a test per validator check constructing a violating candidate
 - **Banned vocabulary test matches the evaluative sense of `behind` only**, per `CLARITY_LOGIC_ENGINE.md` 11.3. The spatial sense, a queue behind an item, is correct and appears in thirteen approved lines
 - **Every `lengthBand` is computed at catalog load, never read from a corpus tag.** A test asserts the computed band for every lead and that no two consecutive leads in a generated report share one
@@ -1175,7 +1183,7 @@ Phrasing of this shape: `Built for people who find long lists paralyzing. Design
 - **No rendered sentence states a delta between an estimate and an actual.** A veto test constructs the forbidden form and asserts it cannot render
 - No estimate observation fires below five completed items carrying an estimate inside the window the sentence describes
 - **A persona whose activity is cyclical across a simulated year receives no decline, neglect or fading observation**, because every dip they have has a precedent
-- **A re-entry persona receives no Pulse for two days and no decline, neglect or gap observation for a week**, and no surface states the length of the gap, counts anything, or asks where they were
+- **A re-entry persona receives no Pulse for two days and no decline, neglect or gap observation for a week**, and no surface states the length of the gap, counts anything, or asks where they were. **The first clause is true as of phase 6** and `PulseGenerationTest` holds it in both directions, the two days silent and the third day speaking again. The week of Report suppression is phase 8. **The third clause is vacuously true and must not be read as met**: there is no re-entry surface to state anything, per 14b.4, and this line becomes a real check on the day that screen is built
 - **The word `abandoned` reaches nothing a person can see**, including the Trail and every accessibility label. The naming decision in 5.2 is settled and the type is `FOCUS_ENDED_EARLY`, so it is absent from the export file too. Phase 4 built the Focus surface and every string on it, and `EndedEarlyRenameTest` holds the line
 - Export and import round trip, encrypted and unencrypted, to byte identical state, and a corruption suite refuses cleanly and leaves the database unchanged
 - An unfiled item is never `ACTIVE`, never `COMPLETED`, never counted in an area's queue, and never named by the engine
@@ -1243,7 +1251,11 @@ It ended up larger than the 40 rules the phase asked for and smaller than the co
 
 **Six of the ten checks in `CLARITY_LOGIC_ENGINE.md` 12 fail, and that is this phase working rather than failing.** Issue #3 says so in advance: the corpus is not grown until phase 9 and layer 6 does not exist until 9b, so every check whose failure is a bench too small carries a date and the issue that lifts it, runs on every simulation, and prints the number it measured. Those numbers are the baseline phase 9 is judged against and they are in `docs/BUILD_STATE.md` and `DECISIONS.md`.
 
-**Phase 6. Pulse.** Generation lifecycle per 11.3, the sheet, ambient mode, history, reminders. **Plus Addendum 01:** the re-entry surface and the two day Pulse silence after a return (14b.4), and an empty state that says what it needs and roughly when it becomes useful (14b.10).
+**Phase 6. Pulse. Built, and awaiting the closing build, install and device check.** Issue #4. Generation lifecycle per 11.3, the sheet, ambient mode, history, reminders. **Plus Addendum 01:** the two day Pulse silence after a return (14b.4), and an empty state that says what it needs and roughly when it becomes useful (14b.10), which landed as two fixed lines describing how the Pulse works and saying nothing whatever about the person's week.
+
+**It is the first phase whose output is a sentence about a person's own life**, and the checks that matter in it are the ones a screenshot cannot make: one entry per local day across both daylight saving transitions, a reflection period that switches once at 17:00, a firing history rebuilt from the log on every invocation and never cached, and a reminder with no code path that can post on a silent day. All four are unit tested. What the device adds is whether the amber night reads as a room, whether the three marks in the rhythm row are distinguishable at arm's length, and whether the reminder actually arrives at the hour it was armed for.
+
+**One thing this phase owned and did not carry: the re-entry surface**, 14b.4 and `design-v3.md` 11.2. The two engine side rules that follow that screen are built and tested; the screen is not, and it has no phase. 14b.4 now says so at the point where a session would otherwise read it as shipped, and `docs/BUILD_STATE.md` carries it as an open question for the owner. **Two things belong to phase 11 rather than to this phase**, and both are written and waiting: the reminder switch and its hour picker, 14.1, whose preferences exist and are honored, and the contextual `POST_NOTIFICATIONS` request that goes beside the switch.
 
 **Phase 7. Momentum.** All five blocks plus the empty state. **Plus Addendum 01:** the same honest first weeks treatment on every block that needs history, and no empty chart anywhere (14b.10).
 

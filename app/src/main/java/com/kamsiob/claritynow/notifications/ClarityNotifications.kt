@@ -9,10 +9,12 @@ import androidx.compose.ui.graphics.toArgb
 import com.kamsiob.claritynow.data.repo.FOCUS_TRANSITION_WARNING_SECONDS
 import com.kamsiob.claritynow.data.repo.FocusCountdown
 import com.kamsiob.claritynow.di.ClarityGraph
+import com.kamsiob.claritynow.domain.dateKey
 import com.kamsiob.claritynow.domain.replay.ClarityState
 import com.kamsiob.claritynow.ui.theme.calmed
 import com.kamsiob.claritynow.ui.theme.parseAreaColor
 import com.kamsiob.claritynow.ui.theme.resolveCalmMode
+import com.kamsiob.claritynow.work.PulseReminderScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -56,6 +58,19 @@ import kotlinx.coroutines.launch
  * | the planned time runs out, app elsewhere | one gentle notification, and the session resolves on the next resume or from that notification, MASTER_BUILD_PROMPT 10 |
  * | the session ends, however it ended | everything is cleared and nothing takes its place |
  *
+ * ### The Pulse reminder is wired here and posted somewhere else
+ *
+ * Phase 6 added two collectors to [install] and no fourth notification to this object.
+ * One follows the two reminder preferences and keeps a piece of WorkManager work armed,
+ * `PulseReminderScheduler`; the other takes the reminder out of the shade once the day
+ * has been answered. **Neither of them can post anything**, which is deliberate: the
+ * reminder is posted by `PulseReminderWorker` alone, holding a token it can only obtain
+ * from an entry that exists and is unanswered, per MASTER_BUILD_PROMPT 12.1.
+ *
+ * They live here because this is the app's one process wide hook that runs before any
+ * screen and outlives all of them, which is the same reason the channels are created
+ * here. A reminder somebody switched on has to survive the app never being opened.
+ *
  * **No event is written here.** In particular nothing in this file writes
  * `FOCUS_COMPLETED` when a session's planned time runs out while the app is away,
  * and that is load bearing rather than an omission: `ClarityRepository.restoreFocus`
@@ -97,9 +112,9 @@ object ClarityNotifications {
     val transitionWarnings: SharedFlow<String> = _transitionWarnings.asSharedFlow()
 
     /**
-     * Creates the channels, starts watching for a session, and starts counting
-     * started activities so the two rules that turn on where the person is looking
-     * can be answered.
+     * Creates the channels, starts watching for a session and for the Pulse reminder
+     * settings, and starts counting started activities so the two rules that turn on
+     * where the person is looking can be answered.
      *
      * Called once, from `Application.onCreate`, immediately after
      * `ClarityGraph.install`. **It posts nothing and asks for nothing**: creating a
@@ -122,6 +137,12 @@ object ClarityNotifications {
         ClarityNotificationChannels.ensure(context)
         application.registerActivityLifecycleCallbacks(foregroundCounter())
         scope.launch { watchFocusSessions() }
+        // The Pulse reminder, MASTER_BUILD_PROMPT 12.1. Both of these are collectors
+        // rather than one call, and neither posts anything at process start: the first
+        // arms a piece of work for tonight, and the second only ever takes something
+        // out of the shade.
+        scope.launch { PulseReminderScheduler.watchSettings(context) }
+        scope.launch { watchAnsweredPulses(context) }
     }
 
     /**
@@ -169,6 +190,33 @@ object ClarityNotifications {
             }
             .distinctUntilChangedBy { it?.renderKey }
             .collect { model -> render(model) }
+    }
+
+    /**
+     * Takes the reminder out of the shade once the day's Pulse has been answered.
+     *
+     * A notification that asks somebody to answer a question they have already answered
+     * is the app failing to notice what they did, which is the one thing this app is
+     * supposed to be good at. Tapping it already dismisses it; this is the person who
+     * opened the app some other way, which is most of them.
+     *
+     * **It cancels and never posts.** There is exactly one thing in this app that can
+     * post the reminder and it is `PulseReminderWorker`, holding a token it can only
+     * get from an unanswered entry. A cancel needs no permission, no token and no
+     * notification to have been posted in the first place.
+     *
+     * Reading the day from the clock on each emission is the same arrangement the Areas
+     * chip uses. A process alive across midnight cancels against the new day, which can
+     * only ever mean one redundant cancel.
+     */
+    private suspend fun watchAnsweredPulses(context: Context) {
+        val repository = ClarityGraph.repository
+        val clock = ClarityGraph.clock
+        val reminders = PulseReminderPoster(context)
+        repository.state
+            .map { state -> state.pulses[clock.dateKey()]?.isAnswered == true }
+            .distinctUntilChanged()
+            .collect { answered -> if (answered) reminders.clear() }
     }
 
     private fun modelFor(

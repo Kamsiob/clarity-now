@@ -439,6 +439,8 @@ Never on scroll, screen entry, notification arrival, or more than once per user 
 ### 10.1 Top of Areas
 Serif title at displayTitle, left aligned, archive and settings icons at inkSecondary on the right. Below, two pill chips: Focus and Pulse, card colored, **soft elevation only, no border**. The Pulse chip carries a 6dp warnAmber dot at its top right when a Pulse is ready and unanswered.
 
+**Both permanent chips are built: Focus in phase 4, Pulse in phase 6**, in that order, and neither was built before the surface behind it existed, because a chip that opens nothing is worse than a chip that is not there. The dot is the one use of `warnAmber` that 3.1 scopes it to, it is taken straight from the token rather than through the calm mode transform per 16.2, and nothing else in this row may grow one; the inbox chip carries a count in its label and never a badge. **The dot is not the signal on its own.** Section 13 requires a second one, and it is the label: the chip reads `Pulse` at rest and `Today's Pulse` when there is one waiting, which is the name `MASTER_BUILD_PROMPT.md` 13.5 already gives this destination for the shortcut that opens it. The rejected options were `Pulse ready` and a count, both of which report on the person rather than name the destination. Neither the dot nor the label says anything about not having answered, and there is no content description on the dot for the same reason. Logged in `DECISIONS.md`.
+
 **A third chip, reading `Inbox 4`, joins them when the unfiled inbox is not empty**, 10.16, and is absent when it is empty. It sits last so it can never displace the two permanent chips, and it carries no dot and no color. Built in phase 3b.
 
 ### 10.2 Weekly banner
@@ -674,7 +676,11 @@ The obvious answer is to turn the ring amber or red at five minutes. It is rejec
 
 **The screen is not told which kind of ending it is drawing**, and that absence is how the rule is kept rather than remembered. The value it is handed carries the duration, the area and the item and carries no field recording whether the planned time ran out, so there is no fact on this surface that a later edit could teach it to render. A session ended under sixty seconds is the one case that does not reach this screen at all, per section 10, because forty seconds is a mis-tap rather than a short session.
 
-**Pulse.** The amber night. The observation in readSerif centered, the question in body at textDim, then response pills. After answering, an acknowledgment fades in, then ambient mode: a 14 day rhythm row, today's answered card, and a History entry. Filled amber means answered, a hollow ring means generated but unanswered, faint means a silent day.
+**Pulse. Built, phase 6.** The amber night. The observation in readSerif centered, the question in body at textDim, then response pills. After answering, an acknowledgment fades in, then ambient mode: a 14 day rhythm row, today's answered card, and a History entry. Filled amber means answered, a hollow ring means generated but unanswered, faint means a silent day.
+
+**The four numbers v3 left open here, and what phase 6 chose.** The room is 520dp, collapsing to no less than 320dp, with both phases scrolling inside whatever height they are given. The obvious answer is a sheet that wraps its content, about 300dp for the question and about 250dp for ambient mode, which makes the amber night a panel rather than a room and resizes it under the settle in 8.2 item 11. **The response pills are stacked and never set side by side**, identical in width and treatment, because a left position reads as a recommendation and because side by side does not survive the three options of `quietDay` without the layout becoming a signal about which family fired. **The dawn and evening tints reach 45 percent of the height at 55 percent and stop**, since 3.3 asks for a shift felt rather than noticed and a gradient across the whole surface is what a hero background looks like. **The acknowledgment is held for 1,100ms** before the room settles, and that hold does not shorten under reduce motion, for the reason 8.4 keeps the empty state's delay: a hold is not motion. Section 15, and all four logged in `DECISIONS.md`.
+
+**The silent mark in the rhythm row is faint with a floor.** At half strength it measures 3.0 to one against `deepBlack`, which is the ratio 16.7 holds a graphic to, and it is drawn smaller as well as fainter so the three states differ in form and not only in opacity, per 13. Below that floor a mark stops being quiet and starts being absent, and a fortnight of silence would read as a broken row rather than a calm one. **Today carries no ring here.** That is Momentum's treatment and importing it would add a fourth state to a row whose safety property is that it has exactly three. **Built, phase 6.**
 
 ### 11.1 The Report
 
@@ -719,7 +725,9 @@ Second, one line at the end of onboarding announcing Pulse before it ever appear
 
 ### 11.2 The re-entry state
 
-**Pending. Detection phase 3b, surface phase 6.** Addendum 01 4d. **This is the highest-stakes screen in the app**, and it is the one that has to be right the first time, because the person seeing it already decided once to stop.
+**Pending. Detection phase 3b. The two engine side rules that follow this screen were built in phase 6. The screen itself was not, and it has no phase.** Addendum 01 4d. **This is the highest-stakes screen in the app**, and it is the one that has to be right the first time, because the person seeing it already decided once to stop.
+
+**Do not read this section as shipped.** Phase 6 owned it and did not carry it. What exists today is the detection query from phase 3b and the Pulse suppression from phase 6: a person returning after a fortnight sees the ordinary Areas screen and a Pulse that stays quiet for two days. Nothing measures their absence, and nothing greets them either. `MASTER_BUILD_PROMPT.md` 14b.4 says the same at the point a session would otherwise miss it, and `docs/BUILD_STATE.md` carries the phase assignment as an open question for the owner.
 
 This audience leaves and comes back. That is ordinary use, not failure, and the app has no opinion about it.
 

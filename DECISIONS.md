@@ -71,6 +71,325 @@ The old entry stays where it is, wrong, dated, and useful.
 
 ---
 
+## August 27, 2026: the twelve open choices in the Pulse
+
+Phase 6, issue #4. `MASTER_BUILD_PROMPT.md` 11.3, 11.6, 12.1, 13.4 and 14b.4,
+`design-v3.md` 3.3, 8.2, 8.4, 10.1, 11 and 13, `CLARITY_LOGIC_ENGINE.md` 6.1 and 6.2,
+and `CORPUS_1_PULSE.md`. Twelve things those documents leave to the builder, settled
+here under `design-v3.md` 15, and one that is not a builder's to settle and is recorded
+as open.
+
+**This is the first surface in the app that shows a sentence the engine wrote about a
+person's own life.** Everything before it was a fixed label or a readout of a number the
+app had just counted. That changes what a wrong decision costs: a screen that assembles
+one string for one edge case is not a visible defect, it is a false claim about
+somebody's week with nothing on the screen pointing back at the cause. Several entries
+below are therefore about a shape that makes the wrong thing unreachable rather than
+about a check somebody has to remember to write.
+
+### The response pills are stacked, and never set side by side
+
+**Decided.** The two options, or three for `quietDay`, sit in a vertical stack, identical
+in width and in treatment, with one composable called once per option and no parameter
+that could make one of them louder. Implemented in `ui/pulse/PulseSurface.kt` and
+`ui/pulse/PulseResponsePill.kt`, and stated in `design-v3.md` 11.
+
+**Why.** `design-v3.md` 11 says "response pills" and gives no arrangement, so section 15
+applies. Side by side is the statistically common answer and it costs two things.
+It puts one option on the left, and in a left to right reading order the left position
+reads as the recommendation, which `CLARITY_LOGIC_ENGINE.md` 6.1 forbids the interface
+from making: both responses must feel equally valid read out of context. And it does not
+survive `quietDay`, the one family with three options, so the surface would rearrange
+itself between families for a reason the person cannot see. One stacked layout answers
+both cases in one shape.
+
+**Considered and rejected: side by side for two and stacked for three**, which is the
+arrangement that looks best in each case taken alone and is the worst of the three,
+because it makes the layout a signal about which family fired. **Also rejected: a primary
+and a secondary treatment**, which is the same prohibition stated in color instead of in
+position.
+
+**Revisit if** a three option stack turns out to push the observation off the top of the
+room at a large font scale. The first move then is the room, not the arrangement.
+
+### The room is a fixed band rather than a sheet that wraps its content
+
+**Decided.** The Pulse opens at 520dp, collapsing to no less than 320dp, and both phases
+scroll inside whatever height they are given. Implemented in `ui/pulse/PulseRoute.kt`.
+
+**Why.** `design-v3.md` gives the Pulse no height. A sheet that wraps its content is the
+obvious answer and would be about 300dp for the question and about 250dp for ambient
+mode, which makes the amber night a panel rather than a room, and makes the surface
+resize under the settle in 8.2 item 11. A little over half a phone is enough for a serif
+observation to sit in space with its question beneath it, and short of the full screen
+that would make a drag down feel like leaving the app rather than closing a sheet. The
+band rather than a single value is what carries landscape, where a fixed 520dp is taller
+than the device, and a 200 percent font scale, where the content scrolls inside the room
+instead of growing it.
+
+**Considered and rejected: full screen**, which is what the Focus surface is and is right
+there, because Focus is a place a person stays for twenty five minutes and this is a
+question that takes fifteen seconds.
+
+**Revisit if** the device check shows the ambient phase looking empty in the room at
+520dp. The answer then is what ambient mode holds, not the height.
+
+### The amber tint reaches under half the height and stops
+
+**Decided.** The dawn and evening tints are a vertical gradient at 55 percent from one
+edge, reaching 45 percent of the height and going to nothing. In calm mode the tint is
+not transformed, it is not drawn at all. Implemented in `ui/pulse/PulseBackdrop.kt` and
+consistent with `design-v3.md` 3.3 and 16.7.
+
+**Why.** 3.3 says the shift "must be felt rather than noticed", which is the whole
+specification of its strength. The obvious reading of blending a whisper into one edge is
+a gradient across the whole surface, which is what a hero background looks like in 2026
+and which would make the time of day the loudest thing on a screen whose entire content
+is one sentence. A tint that stops before the midpoint is a room lit from one side rather
+than a colored screen.
+
+**Considered and rejected: a tint that animates as the hour moves.** Nothing here counts
+down to the next boundary. A background that redrew itself while somebody was reading is
+the exact opposite of felt rather than noticed.
+
+**Revisit if** the two tints are indistinguishable from midday on the device at low
+brightness, which is the failure mode of choosing quiet.
+
+### The chip's second signal is the destination's name, not a status word
+
+**Decided.** The Pulse chip reads `Pulse` at rest and `Today's Pulse` when a Pulse is
+ready and unanswered, alongside the 6dp `warnAmber` dot that `design-v3.md` 10.1
+specifies. Implemented in `ui/areas/PulseChip.kt`, with both strings in `strings.xml`.
+
+**Why.** `design-v3.md` 13 requires a second signal because color is never the only one,
+and leaves the wording open. The obvious answers are a status word appended to the label,
+`Pulse ready`, or a count, `Pulse 1`, which is the shape the inbox chip already uses.
+Both report on the person rather than name the destination, and a count of one is a
+number nobody needs. `MASTER_BUILD_PROMPT.md` 13.5 already calls this surface
+`Today's Pulse` for the app shortcut that opens it, so the two entry points into one
+surface say the same words, and the label reads as an invitation rather than as a notice
+that something is outstanding.
+
+**Considered and rejected: a content description on the dot.** Any wording for it would
+be a sentence about an unanswered question, and 11.6 says not answering is never chased,
+never counted and never mentioned. The changed label is the whole of what is said.
+
+**Revisit if** user testing shows people do not read the chip label at all, in which case
+the second signal has to be a shape rather than a word.
+
+### The history list carries absolute dates, including today's
+
+**Decided.** Every row in the Pulse history is a date. There is no `Today` and no
+`Yesterday`. Implemented in `ui/pulse/PulseHistoryPage.kt`.
+
+**Why.** The Trail does relative labels for the two newest days, and inheriting that here
+was the default. The two lists are read for different things: the Trail is read for
+recency, and this is read for pattern, down one column. A list whose first two rows are
+labeled differently from the rest breaks the column a person is scanning.
+
+**Considered and rejected: relative labels everywhere**, which would have been consistent
+with the Trail and would have made the page a list of phrases instead of a list of dates.
+
+**Revisit if** the Trail and the Pulse history ever appear on one screen, where two date
+conventions side by side would be worse than either.
+
+### The acknowledgment is held for 1,100ms, and the hold does not shorten under reduce motion
+
+**Decided.** After an answer the pill fills over 220ms, the acknowledgment fades in over
+400ms after a 250ms hold per `design-v3.md` 8.2 item 10, it is held for 1,100ms, and the
+room then settles into ambient mode. Under reduce motion the two fades shorten to 150ms
+and the 1,100ms hold is unchanged. Implemented in `ui/pulse/PulseSurface.kt`.
+
+**Why.** 8.2 gives every number in that sequence except how long the acknowledgment
+stands. The corpus calls these lines "shown briefly" and they are short: a second and a
+bit is one unhurried reading of a five word sentence and is short of the point where a
+person starts wondering whether the screen has stuck. The hold survives reduce motion for
+the reason `design-v3.md` 8.4 keeps the empty state's delay: **a hold is not motion**, and
+shortening it would remove reading time from the person most likely to need it rather
+than removing an animation.
+
+**Considered and rejected: dismissing on the next tap instead of on a timer**, which
+would hand the person a control whose only function is to skip a sentence the app just
+wrote for them.
+
+**Revisit if** the corpus grows acknowledgment lines materially longer than the ones
+authored today, in which case the hold has to be a function of length rather than a
+constant.
+
+### The reminder is a chain of one hop at a time, not a periodic request
+
+**Decided.** The daily reminder is a `OneTimeWorkRequest` under a unique name, and each
+run arms the next one by recomputing the target hour against the clock and its zone.
+Implemented in `work/PulseReminderScheduler.kt` and `work/PulseReminderSchedule.kt`.
+
+**Why.** A `PeriodicWorkRequest` with a twenty four hour period is the obvious
+implementation and it loses on the one thing this feature is, which is a time. A period
+is a fixed duration measured from the previous run and not a wall clock hour: the morning
+the clocks change it fires an hour early or an hour late and stays there until something
+reschedules it, and WorkManager's batching accumulates over months. Recomputing on every
+hop makes daylight saving a calendar question the scheduling code never sees, and absorbs
+a timezone change on the next hop. For the audience `MASTER_BUILD_PROMPT.md` 14b
+describes, a reminder that arrives at the wrong hour teaches them the app's timing cannot
+be trusted, and they switch it off.
+
+**Considered and rejected: an exact alarm**, which needs `SCHEDULE_EXACT_ALARM` and is
+out of scope under section 18. WorkManager may run this late and Doze can hold it on a
+sleeping phone. A reminder that arrives a little late is the honest version of what this
+app can promise.
+
+**Revisit if** the device check shows the reminder arriving materially late in ordinary
+use, which is the one thing the unit tests cannot see.
+
+### The permission prompt fires on a transition, and never on the first composition
+
+**Decided.** `NotificationPermissionOnReminderEnabled` remembers the value the switch
+first showed and asks for `POST_NOTIFICATIONS` only when that value goes from false to
+true. Implemented in `notifications/NotificationPermission.kt`.
+
+**Why.** `pulseRemindersEnabled` defaults to true, per `MASTER_BUILD_PROMPT.md` 14b.12,
+so the obvious `LaunchedEffect` keyed on the value would prompt every person who has
+never touched the switch, the moment they first opened Settings. That is not quite launch
+and it is close enough to be the same defect: a permission prompt for something they did
+not just do. It is also derived from the setting changing rather than announced by
+whoever changed it, so there is no `onCheckedChange` anybody has to remember to wire, and
+the moment cannot drift into the wrong place in a later phase.
+
+**Considered and rejected: prompting the first time the reminder would actually post**,
+which happens with the app closed and cannot show a dialog at all.
+
+**Revisit if** the default for `pulseRemindersEnabled` ever moves to false, at which
+point the first composition and the transition are the same event and this can be
+simplified.
+
+### The reminder cannot be posted without a token read from the day's entry
+
+**Decided.** `PulseReminderPoster.post` takes a `PulseReminderDue`, whose constructor is
+private and whose only factory returns null unless the day's entry exists and is
+unanswered. Implemented in `notifications/PulseReminderPoster.kt`.
+
+**Why.** `MASTER_BUILD_PROMPT.md` 12.1 and issue #4 both say the reminder posts only if
+that day's entry exists and is unanswered, never when IDLE. Written as an `if` at the
+call site that is one line, it looks right without it, and it is exactly the kind of
+check a later refactor drops. A notification on a day the engine chose to stay silent
+turns designed silence into a broken promise, which is the most expensive defect this
+phase could ship. Made a type, the rule is not something anybody can forget: there is no
+way to reach the poster without having read the entry out of the log. It is the same
+shape `NotificationMoment` uses to make "never ask at launch" structural.
+
+**Considered and rejected: generating a Pulse inside the worker** so that there would
+always be something to post, which would be the app speaking to somebody who did not open
+it, forbidden by name in 13.4.
+
+**Revisit if** a second thing ever needs to post on this channel, which is the point at
+which the token stops being free.
+
+### The rhythm row has three marks and today carries no ring
+
+**Decided.** Filled amber for answered, a hollow ring for generated but unanswered, and a
+smaller half strength mark for a silent day. No fourth state, no ring on today, no
+caption, and a spoken description that names the element rather than tallying it.
+Implemented in `ui/pulse/PulseRhythmRow.kt`.
+
+**Why.** `MASTER_BUILD_PROMPT.md` 12.1 names the three and stops. Today's ring is
+Momentum's treatment, 12.2, and importing it here would add a fourth mark to a row whose
+whole safety property is that it has three: the mark takes a `PulseDayState`, so a fourth
+kind of mark would need a fourth day state and the log cannot produce one. The row is
+also the single most likely place in the app to reintroduce a streak by accident, so each
+mark is drawn from its own day and knows nothing about the day beside it, and a gap is a
+fainter mark and nothing else. The silent mark is drawn smaller as well as fainter, so
+the three differ in form and not only in opacity, and it is held at 3.0 to one against
+`deepBlack` per `design-v3.md` 16.7, because a mark below that stops being quiet and
+starts being absent, and a fortnight of silence would then look like a broken row rather
+than a calm one.
+
+**Considered and rejected: a count beneath the row.** `design-v3.md` 14 forbids a
+consecutive count and section 11 gives the row no caption, so a spoken figure would hand
+a screen reader user a claim the sighted reader cannot see.
+
+**Revisit if** the three marks turn out to be hard to tell apart on the device at arm's
+length, in which case the silent mark's size moves before its opacity does.
+
+### The corpus ships as an asset rather than as a Kotlin constant
+
+**Decided.** The three committed corpus files are read at runtime through a `CorpusSource`
+seam, which on the phone reads `assets/corpus/` and in a test reads the committed file off
+disk. Implemented in `domain/pulse/PulseCoordinator.kt` and `ClarityApp.kt`.
+
+**Why.** CLAUDE.md's authority order gives the corpora the last word on the wording of
+every sentence. A copy of a corpus embedded in Kotlin is a second corpus, and a second
+corpus drifts silently: the file an author edits stops being the file the app reads, and
+nothing fails when they disagree. The seam rather than a direct call is what keeps
+`ClarityCatalog.build` taking text, which is what lets phase 9 judge a corpus edit against
+the real rules from a string.
+
+**Considered and rejected: parsing at build time into a generated Kotlin source**, which
+is faster on the phone and puts a generated artifact between the author and the app,
+which is the drift this decision exists to prevent.
+
+**Revisit if** catalog build time is measurable on the first foreground of the day on the
+device. The answer then is when it is built, not where it is read from.
+
+### The Pulse generates after the presence marker, not before it
+
+**Decided.** On the first foreground of a process, `ClarityApp` writes `APP_OPENED` and
+then runs the generation sequence, in that order, in one call. Implemented in
+`ClarityApp.kt`.
+
+**Why.** 14b.4 suppresses the Pulse for the first two days after a return, and a return
+is detected by comparing today's `APP_OPENED` against the newest one before it. Generating
+first would find no return on the one day it matters, and a person coming back after a
+fortnight would be met by exactly the observation about their absence that the whole of
+14b.4 exists to prevent. The ordering is not a preference, it is the difference between
+the rule holding and the rule reading correctly while doing nothing.
+
+**Considered and rejected: running the two in parallel**, which is faster by a few
+milliseconds on a path nobody is waiting on and reintroduces the race the ordering
+removes.
+
+**Revisit if** the presence marker ever moves out of the foreground callback, at which
+point this ordering has to move with it.
+
+### Open, and the owner's rather than a builder's: what WorkManager adds to the merged manifest
+
+**Not decided.** This phase is the first thing in the app that really uses WorkManager,
+and the question has been open since phase 2. It is recorded here rather than settled.
+
+**What is actually true today.** The merged manifest, debug and release, declares six
+permissions: `POST_NOTIFICATIONS`, `POST_PROMOTED_NOTIFICATIONS`, `VIBRATE`,
+`FOREGROUND_SERVICE`, `WAKE_LOCK` and `RECEIVE_BOOT_COMPLETED`. The last three arrive from
+work-runtime and none of them is a network permission, so `verifyNoInternetPermission`
+passes on both variants and the privacy claim a person can check in Android settings is
+intact. `ACCESS_NETWORK_STATE`, which work-runtime also declares, is removed with
+`tools:node="remove"` and does not appear in either merged manifest.
+
+**Why it is still open.** `MASTER_BUILD_PROMPT.md` 18 puts every permission beyond
+notifications out of scope for v1, and three of the six are beyond notifications. Section
+3 and 12.1 both require WorkManager for this reminder, and 12 requires it again for the
+widget refresh, so the only ways to close the gap are to accept the three permissions in
+writing or to build the reminder on something else. This phase uses WorkManager because
+the specification tells it to, and reports what the merged manifest gains.
+
+**The removal was checked against the library rather than assumed.** In work-runtime
+2.11.2, `WorkConstraintsTracker.track` filters its controllers by
+`ConstraintController.hasConstraint` for the spec it is given, so a request with no
+constraints never reaches the network tracker and never starts it, and everything that
+does touch `ConnectivityManager` already catches `SecurityException`. A constraint free
+daily reminder is therefore safe without the permission. **Adding any constraint to any
+work request in this app means putting `ACCESS_NETWORK_STATE` back**, which changes what
+the privacy policy invites people to verify, so it is the owner's call and not a build
+fix. The manifest says so at the point of the removal.
+
+**The recommendation, stated and not taken.** Amend section 18 to name the three
+WorkManager permissions explicitly rather than leave a document saying no permission
+beyond notifications while the app ships three, since a specification that is quietly
+untrue about permissions is worse than one that says which three and why.
+
+**Revisit at** phase 11, where the privacy sheet and the permission card are built and
+this list has to be shown to a person, and again at phase 12, where the widget refresh
+makes WorkManager unavoidable a second time.
+
+---
+
 ## August 27, 2026: the fourteen open choices in the engine skeleton and the simulator
 
 Phase 5, issue #3. `CLARITY_LOGIC_ENGINE.md` 2 to 8, 11.1, 12 and 14,
@@ -2170,7 +2489,7 @@ does not have to redo the analysis. It is not a list of exceptions to apologize 
 |---|---|---|---|
 | August 27, 2026 | Depleting focus ring | 1, no platform equivalent exists | built, phase 4 |
 | August 27, 2026 | Week ribbon, in the Report | 1, no platform equivalent exists | pending, phase 8 |
-| August 27, 2026 | Fourteen day rhythm dot row | 1, no platform equivalent exists | pending, phase 7 |
+| August 27, 2026 | Fourteen day rhythm dot row | 1, no platform equivalent exists | built, phase 6, in the Pulse; Momentum's own row is phase 7 |
 | August 27, 2026 | Area color wash | 1, no platform equivalent exists | built, phase 2 |
 | August 27, 2026 | Two stage color picker | 1, no platform equivalent exists | built, phase 2 |
 | August 27, 2026 | Tutorial spotlight | 1, no platform equivalent exists | pending, phase 10 |

@@ -59,11 +59,19 @@ private sealed interface AreaSheet {
  * Focus surface a destination reached from the Focus chip, and section 2 makes it the
  * Contemplative world: it is a room the app moves into and not a panel over this one,
  * so the shell owns it and this screen only asks.
+ *
+ * **[onOpenPulse] is the same arrangement for the same reason**, and it has no default.
+ * The Pulse is the second Contemplative surface, design-v3.md 2 and 11, so the shell
+ * owns it too. A default of `{}` here would compile everywhere and ship a chip that
+ * opens nothing, which is the exact thing phase 2 refused to do when it left this chip
+ * out rather than putting an inert one in the header. Leaving it required means the
+ * app does not build until the chip has somewhere to go.
  */
 @Composable
 fun AreasRoute(
     viewModel: AreasViewModel,
     onOpenFocus: () -> Unit,
+    onOpenPulse: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -91,6 +99,7 @@ fun AreasRoute(
             onDismissConflict = { viewModel.dismissConflict(it) },
             onOpenInbox = { sheet = AreaSheet.Inbox },
             onOpenFocus = onOpenFocus,
+            onOpenPulse = onOpenPulse,
             // MASTER_BUILD_PROMPT 14b.1 and 8.4. At zero areas the FAB creates an
             // area, which 8.4 states and this phase does not change.
             //

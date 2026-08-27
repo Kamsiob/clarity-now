@@ -114,6 +114,7 @@ fun AreasScreen(
     onDismissConflict: (String) -> Unit,
     onOpenInbox: () -> Unit,
     onOpenFocus: () -> Unit,
+    onOpenPulse: () -> Unit,
     onFabClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -166,7 +167,9 @@ fun AreasScreen(
             item(key = "header") {
                 AreasHeader(
                     unfiledCount = state.unfiledCount,
+                    pulseReady = state.pulseReady,
                     onOpenFocus = onOpenFocus,
+                    onOpenPulse = onOpenPulse,
                     onOpenArchive = onOpenArchive,
                     onOpenInbox = onOpenInbox,
                     modifier = Modifier.clarityEntrance(HEADER_ENTRANCE_INDEX),
@@ -312,14 +315,16 @@ private fun AreaRow(
  * design-v3.md 10.1. The serif title, the archive glyph, and the chip row beneath.
  *
  * The row was written in phase 2 as a shape the permanent chips could prepend to
- * without it being redrawn, and this is the first of them arriving. Focus is first and
- * permanent, Pulse joins it in phase 6, and the unfiled inbox chip, 10.16, stays last
- * and present only while the inbox holds something, so it can never displace them.
+ * without it being redrawn. Focus arrived in phase 4 and Pulse in phase 6, in that
+ * order and both permanent, and the unfiled inbox chip, 10.16, stays last and present
+ * only while the inbox holds something, so it can never displace them.
  */
 @Composable
 private fun AreasHeader(
     unfiledCount: Int,
+    pulseReady: Boolean,
     onOpenFocus: () -> Unit,
+    onOpenPulse: () -> Unit,
     onOpenArchive: () -> Unit,
     onOpenInbox: () -> Unit,
     modifier: Modifier = Modifier,
@@ -357,7 +362,9 @@ private fun AreasHeader(
 
         AreasChipRow(
             unfiledCount = unfiledCount,
+            pulseReady = pulseReady,
             onOpenFocus = onOpenFocus,
+            onOpenPulse = onOpenPulse,
             onOpenInbox = onOpenInbox,
         )
     }
@@ -366,13 +373,14 @@ private fun AreasHeader(
 /**
  * design-v3.md 10.1 and 10.8. Pill chips in a horizontally scrolling row.
  *
- * **Every chip here is an ordinary unselected `ClarityChip` and none of them carries a
- * count badge, a dot or an accent.** 10.1 gives the permanent chips soft elevation and
- * no border, and phase 3c moved app chrome down one step of the value ladder, so an
- * unselected chip sits at `raise` rather than at `card` and this row inherits that from
- * the component rather than restating it. The one dot in this row's future is the
- * warnAmber Pulse dot in 10.1, which arrives with Pulse in phase 6 and is scoped by
- * 3.1 to that one use.
+ * **Every chip here is an ordinary unselected `ClarityChip`, and exactly one of them
+ * can carry a dot.** 10.1 gives the permanent chips soft elevation and no border, and
+ * phase 3c moved app chrome down one step of the value ladder, so an unselected chip
+ * sits at `raise` rather than at `card` and this row inherits that from the component
+ * rather than restating it. The one dot is the warnAmber Pulse dot in 10.1, which 3.1
+ * scopes to that single use; it lives in [PulseChip] and nothing else in this row may
+ * grow one. The inbox chip in particular carries a count in its label and never a
+ * badge, per 10.16 and Addendum 01 4a.
  *
  * **Focus is permanent and is present even when nothing can be focused on.** The
  * obvious answer is to hide it, or to dim it, while there is no area with an active
@@ -393,7 +401,9 @@ private fun AreasHeader(
 @Composable
 private fun AreasChipRow(
     unfiledCount: Int,
+    pulseReady: Boolean,
     onOpenFocus: () -> Unit,
+    onOpenPulse: () -> Unit,
     onOpenInbox: () -> Unit,
 ) {
     Row(
@@ -409,9 +419,11 @@ private fun AreasChipRow(
             onClick = onOpenFocus,
         )
 
-        // The Pulse chip, design-v3.md 10.1, is phase 6. It is absent rather than
-        // present and inert, which is what phase 2 decided about both of these and why
-        // the Focus chip was not built until it had a surface to open.
+        // design-v3.md 10.1, and the reason it was not here before this phase: phase 2
+        // left it out rather than shipping a chip that opened nothing, the same
+        // decision that held the Focus chip back until phase 4 built the surface
+        // behind it. Both permanent chips are now real doors.
+        PulseChip(ready = pulseReady, onClick = onOpenPulse)
 
         if (unfiledCount > 0) {
             InboxChip(count = unfiledCount, onClick = onOpenInbox)

@@ -3,6 +3,9 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.InputFiles
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.io.File
@@ -32,8 +35,10 @@ plugins {
 // 0.6.0: phase 5, the engine's five layers and the simulator. A minor bump even
 // though nothing on screen changed, because the thing phases 6 through 8 render now
 // exists and is the largest single addition since the event log itself.
+// 0.7.0: phase 6, the Pulse. The first screen that renders a sentence the engine
+// wrote about a person's own life, rather than a label or a readout.
 val versionMajor = 0
-val versionMinor = 6
+val versionMinor = 7
 val versionPatch = 0
 
 android {
@@ -268,6 +273,55 @@ val verifyDevtoolsAreDebugOnly = tasks.register<VerifyDevtoolsAreDebugOnly>("ver
 // names are registered after this script is evaluated.
 tasks.matching { it.name == "testDebugUnitTest" || it.name == "assembleRelease" }
     .configureEach { dependsOn(verifyDevtoolsAreDebugOnly) }
+
+/**
+ * The three corpus files, copied into the APK assets at build time.
+ *
+ * The engine has no sentences without them. They live at the repository root because
+ * they are specification documents the owner edits and `verifyLanguageHygiene` scans,
+ * and they have to be inside the APK because the catalog parses them at runtime.
+ *
+ * **Copied rather than duplicated.** A second set under `src/main/assets` would be two
+ * corpora that drift, and the one the app shipped would not be the one anybody
+ * reviewed. That is the whole reason this is a build step.
+ *
+ * It goes through the Variant API rather than `sourceSets.assets.srcDir`, because AGP
+ * refuses a `Provider` there: it cannot tell a generated directory from a static one,
+ * and a plain `srcDir` would not carry the task dependency, so a clean build could
+ * package an empty assets directory and the app would start with a silent engine.
+ */
+abstract class CopyCorpora : DefaultTask() {
+
+    @get:InputFiles
+    abstract val corpora: ConfigurableFileCollection
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun copyThem() {
+        val target = outputDir.get().asFile.resolve("corpus")
+        target.deleteRecursively()
+        target.mkdirs()
+        corpora.files.forEach { source ->
+            source.copyTo(target.resolve(source.name), overwrite = true)
+        }
+    }
+}
+
+val copyCorpora = tasks.register<CopyCorpora>("copyCorpora") {
+    group = "build"
+    description = "Copies the corpus files into the APK assets, so the engine has sentences."
+    corpora.from(rootProject.layout.projectDirectory.file("CORPUS_1_PULSE.md"))
+    corpora.from(rootProject.layout.projectDirectory.file("CORPUS_2_REPORT.md"))
+    corpora.from(rootProject.layout.projectDirectory.file("CORPUS_3_MOMENTUM.md"))
+}
+
+androidComponents {
+    onVariants { variant ->
+        variant.sources.assets?.addGeneratedSourceDirectory(copyCorpora, CopyCorpora::outputDir)
+    }
+}
 
 val verifyNoInternetPermission = tasks.register("verifyNoInternetPermission") {
     group = "verification"

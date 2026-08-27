@@ -1,0 +1,284 @@
+package com.kamsiob.claritynow.domain.pulse
+
+import com.kamsiob.claritynow.data.repo.ClarityRepository
+import com.kamsiob.claritynow.domain.ClarityClock
+import com.kamsiob.claritynow.domain.dateKey
+import com.kamsiob.claritynow.domain.engine.SilenceReason
+import com.kamsiob.claritynow.domain.engine.catalog.ClarityCatalog
+import com.kamsiob.claritynow.domain.engine.catalog.CorpusVolume
+import com.kamsiob.claritynow.domain.engine.catalog.ResponseOption
+import com.kamsiob.claritynow.domain.query.TrailQueries
+import com.kamsiob.claritynow.domain.replay.PulseEntryState
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.util.UUID
+
+/** The three corpus files, as text. Nothing else is ever read from them. */
+data class CorpusText(val pulse: String, val report: String, val momentum: String)
+
+/**
+ * Where the three corpus files come from on this platform.
+ *
+ * A seam rather than a call, because `ClarityCatalog.build` takes text and the catalog
+ * package deliberately opens no file: that is what lets phase 9 test a corpus edit
+ * against the real rules from a string. On the phone the text is an asset, in a test it
+ * is the committed file read off disk, and neither of those belongs in `domain`.
+ */
+fun interface CorpusSource {
+
+    /** Reads all three volumes. Throws when one cannot be read; see [PulseOutcome.Unavailable]. */
+    suspend fun read(): CorpusText
+
+    companion object {
+
+        /** The asset path a volume is packaged at. See `ClarityApp` and the build file. */
+        fun assetPathOf(volume: CorpusVolume): String = "corpus/${volume.fileName}"
+    }
+}
+
+/**
+ * One day's Pulse, with everything a screen needs and nothing it has to assemble.
+ *
+ * The sheet renders [PulseEntryState.observation], then [PulseEntryState.question], then
+ * one pill per [responses] entry, and after a tap it shows [acknowledgment]. Every one of
+ * those strings came out of a corpus through the engine layers in order. **A composable
+ * never builds a sentence and never opens a bench**, per `MASTER_BUILD_PROMPT.md` 11.4.
+ */
+data class DailyPulse(
+    val entry: PulseEntryState,
+    /** Two, or three for `quietDay`. Empty only when the corpus no longer has the stage. */
+    val responses: List<ResponseOption>,
+    /** Shown briefly after an answer. Null when the bench is absent. */
+    val acknowledgment: String?,
+) {
+    val state: PulseDayState get() = PulseDayState.of(entry)
+}
+
+/** What a foreground generation attempt did. */
+sealed interface PulseOutcome {
+
+    /**
+     * There is an entry for the day. [justGenerated] is false when it was already there,
+     * which is every foreground after the first one of the day.
+     */
+    data class Present(val pulse: DailyPulse, val justGenerated: Boolean) : PulseOutcome
+
+    /** The engine had nothing to say. Nothing was written. The day is IDLE. */
+    data class Silent(val dateKey: String, val reason: SilenceReason) : PulseOutcome
+
+    /** One of the first two days after a return. Nothing was written. 14b.4. */
+    data class Suppressed(val dateKey: String) : PulseOutcome
+
+    /**
+     * The language could not be loaded, so nothing was attempted and nothing was written.
+     *
+     * This is the corpus being unreadable or unparseable, which is a build or packaging
+     * fault rather than anything about the person's data. It is a state of its own so
+     * that it appears in a log line as itself: an app that silently produced no Pulse for
+     * a month because an asset was missing would look exactly like a quiet month.
+     */
+    data class Unavailable(val reason: String) : PulseOutcome
+}
+
+/**
+ * The Pulse lifecycle, wired. `MASTER_BUILD_PROMPT.md` 11.3 and 12.1.
+ *
+ * This is the engine's first real caller, and everything impure about that is here: the
+ * clock, the log, the corpus text and the one write. [PulseGenerator] holds the decision
+ * and can be tested; this holds the plumbing and cannot.
+ *
+ * ## The catalog is built once and held
+ *
+ * 11.7: building it parses three markdown files and runs its integrity checks, so it is
+ * not a per invocation cost. **The firing history is the opposite and is rebuilt every
+ * time**, inside the generator, because it is derived from a log that merges and caching
+ * it is how two devices drift apart silently.
+ *
+ * ## Where it is called from
+ *
+ * `ClarityApp` calls [generateOnForeground] on the first foreground of the process, from
+ * the same callback that writes the presence marker, and **after** it: the re-entry
+ * suppression in 14b.4 is measured against a log that already contains today's
+ * `APP_OPENED`, so running these two the other way around would miss the return on the
+ * day it happened, which is the only day it matters.
+ *
+ * Calling it more often is harmless and cheap. The second call of a day finds the entry
+ * in the projection and returns before it reads the log at all.
+ */
+class PulseCoordinator(
+    private val repository: ClarityRepository,
+    private val clock: ClarityClock,
+    private val corpus: CorpusSource,
+    private val newPulseId: () -> String = { UUID.randomUUID().toString() },
+) {
+
+    private val catalogLock = Mutex()
+    private var cached: PulseLanguage? = null
+
+    /** Why the corpus could not be loaded, last time it was tried. */
+    private var unavailable: String = "the corpus has not been read"
+
+    /**
+     * Runs the sequence for today, and appends `PULSE_GENERATED` if the engine spoke.
+     *
+     * Three of the four decisions write nothing at all. Only [PulseDecision.Speak] reaches
+     * a writer, and the writer is the repository, which is the only thing in this app that
+     * writes.
+     *
+     * **A failure to read or parse the corpus is caught and reported, and a failure to
+     * write is not.** The first is a packaging fault that must not take down the first
+     * screen of somebody's day, and the app is fully usable without a Pulse. The second is
+     * the database refusing an append, which is not a Pulse problem and is not this class's
+     * to swallow.
+     */
+    suspend fun generateOnForeground(): PulseOutcome {
+        repository.load()
+        val zone = clock.zone()
+        val now = clock.nowMillis()
+        val day = PulseSchedule.dayAt(now, zone)
+
+        // Step 2, asked of the projection first. It is a map lookup, and it is what keeps
+        // every foreground after the first one of the day off the log entirely.
+        repository.pulseFor(day.dateKey)?.let { return present(it, justGenerated = false) }
+
+        val language = languageOrNull() ?: return PulseOutcome.Unavailable(unavailable)
+        val decision = try {
+            val queries = TrailQueries(repository.allEvents(), zone)
+            PulseGenerator(language.catalog, zone, newPulseId).decide(queries, now)
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (failure: Exception) {
+            return PulseOutcome.Unavailable(describe(failure))
+        }
+
+        return when (decision) {
+            is PulseDecision.Speak -> present(
+                repository.recordPulseGenerated(decision.payload),
+                justGenerated = true,
+            )
+
+            is PulseDecision.Silent -> PulseOutcome.Silent(decision.day.dateKey, decision.reason)
+
+            is PulseDecision.SuppressedAfterReturn -> PulseOutcome.Suppressed(decision.day.dateKey)
+
+            // The log holds an entry the projection does not. Nothing writes to one without
+            // the other, so this is unreachable, and it is reported rather than assumed.
+            is PulseDecision.AlreadyWritten ->
+                repository.pulseFor(decision.day.dateKey)?.let { present(it, justGenerated = false) }
+                    ?: PulseOutcome.Unavailable(
+                        "the log holds a Pulse for ${decision.day.dateKey} that the projection does not",
+                    )
+        }
+    }
+
+    /** Today's Pulse, or null when the day is IDLE. */
+    suspend fun today(): DailyPulse? = pulseOn(clock.dateKey())
+
+    /** The Pulse for one day, or null when that day is IDLE. */
+    suspend fun pulseOn(dateKey: String): DailyPulse? {
+        repository.load()
+        return repository.pulseFor(dateKey)?.let { dailyPulse(it) }
+    }
+
+    /**
+     * One day's Pulse as it changes, for a screen.
+     *
+     * Derived from the repository's own projection, so an answer written anywhere reaches
+     * every collector. The entry is the only thing that changes; the responses and the
+     * acknowledgment are functions of it and of the corpus.
+     */
+    fun observe(dateKey: String): Flow<DailyPulse?> =
+        repository.state
+            .map { state -> state.pulses[dateKey] }
+            .distinctUntilChanged()
+            .map { entry -> entry?.let { dailyPulse(it) } }
+
+    /**
+     * The state of one local day. IDLE, READY or ANSWERED.
+     *
+     * **This is the predicate the reminder is allowed to ask.** 12.1: the daily
+     * notification is posted only if that day's entry exists and is unanswered, and never
+     * when IDLE. See [reminderIsDue], which is this and nothing else.
+     */
+    suspend fun stateOn(dateKey: String): PulseDayState {
+        repository.load()
+        return PulseDayState.of(repository.pulseFor(dateKey))
+    }
+
+    /**
+     * Whether a reminder may be posted for [dateKey]. `MASTER_BUILD_PROMPT.md` 12.1.
+     *
+     * True only in [PulseDayState.READY]. A silent day is IDLE and posts nothing, which is
+     * the whole reason this is a function on the lifecycle rather than a check inside a
+     * worker: designed silence followed by a notification saying there is something to
+     * answer is a broken promise, and the rule is easier to keep in one place than in
+     * every place that might post.
+     */
+    suspend fun reminderIsDue(dateKey: String): Boolean = stateOn(dateKey) == PulseDayState.READY
+
+    /**
+     * Records an answer, storing [option]'s label **verbatim**.
+     *
+     * The whole option travels rather than three strings, so the label, the key and the
+     * polarity cannot be assembled from different places. A later callback quotes what the
+     * person actually saw, per `CLARITY_LOGIC_ENGINE.md` 3.1, and that is only true if the
+     * string written here is the string the pill carried.
+     *
+     * Answering twice is a no op, and so is answering a day with no entry. Neither is an
+     * error: a double tap and a stale screen are both ordinary.
+     */
+    suspend fun answer(dateKey: String, option: ResponseOption): DailyPulse? {
+        repository.load()
+        val entry = repository.answerPulse(dateKey, option) ?: return null
+        return dailyPulse(entry)
+    }
+
+    private suspend fun present(entry: PulseEntryState, justGenerated: Boolean): PulseOutcome =
+        PulseOutcome.Present(dailyPulse(entry), justGenerated)
+
+    /**
+     * An entry with its benches attached, or the entry alone when the corpus cannot be
+     * read.
+     *
+     * The observation and the question are on the event and always render. Losing the
+     * corpus costs the pills and the acknowledgment and nothing else, which is the right
+     * failure: a person can still read what the app noticed.
+     */
+    private suspend fun dailyPulse(entry: PulseEntryState): DailyPulse {
+        val language = languageOrNull()
+        return DailyPulse(
+            entry = entry,
+            responses = language?.responsesFor(entry).orEmpty(),
+            acknowledgment = language?.acknowledgmentFor(entry.dateKey),
+        )
+    }
+
+    /**
+     * The catalog and its two benches, built once for the process, or null with [unavailable]
+     * set to why.
+     *
+     * The failure is held as a field rather than thrown because two callers want two
+     * different things from it: [generateOnForeground] reports it, and [dailyPulse] renders
+     * what it can without it.
+     */
+    private suspend fun languageOrNull(): PulseLanguage? = catalogLock.withLock {
+        cached?.let { return@withLock it }
+        try {
+            val text = corpus.read()
+            PulseLanguage(ClarityCatalog.build(text.pulse, text.report, text.momentum))
+                .also { cached = it }
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (failure: Exception) {
+            unavailable = describe(failure)
+            null
+        }
+    }
+
+    private fun describe(cause: Throwable): String =
+        "${cause::class.java.simpleName}: ${cause.message ?: "no detail"}"
+}

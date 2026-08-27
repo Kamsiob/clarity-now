@@ -22,6 +22,15 @@
     <string name="areas_chip_focus">Focus</string>
     <string name="areas_chip_pulse">Pulse</string>
     <!--
+        The Pulse chip's second label, design-v3.md 10.1 and 13. The ready state is a
+        6dp warnAmber dot **and** a changed label, because color is never the only
+        signal, and this is the changed label. It names the destination rather than
+        reporting on the person: `MASTER_BUILD_PROMPT` 13.5 already calls this surface
+        `Today's Pulse` for the shortcut that opens it, and 11.6 says an unanswered
+        question is never chased, counted or mentioned. See PulseChip.kt.
+    -->
+    <string name="areas_chip_pulse_ready">Today\'s Pulse</string>
+    <!--
         The unfiled inbox chip, design-v3.md 10.1 and 10.16. The count is the label
         and the label is plain text: never a badge, never a dot, never a color that
         reads as an alert. Addendum 01 4a says this twice and design-v3.md 14 forbids
@@ -221,6 +230,26 @@
     -->
     <string name="focus_transition_notification_title">5 minutes left</string>
 
+    <!--
+        The daily Pulse reminder, MASTER_BUILD_PROMPT 12.1 and 13.4. Posted at the
+        chosen hour and **only on a day whose entry exists and is unanswered**, so
+        these two lines are read by somebody who has a question waiting and by nobody
+        else. A silent day posts nothing at all.
+
+        **Neither line says anything about the person.** The observation the engine
+        wrote for that day stays inside the app: a sentence about somebody's own week
+        does not belong on a lock screen, and putting it here would be a second path
+        to a corpus sentence, which MASTER_BUILD_PROMPT 11.2 closes. These are fixed
+        interface strings that describe the feature, which is what CLAUDE.md rule 8
+        allows into this file.
+
+        There is no urgency in either of them and no count of anything missed. It is a
+        reminder a person switched on, not a re-engagement notification, which 13.4
+        forbids outright.
+    -->
+    <string name="pulse_reminder_title">Today\'s Pulse</string>
+    <string name="pulse_reminder_text">One observation and one question, when you have a moment.</string>
+
     <!-- Conflict card, MASTER_BUILD_PROMPT 6.3 -->
     <string name="conflict_dismiss">Got it</string>
     <string name="conflict_two_active">While you were away, two things became active in %1$s. %2$s is active. %3$s is back at the top of the queue.</string>
@@ -340,5 +369,48 @@
     </plurals>
     <string name="cd_focus_under_a_minute">Under a minute remaining</string>
     <string name="cd_focus_start">Start a focus session on %1$s</string>
+
+    <!--
+        Pulse, MASTER_BUILD_PROMPT 12.1 and design-v3.md section 11.
+
+        **Not one line here is an observation, and this is the surface where that
+        distinction is hardest and matters most.** The observation, the question, the
+        response labels and the acknowledgment are all corpus lines, selected, realized
+        and validated by the engine and stored on the event, per MASTER_BUILD_PROMPT
+        11.1. They can never appear in this file, and there is nothing here that could
+        stand in for one if the engine had nothing to say: a silent day shows the two
+        lines below, which describe how the Pulse works and say nothing whatever about
+        the person's week. 14b.11 asks for exactly that kind of line, because interface
+        behavior that arrives unannounced is a real cost for this audience and one
+        sentence of predictability is cheap.
+
+        **There is no string here for a Pulse that went unanswered**, and there must
+        never be one. MASTER_BUILD_PROMPT 11.6 and CLARITY_LOGIC_ENGINE.md 6.2: not
+        answering is a fully supported state, never chased, never counted against the
+        user and never mentioned. Its whole representation is a hollow amber ring in the
+        rhythm row. A line reading `You skipped this` or `Still waiting` would be the
+        cheapest way to break the most carefully argued promise in the specification,
+        and its absence from this file is the guard.
+    -->
+    <string name="pulse_answered_label">You answered</string>
+    <string name="pulse_idle_title">Nothing to answer today</string>
+    <string name="pulse_idle_body">The Pulse asks once a day, and some days it stays quiet.</string>
+    <string name="pulse_history_row">History</string>
+    <string name="pulse_history_title">Past pulses</string>
+    <string name="pulse_history_empty_title">Nothing here yet</string>
+    <string name="pulse_history_empty_body">Every Pulse this app shows you is kept here, back to the day you installed it.</string>
+
+    <!--
+        Pulse content descriptions.
+
+        The rhythm row is one node and its description names the element rather than
+        tallying it. A sighted reader gets a texture of fourteen marks and no number,
+        because design-v3.md 14 forbids a consecutive count and section 11 gives the row
+        no caption, so a spoken figure would hand one reader a claim the other cannot
+        see. The detail lives in the History page, which is a row away and reads aloud
+        properly.
+    -->
+    <string name="cd_pulse_rhythm">Pulse rhythm, the last %1$d days</string>
+    <string name="cd_pulse_history_back">Back to the Pulse</string>
 
 </resources>

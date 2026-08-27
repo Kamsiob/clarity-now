@@ -53,6 +53,7 @@ import com.kamsiob.claritynow.ui.components.TAB_REPORT
 import com.kamsiob.claritynow.ui.components.TAB_TRAIL
 import com.kamsiob.claritynow.ui.components.rememberClarityTabs
 import com.kamsiob.claritynow.ui.focus.FocusRoute
+import com.kamsiob.claritynow.ui.pulse.PulseRoute
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.TabEntrance
@@ -109,6 +110,11 @@ fun ClarityShell(focusRequest: Long, modifier: Modifier = Modifier) {
     // is the only other thing that resets it, and re-offering a running session there
     // is the same answer this gives on a cold start.
     var focusEntry by remember { mutableStateOf(FocusEntry()) }
+
+    // The Pulse is a sheet rather than a destination, so it rides above whatever tab
+    // is showing rather than replacing it. design-v3.md 10.15's destination table has
+    // no Pulse row for the same reason: answering one is a moment, not a place.
+    var pulseOpen by rememberSaveable { mutableStateOf(false) }
 
     // design-v3.md 8.2 entry 24 puts the tab crossfade at 180ms, one of the two places
     // in the document that names a duration rather than a spring. The nearest token,
@@ -191,6 +197,7 @@ fun ClarityShell(focusRequest: Long, modifier: Modifier = Modifier) {
                         TAB_AREAS -> AreasRoute(
                             viewModel = areasViewModel,
                             onOpenFocus = { focusEntry = focusEntry.requested() },
+                            onOpenPulse = { pulseOpen = true },
                         )
 
                         TAB_TRAIL -> {
@@ -204,6 +211,10 @@ fun ClarityShell(focusRequest: Long, modifier: Modifier = Modifier) {
                     }
                 }
             }
+        }
+
+        if (pulseOpen) {
+            PulseRoute(onDismiss = { pulseOpen = false })
         }
 
         ClarityTabBar(

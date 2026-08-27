@@ -14,6 +14,27 @@
         neither could use one. The permission is removed rather than shipped, since
         a permission the app cannot make use of still shows up in the app info
         screen a person is invited to go and check.
+
+        **Phase 6 is the first real caller, and the removal was checked against the
+        library rather than assumed.** In work-runtime 2.11.2,
+        WorkConstraintsTracker.track filters its controllers by
+        ConstraintController.hasConstraint for the spec it is given, so a request
+        with no constraints never reaches the network tracker and never starts it.
+        Everything that does touch ConnectivityManager, the state read and the
+        default network callback registration, catches SecurityException already. A
+        constraint free daily reminder is therefore safe without the permission.
+        **Adding any constraint to a work request in this app means putting the
+        permission back**, which would be a change to what the privacy policy invites
+        people to verify, so it is a decision for the owner and not a build fix.
+
+        The three WorkManager permissions this app does ship are WAKE_LOCK,
+        RECEIVE_BOOT_COMPLETED and FOREGROUND_SERVICE. None is a network permission
+        and verifyNoInternetPermission passes on both variants. MASTER_BUILD_PROMPT
+        section 18 puts every permission beyond notifications out of scope for v1,
+        which these are, and docs/BUILD_STATE.md records the question as the
+        builder's call. Phase 6 does not settle it: it uses WorkManager because
+        section 3 and 12.1 both require it for this reminder, and reports what the
+        merged manifest gains.
     -->
     <uses-permission
         android:name="android.permission.ACCESS_NETWORK_STATE"
