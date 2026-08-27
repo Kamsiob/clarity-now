@@ -275,11 +275,19 @@ data class ItemReordered(
     override val primaryEntityId get() = itemId
 }
 
-/** A tombstone. */
+/**
+ * A tombstone.
+ *
+ * [areaId] is null for an item deleted straight out of the inbox. Deleting is the one
+ * operation an inbox must always support, and requiring an area here would have meant
+ * a person could put something in the inbox and only get it out again by filing it
+ * first. Addendum 01 4a and MASTER_BUILD_PROMPT 14b.1 both say an unfiled item can be
+ * deleted, with the same undo window as anywhere else.
+ */
 @Serializable
 data class ItemDeleted(
     val itemId: String,
-    val areaId: String,
+    val areaId: String?,
     val titleSnapshot: String,
 ) : EventPayload {
     override val primaryEntityId get() = itemId

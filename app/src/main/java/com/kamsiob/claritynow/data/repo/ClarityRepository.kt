@@ -454,14 +454,36 @@ class ClarityRepository(
         val item = current.items[itemId]?.takeIf { it.deletedAt == null } ?: return
         if (item.areaId != null) return
         val area = current.areas[areaId]?.takeIf { it.deletedAt == null && !it.archived } ?: return
-        commit(
-            ItemFiled(
-                itemId = itemId,
-                areaId = areaId,
-                orderKey = tailOrderKey(current.liveItemsIn(areaId)),
-                areaNameSnapshot = area.name,
-            ),
+        val filed = ItemFiled(
+            itemId = itemId,
+            areaId = areaId,
+            orderKey = tailOrderKey(current.liveItemsIn(areaId)),
+            areaNameSnapshot = area.name,
         )
+        // Filing into an idle area promotes in the same transaction, exactly as an add
+        // does in 8.2. MASTER_BUILD_PROMPT 14b.1 requires it, and the alternative
+        // leaves an area sitting idle with something queued behind it, which is a
+        // state the Areas screen has no way to read: it would show `Add your first
+        // item` above a queue that is not empty.
+        //
+        // Filing is still the separate, optional act Addendum 01 4a asks for. What is
+        // not optional is that an area with something in it has an active item.
+        if (current.activeItemIn(areaId) == null) {
+            commit(
+                filed,
+                ItemPromoted(
+                    itemId = itemId,
+                    areaId = areaId,
+                    previousStatus = ItemStatus.QUEUED,
+                    demotedItemId = null,
+                    demotedToOrderKey = null,
+                    titleSnapshot = item.title,
+                    areaNameSnapshot = area.name,
+                ),
+            )
+        } else {
+            commit(filed)
+        }
     }
 
     /**
@@ -634,27 +656,18 @@ class ClarityRepository(
      * A tombstone. The undo window lives in the UI and expires before this is
      * called, so there is no event to compensate for and nothing to explain later.
      *
-     * **An unfiled item cannot be deleted, and that is a gap that has to be closed
-     * before the inbox ships.** MASTER_BUILD_PROMPT 14b.1 is explicit that an
-     * inbox item can be deleted, with the same five second undo as anywhere else,
-     * and Addendum 01 4a says the same. `ITEM_DELETED` carries a non null `areaId`,
-     * per 5.2's catalog, so the event cannot be built for an item that has no area,
-     * and the only honest thing this method can do meanwhile is refuse.
-     *
-     * The consequence, stated plainly because a silent early return does not state
-     * it: until that payload is widened, a person can put something in the inbox
-     * and has no way to take it back out except by filing it first. That is the
-     * one operation an inbox must always support, so this is not a defect a later
-     * phase can absorb, and the fix is a schema change that is nearly free now.
+     * An unfiled item is deleted the same way anything else is. `ITEM_DELETED`
+     * carries a nullable area for exactly this case: taking something back out of
+     * the inbox is the one operation an inbox must always support, and requiring an
+     * area would have meant filing it first in order to throw it away.
      */
     suspend fun deleteItem(itemId: String) {
         val current = _state.value
         val item = current.items[itemId]?.takeIf { it.deletedAt == null } ?: return
-        val areaId = item.areaId ?: return
         commit(
             ItemDeleted(
                 itemId = itemId,
-                areaId = areaId,
+                areaId = item.areaId,
                 titleSnapshot = item.title,
             ),
         )

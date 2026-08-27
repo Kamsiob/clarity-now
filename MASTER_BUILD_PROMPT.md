@@ -218,7 +218,7 @@ Payloads carry **full before and after values**, so replay reconstructs state wi
 | `ITEM_COMPLETED` | itemId, areaId, titleSnapshot, areaNameSnapshot, activeDurationDays |
 | `ITEM_REOPENED` | itemId, areaId, targetOrderKey |
 | `ITEM_REORDERED` | itemId, areaId, previousOrderKey, newOrderKey |
-| `ITEM_DELETED` | itemId, areaId, titleSnapshot (tombstone) |
+| `ITEM_DELETED` | itemId, areaId (nullable), titleSnapshot (tombstone) |
 | `FOCUS_STARTED` | sessionId, areaId, itemId, plannedSeconds |
 | `FOCUS_COMPLETED` | sessionId, actualSeconds |
 | `FOCUS_ENDED_EARLY` | sessionId, actualSeconds |
@@ -236,6 +236,8 @@ Payloads carry **full before and after values**, so replay reconstructs state wi
 **The four new types and the change to `ITEM_ADDED` come from Addendum 01**, and they are in the catalog now rather than in the phase that uses them because an event payload is nearly free to change before user data exists and expensive afterward. `docs/EVENT_FORMAT.md`, the golden fixture and the replay harness carry the same change, including replay coverage for an unfiled item, the filing transition and a session extension. The schema version those events are written at, and whether the event `schemaVersion` moves off 1, belong to that one schema commit, which also carries the payload questions already open as issue #19. A log written before the change must still replay: an absent optional field reads as null.
 
 **`APP_OPENED` is a presence marker and is never counted as activity.** It records a date key, no time and no count, written at most once per calendar day on the first foreground, and it exists only so a gap can be detected without any tracking. It is excluded from `ClarityEventType.isUserActivity`, joining `PULSE_GENERATED`, `REPORT_GENERATED` and `PLAN_OFFERED`, and the predicate's complement is therefore no longer only the three events the engine writes: it is every event the app writes without a user act. This is not a nicety. `activeDays` and `totalEvents` count user activity, so an `APP_OPENED` that counted would make `mo.steady`, active on 9 or more of the last 14 days, fire for someone who did nothing for a fortnight, would turn `ob.day.l03`, `{n} of seven days had activity`, into a count of app opens, and would put `quietDay` nearly out of reach. For the same reason `APP_OPENED` renders no Trail row and is excluded from the day header event count in section 9: a log of when someone was present is a measurement of absence turned inside out, which is exactly what 14b.4 forbids.
+
+**`ITEM_DELETED` carries a nullable area for the same reason.** Deleting is the one operation an inbox must always support, and an unfiled item has no area to name. Requiring one would have meant a person could put something in the inbox and get it out again only by filing it first, which is the opposite of what a capture surface is for.
 
 **`ITEM_FILED` exists because `ITEM_ADDED` can now carry a null area.** An item with no area is real, is queryable, and is outside every area scoped invariant in 6.2 and outside every engine fact. It cannot be `ACTIVE` or `COMPLETED` until it is filed, and filing is the only transition into an area. `ITEM_FILED` carries `areaNameSnapshot` so a Trail row can name the destination without a lookup, and resolves the item title by folding, which is what every type without a full snapshot does. Room migrates to schema 3 for the nullable column.
 

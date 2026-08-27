@@ -182,7 +182,7 @@ out of step with its parent.
 | `ITEM_COMPLETED` | `itemId`, `areaId`, `titleSnapshot`, `areaNameSnapshot`, `activeDurationDays` |
 | `ITEM_REOPENED` | `itemId`, `areaId`, `targetOrderKey` |
 | `ITEM_REORDERED` | `itemId`, `areaId`, `previousOrderKey`, `newOrderKey` |
-| `ITEM_DELETED` | `itemId`, `areaId`, `titleSnapshot` |
+| `ITEM_DELETED` | `itemId`, `areaId` (nullable), `titleSnapshot` |
 
 `previousStatus` is one of `ACTIVE`, `QUEUED`, `COMPLETED`, `DELETED`.
 
