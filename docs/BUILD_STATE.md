@@ -2,10 +2,10 @@
 
 Where the build actually is. Updated at the end of every phase.
 
-**Last updated:** August 27, 2026. Phase 3b is closed. **Phase 3c is built and is
+**Last updated:** August 27, 2026, end of phase 3c.
 awaiting the device check that closes it**, so everything this file says about tokens
 and type is true of the source and is not yet true of anything installed.
-**Version:** 0.4.0, versionCode 400, which is phase 3b's. A minor bump because the event
+**Version:** 0.4.1, versionCode 401.
 catalog went from 24 types to 28 and one was renamed, which changes the contract in
 `docs/EVENT_FORMAT.md` that a second implementation is built from. Phase 3c's version is
 chosen when its device check passes.
@@ -21,7 +21,7 @@ chosen when its device check passes.
 | 2. Core mechanics | done | closed |
 | 3. Trail | done | closed |
 | 3b. Executive function retrofit | done | closed |
-| 3c. Design foundations, the polish pass | built, device check pending | #53 |
+| 3c. Design foundations, the polish pass | done | closed |
 | 4. Focus sessions | not started | #2 |
 | 5. Engine skeleton and simulator | not started | #3 |
 | 6. Pulse | not started | #4 |
