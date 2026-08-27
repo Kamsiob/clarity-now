@@ -16,9 +16,13 @@ plugins {
 // and one was renamed, which is a change to the contract in docs/EVENT_FORMAT.md that
 // a second implementation is built from. Not a major one because nothing a person can
 // see behaves differently than it did, apart from being calmer when they ask for it.
+// 0.4.1: phase 3c, the foundations half of the polish pass. A patch rather than a
+// minor bump because nothing new can be done with the app: the value ladder, the
+// tracking and the type steps correct things that were already specified or already
+// wrong, and no contract, capability or event changed.
 val versionMajor = 0
 val versionMinor = 4
-val versionPatch = 0
+val versionPatch = 1
 
 android {
     namespace = "com.kamsiob.claritynow"

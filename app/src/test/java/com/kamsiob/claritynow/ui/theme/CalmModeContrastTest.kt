@@ -26,6 +26,12 @@ import kotlin.math.abs
  * The three grounds are the three the design permits: no wash on an idle area, the
  * resting wash, and the in-session wash. design-v3.md 8.2 item 1's promotion peak of 11
  * percent is shallower than the in-session wash in both worlds and is covered by it.
+ *
+ * **Phase 3c moved four light tokens and two dark ones and every number below is the
+ * re-measurement.** `areaLabelColor` recomputes its ground from the token set, so the
+ * variants adapted on their own: eight of the 96 changed, three in light and five in
+ * dark. What did not adapt was the assumption underneath them, and it was wrong. See
+ * the calm ground note in `AreaPalette.kt`.
  */
 class CalmModeContrastTest {
 
@@ -73,10 +79,14 @@ class CalmModeContrastTest {
      * unchanged in calm mode, so the same variant has to clear on the calm ground as
      * well. All 48 colors, both worlds, five grounds, 480 measurements.
      *
-     * The tightest is 4.52 to one, `#4F46E5` on a dark in-session card in calm mode.
-     * That is 0.02 of margin, which is the same order as the 4.50 the light canvas
-     * already has in `TrailContrastTest`, and it is why this is a test rather than a
-     * note: a later change to a wash opacity or to the 48 colors moves it.
+     * The tightest is 4.538 to one, `#A68B6B` on a light in-session card. The dark
+     * world's tightest is 4.655, `#92400E` in calm mode, and dark used to be the tighter
+     * of the two with 0.04 over the floor. It is no longer, because phase 3c made the
+     * calm ground one of the two the variant is solved against rather than an
+     * assumption about it.
+     *
+     * This is a test rather than a note because a later change to a wash opacity, to a
+     * surface token or to the 48 colors moves it. Phase 3c is the proof: it moved.
      */
     @Test
     fun `every area label clears the floor on every ground it can sit on`() {
@@ -116,8 +126,11 @@ class CalmModeContrastTest {
      *
      * Verifying the label against `colors.card` clears the floor on all 48 colors and is
      * wrong, because no label is ever drawn on a bare card unless its area is idle. On an
-     * in-session card the worst of the 48 measures 3.83 to one in light, which is further
-     * under the floor than the Trail defect phase 3 found.
+     * in-session card the worst of the 48 measures 3.707 to one in light, which is
+     * further under the floor than the Trail defect phase 3 found. It measured 3.833
+     * before phase 3c took `card` off pure white, so the rejected reading got worse
+     * rather than better, which is the direction that matters: the cost of getting this
+     * wrong grows with the design rather than shrinking.
      */
     @Test
     fun `verifying the label against the bare card is the reading that fails`() {
@@ -167,43 +180,49 @@ class CalmModeContrastTest {
     }
 
     /**
-     * `inkSecondary` sits exactly on the floor on a resting card, 4.5016 to one, and
-     * under it on an in-session one, 4.2896, both in light mode on `#1E293B`.
+     * `inkSecondary` used to sit on the floor on a resting card, 4.48 to one, and under
+     * it on an in-session one, 4.27, both in light mode on `#1E293B`.
      *
-     * **Nothing draws it there today**, which is why this is pinned rather than fixed:
-     * the area card's status line is `inkTertiary` on an idle card, which carries no
-     * wash at all, or the area accent while a session is running. Fixing it would mean
-     * raising an ink token's opacity for every screen in the app, which is a change to
-     * design-v3.md 3.1 rather than to calm mode. Pinning it means the day a caption does
-     * land on an in-session card, this fails instead of the screen quietly missing the
-     * floor, which is exactly how the Trail defect in phase 3 got as far as it did.
+     * Phase 3b pinned that as a failure rather than fixing it, and wrote down why:
+     * "fixing it would mean raising an ink token's opacity for every screen in the app,
+     * which is a change to design-v3.md 3.1 rather than to calm mode". **Phase 3c is
+     * that change to 3.1.** The token went from 0.60 to 0.64, required by the new canvas
+     * on its own, and closing this was the second thing it bought. Resting is now 5.05
+     * to one and in-session 4.75, on every one of the 48 colors in both worlds.
      *
-     * Both numbers are ranges rather than floors, because 0.0016 of margin is not a
-     * margin and an assertion that it clears would be a coin toss on rounding.
+     * The test is kept and inverted rather than deleted, because the reason it existed
+     * has not gone away: nothing draws a caption on an in-session card today, so if this
+     * regresses no screen shows it. It now asserts clearance so that the day something
+     * does land there, the floor is already true.
      */
     @Test
-    fun `ink secondary has no headroom on an area card carrying a wash`() {
-        val light = ClarityLightColors
-        val resting = palette.minOf { hex ->
-            val on = ground(parseAreaColor(hex), light.cardWashAlpha, light.card)
-            contrastRatio(light.inkSecondary.compositeOver(on), on)
+    fun `ink secondary clears the floor on an area card carrying a wash`() {
+        val failures = worlds.flatMap { world ->
+            palette.flatMap { hex ->
+                grounds(hex, world).mapNotNull { (name, on) ->
+                    val ink = world.colors.inkSecondary
+                    val ratio = contrastRatio(ink.compositeOver(on), on)
+                    if (ratio < floor) "${world.name} $hex on $name at $ratio" else null
+                }
+            }
         }
+        assertTrue(
+            "below design-v3.md 13's floor of $floor to one: " + failures.joinToString("; ") +
+                ". This cleared for the first time in phase 3c, when inkSecondary went " +
+                "to 0.64. Lowering it again puts every caption in the app back under " +
+                "the floor, not just the ones on an area card.",
+            failures.isEmpty(),
+        )
+
+        val light = ClarityLightColors
         val inSession = palette.minOf { hex ->
             val on = ground(parseAreaColor(hex), light.cardWashActiveAlpha, light.card)
             contrastRatio(light.inkSecondary.compositeOver(on), on)
         }
-
         assertTrue(
-            "inkSecondary on a resting card measured $resting to one, and is supposed " +
-                "to be sitting on design-v3.md 13's floor of $floor with nothing to spare",
-            resting in 4.45..4.60,
-        )
-        assertTrue(
-            "inkSecondary on an in session card measured $inSession to one, which is " +
-                "supposed to be under the floor. If it now clears, the wash opacities " +
-                "or the ink token changed and this finding needs re-checking rather " +
-                "than the test relaxing.",
-            inSession < floor,
+            "the in session card is supposed to stay the tightest of the grounds and " +
+                "measured $inSession to one",
+            inSession in 4.65..4.90,
         )
     }
 
@@ -233,11 +252,15 @@ class CalmModeContrastTest {
      * be one way.
      *
      * It moves both ways. In light mode the calm wash is a shallower and less colored
-     * ground and every label improves, the largest by 0.33 of a ratio; in dark mode
-     * fifteen of the 48 get very slightly worse, the largest by 0.04. Neither is a
+     * ground and every label improves, the largest by 0.30 of a ratio; in dark mode it
+     * goes the other way for fourteen of the 48, the largest by 0.19. Neither is a
      * problem, and the assertion is that neither is ever large: a token whose contrast
      * swung by a whole point when the switch was thrown would be a token calm mode is
      * not allowed to touch.
+     *
+     * **The dark direction is why `areaLabelColor` solves against the calm ground as
+     * well.** A move that is small is still a move, and phase 3b's variants were sitting
+     * on 0.04 of margin against it.
      */
     @Test
     fun `desaturating the wash moves contrast only slightly, in both directions`() {
@@ -272,8 +295,10 @@ class CalmModeContrastTest {
      * `inkSecondary` glyph. Calm mode desaturates the circle, so the glyph inside it is
      * measured with the transform applied.
      *
-     * A glyph is a graphic and takes the 3 to 1 floor rather than 4.5. It measures 4.14
-     * in light and 5.02 in dark, and calm mode moves it by 0.01.
+     * A glyph is a graphic and takes the 3 to 1 floor rather than 4.5. It measures 4.48
+     * in light and 5.99 in dark, and calm mode moves it by 0.01. The light figure rose
+     * from 4.12 in phase 3c: the circle sits on the canvas, which moved down, and the
+     * glyph is `inkSecondary`, which went up.
      */
     @Test
     fun `the trail event glyph clears the graphic floor with the circle desaturated`() {
@@ -298,7 +323,8 @@ class CalmModeContrastTest {
     /**
      * The label variant as it was verified before phase 3b: measured against the bare
      * card token rather than against the card as drawn. Kept here, and only here, so the
-     * test above can measure what it costs.
+     * test above can measure what it costs. It reads `colors.card` live, so it tracks
+     * the token rather than freezing the pure white it was written against.
      */
     private fun naiveLabelColor(accent: Color, colors: ClarityColors): Color {
         if (contrastRatio(accent, colors.card) >= floor) return accent

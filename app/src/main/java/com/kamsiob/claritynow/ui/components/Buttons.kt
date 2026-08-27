@@ -219,8 +219,12 @@ fun ClarityChip(
     // ClarityMotion says the same thing about the token itself: an alpha that
     // overshoots is a bug rather than a flourish. The press scale keeps springSnappy,
     // which design-v3.md 8.1 assigns to chips by name.
+    //
+    // An unselected chip is chrome and sits at `raise`, one step under the content it
+    // filters. design-v3.md 3.1 as amended in phase 3c. A selected chip inverts to ink
+    // and leaves the ladder entirely, which is the point of the inversion.
     val background by animateColorAsState(
-        targetValue = if (selected) colors.inkPrimary else colors.card,
+        targetValue = if (selected) colors.inkPrimary else colors.raise,
         animationSpec = motion.effects(),
         label = "chipBackground",
     )

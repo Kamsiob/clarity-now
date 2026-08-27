@@ -74,7 +74,13 @@ fun ClarityTabBar(
             .height(61.dp)
             .clarityShadow(ClarityElevation.tabBar, CircleShape, enabled = !colors.isDark)
             .clip(CircleShape)
-            .background(colors.card)
+            // `raise`, not `card`. design-v3.md 3.1 as amended in phase 3c: the
+            // surface ladder is a rank, and chrome sits one step below content so it
+            // stops competing with it. This bar and an area card used to be the same
+            // value, which is why a screen of cards read as a screen of chrome. The
+            // shadow stays: a lightness step stands in for a border, never for a
+            // shadow, and 6.1's prohibition is on a hairline and a shadow together.
+            .background(colors.raise)
             .padding(horizontal = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly,

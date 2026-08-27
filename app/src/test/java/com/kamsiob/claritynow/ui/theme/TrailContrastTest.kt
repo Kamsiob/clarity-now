@@ -12,7 +12,7 @@ import java.io.File
  *
  * The Trail puts two pieces of 12sp text on the canvas, the row timestamp and the day
  * header count, and the obvious token for both of them is `inkTertiary`, which is
- * what a de-emphasized caption is for. It measures 2.37 to 1 in light mode, missing
+ * what a de-emphasized caption is for. It measures 2.34 to 1 in light mode, missing
  * the floor by a factor of two, and it is design-v3.md 15.1's "Dark mode with low
  * contrast body text" in its light mode form. That is the finding this file exists to
  * keep true: the Trail uses `inkSecondary` for both.
@@ -22,6 +22,19 @@ import java.io.File
  * palette document claims. Both ink tokens carry an alpha, so each is composited over
  * its surface first; a contrast ratio between a translucent color and a background is
  * not a defined quantity.
+ *
+ * **Phase 3c moved the ground under all of it.** The light canvas went from `#F1F1F6`
+ * to `#E6E6EC` and `inkSecondary` went from 0.60 to 0.64, and the second is the
+ * consequence of the first rather than an improvement chosen alongside it: at 0.60 this
+ * screen's timestamps measured 4.34 to one on the new canvas. Every figure below is the
+ * re-measurement, and one of the findings this file recorded no longer holds. It is
+ * marked where it is.
+ *
+ * Every figure is what the running app computes, which means 8 bits per channel: an
+ * `androidx.compose.ui.graphics.Color` in the sRGB space quantizes on construction, so
+ * a wash composited onto a card lands on a real pixel value and not on a float. Two of
+ * the numbers phase 3b wrote down here were carried at full precision and are 0.02 out
+ * as a result. The ranges below are the measured values.
  */
 class TrailContrastTest {
 
@@ -76,16 +89,19 @@ class TrailContrastTest {
     }
 
     /**
-     * The light canvas is the tightest of the six by a wide margin, at about 4.50 to
-     * one against a floor of 4.5. It passes, and it passes with almost nothing to
-     * spare, so a later darkening of `canvas` or a lightening of `inkSecondary` would
-     * take the whole Daylight world under the floor without touching this screen.
-     * Pinned so that change fails here rather than in an audit.
+     * The light canvas is still the tightest of the six, and it now has a margin.
+     *
+     * It measured 4.5046 to one before phase 3c, which is the 4.50 this test was written
+     * to pin, and the darkening of `canvas` that phase 3c performs is exactly the change
+     * the old comment here predicted would break it: "a later darkening of `canvas`
+     * would take the whole Daylight world under the floor without touching this
+     * screen". It did, to 4.33, and that is why `inkSecondary` moved with it. The pair
+     * is now 4.88 to one and the surface order is unchanged.
      */
     @Test
-    fun `the light canvas is the tightest surface and has almost no margin`() {
+    fun `the light canvas is the tightest surface, with a margin since phase 3c`() {
         val tightest = ratioOn(ClarityLightColors.inkSecondary, ClarityLightColors.canvas)
-        assertTrue("expected about 4.50 to one, measured $tightest", tightest in 4.50..4.55)
+        assertTrue("expected about 4.88 to one, measured $tightest", tightest in 4.82..4.95)
         val others = listOf(
             ratioOn(ClarityLightColors.inkSecondary, ClarityLightColors.card),
             ratioOn(ClarityDarkColors.inkSecondary, ClarityDarkColors.canvas),
@@ -99,27 +115,42 @@ class TrailContrastTest {
     }
 
     /**
-     * The completed row is the one place on this screen where the choice of ground
-     * decides whether the app passes design-v3.md 13, and it is a one word decision.
+     * The completed row is a card, and **the argument for that changed in phase 3c**.
      *
-     * design-v3.md 11 calls it a "mint wash card". Read as a card it is
-     * `positiveGreen` at 8 percent over `card`, and the timestamp on it clears the
-     * floor. Read as a tint on the page it is the same wash over `canvas`, which
-     * darkens the ground and takes the same text under the floor. Nothing else on the
-     * screen distinguishes the two readings, so without this test the failing one is
-     * an equally reasonable thing for somebody to build.
+     * design-v3.md 11 calls it a "mint wash card". Read as a card it is `positiveGreen`
+     * at 8 percent over `card`; read as a tint on the page it is the same wash over
+     * `canvas`. Until phase 3c the contrast floor decided between them: the card reading
+     * measured 4.56 to one and the canvas reading 4.40, so only one of the two shipped a
+     * legible timestamp. With `inkSecondary` at 0.64 both clear, 5.14 and 4.77, and the
+     * floor no longer chooses.
+     *
+     * That is recorded rather than quietly dropped, because the reading is unchanged and
+     * the reasons for it now have to carry it alone: design-v3.md 11 says "card", and the
+     * phase 3c surface ladder says a completed event is content sitting at the top rank
+     * rather than a tint on the page.
+     *
+     * What is asserted is therefore the ordering rather than a pass and a fail. The card
+     * reading is the lighter ground and has to stay the more legible one, and the gap
+     * between the two is what getting the word wrong still costs.
      */
     @Test
-    fun `the completed row's mint goes over card, because over canvas it fails the floor`() {
+    fun `the completed row's mint goes over card, and stays the more legible ground`() {
         val overCard = ratioOn(ClarityLightColors.inkSecondary, completedRow(ClarityLightColors))
         val overCanvas =
             ratioOn(ClarityLightColors.inkSecondary, completedRowOnCanvas(ClarityLightColors))
 
         assertTrue("the shipped reading measures $overCard to one", overCard >= floor)
         assertTrue(
-            "the canvas reading measures $overCanvas to one, which is supposed to be " +
-                "the failing one this test exists to rule out",
-            overCanvas < floor,
+            "the canvas reading measures $overCanvas to one. Since phase 3c it clears " +
+                "the floor as well, so if this is ever under $floor again the tokens " +
+                "moved and the whole file needs re-measuring rather than this test " +
+                "relaxing.",
+            overCanvas >= floor,
+        )
+        assertTrue(
+            "the card reading is the lighter ground and is supposed to be the more " +
+                "legible one. Card $overCard, canvas $overCanvas.",
+            overCard > overCanvas,
         )
     }
 

@@ -166,6 +166,12 @@
     <string name="conflict_two_active">While you were away, two things became active in %1$s. %2$s is active. %3$s is back at the top of the queue.</string>
 
     <!-- Trail, MASTER_BUILD_PROMPT 9 and design-v3.md 11 -->
+    <!--
+        The screen title, added in phase 3c. Its own string rather than a reuse of
+        tab_trail: the two say the same word today and are free to stop, and a tab
+        label and a serif screen title are not the same kind of copy.
+    -->
+    <string name="trail_title">Trail</string>
     <string name="trail_filter_all">All</string>
     <string name="trail_day_today">Today</string>
     <string name="trail_day_yesterday">Yesterday</string>

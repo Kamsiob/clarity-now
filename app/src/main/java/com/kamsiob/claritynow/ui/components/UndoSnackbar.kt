@@ -109,6 +109,10 @@ fun UndoSnackbar(
                 .padding(horizontal = 17.dp)
                 .clarityShadow(ClarityElevation.card, RoundedCornerShape(12.dp), enabled = !colors.isDark)
                 .clip(RoundedCornerShape(12.dp))
+                // `card` rather than `raise`, and it is the one piece of floating
+                // furniture in the app that keeps the content value. For five seconds
+                // this is the top plane on the screen, and what it holds is the only
+                // way back from a deletion. Chrome recedes; this cannot afford to.
                 .background(colors.card),
         ) {
             Column {

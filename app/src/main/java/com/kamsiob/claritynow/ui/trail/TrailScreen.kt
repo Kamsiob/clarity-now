@@ -217,6 +217,8 @@ fun TrailScreen(
                         TabBarHeight + TabBarInset + 24.dp,
                 ),
             ) {
+                item(key = "title") { TrailHeader() }
+
                 item(key = "filters") {
                     Column {
                         TrailFilterRow(
@@ -224,11 +226,13 @@ fun TrailScreen(
                             selectedAreaId = state.selectedAreaId,
                             onSelect = { areaId ->
                                 onSelectArea(areaId)
-                                // The chip row is the first item, so a filter change
-                                // that replaces the whole list has to bring it back
-                                // into reach. Instant rather than animated: an
-                                // animated scroll would travel through rows that are
-                                // being replaced underneath it.
+                                // A filter change replaces the whole list, so it has
+                                // to bring the chip row back into reach. Item 0 is the
+                                // title rather than the chips, which is what is wanted:
+                                // the header and the chips arrive together and the
+                                // screen re-reads from the top. Instant rather than
+                                // animated, because an animated scroll would travel
+                                // through rows that are being replaced underneath it.
                                 scope.launch { listState.scrollToItem(0) }
                             },
                         )
@@ -262,6 +266,59 @@ fun TrailScreen(
             }
         }
     }
+}
+
+/**
+ * The screen title, in the serif. design-v3.md 11 and 5.3.
+ *
+ * **Phase 3 decided the Trail had no title and phase 3c reverses that decision.** The
+ * original reasoning was sound as far as it went: the tab bar already says Trail, so a
+ * heading reading Trail repeats a word the user can see at the other end of the same
+ * screen. What that reasoning did not price is what section 11 gives every other
+ * surface. Areas opens with a `displayTitle`, the Report has an eyebrow and a
+ * `displayHero`, Momentum has a `readSerif` headline and About has a `displayTitle`, so
+ * the Trail was the one screen in the document that began with its content. The design
+ * audit measured the cost: the built Trail contained no serif glyph at all, and across
+ * the whole app Newsreader had five call sites, of which four were the empty states in
+ * `AreaSheets`, `InboxSheet`, `AreasScreen` and this file, and the fifth was the Areas
+ * title. Four uses in five said "there is nothing here", which is not what a signature
+ * typeface should mean. This line is the sixth, and it changes the ratio as well as
+ * this screen.
+ *
+ * The audit's second finding here is the same fact from the other end. With no title,
+ * the loudest thing on the Trail was the selected `All` filter chip, so a filter
+ * outranked everything it filters. Thirty sp of serif above it puts the ranking back.
+ *
+ * Recorded rather than flipped: design-v3.md 11 now names this title, and the
+ * reversal and its reason are written there as well as here.
+ *
+ * **The same treatment as Areas, deliberately.** Same role, same 12dp above and 6dp
+ * below, same `inkPrimary`, no glyph beside it, because the Trail has nothing that
+ * belongs next to a title the way the archive does on Areas. Two screens that open the
+ * same way are one app; a Trail title styled to be interesting would be a second
+ * design language for a screen that reads history.
+ *
+ * The 12dp of horizontal padding is the list's own 8dp brought up to the 20dp screen
+ * padding in design-v3.md 6, which is the same arithmetic every row and day header on
+ * this screen does. The title's left edge therefore lands on the day headers' left
+ * edge exactly.
+ *
+ * No entrance. design-v3.md 8.4's once-per-tab entrance is wired on Areas and nowhere
+ * else, and giving the Trail one is a motion decision rather than a type one.
+ */
+@Composable
+private fun TrailHeader() {
+    val colors = LocalClarityColors.current
+    val type = LocalClarityTypography.current
+    Text(
+        text = stringResource(R.string.trail_title),
+        style = type.displayTitle,
+        color = colors.inkPrimary,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp)
+            .padding(top = 12.dp, bottom = 6.dp),
+    )
 }
 
 /**
@@ -325,6 +382,16 @@ private fun TrailFilterRow(
  * three separate times, in the 15.1 tell list, in 10.12 and in 14. An all caps date
  * header is the near universal convention in activity logs, which makes it the
  * highest risk tell on this screen.
+ *
+ * **The header only started outranking its rows in phase 3c, and not by anything this
+ * file does.** `body` and `bodyStrong` were both 16sp through phase 3b, so section 11's
+ * instruction to set the header in one and the rows in the other bought a weight change
+ * and nothing else, and a device capture of four events read as a wall of one size at
+ * 12 and 16sp. 5.3 now puts `body` at 15 and `bodyStrong` at 17, so the same two lines
+ * of code that were a 1.00 size ratio are a 1.13 one, on top of the 600 against 400.
+ * With the serif title above it the screen reads 30, 17, 15, 12 rather than 16 and 12.
+ * Nothing here changed; the scale under it did, which is the whole argument for having
+ * fixed the scale before building the eight screens that do not exist yet.
  *
  * The hairline is the header's one separation device, which is why there is no card,
  * no background shift, no shadow and no stickiness underneath it. It is drawn with

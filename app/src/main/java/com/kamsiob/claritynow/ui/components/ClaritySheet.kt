@@ -50,6 +50,10 @@ fun ClaritySheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        // `card`, and it stays `card`. design-v3.md 3.1 names this token "cards and
+        // sheets", and the phase 3c ladder puts content at the top: a sheet is where a
+        // person reads and types, not chrome. `raise` is for a surface drawn *inside* a
+        // sheet that has to separate from it, and there is no such surface yet.
         containerColor = colors.card,
         contentColor = colors.inkPrimary,
         scrimColor = Color.Black.copy(alpha = 0.42f),

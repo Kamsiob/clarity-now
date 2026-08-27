@@ -137,6 +137,13 @@ fun ContemplativeTheme(
     }
 }
 
+/**
+ * `surfaceVariant` takes `raise`, which since phase 3c is a real value with real call
+ * sites rather than a token nothing drew: the floating tab bar and an unselected chip
+ * sit there, one rank under the content they serve. A Material component that reaches
+ * for `surfaceVariant` therefore lands on the app's chrome value, which is what such a
+ * component almost always is.
+ */
 private fun materialSchemeFor(colors: ClarityColors, dark: Boolean) = if (dark) {
     darkColorScheme(
         primary = colors.actionBlue,

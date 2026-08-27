@@ -110,6 +110,9 @@ fun Modifier.areaWash(accent: Color, alpha: Float, areaId: String): Modifier = c
  * There is no border parameter, and there never will be one. A card carries a
  * shadow in the light world and a lightness step in the dark world, and nothing
  * carries both.
+ *
+ * The default background is `card`, the top rank of the phase 3c surface ladder, and
+ * a content card is what that rank is for. Chrome sits at `raise` one step below it.
  */
 @Composable
 fun ClarityCard(

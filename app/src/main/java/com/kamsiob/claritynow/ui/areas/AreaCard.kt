@@ -146,8 +146,26 @@ fun AreaCardContent(
             if (area.isIdle) {
                 Text(
                     text = stringResource(R.string.area_idle_title),
+                    // 500 rather than itemTitle's 650, design-v3.md 10.3. The
+                    // invitation is the same string at the same size as a real item
+                    // title, one step lighter, so an empty card reads as a place
+                    // waiting to be filled rather than as a card that is already
+                    // full. This line rendered at 650 through phases 2 and 3b: the
+                    // sans family pinned a single weight instance, so the copy had
+                    // nothing to resolve against and was dropped in silence. See
+                    // ClarityType.kt. The tracking stays at the role's own value,
+                    // because the size and the job have not changed.
                     style = type.itemTitle.copy(fontWeight = FontWeight(500)),
-                    color = colors.inkTertiary,
+                    // inkSecondary, and 10.3 says inkTertiary. **That is a
+                    // contradiction inside design-v3.md and section 13 wins**, because
+                    // a floor is a floor: `inkTertiary` measures 2.40 to one on the
+                    // card and 3.22 in dark, against 13's 4.5, and 10.3 calls this
+                    // same string the most important one on the screen. Resolved in
+                    // 10.3 rather than patched here. `inkSecondary` is the one step
+                    // down from `inkPrimary` that clears, at 5.29 to one in light and
+                    // 6.36 in dark on the phase 3c card, and the weight above already
+                    // carries the "one step lighter" the idle state is for.
+                    color = colors.inkSecondary,
                 )
             } else {
                 Text(
@@ -244,6 +262,11 @@ private fun StatusLine(area: AreaCardModel, accent: Color) {
             )
             Text(
                 text = pluralStringResource(R.plurals.area_in_focus_minutes, minutes, minutes),
+                // Semibold, design-v3.md 10.3. This is the one status line that
+                // reports something happening right now, and weight is the only
+                // device available to say so: the card has no room for a second
+                // size and 3.4 forbids giving it a filled block. Inert until phase
+                // 3c for the same reason as the idle title above.
                 style = type.caption.copy(fontWeight = FontWeight(600)),
                 color = accent,
                 modifier = Modifier.padding(start = 5.dp),
@@ -260,7 +283,12 @@ private fun StatusLine(area: AreaCardModel, accent: Color) {
                 )
             },
             style = type.caption,
-            color = colors.inkTertiary,
+            // The same correction as the idle title above, and a worse failure before
+            // it: this line is 12sp rather than 21, and it was the smallest text in
+            // the app sitting at 2.40 to one. design-v3.md 10.3 names no color for
+            // this row, so there was no contradiction to resolve, only section 13 to
+            // obey. It reads quieter than the title anyway, by 9sp of size.
+            color = colors.inkSecondary,
             modifier = Modifier.padding(top = 6.dp),
         )
 

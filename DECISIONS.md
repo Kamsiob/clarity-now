@@ -71,6 +71,402 @@ The old entry stays where it is, wrong, dated, and useful.
 
 ---
 
+## August 27, 2026: the polish pass, and the design foundations under it
+
+Phase 3c, issue #53, and the split that puts the rest of it in phase 12b, issue #54.
+Addendum 01 3c, `MASTER_BUILD_PROMPT.md` 19, and `design-v3.md` 1, 3.1, 3.4, 5.3, 10.3,
+11, 13, 14 and 15. Eight things settled, seven of which required changing the document
+that is the authority on anything visual, which is the owner's call and not a builder's.
+
+**The starting fact, recorded plainly because it is the least comfortable one.**
+Addendum 01 3c asks for a polish pass and no phase ever carried it. When the addendum
+was recorded, earlier the same day, 3c was written into `design-v3.md` 17.4 and
+`MASTER_BUILD_PROMPT.md` 3.2 as a rule governing platform versus custom, and the pass
+that the same section describes was never turned into a phase. That is a recording
+error rather than a change of plan. **The owner found it by looking at the app rather
+than at the plan**, on the build at 0.4.0:
+
+> "I don't know if we've gotten to the design, polish, and premium feeling layer that's
+> added on top of the Material 3 Expressive. But I can tell you so far what I've seen is
+> not that great."
+
+An audit was commissioned to separate three causes that have completely different
+fixes: implementation drift, where the code does not match a number the document
+already states; missing content, where a screen is running at partial content because
+its phase has not arrived; and a genuine gap, where the code matches the document and
+the result is still flat. **It found the third dominates**, and about twenty drift
+findings of which five were visible on a screen the owner could open.
+
+**The finding that made every decision below the owner's.** `design-v3.md` removed
+every conventional decoration device on purpose, which is a strong position and the
+right one, and it moves the entire burden onto four things: type, space, value and
+motion. Measured on the two built screens, three of the four were not carrying. Value:
+card against canvas at 1.126 to one, `raise` declared and drawn nowhere, and two colors
+covering 91.6 percent of the Areas screen. Type: tracking set on two of the nine sans
+roles, `body` and `bodyStrong` both at 16sp, and the signature serif appearing at five
+call sites in the whole app of which four were empty states, which had quietly made
+Newsreader mean "there is nothing here". Motion: nothing moving at rest. Space was
+carrying, alone, and what it was expressing was emptiness. **None of that is reachable
+by conforming harder**, which is the whole reason the document moved instead.
+
+### The light world buys its depth downward, and pure white loses
+
+**Decided.** `canvas` goes from `#F1F1F6` to `#E6E6EC`, L\* 95.3 to 91.4. `card` goes
+from `#FFFFFF` to `#FCFBF9`, L\* 100 to 98.6, and is warm. `raise` goes from `#FAFAFC`
+to `#F4F3F0`, L\* 98.3 to 95.8. Card against canvas moves from **1.126 to one** to
+**1.202 to one**, and the light world's span from 4.73 L\* to 7.19. In dark, where
+`design-v3.md` 6.1 allows no shadows at all and the lightness ladder is therefore the
+only separation device there is, `card` goes `#191921` to `#1D1D25` and `raise`
+`#15151C` to `#18181F`, while `canvas` is deliberately held at `#0E0E13`. Stated in
+`design-v3.md` 3.1 and 3.2 and held by `SurfaceLadderTest`.
+
+**This resolves a contradiction that had survived two phases, and it is recorded as
+resolved rather than quietly fixed.** `design-v3.md` 1 says "backgrounds are never pure
+white or pure black". Section 14 says "no pure white or pure black backgrounds". 3.1
+said `card` is `#FFFFFF`, and 10.3 repeated the hex rather than naming the token. **Two
+statements against one, and the build had followed the one**, faithfully, because 3.1
+is the token table. The two win. 10.3 now names the token, because a component section
+repeating a color out of the token table is how the contradiction lasted as long as it
+did.
+
+**Why the ground moved rather than the card.** There was no headroom. `card` was
+already pure white, so no amount of lifting it could produce a step, and the only
+direction with any room in it was down. That is also the answer to the instinct the
+audit named and `design-v3.md` 15.3 now refuses: when an element does not separate,
+measure whether the ground under it has any room left before reaching for the element.
+The new canvas keeps the cool lean section 1 asks for, at 6 points of blue over red,
+and the new card is warm at 3 points of red over blue, which is the "warmth in the
+cards" the same sentence promises and which nothing in the app delivered. `cardWash` is
+the user's own area color and four of the eight moods are cool, so the default area put
+a cool wash on a pure white card.
+
+**Considered and rejected: taking the dark canvas toward pure black**, which is the
+statistically common 2026 answer for an OLED panel and would have bought dark its step
+the cheap way. Section 14 bans pure black outright, and the Contemplative world's
+`deepBlack` is only 0.97 L\* below the Daylight canvas, so a darker Daylight ground
+would collapse the two worlds' floors and take the room dimming out of entering Focus.
+Dark bought its depth upward instead, which is the exact mirror of the light world's
+problem. **Considered and rejected: leaving dark alone** on the theory that the light
+world was what the owner was looking at. Dark measured 1.102 to one card against
+canvas, worse than the light world that also had a paired shadow to help it, and a
+device capture was 86.6 percent one color.
+
+**One half of the contradiction is deliberately left open.** Section 1 also says "dark
+surfaces are warm blacks" and every dark token in 3.2 leans cool by 5 to 8 points of
+blue over red. That is a separate decision about four tokens across two worlds and it
+is left to be taken as one rather than folded into this entry.
+
+**Revisit if** the parchment weekly banner arrives in phase 5 and still fails to
+separate. It measured 1.036 to one against the old canvas, which is to say it would
+have arrived **less** visible than the card was; against the new canvas it is a
+different number and it was not re-derived here, because nothing draws it yet.
+
+### `inkSecondary` moves to 0.64, and it was forced rather than chosen
+
+**Decided.** The light `inkSecondary` goes from ink at 0.60 to ink at **0.64**.
+Stated in `design-v3.md` 3.1, held by `TrailContrastTest`.
+
+**Why this is in its own entry.** It is not a design improvement and nobody proposed
+it. It is a second order effect of the canvas change, and it is the kind of effect that
+gets missed. At 0.60 the light canvas was already the tightest surface in the app at
+**4.5046 to one**, four ten-thousandths above `design-v3.md` 13's floor of 4.5, and a
+test written in phase 3 pinned it there with a comment predicting that "a later
+darkening of `canvas` would take the whole Daylight world under the floor without
+touching this screen". Darkening the canvas did exactly that, to **4.33**. So the
+canvas change is not free: it costs four points of alpha on an ink token, everywhere,
+and had the prediction not been written down the first symptom would have been an
+accessibility failure on a screen nobody had edited.
+
+At 0.64 the tightest ground in the app is the light canvas at **4.88 to one**. The
+raise also retires a defect phase 3b had to pin as unfixable rather than fix: at 0.60
+this token measured 4.48 to one on a resting area card and **4.27 on an in-session
+one**, and 16.7 recorded it as measured and held in a test because raising an ink token
+for every screen in the app was out of scope for a calm mode audit. It is in scope for
+a token pass. Both now clear, at 5.05 and 4.75.
+
+**Considered and rejected: leaving the ink alone and taking less canvas.** A canvas
+light enough to keep 0.60 over the floor is a canvas that does not buy the card a step,
+which was the entire point. **Considered and rejected: raising the alpha only where a
+measurement failed**, which would have made `inkSecondary` mean two different values
+depending on the ground and defeated the purpose of a token.
+
+**Revisit if** any future change to `canvas`, in either world, moves the tightest
+measured pair. The rule this entry establishes: **the ink tokens are downstream of the
+ground tokens and are re-measured whenever a ground moves.**
+
+### `raise` gets a job
+
+**Decided.** The three neutral surfaces are a **rank ladder** and each rank has named
+occupants. `canvas` is the page. `raise` is chrome: the floating tab bar and an
+unselected chip. `card` is content: area cards, sheets and the undo snackbar. Content
+is the top plane and chrome recedes from it, and the statement is the same in both
+worlds, which is why the steps are matched across them rather than each world being
+tuned alone. Stated in `design-v3.md` 3.1, held by `SurfaceLadderTest`.
+
+**Why.** 3.1 defined `raise` as "the 3 percent lightness step used instead of a border"
+and never said where it goes, so it went nowhere: it was handed to Material's
+`surfaceVariant` and drawn by nothing. The card, the tab bar, the sheets, the chips and
+the snackbar were therefore one value doing four semantically different jobs, and a
+screen of cards read as a screen of chrome. It would not have helped even if something
+had drawn it, at 1.68 L\* under the card. Giving it a rank roughly triples the depth
+budget of the app using no decoration whatsoever, which is the only kind of depth this
+design system permits.
+
+**`raise` plus a shadow is one separation device, not two, and that needs saying
+because it looks like a violation.** 6.1's prohibition is specifically "never a hairline
+and a shadow on the same element", and 3.1 defines `raise` as the step used **instead
+of** a border. A card has always been lighter than the canvas and has always carried a
+shadow. A value is what a surface is; only a deliberate step standing in for a hairline
+is the device. Putting a hairline on anything in the ladder is still forbidden, and
+`design-v3.md` 15.3 refuses it by name.
+
+**Considered and rejected: putting sheets on `raise` as well**, which is the tidier
+rule, one value for everything that floats. A sheet is where a person reads and types
+and is content, not chrome. **Considered and rejected: putting the undo snackbar on
+`raise`** with the rest of the floating furniture. For five seconds it is the top plane
+on the screen and what it holds is the only way back from a deletion; chrome recedes
+and that cannot afford to.
+
+**Revisit if** a surface has to be drawn **inside** a sheet, which is the one job
+`raise` was defined for and does not yet have. The color picker preview in 10.9 is the
+likeliest first.
+
+### Tracking runs the whole sans scale, and `body` and `bodyStrong` stop being the same size
+
+**Decided.** Every one of the nine sans roles in `design-v3.md` 5.3 carries a tracking
+value, and a role without one is now a defect rather than a default. The ramp opens at
+the small sizes and closes at the large ones: +0.032, +0.022, +0.016, +0.004, -0.006,
+-0.014, -0.022, -0.030em, from `swipeLabel` at 10.5sp to `timerNumeral` at 64sp.
+`sidehead` sits deliberately off the ramp at +0.024em, above `label` at the same 13sp.
+Separately, `body` drops from 16sp to **15** and `bodyStrong` rises from 16sp to **17**.
+
+**Why tracking.** Hanken Grotesk carries one set of sidebearings, drawn to fit at
+reading sizes. Set large it leaves proportionally too much room, because the space
+between letters does not need to grow at the same rate the letters do; set small it
+leaves too little, for the same reason in reverse. The correction is the oldest one in
+typesetting. Two of the nine roles carried a value, so the seven that make up almost
+every string on both built screens ran at whatever the font file happened to ship. This
+is the cheapest change in the whole pass and it touches every label, sidehead, caption
+and chip in the app, built and unbuilt.
+
+**Why `sidehead` is off the ramp.** A section label has to read as a marker rather than
+as a sentence, and the conventional way to buy that is capitals, which 5.3 and section
+14 and 15.1 all forbid. Tracking says the same thing at a fraction of the volume and
+leaves the sentence case intact. Recorded under section 15 as an open choice taken
+against the obvious answer.
+
+**Why the two body roles split, and why the step is uneven.** They were both 16sp,
+which made a size hierarchy impossible inside a run of text. `design-v3.md` 11 gives a
+Trail day header to `bodyStrong` and the rows under it to `body`, so the header could
+outrank its rows by weight and by nothing else, and a device capture of four events
+read as a wall of one size at 12 and 16sp. Forty rows would read worse. Most of the
+step is taken below rather than above, because `bodyStrong` is also the button label in
+10.7 and the undo action in 10.14, and one step is as far as either can move without
+starting to shout. 16sp is in any case Material's `bodyLarge` default, so moving off it
+is the choice section 15 asks for, and 10.11 already set a settings row title at 15sp,
+which makes 15 an established row size in this document rather than a new one.
+
+**Considered and rejected: a new role for the day header** and leaving the body pair at
+16sp. It adds a fifteenth name to a scale of fourteen to avoid admitting that two of
+the existing fourteen were the same size, and it would have left every other run of
+text in the app with no step available. **Considered and rejected: moving `bodyStrong`
+to 18sp** for a cleaner 15 and 18. It is one step from `title` at 19sp, and a button
+label at 18sp is a loud button.
+
+**Revisit if** a screen built in a later phase needs a size between 15 and 17. The sans
+ladder is 13, 15, 17, 19, 21, one even step per rung, with 12 and 10.5 beneath it, and
+inserting a rung is a change to the ladder rather than an addition to it.
+
+### The Trail gets a serif title, which reverses a decision phase 3 took deliberately
+
+**Decided.** The Trail opens with `Trail` in `displayTitle`, left aligned on the same
+measure as the day headers, no glyph beside it, the same treatment the Areas title
+takes in `design-v3.md` 10.1. Stated in `design-v3.md` 11 and built in
+`ui/trail/TrailScreen.kt`.
+
+**This reverses a decision, and the old one was not careless.** Section 11 gave the
+Trail day headers and rows and stopped, phase 3 read that silence as intentional, and
+it reasoned the reversal out: the tab bar already says Trail, so a heading reading Trail
+repeats a word the user can see at the other end of the same screen. That is a real
+argument and it is still true.
+
+**What changed is not the argument, it is what the argument was weighed against.**
+Phase 3 priced the repetition and did not price the absence, because with one screen
+built there was nothing to price it against. Section 11 opens every other surface in
+this app with a headline treatment: Areas takes a `displayTitle`, the Report an eyebrow
+and a `displayHero`, Momentum a `readSerif` headline, About a `displayTitle`. The Trail
+was the one screen in the document that began with its content. The audit measured what
+that cost. The built Trail contained **no serif glyph at all**, and across the whole app
+Newsreader had five call sites, of which four were empty states, so the signature
+typeface of this design system meant "there is nothing here" four times in five. The
+same absence had a second effect the audit named separately: with no title, the loudest
+element on the Trail was the selected `All` filter chip, so **a filter outranked
+everything it filtered**. One serif line fixes both, and it changes the app-wide ratio
+as well as this screen.
+
+**Considered and rejected: a different treatment for this title**, something with more
+character than the Areas title, on the argument that the Trail is a different kind of
+screen. Two screens that open the same way are one app; a Trail title styled to be
+interesting would be a second design language for the screen that reads history.
+**Considered and rejected: reusing `tab_trail` for the string.** The two say the same
+word today and are free to stop, and a tab label and a serif screen title are not the
+same kind of copy.
+
+**Revisit if** a later screen has something that genuinely belongs beside its title, as
+the archive and settings glyphs do on Areas. The Trail has nothing, which is why it has
+no glyph and not because a title never takes one.
+
+### The idle card title comes off `inkTertiary`, because section 13 beats 10.3
+
+**Decided.** `Add your first item` and the `Last active` status line under it read at
+`inkSecondary` rather than `inkTertiary`. The weight drop from 650 to 500 is unchanged
+and is what carries the idle state. Stated in `design-v3.md` 10.3.
+
+**Why, and it is a contradiction inside one document rather than a preference.** 10.3
+said the idle title reads "at inkTertiary weight 500" and the same section calls the
+active title "the most important string on the screen". `inkTertiary` measures **2.40
+to one** on the card in light and 3.22 in dark, against section 13's floor of 4.5.
+**13 wins, because a floor is a floor.** `inkSecondary` is the one step down from
+`inkPrimary` that clears, at 5.29 to one in light and 6.36 in dark on the phase 3c card.
+The idle state loses nothing: the weight is what says "waiting to be filled", and it
+says it whether or not the color is also below the threshold at which a person can read
+the invitation they are being given. The status line was the worse of the two, being
+12sp rather than 21, and 10.3 named no color for it at all, so there was no
+contradiction there to resolve, only section 13 to obey.
+
+**Two inert weight calls were retired in the same change and they are worth recording,
+because nothing failed.** `AreaCard.kt` asked for weight 500 on the idle title and 600
+on the in-session status line, and both rendered at the wrong weight in phases 2 and 3b.
+The sans family was built one weight per `FontFamily` with `FontVariation.weight` baked
+into the typeface at load, so the font matcher had exactly one face to return and
+`TextStyle.copy(fontWeight = ...)` resolved to the pinned instance. **The requested
+weight was discarded with no error and no visible symptom.** The family now registers
+every weight the design system asks for, so the matcher has something to choose between.
+
+**Considered and rejected: keeping `inkTertiary` and lifting the alpha until it
+clears.** `inkTertiary` at an alpha that clears 4.5 to one is `inkSecondary` with a
+second name.
+
+**Revisit if** a variable weight axis is ever needed at a weight not on the registered
+list. A request off the list resolves to the nearest one that is, which makes a missing
+entry a slightly wrong rendering rather than a silent no-op, and that is the contract
+this change restored.
+
+### The default area walk starts at Berry and never hands out a function color
+
+**Decided.** Two changes, and the second is the load bearing one. The walk starts at
+**Berry** rather than Ocean, and it never assigns `#2D7FF9`, `#4DA3FF`, `#22C55E` or
+`#F59E0B`, each of which is byte identical to a function token in `design-v3.md` 3.1 or
+3.2. **All four remain choosable**: 3.4 opens with "all 48 available to everyone" and
+that is untouched. What changed is only what the app hands out on its own.
+
+**Why.** The shipped walk gave the first area `#2D7FF9`, which is `actionBlue`. On the
+first run screen, where the only two colored elements in the entire app are one area and
+one FAB, they were the same color, so identity and function collapsed on the first
+screen a new user ever sees. **An identity indistinguishable from a status is not an
+identity.** It is also not a single collision: `#22C55E` is the first color of Meadow,
+so the walk also handed out `positiveGreen`, the completion color, at area five, and it
+reaches both inside the first eight areas from **every** starting point. Moving where
+the walk starts cannot fix that. Naming what it may not hand out can, which is why the
+reservation is the real change and the starting point is the smaller one.
+
+**Why Berry.** 3.4 asks the walk for one thing, that the first four be distinct without
+the user choosing, and the shipped start did not deliver it: `#2D7FF9` at hue 216 next
+to `#6366F1` at 239 is a 23 degree step and two blues in a row. Berry's first four are
+292, 0, 142 and 41, whose narrowest step is 68 degrees, the widest that any of the eight
+possible starts produces, measured across all eight rather than assumed.
+
+**Considered and rejected: Twilight, which is the obvious move**, one step along the
+list from Ocean. `#6366F1` is 23 degrees from `actionBlue`, an indigo that reads as a
+shade of the button rather than as an identity, and it walks toward the family 15.1
+names twice. It is the worst available start on both counts. **Considered and rejected:
+Earth and Stone**, both of which sit further from `actionBlue` than Berry does. Starting
+at Earth puts `#CA8A04` and `#A68B6B` eight degrees apart in the first four, two muted
+yellows a person has to compare rather than recognize; starting at Stone takes the
+narrowest step to 22. Each buys distance from one button by giving up the distinctness
+the walk exists for. **Considered and rejected: stepping over a reserved color at
+assignment time** rather than filtering it out of the list. Stepping maps two different
+area counts onto the same color, so area three and area nineteen would both come out
+`#18BFFF`; filtering keeps the walk a bijection over each mood's remaining colors, which
+is the property that makes "distinct without anyone choosing" true past the first eight.
+
+**Revisit if** a function color is ever added to or removed from 3.1 or 3.2. The
+reserved list is derived from that table and is not independent of it.
+
+### The pass is split: foundations now, surfaces at phase 12b
+
+**Decided.** Phase 3c, tokens and type, sits between 3b and 4. Phase 12b, surfaces,
+sits between 12 and 13. `MASTER_BUILD_PROMPT.md` 19 carries both, issue #54 carries
+12b's acceptance criteria.
+
+**Why, and it is not a compromise between doing it now and doing it later.** The two
+halves have genuinely different properties. **A token or a type role corrected now is
+inherited free by every screen that does not exist yet.** Focus, Pulse, Momentum, the
+Report, onboarding, Settings, About and six widgets will all be built on the corrected
+values without anyone touching them again. Corrected at phase 13 instead, all eight of
+those would have been composed against a value structure the owner has already said is
+not good enough, and every one would have to be re-examined, which is exactly the
+re-polishing cost the scheduling tension in #53 names. The two highest impact changes
+in the entire audit are both token changes.
+
+**Surface changes have the opposite property and get better information by waiting.**
+Fading the scroll edge on Areas does nothing for Momentum. Deciding what a text field
+looks like is worth doing once, when there is more than one sheet to judge it against.
+And the Contemplative world is unbuilt: the indigo Focus night, the amber Pulse night
+and the gold Report carry half this app's character and all of its atmosphere, and
+polishing the Daylight surface with no Contemplative surface to balance it against is
+judging half a design against itself.
+
+**Phase 12b and not a bullet inside phase 13**, which is the part of this decision most
+likely to be undone by someone being sensible. Phase 13 already carries the Baseline
+Profile, R8, the accessibility pass, the full checklist, real screenshots, the README,
+the store listing and the release. **A polish pass buried inside a ship phase is the
+first thing cut when a date moves.**
+
+**One expectation set honestly, because it is easier to set now than to explain later.**
+Phase 3c moves the app from flat to solid. It does not move it from flat to distinctive,
+and it was not designed to. Distinctive is 12b, and it is mostly five open questions
+none of which can be answered well with two screens on the table: whether anything in
+this app moves at rest, what the Trail's event circle carries, whether an inactive tab
+keeps its label, what a text field looks like, and what a sheet full of choices looks
+like. 3c should be judged as "the foundation is now right".
+
+**Considered and rejected: doing all of it now**, which polishes four screens and
+re-polishes as eight more arrive. **Considered and rejected: doing all of it at phase
+13**, which lets eight more screens be built against a look nobody is happy with and
+turns the pass into a rewrite. **Considered and rejected: waiting for the whole pass
+before shipping anything**, which the audit argued against directly: the largest single
+visual return in it was thirty minutes of work, an area card whose shadow was being
+clipped away in full by the row that made it swipeable.
+
+**Revisit if** phase 12b's five questions turn out to be answerable earlier than phase
+12, which would mean the Contemplative surfaces built in phases 4, 6 and 8 settled them
+on arrival. That is a reason to pull 12b forward, never a reason to fold it into 13.
+
+### Where the audit's refusal list went, and why
+
+**Decided.** The audit's "what not to do" list is `design-v3.md` **15.3**, a section of
+its own, rather than additional entries on 15.1.
+
+**Why.** 15.1 is a dated record of what the industry currently produces, 15.2 requires
+it to be re-swept before every release, and it is expected to churn. The refusals are
+not industry observations and they do not expire: each is a specific temptation in this
+specific app, paired with the sentence in this document that already forbids it, and
+re-deriving them at every release is the work the section exists to prevent. Merging
+them would also blunt 15.1, which is read as a list of tells to check a design against,
+while half the refusals are not tells at all but fixes that break a rule. The two lists
+fail in opposite directions, which is the last reason they are two: a stale entry on
+15.1 costs a false alarm about a treatment nobody makes any more, and a missing entry in
+15.3 costs the treatment.
+
+**Considered and rejected: `DECISIONS.md`**, meaning this file, which is where the
+reasoning would naturally go. This file has no authority over anything and says so in
+its own header. A refusal that has to hold against a session reaching for the nearest
+premium looking thing has to live in the document that wins on anything visual.
+
+**Revisit if** 15.3 grows past the point where a person will read it before starting.
+It is fifteen entries and it is meant to be read once per pass.
+
 ## August 27, 2026: six open choices in the calm mode and entrance retrofit
 
 Phase 3b, issues #48, #50 and #27. Addendum 01 8c, 8e and 4d,

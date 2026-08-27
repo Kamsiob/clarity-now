@@ -35,14 +35,92 @@ object AreaPalette {
     val all: List<String> = moods.flatMap { it.colors }
 
     /**
-     * Walks the mood groups in order taking the first color of each, so the first
-     * four areas a person creates are distinct without anyone choosing. Wraps into
-     * the second color of each mood once all eight firsts are spent.
+     * The four palette entries the default walk never hands out, because each one is
+     * byte identical to a function color in design-v3.md 3.1 or 3.2.
+     *
+     * `#2D7FF9` is `actionBlue` in light, `#4DA3FF` is `actionBlue` in dark, `#22C55E`
+     * is `positiveGreen` and `#F59E0B` is `warnAmber`. On a screen carrying any of
+     * them, the color that means "this is your area" and the color that means "this is
+     * a button", "this is done" or "there is a Pulse waiting" are the same pixel value,
+     * and an identity that is indistinguishable from a status is not an identity.
+     *
+     * The audit found the first of these on the first run screen, where the shipped
+     * walk gave area one `#2D7FF9` beside a FAB in `#2D7FF9`. It is not a single
+     * collision. `#22C55E` is the first color of Meadow, so the shipped walk also gave
+     * area five the completion color, and the walk reaches both inside the first eight
+     * areas from any starting point. Moving where the walk starts cannot fix that;
+     * naming what it may not hand out can.
+     *
+     * **This is not a locked subset.** design-v3.md 3.4 opens with "All 48 available to
+     * everyone" and that is untouched: every one of these four is still in the picker
+     * and still choosable. What changed is only what the app assigns on its own. A
+     * color someone picks deliberately is a decision they made; a color the app hands
+     * out is a decision the app made, and the app should not make this one.
+     *
+     * `deleteMuted`, `parchment` and every Contemplative accent in 3.3 are checked and
+     * are not in the palette, so the list is these four.
+     */
+    private val RESERVED_BY_FUNCTION =
+        listOf("#2D7FF9", "#4DA3FF", "#22C55E", "#F59E0B")
+
+    /**
+     * Berry, index 2, where the default walk begins. design-v3.md 3.4.
+     *
+     * 3.4 asks the walk for one thing, "so the first four are distinct without the user
+     * choosing", and the shipped start did not deliver it: Ocean `#2D7FF9` at hue 216
+     * and Twilight `#6366F1` at 239 are 23 degrees apart, which is the narrowest step
+     * in the whole first four and is two blues in a row. Starting at Berry, the first
+     * four are `#D946EF` 292, `#EF4444` 0, `#16A34A` 142 and `#CA8A04` 41, whose
+     * narrowest step is 68 degrees. That is the widest that any of the eight possible
+     * starts produces, measured across all eight rather than assumed.
+     *
+     * It also answers the collision the audit named. `#D946EF` is 76 degrees from
+     * `actionBlue` and in a different family entirely, so on the first run screen, where
+     * the only two colored things are one area and one FAB, they cannot be read as the
+     * same thing.
+     *
+     * **The obvious start is not this one.** The obvious move is one step along the
+     * list, to Twilight, and Twilight's `#6366F1` is 23 degrees from `actionBlue`: an
+     * indigo that reads as a shade of the button rather than as an identity. It would
+     * also walk toward the family design-v3.md 15.1 names twice, "lavender or
+     * indigo-to-purple gradients" and "a blue to purple gradient". Berry walks away
+     * from it. design-v3.md 15.
+     *
+     * Earth at 41 and Stone at 33 sit further from `actionBlue` than Berry does, and
+     * both were rejected on the same sentence they would satisfy halfway. Starting at
+     * Earth puts `#CA8A04` and `#A68B6B` next to each other 8 degrees apart, two muted
+     * yellows a person would have to compare rather than recognize; starting at Stone
+     * takes the narrowest step to 22. Each buys distance from one button by giving up
+     * the distinctness 3.4 asks the walk for in the first place.
+     */
+    private const val WALK_START_MOOD = 2
+
+    /**
+     * Each mood's colors with the function colors removed, which is what the walk reads
+     * instead of reading the mood directly.
+     *
+     * Filtering the list rather than stepping over a reserved entry at assignment time
+     * is deliberate: stepping would map two different area counts onto the same color,
+     * so area three and area nineteen would both come out `#18BFFF`. Removing the entry
+     * keeps the walk a bijection over each mood's remaining colors, which is the
+     * property that makes "distinct without anyone choosing" true past the first eight.
+     */
+    private val walkShades: List<List<String>> = moods.map { mood ->
+        mood.colors.filterNot { hex -> RESERVED_BY_FUNCTION.any { it.equalsHex(hex) } }
+    }
+
+    /**
+     * Walks the mood groups in order from [WALK_START_MOOD], taking the first color of
+     * each that is not one of the app's own function colors, so the first four areas a
+     * person creates are distinct from each other and from every colored control on the
+     * screen without anyone choosing. Wraps into each mood's next color once all eight
+     * firsts are spent.
      */
     fun defaultColorForIndex(existingAreaCount: Int): String {
-        val moodIndex = existingAreaCount % moods.size
-        val shadeIndex = (existingAreaCount / moods.size) % moods[moodIndex].colors.size
-        return moods[moodIndex].colors[shadeIndex]
+        val count = existingAreaCount.coerceAtLeast(0)
+        val moodIndex = (WALK_START_MOOD + count) % moods.size
+        val shades = walkShades[moodIndex]
+        return shades[(count / moods.size) % shades.size]
     }
 
     fun moodOf(hex: String): AreaMood? =
@@ -72,16 +150,28 @@ fun washCornerFor(areaId: String): WashCorner =
 
 /**
  * The deepest ground an area label can ever sit on, per world: the card carrying that
- * area's own wash at the in-session opacity from design-v3.md 3.1 and 3.2.
+ * area's own wash at the in-session opacity from design-v3.md 3.1 and 3.2. It also
+ * covers the 11 percent peak of the promotion in 8.2 item 1, which is shallower.
  *
- * These are the **ordinary** opacities, not calm mode's. design-v3.md 16.2 leaves the
- * label unchanged in calm mode and pins the wash under it shallower, so a variant that
- * clears the floor here clears it there too, and the label does not change color when
- * the switch is thrown. It also covers the 11 percent peak of the promotion in 8.2
- * item 1, which is shallower than both.
+ * **There are two of these grounds per world, not one, and phase 3c is where that was
+ * found.** design-v3.md 16.2 pins the calm wash shallower and desaturates the accent
+ * under it, and the phase 3b reading of that was "shallower and less colored is an
+ * easier ground, so a variant that clears the ordinary one clears the calm one too".
+ * In light that is true. **In dark it is false**: a desaturated accent at 15 percent
+ * over the card is not uniformly lighter than the true accent at 16, and fourteen of
+ * the 48 dark labels measure slightly worse in calm mode than out of it. It survived phase
+ * 3b on 0.04 of margin, and 0.04 is not a margin. Lifting the dark card in phase 3c
+ * spent it: `#E11D48`, `#BE185D` and `#DC2626` went to 4.48, 4.42 and 4.48 to one.
+ *
+ * So the variant is verified against **both**, and is the same color in both, which is
+ * what 16.2 requires of it. This is the same class of correction phase 3b made when it
+ * stopped verifying against the bare card: the label is measured on every ground it is
+ * actually drawn on, and calm mode is one of them.
  */
 private const val LABEL_GROUND_ALPHA_LIGHT = 0.13f
 private const val LABEL_GROUND_ALPHA_DARK = 0.16f
+private const val LABEL_GROUND_ALPHA_LIGHT_CALM = 0.12f
+private const val LABEL_GROUND_ALPHA_DARK_CALM = 0.15f
 
 /**
  * Area label text uses the accent at full strength. design-v3.md 3.4 requires 4.5:1,
@@ -93,40 +183,68 @@ private const val LABEL_GROUND_ALPHA_DARK = 0.16f
  * defect this function shipped with. design-v3.md 3.4 says "verify 4.5:1 against the
  * card", and the card a label actually sits on carries the area's own accent at up to
  * 13 percent in light and 16 in dark. Measured against `colors.card` the worst of the
- * 48 colors clears at 4.58:1 and looks fine; measured against the card as drawn, the
- * same label on an in-session area is `#E11D48` at **3.83:1**, well under the floor in
- * design-v3.md 13, and 3.95:1 at the peak of a promotion. It is the same class of
- * mistake phase 3 found in the Trail's mint completed row, where a wash was composited
- * over the wrong ground and cost 0.1 of a contrast ratio; here it costs 0.75.
+ * 48 colors clears at 4.54:1 and looks fine; measured against the card as drawn, the
+ * same label on an in-session area is `#E11D48` at **3.71:1**, well under the floor in
+ * design-v3.md 13. It is the same class of mistake phase 3 found in the Trail's mint
+ * completed row, where a wash was composited over the wrong ground and cost 0.1 of a
+ * contrast ratio; here it costs 0.8.
  *
  * It surfaced during the calm mode audit, issue #48, because calm mode's transform has
  * to be measured on the ground it lands on and measuring it exposed that nothing else
- * ever had been. Calm mode is not the cause and does not fix it: with the transform
- * applied the same label reads 4.41:1, better and still failing.
+ * ever had been.
  *
- * With the ground corrected the worst case is 4.55:1 in light and 4.56:1 in dark, on
- * every one of the 48 colors, in ordinary and in calm mode, on every wash opacity the
- * design permits. Twenty three of the 48 light labels move as a result and five of the
- * dark ones. `CalmModeContrastTest` holds all of it.
+ * **Every ground is recomputed at runtime from `colors`, which is why the token change
+ * in phase 3c did not have to be applied here by hand.** Moving `card` and lifting the
+ * dark card changed eight of the 96 variants and the function found them on its own:
+ * three in light, five in dark. The numbers that do not adapt are the ones written
+ * down, so they are the ones the tests hold. With both grounds verified the worst case
+ * is 4.538:1 in light and 4.655:1 in dark, on every one of the 48 colors, in ordinary
+ * and in calm mode, on every wash opacity the design permits. `CalmModeContrastTest`
+ * holds all of it.
  */
 fun areaLabelColor(accent: Color, colors: ClarityColors): Color {
-    val groundAlpha = if (colors.isDark) LABEL_GROUND_ALPHA_DARK else LABEL_GROUND_ALPHA_LIGHT
-    val ground = accent.copy(alpha = groundAlpha).compositeOver(colors.card)
+    val grounds = labelGrounds(accent, colors)
     if (colors.isDark) {
         val lightened = accent.blendWith(Color.White, 0.30f)
-        return if (contrastRatio(lightened, ground) >= 4.5) lightened else accent.forceContrast(ground, Color.White)
+        if (lightened.clears(grounds)) return lightened
+        return accent.forceContrast(grounds, Color.White)
     }
-    if (contrastRatio(accent, ground) >= 4.5) return accent
+    if (accent.clears(grounds)) return accent
     val darkened = accent.blendWith(Color.Black, 0.25f)
-    return if (contrastRatio(darkened, ground) >= 4.5) darkened else accent.forceContrast(ground, Color.Black)
+    if (darkened.clears(grounds)) return darkened
+    return accent.forceContrast(grounds, Color.Black)
 }
 
+/**
+ * The card as drawn under this label, ordinary and calm. Both alphas are read from the
+ * constants above rather than from [colors], so the variant is identical whether the
+ * caller holds an ordinary or a calmed token set, which is what design-v3.md 16.2 means
+ * by excluding the label from the transform.
+ */
+private fun labelGrounds(accent: Color, colors: ClarityColors): List<Color> {
+    val card = colors.card
+    return if (colors.isDark) {
+        listOf(
+            accent.copy(alpha = LABEL_GROUND_ALPHA_DARK).compositeOver(card),
+            accent.calmed(true).copy(alpha = LABEL_GROUND_ALPHA_DARK_CALM).compositeOver(card),
+        )
+    } else {
+        listOf(
+            accent.copy(alpha = LABEL_GROUND_ALPHA_LIGHT).compositeOver(card),
+            accent.calmed(true).copy(alpha = LABEL_GROUND_ALPHA_LIGHT_CALM).compositeOver(card),
+        )
+    }
+}
+
+private fun Color.clears(grounds: List<Color>): Boolean =
+    grounds.all { contrastRatio(this, it) >= 4.5 }
+
 /** Blends further toward [toward] in 5 percent steps until 4.5:1 is met or the blend is spent. */
-private fun Color.forceContrast(against: Color, toward: Color): Color {
+private fun Color.forceContrast(against: List<Color>, toward: Color): Color {
     var amount = 0.30f
     while (amount <= 0.95f) {
         val candidate = blendWith(toward, amount)
-        if (contrastRatio(candidate, against) >= 4.5) return candidate
+        if (candidate.clears(against)) return candidate
         amount += 0.05f
     }
     return blendWith(toward, 0.95f)

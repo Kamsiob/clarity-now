@@ -159,7 +159,11 @@ Area label text uses the accent at full strength, 13sp semibold. **Verify 4.5:1 
 
 The distinction in that first sentence is not pedantry. Verifying against the bare token clears on all 48 colors and is what shipped, and the same labels measure as low as 3.83:1 on an in-session card. The measurement, and the twenty eight label variants that moved when it was corrected, are in 16.7.
 
-**Default assignment.** New areas walk the mood groups in order taking the first color of each, so the first four are distinct without the user choosing.
+**Default assignment.** New areas walk the mood groups in order **starting at Berry**, taking the first color of each that is not one of this document's own function colors, so the first four are distinct from each other and from every colored control on the screen without the user choosing. The first eight are `#D946EF`, `#EF4444`, `#16A34A`, `#CA8A04`, `#A68B6B`, `#0D9488`, `#18BFFF`, `#6366F1`, and the walk then wraps into each mood's next color.
+
+**Four colors are never assigned automatically, and all four remain choosable.** `#2D7FF9` and `#4DA3FF` are `actionBlue` in light and dark, `#22C55E` is `positiveGreen` and `#F59E0B` is `warnAmber`. Each is byte identical to a token in 3.1 or 3.2, so an area carrying one puts identity and function at the same pixel value, and an identity indistinguishable from a status is not an identity. This is **not** a locked subset: the sentence at the top of this section still holds, the picker still offers all 48, and what changed is only what the app hands out on its own. A color someone chooses is their decision; a color the app assigns is the app's, and the app should not make this one.
+
+**Recorded under section 15, because the walk's start was an open choice made badly.** The shipped walk began at Ocean and gave the first area `#2D7FF9`, so on the first run screen, where the only two colored elements are one area and one FAB, they were the same color. It also gave area five `#22C55E`, the completion color, which the fix above catches and a change of starting point alone could not: the walk reaches both inside the first eight areas from every start. On the choice of Berry: this section asks the walk for distinctness, and the shipped start delivered `#2D7FF9` at hue 216 next to `#6366F1` at 239, a 23 degree step and two blues in a row. Berry's first four are 292, 0, 142 and 41, whose narrowest step is 68 degrees, the widest that any of the eight possible starts produces. The obvious move, one step along the list to Twilight, is the worst available on both counts: `#6366F1` is 23 degrees from `actionBlue`, and it walks toward the family 15.1 names twice. Earth and Stone sit further from `actionBlue` than Berry but put two muted yellows 8 degrees apart in the first four, which trades this defect for the one this sentence is about.
 
 **Calm mode leaves identity alone.** The 7dp dot and the area label text keep their accent at full strength, because they are how an area is recognized and they are the two places a contrast ratio was verified. Washes, tiles and every atmospheric use of the accent desaturate. The transform, and the list of what is excluded by name, are in 16.2.
 
@@ -222,24 +226,52 @@ Everything else. Weights 400 to 800. **Verify at build time:** tabular figures (
 
 All in sp, respecting the user's font scale. No fixed pixel text anywhere.
 
-| role | spec | used for |
-|---|---|---|
-| displayHero | Newsreader 40, opsz 68, w400, lh 1.08, tracking -0.012em | Report headline |
-| displayTitle | Newsreader 30, opsz 48, w400 | screen titles |
-| readSerif | Newsreader 26, opsz 34, w400, lh 1.36 | Momentum headline, Pulse observation |
-| closingLine | Newsreader 24, opsz 34, w400, lh 1.42 | the Report's one thing |
-| bodySerif | Newsreader 17, opsz 17, w400, lh 1.62 | Report section prose |
-| itemTitle | Hanken Grotesk 21, w650, tracking -0.022em | active item on the area card |
-| title | Hanken Grotesk 19, w700 | sheet titles |
-| body | Hanken Grotesk 16, w400, lh 1.5 | |
-| bodyStrong | Hanken Grotesk 16, w600 | |
-| label | Hanken Grotesk 13, w600 | area labels, tab labels, chips |
-| sidehead | Hanken Grotesk 13, w700, **sentence case** | section labels. Not all caps |
-| swipeLabel | Hanken Grotesk 10.5, w700 | swipe action labels |
-| caption | Hanken Grotesk 12, w400 | timestamps, footers, helper text |
-| timerNumeral | Hanken Grotesk 64, w250, tabular, tracking -0.03em | focus countdown, caps at 1.3x font scale |
+**Tracking is part of the scale, not a note on two rows of it.** Every role carries
+a value, and a role without one is a defect rather than a default.
+
+| role | spec | tracking | used for |
+|---|---|---|---|
+| displayHero | Newsreader 40, opsz 68, w400, lh 1.08 | -0.012em | Report headline |
+| displayTitle | Newsreader 30, opsz 48, w400, lh 1.2 | 0, opsz | screen titles |
+| readSerif | Newsreader 26, opsz 34, w400, lh 1.36 | 0, opsz | Momentum headline, Pulse observation |
+| closingLine | Newsreader 24, opsz 34, w400, lh 1.42 | 0, opsz | the Report's one thing |
+| bodySerif | Newsreader 17, opsz 17, w400, lh 1.62 | 0, opsz | Report section prose |
+| itemTitle | Hanken Grotesk 21, w650 | -0.022em | active item on the area card |
+| title | Hanken Grotesk 19, w700, lh 1.26 | -0.014em | sheet titles |
+| body | Hanken Grotesk 15, w400, lh 1.5 | +0.004em | list rows, sheet prose, field text, snackbar message |
+| bodyStrong | Hanken Grotesk 17, w600, lh 1.35 | -0.006em | Trail day headers, button labels, emphasis inside a run of body |
+| label | Hanken Grotesk 13, w600 | +0.016em | area labels, tab labels, chips |
+| sidehead | Hanken Grotesk 13, w700, **sentence case** | +0.024em | section labels. Not all caps |
+| swipeLabel | Hanken Grotesk 10.5, w700 | +0.032em | swipe action labels |
+| caption | Hanken Grotesk 12, w400 | +0.022em | timestamps, footers, helper text, the first step line |
+| timerNumeral | Hanken Grotesk 64, w250, tabular | -0.030em | focus countdown, caps at 1.3x font scale |
 
 Every updating numeric display uses tabular figures so digits do not jitter.
+
+**The sans ramp.** A face drawn to fit at reading sizes leaves proportionally too
+much room between letters when it is set large and too little when it is set small,
+because the space does not need to grow at the same rate the letters do. So the sans
+scale opens at 15sp and below, crosses zero between 15 and 17, and closes from 17sp
+up, on a curve that flattens as the size rises: +0.032, +0.022, +0.016, +0.004, -0.006, -0.014, -0.022, -0.030. `sidehead` is
+the one value deliberately off that curve, at +0.024em against `label`'s +0.016em at
+the same 13sp, because a section label has to read as a marker and the conventional
+way to buy that is capitals, which this section and 15.1 both forbid. Tracking says
+the same thing at a fraction of the volume and leaves the sentence case intact.
+
+The serif roles are not on the ramp. Newsreader carries an optical size axis and
+every serif role sets it, which is the same correction made inside the outlines
+rather than between them; `displayHero` adds -0.012em on top at 40sp.
+
+**The sans sizes are a ladder: 13, 15, 17, 19, 21**, one even step per rung, with 12
+and 10.5 beneath it for captions and swipe labels. `body` and `bodyStrong` were both
+16sp through phase 3b, which left no size step available inside a run of text, and
+section 11 gives a Trail day header to `bodyStrong` and the rows under it to `body`,
+so a day header could outrank a row by weight alone. `body` drops to 15 and
+`bodyStrong` rises to 17, which puts most of the step below rather than above,
+because `bodyStrong` is also the button label in 10.7 and the undo action in 10.14
+and one step is as far as either can move without starting to shout. 16sp is in any
+case Material's `bodyLarge` default, so moving off it is the choice section 15 asks
+for, and 10.11 already sets a settings row title at 15sp.
 
 ---
 
@@ -410,7 +442,7 @@ Full width, parchment, 14dp radius, no border, no progress track. A bodyStrong s
 
 ### 10.3 The area card
 
-**A2 slim card, locked.** Card at `#FFFFFF`, 18dp radius, soft elevation, **no border**, 18 by 17dp padding, 11dp gaps between cards, the wash pooled toward the hashed corner. Five areas fit comfortably on screen.
+**A2 slim card, locked.** Card at the `card` token, 18dp radius, soft elevation, **no border**, 18 by 17dp padding, 11dp gaps between cards, the wash pooled toward the hashed corner. Five areas fit comfortably on screen. The card names a token rather than a hex value: this line read `#FFFFFF` and was the third statement in the pure white contradiction 3.1 resolves, and a component section repeating a color out of the token table is how that contradiction survived two phases.
 
 **Content.**
 - Row one: a 7dp color dot and the area name at label size in the area color
@@ -420,7 +452,9 @@ Full width, parchment, 14dp radius, no border, no progress track. A bodyStrong s
 
 The card never exceeds four lines. When a first step and a status line are both present, the first step truncates first, because the status line is about now and the first step is about what to do next, and now wins on a card that has to pass the three second test.
 
-**Idle state.** Title reads `Add your first item` at inkTertiary weight 500. No wash. The dot drops to 45 percent.
+**Idle state.** Title reads `Add your first item` at **inkSecondary** weight 500. No wash. The dot drops to 45 percent. The status line beneath it, `Last active 21 days ago`, is inkSecondary at caption.
+
+**inkSecondary is a correction, and this section is where it is recorded.** v3 said inkTertiary here, and inkTertiary measures **2.40:1** on the card in light and 3.22:1 in dark, against section 13's floor of 4.5:1. That is a contradiction inside this document between 10.3 and 13, on the same string this section calls the most important one on the screen, and **13 wins, because a floor is a floor.** inkSecondary is the one step down from inkPrimary that clears it, at 5.29:1 in light and 6.36:1 in dark on the phase 3c card, and the idle state loses nothing by it: the weight drop from 650 to 500 is what says "waiting to be filled", and it says it whether or not the color is also below the threshold at which a person can read the invitation they are being given. The status line moved with it and was the worse of the two, being 12sp rather than 21.
 
 **In-session state.** The wash doubles from 6 to 13 percent and the status line becomes `In focus, 7 minutes left` in the area color at semibold with a small play glyph. **There is no colored bar, stripe or edge treatment anywhere in this app.**
 
@@ -651,7 +685,11 @@ The background gradient extends under the status bar to the very top edge.
 
 **Momentum.** Daylight, the calmest screen in that world. Headline in readSerif, the 14 dot row, area tiles, three stats as pure typography with no cards, then insight modules under sideheads.
 
-**Trail.** Daylight. Day headers as bodyStrong with an inline count and a hairline to the trailing edge. Events as icon plus text rows, the icon a 23dp circle tinted with the event color. Completed events get a mint wash card at positiveGreen 8 percent.
+**Trail.** Daylight. **A screen title reading `Trail` in displayTitle, left aligned on the same measure as the day headers**, with no glyph beside it. Day headers as bodyStrong with an inline count and a hairline to the trailing edge. Events as icon plus text rows, the icon a 23dp circle tinted with the event color. Completed events get a mint wash card at positiveGreen 8 percent.
+
+**The title is an addition, and it reverses a decision phase 3 took deliberately.** v3 gave the Trail day headers and rows and stopped, and phase 3 read that as intentional and reasoned it through: the tab bar already says Trail, so a heading reading Trail repeats a word the user can see at the bottom of the same screen. That reasoning is sound and it is outweighed. Every other surface in this section opens with a headline treatment, so the Trail was the one screen in this document that began with its content, and the design audit priced what that cost: the built Trail contained no serif glyph at all, and Newsreader had five call sites across the whole app of which four were empty states, which had quietly made the signature typeface mean "there is nothing here". The same absence had a second effect the audit named separately, that with no title the loudest element on the Trail was the selected `All` filter chip, so a filter outranked everything it filtered. One serif line fixes both. The title takes the same treatment as the Areas title in 10.1, because two screens that open the same way are one app.
+
+**The day header outranks its rows by size as well as weight**, which 5.3 only made possible in phase 3c. `body` and `bodyStrong` were both 16sp, so this section's instruction to set the header in one and the rows in the other bought a weight change and nothing else, and four events read as a wall at 12 and 16sp. With `body` at 15 and `bodyStrong` at 17 the screen reads 30, 17, 15, 12.
 
 **Settings.** Rows on canvas under sideheads. Order: Daily routine, Focus, After completing, Appearance, Your data, Privacy, Help, then the support block, then the version line.
 
@@ -879,6 +917,32 @@ The last four entries arrive from Addendum 01 rather than from the August 2026 s
 ### 15.2 Release gate
 
 The verification checklist includes an anti-slop pass against the dated list above. **Update the list before each release** rather than trusting the version in this file.
+
+### 15.3 The refusals, and the entry that refuses each
+
+**This section exists for the session that reads a design audit and reaches for the nearest premium looking thing.** It was written in phase 3c out of the audit issue #53 commissioned, and every line of it is a fix somebody would reasonably propose for a problem this app actually has, paired with the sentence in this document that already forbids it. A prohibition nobody can find is a prohibition that gets rediscovered the expensive way.
+
+**A section of its own rather than more entries on 15.1, and that is the deliberate choice rather than the obvious one.** 15.1 is a dated record of what the industry currently produces, 15.2 requires it to be re-swept before every release, and it is expected to churn. Nothing below is an industry observation and nothing below expires: each entry is a specific temptation in this specific app, and re-deriving them at every release is the work this section exists to prevent. Merging them would blunt 15.1 as well, because 15.1 is read as a list of tells to check a design against and half of these are not tells at all, only fixes that break a rule. So 15.3 cites 15.1 and does not join it, and the dated list stays dated.
+
+Each entry names the fix first, because that is the form it will arrive in, and the rule second.
+
+- **A colored left edge, accent stripe or bar on the area card, to give it identity.** 15.1, "a colored 3 to 4px border or stripe on one side of a card". Section 14, "no colored stripe, bar or edge treatment on any element, ever". 3.4, "never as a stripe, bar, edge, border or filled block". Three separate prohibitions, and the first of them is this document's stated single most recognizable machine generated tell
+- **A hairline border on the card so it reads against the canvas.** 6.1, "never a hairline and a shadow on the same element", and 15.1 lists the pair. A light mode card already carries a shadow, so a border on it is forbidden by construction. When a card does not read, the answer is the ground under it, which is what 3.1 changed in phase 3c
+- **A blurred or translucent tab bar, header or sheet.** 15.1, "glassmorphism used as decoration rather than to solve a layering problem", and separately "glassmorphism combined with a neon glow". Content passing under a floating bar is a real layering problem and it does deserve an answer; a fade to the ground color is the permitted form of one, and reaching for the blur because it looks more modern is exactly the move the entry describes
+- **A gradient on a screen title, on the timer numeral, or on any large figure.** 15.1, "a gradient applied to a large number for impact"
+- **Swapping Newsreader or Hanken Grotesk for a family that looks more premium.** 15.1 names three of the likely replacements outright: "Inter as the interface typeface", "Instrument Serif, particularly paired with Inter", "Space Grotesk paired with a display serif". The two families in 5.1 and 5.2 were never the problem. Through phase 3b the problem was that seven of the nine sans roles carried no tracking value at all and the serif appeared on one screen in one word, and 5.3 settled both without touching a family
+- **Serif italic on day headers, sideheads or eyebrows.** 15.1, "serif italics used as an accent device". Section 14, "no serif italic as a section-level accent". 5.1 permits italic only for genuine emphasis inside a sentence
+- **All caps sideheads, to give a sheet or a screen some structure.** 15.1, "all-caps section labels". Section 14 repeats it and 5.3 sets sidehead in sentence case and says so in bold. The structure a section label needs is bought with tracking instead, which is what sidehead's value in 5.3 is for and why it sits deliberately above `label` at the same size
+- **A card inside the filing chooser sheet, to give its rows an affordance.** Section 14, "no cards inside cards, and no cards inside sheets except the color picker preview in 10.9", repeated in 10.6, which adds that the exception may not be extended by analogy. The v2 mock does exactly this and the mock is wrong, as is its 30dp filter chip, which fails the 48dp touch minimum in section 13
+- **A filled green disc with a white check on the Trail's completed row.** 3.4, "never as a stripe, bar, edge, border or filled block". Section 14, "no confetti and no celebration of any kind". Another v2 mock leftover, and it is not the answer to the open question about what the event circle carries
+- **Any indigo to purple or blue to purple treatment, including on the Focus surface when it arrives.** 15.1 names the family three times: "lavender or indigo-to-purple gradients", "a blue to purple gradient, the single loudest tell of 2026", "a purple to cyan gradient". Section 14 adds "no default Material purple". 3.3's Focus gradient runs indigo into darker indigo over black and it stays on that side of the line
+- **A pulse, a breathe, a glow loop or an ambient shimmer, to satisfy section 14's "nothing that is still".** The problem is real and it is open: nothing on either built screen moves at rest, which makes that sentence false today. Every conventional answer to it is on 15.1 or adjacent to it, and 8.2's ambient entries belong to phases that are not built. It is an owner decision rather than a patch, it is carried by the surface half of the polish pass, and inventing an answer quietly is how a tell gets in
+- **A count badge or a red dot on the inbox chip.** Section 14 as amended by Addendum 01, "no red dot and no numeric badge on any surface", naming the unfiled inbox count. 15.1, "a red numeric badge as the primary signal that something is waiting". 10.16 already says what to do instead, which is that the count is the label
+- **Reimplementing the bottom sheet, the text field, the snackbar or the tab bar in order to change how it looks.** 17.4, and 17.2's "not a reason: preferring the look of something drawn by hand". The six components in 17.3 are settled and are not reopened
+- **Adopting a Material 3 Expressive default because it is the default.** Section 15 itself. The floating tab bar's selected label only behavior arrived at the platform default with no recorded reason, which is how a screen built faithfully to this document came to read as a stock navigation bar
+- **Trying to make the cards pop.** Through phase 3b there was nowhere for them to pop to, because `card` was pure white and the light world had no headroom above it, so every hour spent lifting the card further was an hour not spent on the ground under it. That is the shape of the mistake and not only one instance of it: when an element does not separate, measure whether the ground it sits on has any room left before reaching for the element
+
+**15.1 and 15.3 fail in opposite directions**, which is the last reason they are two lists. A stale entry on 15.1 costs a false alarm about a treatment nobody makes any more. A missing entry here costs the treatment.
 
 ---
 

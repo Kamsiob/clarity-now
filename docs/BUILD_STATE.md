@@ -2,10 +2,13 @@
 
 Where the build actually is. Updated at the end of every phase.
 
-**Last updated:** August 27, 2026, end of phase 3b.
-**Version:** 0.4.0, versionCode 400. A minor bump because the event catalog went from
-24 types to 28 and one was renamed, which changes the contract in
-`docs/EVENT_FORMAT.md` that a second implementation is built from.
+**Last updated:** August 27, 2026. Phase 3b is closed. **Phase 3c is built and is
+awaiting the device check that closes it**, so everything this file says about tokens
+and type is true of the source and is not yet true of anything installed.
+**Version:** 0.4.0, versionCode 400, which is phase 3b's. A minor bump because the event
+catalog went from 24 types to 28 and one was renamed, which changes the contract in
+`docs/EVENT_FORMAT.md` that a second implementation is built from. Phase 3c's version is
+chosen when its device check passes.
 **Installed and verified on:** Pixel 8 (`shiba`), over USB.
 
 ---
@@ -18,6 +21,7 @@ Where the build actually is. Updated at the end of every phase.
 | 2. Core mechanics | done | closed |
 | 3. Trail | done | closed |
 | 3b. Executive function retrofit | done | closed |
+| 3c. Design foundations, the polish pass | built, device check pending | #53 |
 | 4. Focus sessions | not started | #2 |
 | 5. Engine skeleton and simulator | not started | #3 |
 | 6. Pulse | not started | #4 |
@@ -28,6 +32,7 @@ Where the build actually is. Updated at the end of every phase.
 | 10. First run | not started | #9 |
 | 11. Settings, About, data | not started | #10 |
 | 12. Widgets and notifications | not started | #11 |
+| 12b. Design surfaces, the polish pass | not started | #54 |
 | 13. Ship | not started | #12 |
 
 ---
@@ -223,6 +228,166 @@ Each of these is a phase, not an oversight. See the linked issue for why.
   `DECISIONS.md` and in `design-v3.md` 16.8 rather than left to be rediscovered.
 
 ---
+
+## Phase 3c delivered
+
+The foundations half of the polish pass, issue #53. **It exists because Addendum 01 3c
+calls for a polish pass and `MASTER_BUILD_PROMPT.md` 19 never carried one.** That is a
+recording error rather than a change of plan, and the owner found it by looking at the
+app rather than at the plan. The surfaces half is phase 12b, issue #54, and the split is
+argued in `DECISIONS.md`.
+
+**An audit ran first**, against `design-v3.md`, the two device capture sets and the
+source, to separate three causes with completely different fixes: implementation drift,
+missing content, and a genuine gap in the design. It found the third dominates. The
+document removed every conventional decoration device on purpose, which put the whole
+burden on type, space, value and motion, and three of those four were not carrying.
+
+Three drift fixes landed first and in their own commit, because none of them needed a
+design decision and the first is the largest single visual return in the whole audit.
+
+- **The area card's shadow was 100 percent clipped away.** `SwipeableRow` put
+  `.clip(shape)` on the Box whose only measured child is the card, and the clip rect and
+  the card bounds are the same 18dp rounded rectangle. The primary content layer on the
+  home screen was the only element on it with no separation device at all while the tab
+  bar, the FAB and the chips all rendered theirs, which **inverted the depth order**.
+  Measured on a device capture, the card's bottom edge stepped from `#FFFFFF` to the
+  canvas in one pixel, against fourteen pixels of decay under the tab bar. The clip is
+  genuinely required by `design-v3.md` 10.3.1 and now sits on the action layer
+- **The largest tap target in the app produced no feedback.** 8.2 item 2 gives a card the
+  same 0.97 press as a button and section 9 gives it the tap haptic. `clarityClickable`
+  sets `indication = null` deliberately and nothing had been put in its place. The press
+  scale is now a shared modifier rather than a block copied per component, which is how
+  it came to be written twice in `Buttons.kt` and not at all on the card
+- **The FAB drew its colored glow in dark mode.** 6.1 is explicit that dark and
+  Contemplative elevation is lightness only, and every other `clarityShadow` call site
+  already guarded on it
+
+Then the pass itself, **tokens and type only**. Every item below is a `design-v3.md`
+change as well as a code change, recorded in the section that states it.
+
+- **The surface ladder**, 3.1 and 3.2. `canvas` `#F1F1F6` to `#E6E6EC`, `card` `#FFFFFF`
+  to `#FCFBF9`, `raise` `#FAFAFC` to `#F4F3F0`. Card against canvas 1.126 to one becomes
+  **1.202 to one**, and the light world's span 4.73 L\* becomes 7.19. In dark, where 6.1
+  allows no shadows at all and the lightness ladder is the only device there is, `card`
+  `#191921` to `#1D1D25` and `raise` `#15151C` to `#18181F`, with `canvas` deliberately
+  held. `raise` now has named occupants for the first time: chrome, meaning the floating
+  tab bar and an unselected chip, sits one rank under content. `SurfaceLadderTest` holds
+  the order, the size of each step and the fact that `raise` is drawn somewhere
+- **`inkSecondary` to 0.64** from 0.60, in light, and it was **forced by the canvas
+  change rather than chosen**. See below
+- **Tracking on all nine sans roles**, 5.3, where two of nine carried a value. The ramp
+  opens small and closes large, +0.032 to -0.030em, with `sidehead` deliberately off it
+  at +0.024em because the conventional way to make a section label read as a marker is
+  capitals and three separate rules forbid those
+- **`body` to 15sp and `bodyStrong` to 17sp**, 5.3. They were both 16, so `design-v3.md`
+  11's instruction to set a Trail day header in one and its rows in the other bought a
+  weight change and nothing else. The Trail now reads 30, 17, 15, 12 rather than 16 and
+  12
+- **A serif screen title on the Trail**, 11, which **reverses a decision phase 3 took
+  deliberately**. Newsreader had five call sites in the whole app and four were empty
+  states, so the signature typeface meant "there is nothing here" four times in five
+- **The idle card title off `inkTertiary`**, 10.3. `inkTertiary` measures 2.40 to one on
+  the card against section 13's floor of 4.5, on the string 10.3 itself calls the most
+  important one on the screen. A contradiction inside one document, resolved for 13
+- **The default area walk**, 3.4. It starts at Berry and never hands out `#2D7FF9`,
+  `#4DA3FF`, `#22C55E` or `#F59E0B`, each byte identical to a function token. All four
+  stay choosable; only what the app assigns on its own changed
+- **`design-v3.md` 15.3**, the refusal list. Fifteen fixes somebody would reasonably
+  propose for a problem this app actually has, each paired with the sentence that
+  already forbids it
+
+### The contradiction it resolved, and it had survived two phases
+
+`design-v3.md` 1 says "backgrounds are never pure white or pure black". Section 14 says
+"no pure white or pure black backgrounds". 3.1 said `card` is `#FFFFFF` and 10.3
+repeated the hex rather than naming the token. **Two statements against one, and the
+build had followed the one**, faithfully, because 3.1 is the token table. The two win.
+10.3 now names the token, because a component section repeating a color out of the token
+table is how the contradiction lasted as long as it did.
+
+The card also had no warm pixel in it, and neither did anything else. `cardWash` is the
+user's own area color and four of the eight moods are cool, so the default area put a
+cool wash on a pure white card. `#FCFBF9` is warm at 3 points of red over blue, which is
+the "warmth in the cards" section 1 promises.
+
+### What the token change cost downstream, and it was not free
+
+**The canvas change forced an ink token to move, and that is the kind of second order
+effect that gets missed.** At 0.60 the light canvas was already the tightest surface in
+the app at **4.5046 to one**, four ten-thousandths over section 13's floor, and a test
+written in phase 3 pinned it with a comment predicting that a later darkening of
+`canvas` would take the whole Daylight world under the floor without touching that
+screen. It did, to **4.33**. `inkSecondary` moved to 0.64 in consequence, and the
+tightest ground in the app is now the light canvas at 4.88 to one.
+
+The same raise retired a defect phase 3b had recorded as unfixable rather than fixed. At
+0.60 `inkSecondary` measured 4.48 to one on a resting area card and **4.27 on an
+in-session one**, and 16.7 held it in a test on the grounds that raising an ink token
+for every screen was out of scope for a calm mode audit. It is in scope for a token
+pass. Both now clear, at 5.05 and 4.75.
+
+**The 48 area label variants were re-verified against the new ground**, in both worlds,
+ordinary and in calm mode, which `design-v3.md` 3.4 and 16.7 require whenever the card
+moves. Eight of the 96 variants changed, three in light and five in dark, and the
+function found them on its own because every ground is recomputed at runtime from the
+token set rather than written down. The worst case is 4.538 to one in light and 4.655 in
+dark.
+
+**A second calm mode defect surfaced while doing it.** Phase 3b assumed that a variant
+clearing the ordinary ground clears the calm one, because 16.2 pins the calm wash
+shallower and desaturates the accent under it. In light that holds. **In dark it does
+not**: a desaturated accent at 15 percent over the card is not uniformly lighter than
+the true accent at 16, and fourteen of the 48 dark labels measure slightly worse in calm
+mode than out of it. It survived phase 3b on 0.04 of margin. Lifting the dark card spent
+it, and three variants went under. Labels are now verified against **both** grounds and
+are the same color on both, which is what 16.2 requires of them.
+
+### Eight decisions where the obvious answer was rejected
+
+Recorded per `design-v3.md` 15, in `DECISIONS.md` under the August 27 polish pass entry.
+Depth is bought downward rather than by lifting the card, because there was no headroom
+above pure white. The dark canvas is held rather than taken toward pure black for OLED.
+Sheets and the undo snackbar stay at `card` while the tab bar and unselected chips move
+to `raise`. `sidehead` sits off the tracking ramp rather than on it. The body pair
+splits unevenly, 15 and 17 rather than 16 and 18. The Trail title takes the same
+treatment as the Areas title rather than one with more character. The area walk starts
+at Berry rather than at Twilight, the next mood along. And the audit's refusal list
+became `design-v3.md` 15.3 rather than more entries on the dated tell list at 15.1.
+
+### What is deliberately not in this phase
+
+All of it is phase 12b, issue #54, and the reason is that surface decisions get better
+information once there is more than one sheet and more than one world to judge them
+against.
+
+- **Scroll edge treatment.** Content still passes hard edged under the status bar and
+  behind the floating tab bar, and a grep for `verticalGradient`, `fadingEdge`, `blur(`
+  or `overscroll` across `ui/` returns zero hits
+- **The sheet shadow.** `ClarityElevation.sheet` is declared in 6.1 and still has zero
+  call sites, so every sheet in the app butts flat against its scrim
+- **Whether anything in this app moves at rest.** Section 14 closes with "An app that
+  never moves is an app that feels broken" and that sentence is false today. Every
+  conventional fix for it is on 15.1 or next to it and 15.3 refuses four of them by
+  name. It is an owner decision rather than a patch
+- **What the Trail's event circle carries** that the sentence beside it does not, and
+  **whether an inactive tab keeps its label**, and **what a text field looks like**,
+  which section 10 never says at all
+- **The mint completion block's margin.** It sits at 8dp while every other element on the
+  Trail sits at 20dp, because the wash is applied to the row rather than inside the row's
+  own padding. Small, and it belongs with the other surface work
+
+### What the device check still has to find
+
+It has not run. Phase 2 found seven defects on the device that the build had passed and
+phase 3 found five more after the build was green. This phase changes six color tokens
+and nine type roles, so every screen in the app is affected and nothing is isolated to a
+new surface. The two worlds and calm mode all have to be looked at, `adb logcat` checked
+after the install per `CLAUDE.md`, and the things worth pointing a phone at are the card
+against its new ground with its shadow restored, the tab bar at `raise` against a card at
+`card`, the Trail's new title and its 30, 17, 15, 12 ladder, an area card at 200 percent
+font scale now that `body` is 15sp, and a freshly created area coming out `#D946EF`
+rather than the color of the FAB.
 
 ## Phase 3b delivered
 
