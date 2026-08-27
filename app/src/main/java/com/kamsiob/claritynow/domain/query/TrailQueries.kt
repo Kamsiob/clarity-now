@@ -1,5 +1,6 @@
 package com.kamsiob.claritynow.domain.query
 
+import com.kamsiob.claritynow.data.event.AppOpened
 import com.kamsiob.claritynow.data.event.AreaArchived
 import com.kamsiob.claritynow.data.event.AreaCreated
 import com.kamsiob.claritynow.data.event.AreaDeleted
@@ -9,13 +10,16 @@ import com.kamsiob.claritynow.data.event.AreaReordered
 import com.kamsiob.claritynow.data.event.AreaUnarchived
 import com.kamsiob.claritynow.data.event.ClarityEvent
 import com.kamsiob.claritynow.data.event.ClarityEventType
-import com.kamsiob.claritynow.data.event.FocusAbandoned
 import com.kamsiob.claritynow.data.event.FocusCompleted
+import com.kamsiob.claritynow.data.event.FocusEndedEarly
+import com.kamsiob.claritynow.data.event.FocusExtended
 import com.kamsiob.claritynow.data.event.FocusStarted
 import com.kamsiob.claritynow.data.event.ItemAdded
 import com.kamsiob.claritynow.data.event.ItemCompleted
 import com.kamsiob.claritynow.data.event.ItemDeleted
 import com.kamsiob.claritynow.data.event.ItemEdited
+import com.kamsiob.claritynow.data.event.ItemEstimated
+import com.kamsiob.claritynow.data.event.ItemFiled
 import com.kamsiob.claritynow.data.event.ItemPromoted
 import com.kamsiob.claritynow.data.event.ItemQueued
 import com.kamsiob.claritynow.data.event.ItemReopened
@@ -166,6 +170,10 @@ class TrailQueries(
      * than bucketed under a placeholder key. A placeholder would eventually be
      * printed, and CLARITY_LOGIC_ENGINE.md 1 is blunt about what one fabricated area
      * name costs.
+     *
+     * Everything done to an unfiled item takes that path and is therefore absent
+     * from every area's count, which is correct rather than a shortfall: it happened
+     * in no area. It is still in [totalEvents] and still marks the day active.
      */
     fun eventsPerArea(startMillis: Long, endMillis: Long): Map<String, Int> {
         val counts = HashMap<String, Int>()
@@ -199,22 +207,43 @@ class TrailQueries(
     }
 
     /**
-     * The area an event belongs to, or null for the six types that have none.
+     * The area an event belongs to, or null for the types that have none.
      *
-     * Eighteen of the twenty four resolve exactly. ITEM_EDITED carries only an item
-     * id and resolves through that item's ITEM_ADDED, which is exact rather than a
-     * heuristic because an item's area is assigned once when it is added and no
-     * event type moves an item between areas. The two terminal focus types resolve
-     * through their own session's FOCUS_STARTED, which can genuinely be missing on
-     * an imported or merged log, so the answer is nullable rather than a crash.
+     * Sixteen of the twenty eight resolve straight out of their own payload. Five
+     * resolve through another event: ITEM_EDITED and ITEM_ESTIMATED carry only an
+     * item id and resolve through that item's own history, and the three focus
+     * types that are not FOCUS_STARTED resolve through their session's
+     * FOCUS_STARTED, which can genuinely be missing on an imported or merged log,
+     * so the answer is nullable rather than a crash.
      *
-     * The six that cannot resolve are excluded rather than guessed. PULSE_GENERATED,
+     * **Resolving through an item is now time bounded, and it was not before.** It
+     * used to be exact on the ground that an item's area is assigned once and no
+     * event moves it between areas. ITEM_FILED breaks the first half of that: an
+     * item can begin with no area and acquire one later. Resolving an edit made
+     * while the item was unfiled against the area it was filed into a week later
+     * would attribute an event to an area retroactively, which is the same class of
+     * mistake as letting a rename rewrite an older Trail entry. So it resolves as
+     * of the event's own instant, and an edit to an unfiled item belongs to no area,
+     * which is the honest answer rather than a missing one.
+     *
+     * ITEM_ADDED also returns null now, for an unfiled capture. That is not a
+     * failure to resolve. The item is in no area, and DECISIONS.md C8 chose that
+     * over a synthetic inbox area precisely so this function has nothing to invent.
+     *
+     * The seven that cannot resolve are excluded rather than guessed. PULSE_GENERATED,
      * PULSE_ANSWERED and REPORT_GENERATED carry a `factSnapshot` whose keys no
      * document specifies, so nothing may be parsed out of it. PLAN_OFFERED carries a
      * `subjectId` but not the `SubjectKind` that would say whether it names an area
      * or an item; testing the id against the known area ids would work in practice
      * and is a heuristic no document authorizes. PLAN_ACCEPTED carries a plan id
-     * with the same missing kind behind it, and a setting is global by definition.
+     * with the same missing kind behind it, a setting is global by definition, and
+     * APP_OPENED carries a date and nothing else.
+     *
+     * The Pulse payloads carry a subject and a kind since the Addendum 01 schema
+     * commit, so the middle case above is answerable now and is deliberately still
+     * not answered here. A Pulse is not something that happened in an area; it is
+     * something the app said about one, and counting it in `eventsPerArea` would
+     * mix the two. Anything wanting the subject reads the payload for it.
      */
     fun areaIdOf(event: ClarityEvent): String? = when (val payload = event.payload) {
         is AreaCreated -> payload.areaId
@@ -226,7 +255,9 @@ class TrailQueries(
         is AreaDeleted -> payload.areaId
 
         is ItemAdded -> payload.areaId
-        is ItemEdited -> areaIdOfItem(payload.itemId)
+        is ItemFiled -> payload.areaId
+        is ItemEdited -> areaIdOfItemAsOf(payload.itemId, event.wallClock)
+        is ItemEstimated -> areaIdOfItemAsOf(payload.itemId, event.wallClock)
         is ItemQueued -> payload.areaId
         is ItemPromoted -> payload.areaId
         is ItemCompleted -> payload.areaId
@@ -236,10 +267,11 @@ class TrailQueries(
 
         is FocusStarted -> payload.areaId
         is FocusCompleted -> areaIdOfFocusSession(payload.sessionId)
-        is FocusAbandoned -> areaIdOfFocusSession(payload.sessionId)
+        is FocusEndedEarly -> areaIdOfFocusSession(payload.sessionId)
+        is FocusExtended -> areaIdOfFocusSession(payload.sessionId)
 
         is PulseGenerated, is PulseAnswered, is ReportGenerated,
-        is PlanOffered, is PlanAccepted, is SettingChanged,
+        is PlanOffered, is PlanAccepted, is SettingChanged, is AppOpened,
         -> null
     }
 
@@ -339,13 +371,38 @@ class TrailQueries(
     }
 
     /**
-     * The area an item belongs to, fixed for the item's whole life.
+     * The area the item was in at [atMillis], or null when it was in none.
      *
-     * `ItemAdded.areaId` is the only assignment the reducer ever makes to an item's
-     * area and no event type moves an item between areas, so this is exact rather
-     * than an approximation of a current value.
+     * Two events assign an item's area and no third one exists: ITEM_ADDED, which
+     * may name none, and ITEM_FILED, which is the only transition into one and only
+     * ever applies to an item that had none. Nothing moves an item between areas
+     * and there is no unfile, so folding those two is exact rather than an
+     * approximation of a current value.
+     *
+     * **Time bounded, unlike the version that shipped in phase 3.** That one had no
+     * bound because there was nothing to bound: every item had an area from the
+     * instant it existed. An item can now be unfiled for a week and filed
+     * afterward, and answering "which area" without saying "when" would attribute
+     * everything done to it while it sat in the inbox to the area it eventually
+     * landed in.
+     *
+     * **Inclusive of [atMillis], like the three `AsOf` snapshot resolvers above and
+     * unlike every other bound in this class.** One commit stamps every event it
+     * writes with one clock reading, so an exclusive bound would leave an item
+     * unable to resolve its own area at the instant it was added or filed.
      */
-    fun areaIdOfItem(itemId: String): String? = itemAddedPayload(itemId)?.areaId
+    fun areaIdOfItemAsOf(itemId: String, atMillis: Long): String? {
+        var areaId: String? = null
+        for (event in byEntity[itemId].orEmpty()) {
+            if (event.wallClock > atMillis) continue
+            when (val payload = event.payload) {
+                is ItemAdded -> areaId = payload.areaId
+                is ItemFiled -> areaId = payload.areaId
+                else -> Unit
+            }
+        }
+        return areaId
+    }
 
     /** The area a focus session ran in, from its own FOCUS_STARTED. */
     fun areaIdOfFocusSession(sessionId: String): String? = focusStartPayload(sessionId)?.areaId
@@ -390,14 +447,16 @@ class TrailQueries(
     // Focus -------------------------------------------------------------------
 
     /**
-     * Seconds of focus in the window, over completed and abandoned sessions alike.
+     * Seconds of focus in the window, over both kinds of ended session alike.
      *
-     * Abandoned sessions count. CLARITY_LOGIC_ENGINE.md 3.1 gives three separate
+     * Sessions ended early count. CLARITY_LOGIC_ENGINE.md 3.1 gives three separate
      * session counts and one undivided total, and it is not named `completedSeconds`.
      * The approved Report line "The sessions that finished averaged {minutes}
      * minutes" only means something if the ordinary minutes figure is unrestricted.
-     * And MASTER_BUILD_PROMPT 10 treats abandonment neutrally everywhere, which
-     * deleting those minutes from the total would quietly stop being true.
+     * And MASTER_BUILD_PROMPT 10 treats an early ending neutrally everywhere, which
+     * deleting those minutes from the total would quietly stop being true. Addendum
+     * 01 4e says the same thing in the language the person sees: fourteen minutes is
+     * fourteen minutes.
      *
      * A session is attributed entirely to the instant it started, so one that
      * crosses midnight belongs to the day it began and lands on exactly one day of a
@@ -424,15 +483,16 @@ class TrailQueries(
     /**
      * Session outcomes for the sessions that started in the window.
      *
-     * A session with no terminal event is counted as unresolved, never as abandoned.
-     * A killed process leaves exactly that, and inferring abandonment from
-     * `started - completed` would put a number behind language that is careful never
-     * to blame.
+     * A session with no terminal event is counted as unresolved, never as ended
+     * early. A killed process leaves exactly that, and inferring an early ending
+     * from `started - completed` would put a number behind language that is careful
+     * never to blame. FOCUS_EXTENDED is not a terminal event and changes nothing
+     * here: a session that was extended and then finished is one completed session.
      */
     fun focusSessionCounts(startMillis: Long, endMillis: Long): FocusCounts {
         var started = 0
         var completed = 0
-        var abandoned = 0
+        var endedEarly = 0
         var unresolved = 0
         for (event in eventsIn(startMillis, endMillis)) {
             val payload = event.payload
@@ -443,21 +503,27 @@ class TrailQueries(
             started++
             when (focusTerminalEvent(payload.sessionId)?.payload) {
                 is FocusCompleted -> completed++
-                is FocusAbandoned -> abandoned++
+                is FocusEndedEarly -> endedEarly++
                 else -> unresolved++
             }
         }
         return FocusCounts(
             started = started,
             completed = completed,
-            abandoned = abandoned,
+            endedEarly = endedEarly,
             unresolved = unresolved,
         )
     }
 
     // Queue and intake --------------------------------------------------------
 
-    /** The active item in each live area at the instant. At most one per area. */
+    /**
+     * The active item in each live area at the instant. At most one per area.
+     *
+     * An unfiled item is never an answer here. It cannot be ACTIVE at all until it
+     * is filed, which `ClarityReducer.itemPromoted` refuses to produce and
+     * `ClarityInvariants` reports if a merged log somehow contains it.
+     */
     fun activeItemPerAreaAt(atMillis: Long): Map<String, String> {
         val state = stateBefore(atMillis)
         return state.liveAreas.mapNotNull { area ->
@@ -479,6 +545,12 @@ class TrailQueries(
      *
      * Every qualifying area appears, including one whose queue is empty, because
      * "an area went from 3 or more queued to 0" is a trigger that needs the zero.
+     *
+     * Unfiled items are in no area's queue and so are in none of these counts and
+     * not in [queueSizeAt] either. An inbox is not a backlog and must not be spoken
+     * about as one: the whole point of Addendum 01 4a is that writing something down
+     * costs nothing, and a queue length that grew every time somebody had a thought
+     * would make it cost something after all.
      */
     fun queueSizeByAreaAt(atMillis: Long, includeArchived: Boolean = false): Map<String, Int> {
         val state = stateBefore(atMillis)
@@ -495,7 +567,22 @@ class TrailQueries(
         queueSizeByAreaAt(atMillis, includeArchived).values.sum()
 
     /**
-     * ITEM_ADDED events in the window.
+     * Items added into an area in the window. Intake, not gestures.
+     *
+     * **An unfiled capture is not counted here, and it is counted by
+     * [totalEvents].** The two questions are different and the split is deliberate.
+     * `totalEvents` and `activeDays` ask what a person did, and writing something
+     * down in the inbox is unambiguously something they did. This asks how much
+     * arrived in the queues, which is what every rule reading it goes on to say
+     * something about: the Pulse accumulation family escalates on additions minus
+     * completions, and telling someone their queue is growing because they emptied
+     * their head into an inbox would be a false sentence about their own data.
+     * Nothing is hidden from the person by this; the capture is in the Trail like
+     * anything else. Addendum 01 4a and DECISIONS.md C8.
+     *
+     * It also keeps this equal to the sum of [additionsPerArea], which a share
+     * needs. A total larger than the parts it is divided into produces percentages
+     * that do not reach a hundred, and nothing on the screen would explain why.
      *
      * There is no signed net flow function here and there never will be.
      * CLARITY_LOGIC_ENGINE.md 3.1 declares `netFlow` as completions minus additions
@@ -504,14 +591,19 @@ class TrailQueries(
      * use and neither can leak into the other.
      */
     fun additionsBetween(startMillis: Long, endMillis: Long): Int =
-        eventsIn(startMillis, endMillis).count { it.type == ClarityEventType.ITEM_ADDED }
+        eventsIn(startMillis, endMillis).count {
+            val payload = it.payload
+            payload is ItemAdded && payload.areaId != null
+        }
 
     /** Additions in the window keyed by the area the payload names. */
     fun additionsPerArea(startMillis: Long, endMillis: Long): Map<String, Int> {
         val counts = HashMap<String, Int>()
         for (event in eventsIn(startMillis, endMillis)) {
             val payload = event.payload
-            if (payload is ItemAdded) counts[payload.areaId] = (counts[payload.areaId] ?: 0) + 1
+            if (payload !is ItemAdded) continue
+            val areaId = payload.areaId ?: continue
+            counts[areaId] = (counts[areaId] ?: 0) + 1
         }
         return counts.toSortedMap()
     }
@@ -661,33 +753,37 @@ class TrailQueries(
     private fun itemAddedEvent(itemId: String): ClarityEvent? =
         byEntity[itemId]?.firstOrNull { it.payload is ItemAdded }
 
-    private fun itemAddedPayload(itemId: String): ItemAdded? =
-        itemAddedEvent(itemId)?.payload as? ItemAdded
-
     private fun focusStartEvent(sessionId: String): ClarityEvent? =
         byEntity[sessionId]?.firstOrNull { it.payload is FocusStarted }
 
     private fun focusStartPayload(sessionId: String): FocusStarted? =
         focusStartEvent(sessionId)?.payload as? FocusStarted
 
-    /** The first terminal event for a session. A second one changes nothing. */
+    /**
+     * The first terminal event for a session. A second one changes nothing.
+     *
+     * FOCUS_EXTENDED is not terminal and is not looked for here. It moves the plan,
+     * not the outcome, and a session can carry several of them.
+     */
     private fun focusTerminalEvent(sessionId: String): ClarityEvent? =
         byEntity[sessionId]?.firstOrNull {
-            it.payload is FocusCompleted || it.payload is FocusAbandoned
+            it.payload is FocusCompleted || it.payload is FocusEndedEarly
         }
 
     /** The session and the seconds of a terminal focus event, or null for anything else. */
     private fun terminalFocusOf(event: ClarityEvent): Pair<String, Int>? =
         when (val payload = event.payload) {
             is FocusCompleted -> payload.sessionId to payload.actualSeconds
-            is FocusAbandoned -> payload.sessionId to payload.actualSeconds
+            is FocusEndedEarly -> payload.sessionId to payload.actualSeconds
             else -> null
         }
 
     /** The item a row is about, for the types whose payload carries no title. */
     private fun subjectItemIdOf(event: ClarityEvent): String? = when (val payload = event.payload) {
         is ItemAdded -> payload.itemId
+        is ItemFiled -> payload.itemId
         is ItemEdited -> payload.itemId
+        is ItemEstimated -> payload.itemId
         is ItemQueued -> payload.itemId
         is ItemPromoted -> payload.itemId
         is ItemCompleted -> payload.itemId
@@ -696,7 +792,8 @@ class TrailQueries(
         is ItemDeleted -> payload.itemId
         is FocusStarted -> payload.itemId
         is FocusCompleted -> itemIdOfFocusSession(payload.sessionId)
-        is FocusAbandoned -> itemIdOfFocusSession(payload.sessionId)
+        is FocusEndedEarly -> itemIdOfFocusSession(payload.sessionId)
+        is FocusExtended -> itemIdOfFocusSession(payload.sessionId)
         else -> null
     }
 

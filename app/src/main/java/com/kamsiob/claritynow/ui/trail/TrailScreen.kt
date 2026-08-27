@@ -513,6 +513,14 @@ private fun iconFor(sentence: TrailSentenceKey): Int = when (sentence) {
     TrailSentenceKey.AREA_ARCHIVED -> ClarityIcons.archive
     TrailSentenceKey.AREA_UNARCHIVED -> ClarityIcons.unarchive
     TrailSentenceKey.AREA_DELETED -> ClarityIcons.erase
+    // Filing puts a captured thing into an area, so it takes the areas glyph, the
+    // same one AREA_CREATED uses. Reuse is the point: design-v3.md 7 wants the set
+    // small and coherent, and twenty nine row shapes still map onto nineteen
+    // drawables that already exist.
+    TrailSentenceKey.ITEM_FILED -> ClarityIcons.areas
+    TrailSentenceKey.ITEM_ESTIMATED -> ClarityIcons.time
+    TrailSentenceKey.ITEM_ESTIMATE_CLEARED -> ClarityIcons.time
+    TrailSentenceKey.FOCUS_EXTENDED -> ClarityIcons.focusEvent
 
     TrailSentenceKey.ITEM_ADDED -> ClarityIcons.add
     TrailSentenceKey.ITEM_EDITED -> ClarityIcons.edit

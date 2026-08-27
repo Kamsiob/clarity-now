@@ -88,27 +88,133 @@ abstract class VerifyLanguageHygiene : DefaultTask() {
         val ALLOWED_NON_ASCII = setOf('\u00B7')
 
         /**
-         * Only the forms that are unambiguously British. `grey` is absent on
-         * purpose: the design system uses it and it is not on the list of words
-         * MASTER_BUILD_PROMPT 2.9 names.
+         * Stems where American English uses `-ize` and British uses `-ise`.
+         *
+         * Curated rather than a blanket `is(e|ed|ing)` rule, because a great many
+         * `-ise` words are correct in American English too: advertise, exercise,
+         * surprise, compromise, franchise, improvise, supervise, televise, revise,
+         * devise, disguise, enterprise. A blanket rule fails the build on correct
+         * copy, which is worse than missing a word, because a gate people have to
+         * argue with is a gate people switch off.
          */
-        val BRITISH_FORMS = listOf(
-            Regex("""\bcolour""", RegexOption.IGNORE_CASE) to "color",
-            Regex("""\blicence""", RegexOption.IGNORE_CASE) to "license",
-            Regex("""\bbehaviour""", RegexOption.IGNORE_CASE) to "behavior",
-            Regex("""\bfavourite""", RegexOption.IGNORE_CASE) to "favorite",
-            Regex("""\bhonour""", RegexOption.IGNORE_CASE) to "honor",
-            Regex("""\bneighbour""", RegexOption.IGNORE_CASE) to "neighbor",
-            Regex("""\borganis(e|ed|ing|ation)""", RegexOption.IGNORE_CASE) to "organize",
-            Regex("""\bprioritis(e|ed|ing|ation)""", RegexOption.IGNORE_CASE) to "prioritize",
-            Regex("""\brecognis(e|ed|ing)""", RegexOption.IGNORE_CASE) to "recognize",
-            Regex("""\banalys(e|ed|ing)\b""", RegexOption.IGNORE_CASE) to "analyze",
-            Regex("""\bcentre\b""", RegexOption.IGNORE_CASE) to "center",
-            Regex("""\bdefence\b""", RegexOption.IGNORE_CASE) to "defense",
-            Regex("""\bwhilst\b""", RegexOption.IGNORE_CASE) to "while",
-            Regex("""\bamongst\b""", RegexOption.IGNORE_CASE) to "among",
-            Regex("""\btravelling\b""", RegexOption.IGNORE_CASE) to "traveling",
+        val ISE_STEMS = listOf(
+            "apologi", "authori", "categori", "critici", "customi", "digiti",
+            "emphasi", "finali", "generali", "hospitali", "initiali", "maximi",
+            "memori", "minimi", "normali", "optimi", "organi", "personali",
+            "prioriti", "randomi", "reali", "recogni", "seriali", "speciali",
+            "stabili", "standardi", "sterili", "summari", "synchroni", "utili",
+            "visuali",
         )
+
+        /**
+         * Stems where American English uses `-yze`.
+         *
+         * `paralys` is here because the earlier `analys` pattern could not catch it:
+         * the word boundary before `analys` never matches inside `paralysing`, and
+         * the word reached a committed document before anyone noticed. That is the
+         * argument for this whole list being longer than it feels like it needs.
+         *
+         * The noun `paralysis` is correct in American English and is deliberately
+         * not matched, which is why these patterns require a letter after the stem.
+         */
+        val YSE_STEMS = listOf("analys", "paralys", "catalys")
+
+        /** Everything that is not a regular family. */
+        val IRREGULAR_BRITISH = listOf(
+            "colour" to "color",
+            "behaviour" to "behavior",
+            "favourite" to "favorite",
+            "honour" to "honor",
+            "neighbour" to "neighbor",
+            "labour" to "labor",
+            "humour" to "humor",
+            "flavour" to "flavor",
+            "rumour" to "rumor",
+            "endeavour" to "endeavor",
+            "vapour" to "vapor",
+            "valour" to "valor",
+            "armour" to "armor",
+            "harbour" to "harbor",
+            "odour" to "odor",
+            "saviour" to "savior",
+            "splendour" to "splendor",
+            "licence" to "license",
+            "defence" to "defense",
+            "offence" to "offense",
+            "pretence" to "pretense",
+            "practise" to "practice",
+            "centre" to "center",
+            "theatre" to "theater",
+            "fibre" to "fiber",
+            "litre" to "liter",
+            "calibre" to "caliber",
+            "sombre" to "somber",
+            "spectre" to "specter",
+            "lustre" to "luster",
+            "travelling" to "traveling",
+            "travelled" to "traveled",
+            "cancelling" to "canceling",
+            "cancelled" to "canceled",
+            "labelling" to "labeling",
+            "labelled" to "labeled",
+            "modelling" to "modeling",
+            "modelled" to "modeled",
+            "signalling" to "signaling",
+            "signalled" to "signaled",
+            "levelled" to "leveled",
+            "fuelled" to "fueled",
+            "marvellous" to "marvelous",
+            "skilful" to "skillful",
+            "wilful" to "willful",
+            "fulfil" to "fulfill",
+            "enrol" to "enroll",
+            "instalment" to "installment",
+            "judgement" to "judgment",
+            "ageing" to "aging",
+            "cosy" to "cozy",
+            "learnt" to "learned",
+            "spelt" to "spelled",
+            "dreamt" to "dreamed",
+            "programme" to "program",
+            "aluminium" to "aluminum",
+            "jewellery" to "jewelry",
+            "storey" to "story",
+            "tyre" to "tire",
+            "kerb" to "curb",
+            "cheque" to "check",
+            "draught" to "draft",
+            "mould" to "mold",
+            "smoulder" to "smolder",
+            "sceptic" to "skeptic",
+            "aeroplane" to "airplane",
+            "plough" to "plow",
+            "gaol" to "jail",
+            "whilst" to "while",
+            "amongst" to "among",
+        )
+
+        /**
+         * `grey` is deliberately absent. The design system uses it, it is not on the
+         * list MASTER_BUILD_PROMPT 2.9 names, and both spellings are current in
+         * American English.
+         */
+        val BRITISH_FORMS: List<Pair<Regex, String>> = buildList {
+            ISE_STEMS.forEach { stem ->
+                add(
+                    Regex("""\b${stem}s(e|es|ed|ing|ation|ations)\b""", RegexOption.IGNORE_CASE)
+                        to "${stem}z...",
+                )
+            }
+            YSE_STEMS.forEach { stem ->
+                add(
+                    Regex("""\b${stem}(e|es|ed|ing)\b""", RegexOption.IGNORE_CASE)
+                        to "${stem.dropLast(1)}z...",
+                )
+            }
+            IRREGULAR_BRITISH.forEach { (british, american) ->
+                add(Regex("""\b${british}""", RegexOption.IGNORE_CASE) to american)
+            }
+        }
     }
 }
 

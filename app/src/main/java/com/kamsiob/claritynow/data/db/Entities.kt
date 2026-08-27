@@ -87,12 +87,34 @@ data class AreaRow(
     val lastEventLamport: Long,
 )
 
+/**
+ * One item, filed or not. The cache half of [ItemState].
+ *
+ * **[areaId] is nullable, and that is a change to how this table has to be
+ * queried, not only to what it can hold.** A null area is an unfiled item in the
+ * inbox, Addendum 01 4a, and SQL treats null as unknown rather than as a value:
+ * `WHERE areaId = :id` is never true for one, which is correct and is the whole
+ * reason a null was chosen over a synthetic inbox area, but `WHERE areaId != :id`
+ * is never true for one either, so a query written to mean everything outside one
+ * area silently drops the entire inbox. Anything of that second shape has to say
+ * `OR areaId IS NULL` out loud. [CacheDao] has no area scoped query today and
+ * repeats this warning where one would be written. DECISIONS.md C8.
+ *
+ * The index on [areaId] still earns its place. SQLite indexes null keys, so a
+ * lookup by area seeks past the unfiled rows rather than scanning them.
+ *
+ * [firstStep] is Addendum 01 4b and [estimateMinutes] is 4c. Both are optional
+ * forever and both are here because the projection carries them; like every other
+ * column in this table they are derived and are rebuilt from the log on demand.
+ */
 @Entity(tableName = "clarity_item", indices = [Index("areaId"), Index("status"), Index("orderKey")])
 data class ItemRow(
     @PrimaryKey val id: String,
-    val areaId: String,
+    val areaId: String?,
     val title: String,
     val note: String?,
+    val firstStep: String?,
+    val estimateMinutes: Int?,
     val orderKey: String,
     val status: String,
     val createdAt: Long,
@@ -228,6 +250,8 @@ fun ItemState.toRow() = ItemRow(
     areaId = areaId,
     title = title,
     note = note,
+    firstStep = firstStep,
+    estimateMinutes = estimateMinutes,
     orderKey = orderKey,
     status = status.name,
     createdAt = createdAt,
@@ -242,6 +266,8 @@ fun ItemRow.toState() = ItemState(
     areaId = areaId,
     title = title,
     note = note,
+    firstStep = firstStep,
+    estimateMinutes = estimateMinutes,
     orderKey = orderKey,
     status = ItemStatus.valueOf(status),
     createdAt = createdAt,

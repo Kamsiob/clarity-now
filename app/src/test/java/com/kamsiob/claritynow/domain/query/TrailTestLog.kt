@@ -1,10 +1,14 @@
 package com.kamsiob.claritynow.domain.query
 
+import com.kamsiob.claritynow.data.event.AppOpened
 import com.kamsiob.claritynow.data.event.AreaCreated
 import com.kamsiob.claritynow.data.event.ClarityEvent
 import com.kamsiob.claritynow.data.event.EventPayload
+import com.kamsiob.claritynow.data.event.FocusExtended
 import com.kamsiob.claritynow.data.event.ItemAdded
 import com.kamsiob.claritynow.data.event.ItemCompleted
+import com.kamsiob.claritynow.data.event.ItemEstimated
+import com.kamsiob.claritynow.data.event.ItemFiled
 import com.kamsiob.claritynow.data.event.ItemPromoted
 import com.kamsiob.claritynow.data.event.ItemStatus
 import java.time.LocalDate
@@ -40,6 +44,16 @@ internal fun at(day: Int, hour: Int = 9, minute: Int = 0): Long =
 
 /** Local midnight of that day. The lower bound of a day window. */
 internal fun startOfDay(day: Int): Long = at(day, 0, 0)
+
+/**
+ * The local date key of that day, the exact string `APP_OPENED` carries.
+ *
+ * Derived from [TEST_START_DATE] rather than formatted from a millisecond value,
+ * so a fixture cannot accidentally name a different day from the one its events
+ * land on. `LocalDate.toString` is ISO-8601, which is the `yyyy-MM-dd` shape
+ * MASTER_BUILD_PROMPT 5.2 specifies for the payload.
+ */
+internal fun dateKey(day: Int): String = TEST_START_DATE.plusDays(day.toLong()).toString()
 
 /**
  * Builds a log the way `ClarityRepository` does: one lamport per event, ascending,
@@ -79,8 +93,8 @@ internal class TrailTestLog(private val defaultOrigin: String = TEST_ORIGIN) {
     fun queries(zone: ZoneId = TEST_ZONE): TrailQueries = TrailQueries(events(), zone)
 }
 
-// The four shapes every fixture in these tests is built out of. Named so a test
-// reads as the sequence of things a person did, not as a wall of payload literals.
+// The shapes every fixture in these tests is built out of. Named so a test reads as
+// the sequence of things a person did, not as a wall of payload literals.
 
 internal fun TrailTestLog.area(
     wallClock: Long,
@@ -135,3 +149,68 @@ internal fun TrailTestLog.complete(
     wallClock,
     ItemCompleted(itemId, areaId, title, areaName, activeDurationDays),
 )
+
+/**
+ * A capture into the inbox. Addendum 01 4a: no area, and none required.
+ *
+ * A separate helper from [item] rather than a nullable parameter on it, because the
+ * two are different acts and a test that reads `log.item(..., areaId = null)` hides
+ * the one fact the test exists to be about. The area name snapshot goes with the
+ * area: both set, or neither, which is why there is no way to pass one here.
+ */
+internal fun TrailTestLog.unfiled(
+    wallClock: Long,
+    itemId: String,
+    title: String,
+    orderKey: String = "a0",
+    estimateMinutes: Int? = null,
+    firstStep: String? = null,
+): ClarityEvent = add(
+    wallClock,
+    ItemAdded(
+        itemId = itemId,
+        areaId = null,
+        title = title,
+        note = null,
+        orderKey = orderKey,
+        areaNameSnapshot = null,
+        estimateMinutes = estimateMinutes,
+        firstStep = firstStep,
+    ),
+)
+
+/** Filing an inbox item into an area. The only transition into one. */
+internal fun TrailTestLog.file(
+    wallClock: Long,
+    itemId: String,
+    areaId: String,
+    orderKey: String = "a0",
+    areaName: String = "Work",
+): ClarityEvent = add(wallClock, ItemFiled(itemId, areaId, orderKey, areaName))
+
+/** An estimate set, changed or cleared after capture. Addendum 01 4c. */
+internal fun TrailTestLog.estimate(
+    wallClock: Long,
+    itemId: String,
+    previousMinutes: Int?,
+    newMinutes: Int?,
+): ClarityEvent = add(wallClock, ItemEstimated(itemId, previousMinutes, newMinutes))
+
+/** Time added to a running session without ending it. Addendum 01 4f. */
+internal fun TrailTestLog.extend(
+    wallClock: Long,
+    sessionId: String,
+    addedSeconds: Int,
+    newPlannedSeconds: Int,
+): ClarityEvent = add(wallClock, FocusExtended(sessionId, addedSeconds, newPlannedSeconds))
+
+/**
+ * The presence marker written on the first foreground of a local day.
+ *
+ * [day] names both the instant and the date key, so a fixture cannot write an
+ * APP_OPENED whose payload disagrees with the day it happened on. The hour defaults
+ * to early morning because that is when the real one is written: on the first
+ * foreground, which is by definition before whatever the person then did.
+ */
+internal fun TrailTestLog.opened(day: Int, hour: Int = 7): ClarityEvent =
+    add(at(day, hour), AppOpened(dateKey(day)))

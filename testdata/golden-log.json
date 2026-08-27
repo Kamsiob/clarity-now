@@ -73,7 +73,9 @@
       "title": "Rewrite the proposal intro",
       "note": null,
       "orderKey": "a0",
-      "areaNameSnapshot": "Work"
+      "areaNameSnapshot": "Work",
+      "estimateMinutes": null,
+      "firstStep": null
     }
   },
   {
@@ -108,7 +110,9 @@
       "title": "Call the printer",
       "note": "before five",
       "orderKey": "a1",
-      "areaNameSnapshot": "Work"
+      "areaNameSnapshot": "Work",
+      "estimateMinutes": null,
+      "firstStep": null
     }
   },
   {
@@ -125,7 +129,9 @@
       "title": "Draft the release notes",
       "note": null,
       "orderKey": "a2",
-      "areaNameSnapshot": "Work"
+      "areaNameSnapshot": "Work",
+      "estimateMinutes": null,
+      "firstStep": null
     }
   },
   {
@@ -142,7 +148,9 @@
       "title": "Book the dentist",
       "note": null,
       "orderKey": "a0",
-      "areaNameSnapshot": "Personal"
+      "areaNameSnapshot": "Personal",
+      "estimateMinutes": null,
+      "firstStep": null
     }
   },
   {
@@ -177,7 +185,9 @@
       "title": "Fix the leaking tap",
       "note": null,
       "orderKey": "a1",
-      "areaNameSnapshot": "Personal"
+      "areaNameSnapshot": "Personal",
+      "estimateMinutes": null,
+      "firstStep": null
     }
   },
   {
@@ -194,7 +204,9 @@
       "title": "Walk before breakfast",
       "note": null,
       "orderKey": "a0",
-      "areaNameSnapshot": "Health"
+      "areaNameSnapshot": "Health",
+      "estimateMinutes": null,
+      "firstStep": null
     }
   },
   {
@@ -263,7 +275,9 @@
       "factSnapshot": {
         "activeItemAgeDays": "2"
       },
-      "reflectionPeriod": "YESTERDAY"
+      "reflectionPeriod": "YESTERDAY",
+      "subjectId": "item-proposal",
+      "subjectKind": "ITEM"
     }
   },
   {
@@ -278,7 +292,9 @@
       "pulseId": "pulse-1",
       "responseKey": "yes",
       "responseLabel": "Still the right thing",
-      "responseIsPositive": true
+      "responseIsPositive": true,
+      "subjectId": "item-proposal",
+      "subjectKind": "ITEM"
     }
   },
   {
@@ -328,7 +344,9 @@
       "previousTitle": "Call the printer",
       "newTitle": "Call the printer about the covers",
       "previousNote": "before five",
-      "newNote": "before five, ask for Dan"
+      "newNote": "before five, ask for Dan",
+      "previousFirstStep": null,
+      "newFirstStep": null
     }
   },
   {
@@ -349,9 +367,28 @@
   {
     "id": "evt-022",
     "schemaVersion": 1,
+    "type": "ITEM_ADDED",
+    "wallClock": 1767819600000,
+    "lamport": 22,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-idea",
+    "payload": {
+      "itemId": "item-idea",
+      "areaId": null,
+      "title": "Look into the loft insulation",
+      "note": null,
+      "orderKey": "a0mr",
+      "areaNameSnapshot": null,
+      "estimateMinutes": 90,
+      "firstStep": "Find last winter heating bill"
+    }
+  },
+  {
+    "id": "evt-023",
+    "schemaVersion": 1,
     "type": "FOCUS_STARTED",
     "wallClock": 1767862800000,
-    "lamport": 22,
+    "lamport": 23,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "focus-2",
     "payload": {
@@ -362,11 +399,11 @@
     }
   },
   {
-    "id": "evt-023",
+    "id": "evt-024",
     "schemaVersion": 1,
-    "type": "FOCUS_ABANDONED",
+    "type": "FOCUS_ENDED_EARLY",
     "wallClock": 1767862800000,
-    "lamport": 23,
+    "lamport": 24,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "focus-2",
     "payload": {
@@ -375,11 +412,11 @@
     }
   },
   {
-    "id": "evt-024",
+    "id": "evt-025",
     "schemaVersion": 1,
     "type": "SETTING_CHANGED",
     "wallClock": 1767988800000,
-    "lamport": 24,
+    "lamport": 25,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "afterCompleting",
     "payload": {
@@ -389,11 +426,11 @@
     }
   },
   {
-    "id": "evt-025",
+    "id": "evt-026",
     "schemaVersion": 1,
     "type": "AREA_RECOLORED",
     "wallClock": 1768035600000,
-    "lamport": 25,
+    "lamport": 26,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "area-health",
     "payload": {
@@ -403,11 +440,25 @@
     }
   },
   {
-    "id": "evt-026",
+    "id": "evt-027",
+    "schemaVersion": 1,
+    "type": "ITEM_ESTIMATED",
+    "wallClock": 1768075200000,
+    "lamport": 27,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-idea",
+    "payload": {
+      "itemId": "item-idea",
+      "previousEstimateMinutes": 90,
+      "newEstimateMinutes": 45
+    }
+  },
+  {
+    "id": "evt-028",
     "schemaVersion": 1,
     "type": "ITEM_PROMOTED",
     "wallClock": 1768122000000,
-    "lamport": 26,
+    "lamport": 28,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "item-printer",
     "payload": {
@@ -421,11 +472,11 @@
     }
   },
   {
-    "id": "evt-027",
+    "id": "evt-029",
     "schemaVersion": 1,
     "type": "ITEM_COMPLETED",
     "wallClock": 1768147200000,
-    "lamport": 27,
+    "lamport": 29,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "item-printer",
     "payload": {
@@ -437,11 +488,11 @@
     }
   },
   {
-    "id": "evt-028",
+    "id": "evt-030",
     "schemaVersion": 1,
     "type": "ITEM_PROMOTED",
     "wallClock": 1768147200000,
-    "lamport": 28,
+    "lamport": 30,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "item-proposal",
     "payload": {
@@ -455,11 +506,11 @@
     }
   },
   {
-    "id": "evt-029",
+    "id": "evt-031",
     "schemaVersion": 1,
     "type": "AREA_RENAMED",
     "wallClock": 1768212000000,
-    "lamport": 29,
+    "lamport": 31,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "area-scratch",
     "payload": {
@@ -469,11 +520,11 @@
     }
   },
   {
-    "id": "evt-030",
+    "id": "evt-032",
     "schemaVersion": 1,
     "type": "AREA_REORDERED",
     "wallClock": 1768212000000,
-    "lamport": 30,
+    "lamport": 32,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "area-scratch",
     "payload": {
@@ -483,11 +534,11 @@
     }
   },
   {
-    "id": "evt-031",
+    "id": "evt-033",
     "schemaVersion": 1,
     "type": "AREA_ARCHIVED",
     "wallClock": 1768215600000,
-    "lamport": 31,
+    "lamport": 33,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "area-scratch",
     "payload": {
@@ -496,11 +547,23 @@
     }
   },
   {
-    "id": "evt-032",
+    "id": "evt-034",
+    "schemaVersion": 1,
+    "type": "APP_OPENED",
+    "wallClock": 1768291200000,
+    "lamport": 34,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "2026-01-13",
+    "payload": {
+      "dateKey": "2026-01-13"
+    }
+  },
+  {
+    "id": "evt-035",
     "schemaVersion": 1,
     "type": "ITEM_DELETED",
     "wallClock": 1768294800000,
-    "lamport": 32,
+    "lamport": 35,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "item-notes",
     "payload": {
@@ -510,11 +573,11 @@
     }
   },
   {
-    "id": "evt-033",
+    "id": "evt-036",
     "schemaVersion": 1,
     "type": "ITEM_REOPENED",
     "wallClock": 1768305600000,
-    "lamport": 33,
+    "lamport": 36,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "item-dentist",
     "payload": {
@@ -524,11 +587,11 @@
     }
   },
   {
-    "id": "evt-034",
+    "id": "evt-037",
     "schemaVersion": 1,
     "type": "ITEM_COMPLETED",
     "wallClock": 1768377600000,
-    "lamport": 34,
+    "lamport": 37,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "item-walk",
     "payload": {
@@ -540,11 +603,11 @@
     }
   },
   {
-    "id": "evt-035",
+    "id": "evt-038",
     "schemaVersion": 1,
     "type": "ITEM_ADDED",
     "wallClock": 1768377600000,
-    "lamport": 35,
+    "lamport": 38,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "item-swim",
     "payload": {
@@ -553,15 +616,17 @@
       "title": "Swim on Thursday",
       "note": null,
       "orderKey": "a1",
-      "areaNameSnapshot": "Health"
+      "areaNameSnapshot": "Health",
+      "estimateMinutes": null,
+      "firstStep": null
     }
   },
   {
-    "id": "evt-036",
+    "id": "evt-039",
     "schemaVersion": 1,
     "type": "ITEM_PROMOTED",
     "wallClock": 1768377600000,
-    "lamport": 36,
+    "lamport": 39,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "item-swim",
     "payload": {
@@ -575,11 +640,11 @@
     }
   },
   {
-    "id": "evt-037",
+    "id": "evt-040",
     "schemaVersion": 1,
     "type": "AREA_UNARCHIVED",
     "wallClock": 1768467600000,
-    "lamport": 37,
+    "lamport": 40,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "area-scratch",
     "payload": {
@@ -588,11 +653,11 @@
     }
   },
   {
-    "id": "evt-038",
+    "id": "evt-041",
     "schemaVersion": 1,
     "type": "AREA_ARCHIVED",
     "wallClock": 1768467600000,
-    "lamport": 38,
+    "lamport": 41,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "area-scratch",
     "payload": {
@@ -601,11 +666,11 @@
     }
   },
   {
-    "id": "evt-039",
+    "id": "evt-042",
     "schemaVersion": 1,
     "type": "AREA_DELETED",
     "wallClock": 1768471200000,
-    "lamport": 39,
+    "lamport": 42,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "area-scratch",
     "payload": {
@@ -614,11 +679,53 @@
     }
   },
   {
-    "id": "evt-040",
+    "id": "evt-043",
+    "schemaVersion": 1,
+    "type": "FOCUS_STARTED",
+    "wallClock": 1768482000000,
+    "lamport": 43,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "focus-3",
+    "payload": {
+      "sessionId": "focus-3",
+      "areaId": "area-personal",
+      "itemId": "item-tap",
+      "plannedSeconds": 900
+    }
+  },
+  {
+    "id": "evt-044",
+    "schemaVersion": 1,
+    "type": "FOCUS_EXTENDED",
+    "wallClock": 1768482000000,
+    "lamport": 44,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "focus-3",
+    "payload": {
+      "sessionId": "focus-3",
+      "addedSeconds": 600,
+      "newPlannedSeconds": 1500
+    }
+  },
+  {
+    "id": "evt-045",
+    "schemaVersion": 1,
+    "type": "FOCUS_COMPLETED",
+    "wallClock": 1768485600000,
+    "lamport": 45,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "focus-3",
+    "payload": {
+      "sessionId": "focus-3",
+      "actualSeconds": 1500
+    }
+  },
+  {
+    "id": "evt-046",
     "schemaVersion": 1,
     "type": "ITEM_ADDED",
     "wallClock": 1768554000000,
-    "lamport": 40,
+    "lamport": 46,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "item-letter",
     "payload": {
@@ -627,15 +734,32 @@
       "title": "Write the landlord a letter",
       "note": null,
       "orderKey": "a2",
+      "areaNameSnapshot": "Personal",
+      "estimateMinutes": null,
+      "firstStep": null
+    }
+  },
+  {
+    "id": "evt-047",
+    "schemaVersion": 1,
+    "type": "ITEM_FILED",
+    "wallClock": 1768557600000,
+    "lamport": 47,
+    "originId": "01947b3f-0000-4000-8000-000000000001",
+    "entityId": "item-idea",
+    "payload": {
+      "itemId": "item-idea",
+      "areaId": "area-personal",
+      "orderKey": "a3mr",
       "areaNameSnapshot": "Personal"
     }
   },
   {
-    "id": "evt-041",
+    "id": "evt-048",
     "schemaVersion": 1,
     "type": "ITEM_QUEUED",
     "wallClock": 1768597200000,
-    "lamport": 41,
+    "lamport": 48,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "item-swim",
     "payload": {
@@ -646,11 +770,11 @@
     }
   },
   {
-    "id": "evt-042",
+    "id": "evt-049",
     "schemaVersion": 1,
     "type": "REPORT_GENERATED",
     "wallClock": 1768636800000,
-    "lamport": 42,
+    "lamport": 49,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "report-1",
     "payload": {
@@ -661,27 +785,40 @@
         {
           "sectionKey": "observations",
           "sidehead": "Your week, honestly",
-          "text": "Three things left Work this week and two arrived."
+          "text": "Three things left Work this week and two arrived.",
+          "familyKey": "intakeVsOutput",
+          "variantKey": "ob.flow.s1.l08",
+          "escalationStage": 1,
+          "register": "PLAIN",
+          "subjectId": "area-work",
+          "subjectKind": "AREA"
         },
         {
           "sectionKey": "focus",
           "sidehead": "Focus",
-          "text": "You protected 25 minutes on Monday."
+          "text": "You protected 25 minutes on Thursday.",
+          "familyKey": "focusInvestment",
+          "variantKey": "ob.focus.s1.l03",
+          "escalationStage": 1,
+          "register": "OBSERVATIONAL",
+          "subjectId": null,
+          "subjectKind": null
         }
       ],
       "factSnapshot": {
         "completions": "3",
         "additions": "2",
         "focusMinutes": "25"
-      }
+      },
+      "headlineVariantKey": "hd.steady.01"
     }
   },
   {
-    "id": "evt-043",
+    "id": "evt-050",
     "schemaVersion": 1,
     "type": "PLAN_OFFERED",
     "wallClock": 1768636800000,
-    "lamport": 43,
+    "lamport": 50,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "plan-1",
     "payload": {
@@ -701,11 +838,11 @@
     }
   },
   {
-    "id": "evt-044",
+    "id": "evt-051",
     "schemaVersion": 1,
     "type": "PLAN_ACCEPTED",
     "wallClock": 1768636800000,
-    "lamport": 44,
+    "lamport": 51,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "plan-1",
     "payload": {
@@ -713,11 +850,11 @@
     }
   },
   {
-    "id": "evt-045",
+    "id": "evt-052",
     "schemaVersion": 1,
     "type": "ITEM_PROMOTED",
     "wallClock": 1768726800000,
-    "lamport": 45,
+    "lamport": 52,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "item-letter",
     "payload": {
@@ -731,11 +868,11 @@
     }
   },
   {
-    "id": "evt-046",
+    "id": "evt-053",
     "schemaVersion": 1,
     "type": "ITEM_PROMOTED",
     "wallClock": 1768726800000,
-    "lamport": 45,
+    "lamport": 52,
     "originId": "01947b3f-0000-4000-8000-000000000002",
     "entityId": "item-dentist",
     "payload": {
@@ -749,11 +886,11 @@
     }
   },
   {
-    "id": "evt-047",
+    "id": "evt-054",
     "schemaVersion": 1,
     "type": "PULSE_GENERATED",
     "wallClock": 1768766400000,
-    "lamport": 46,
+    "lamport": 53,
     "originId": "01947b3f-0000-4000-8000-000000000001",
     "entityId": "pulse-2-phone",
     "payload": {
@@ -768,15 +905,17 @@
       "factSnapshot": {
         "swaps": "1"
       },
-      "reflectionPeriod": "TODAY_SO_FAR"
+      "reflectionPeriod": "TODAY_SO_FAR",
+      "subjectId": "area-personal",
+      "subjectKind": "AREA"
     }
   },
   {
-    "id": "evt-048",
+    "id": "evt-055",
     "schemaVersion": 1,
     "type": "PULSE_GENERATED",
     "wallClock": 1768766400000,
-    "lamport": 46,
+    "lamport": 53,
     "originId": "01947b3f-0000-4000-8000-000000000002",
     "entityId": "pulse-2-laptop",
     "payload": {
@@ -791,7 +930,9 @@
       "factSnapshot": {
         "swaps": "1"
       },
-      "reflectionPeriod": "TODAY_SO_FAR"
+      "reflectionPeriod": "TODAY_SO_FAR",
+      "subjectId": "area-personal",
+      "subjectKind": "AREA"
     }
   }
 ]

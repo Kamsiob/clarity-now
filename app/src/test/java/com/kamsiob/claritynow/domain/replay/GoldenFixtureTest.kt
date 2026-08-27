@@ -3,9 +3,11 @@ package com.kamsiob.claritynow.domain.replay
 import com.kamsiob.claritynow.data.event.ClarityEventJson
 import com.kamsiob.claritynow.data.event.ClarityEventType
 import com.kamsiob.claritynow.data.event.ItemStatus
+import com.kamsiob.claritynow.data.event.SubjectKind
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
@@ -79,6 +81,90 @@ class GoldenFixtureTest {
         assertTrue("the golden log never exercises: ${missing.joinToString()}", missing.isEmpty())
     }
 
+    /**
+     * The five transitions the Addendum 01 vocabulary added, each one asserted on
+     * the state rather than on the presence of an event type.
+     *
+     * `the fixture covers every event type` above is satisfied by an event of the
+     * right type sitting anywhere in the log, including one the reducer refused. The
+     * contract with the desktop app is not that these types appear; it is that
+     * replaying them produces this state. `docs/EVENT_FORMAT.md` 8 names these five
+     * as the transitions nothing else in the fixture would reach.
+     */
+    @Test
+    fun `the fixture exercises the inbox, an estimate and an extended session`() {
+        val state = GoldenFixture.state()
+        val idea = state.items.getValue("item-idea")
+
+        // Captured with no area on day 3, filed into Personal on day 12, and never
+        // active at any point along the way. It could not be while it was unfiled,
+        // and Personal already had an active item when the filing landed.
+        assertEquals("area-personal", idea.areaId)
+        assertEquals(ItemStatus.QUEUED, idea.status)
+        assertNull(idea.activeSince)
+        assertNull(idea.completedAt)
+        assertEquals("Find last winter heating bill", idea.firstStep)
+        // Ninety minutes on capture, revised to forty five three days later. The
+        // event states the value after it and the reducer applies that.
+        assertEquals(45, idea.estimateMinutes)
+        // Nothing is left in the inbox, because the one thing that went in came out.
+        assertTrue(state.unfiledItems.isEmpty())
+
+        // Fifteen minutes planned, ten added, finished at the extended length. The
+        // session neither restarted nor ended when it was extended.
+        val extended = state.focusSessions.getValue("focus-3")
+        assertEquals(1500, extended.plannedSeconds)
+        assertEquals(1500, extended.actualSeconds)
+        assertEquals(FocusOutcome.COMPLETED, extended.outcome)
+
+        // The renamed type, folded as a neutral ending rather than as anything else.
+        assertEquals(FocusOutcome.ENDED_EARLY, state.focusSessions.getValue("focus-2").outcome)
+
+        // APP_OPENED is in the log and changes nothing in the projection. That is
+        // the point of it: a presence marker with no reader but gap detection.
+        val withoutOpens = ClarityReplay.replay(
+            GoldenFixture.log().filterNot { it.type == ClarityEventType.APP_OPENED },
+        )
+        assertEquals(
+            "APP_OPENED must fold into nothing at all. A last opened date on the " +
+                "projection would be a tally of presence in the object every screen " +
+                "reads, which is what Addendum 01 4d exists to prevent.",
+            stateText(withoutOpens.copy(eventsApplied = 0)),
+            stateText(GoldenFixture.state().copy(eventsApplied = 0)),
+        )
+    }
+
+    /**
+     * The keys the engine's own rules are stated in survive into the state.
+     *
+     * A rendered sentence is not enough to derive `FiringHistory` from: two variants
+     * of one family read as two different sentences, and a stage 3 line and a stage
+     * 1 line of the same family read as unrelated. CLARITY_LOGIC_ENGINE.md 7.6 step
+     * 1 excludes a variant for 90 days, 7.3 cools a family for 14, and 6.4 caps
+     * `hardStretch` at 42. All three are keyed on values that only exist because
+     * they are carried on the event. Issue 19.
+     */
+    @Test
+    fun `the fixture carries the family and variant keys the engine needs`() {
+        val report = GoldenFixture.state().reports.getValue("2026-01-11")
+        val sections = report.sections.associateBy { it.sectionKey }
+
+        assertEquals("intakeVsOutput", sections.getValue("observations").familyKey)
+        assertEquals("ob.flow.s1.l08", sections.getValue("observations").variantKey)
+        assertEquals("area-work", sections.getValue("observations").subjectId)
+        assertEquals(SubjectKind.AREA, sections.getValue("observations").subjectKind)
+        // A family with no subject is the other legal shape, not a missing value.
+        assertNull(sections.getValue("focus").subjectId)
+        assertNull(sections.getValue("focus").subjectKind)
+        assertTrue(report.sections.all { it.escalationStage >= 1 })
+        assertEquals(
+            "two sections of one report rendering the same variant would make the " +
+                "90 day exclusion in 7.6 step 1 untestable against this fixture",
+            report.sections.size,
+            report.sections.map { it.variantKey }.distinct().size,
+        )
+    }
+
     @Test
     fun `the fixture ends in a state worth asserting about`() {
         val state = GoldenFixture.state()
@@ -92,9 +178,11 @@ class GoldenFixtureTest {
         assertTrue(state.archivedAreas.isEmpty())
 
         // The contested area resolved to the laptop's promotion, and nothing vanished.
+        // item-idea is in that queue because it was filed there in the second week,
+        // and filing left it queued rather than promoting it.
         assertEquals("item-dentist", state.activeItemIn("area-personal")?.id)
         assertEquals(
-            setOf("item-letter", "item-tap"),
+            setOf("item-letter", "item-tap", "item-idea"),
             state.queueIn("area-personal").map { it.id }.toSet(),
         )
 

@@ -2,8 +2,9 @@
 
 Where the build actually is. Updated at the end of every phase.
 
-**Last updated:** August 26, 2026, end of phase 3.
-**Version:** 0.3.0, versionCode 300.
+**Last updated:** August 27, 2026, after Addendum 01 was recorded and its schema
+window closed.
+**Version:** 0.3.0, versionCode 300. The addendum work is not yet a release.
 **Installed and verified on:** Pixel 8 (`shiba`), over USB.
 
 ---
@@ -15,6 +16,7 @@ Where the build actually is. Updated at the end of every phase.
 | 1. Foundations | done | closed |
 | 2. Core mechanics | done | closed |
 | 3. Trail | done | closed |
+| 3b. Executive function retrofit | not started | #22 |
 | 4. Focus sessions | not started | #2 |
 | 5. Engine skeleton and simulator | not started | #3 |
 | 6. Pulse | not started | #4 |
@@ -26,6 +28,70 @@ Where the build actually is. Updated at the end of every phase.
 | 11. Settings, About, data | not started | #10 |
 | 12. Widgets and notifications | not started | #11 |
 | 13. Ship | not started | #12 |
+
+---
+
+## Addendum 01, executive function support
+
+**Arrived August 27, 2026.** A directive from the owner, out of research and user
+panel work on serving people with executive function challenges. It is recorded in
+full and almost none of it is built.
+
+**Where it is recorded, because a cold start needs to find it:**
+
+| what | where |
+|---|---|
+| the source document | `docs/addenda/ADDENDUM_01_EXECUTIVE_FUNCTION.md`, provenance only |
+| behavior and data | `MASTER_BUILD_PROMPT.md` 14b, plus 3.2, 13.3, 13.5, 16.11, 18, 19 |
+| everything visual | `design-v3.md` 16 calm mode, 17, and edits through 7 to 15 |
+| why, and the nine conflicts | `DECISIONS.md`, the August 27 entries |
+| what remains | issues #22 to #51, all labeled `addendum:01` |
+
+**None of it is a rebuild.** The core mechanic is unchanged. These are additions.
+
+### What actually changed in the code
+
+Only the schema, because the addendum marks Step 2 urgent: a payload change is nearly
+free before user data exists and painful afterward. Everything else waits for its
+phase.
+
+The catalog went from 24 event types to 28, `FOCUS_ABANDONED` was renamed to
+`FOCUS_ENDED_EARLY`, `ITEM_ADDED` gained a nullable area and two optional fields, and
+the issue #19 payload fields landed in the same window. Room went to schema 3, and the
+migration was verified against the real database on the phone rather than only in a
+test: the existing area and its whole history survived.
+
+### One shipped defect found while doing it
+
+Teaching the replay harness to file items out of the inbox exposed a bug class that
+shipped in 0.2.0: an order key was chosen against the entities currently in view
+rather than against everything that can occupy the ordering space. Six paths had it.
+The plainest instance is that **the second item added to any fresh area took the same
+order key as the first**, because the queue is empty at that moment and the active
+item was not being looked at.
+
+Nothing looks wrong when it happens. It surfaces much later as a crash on a drag.
+`DECISIONS.md` has the full write up and `OrderKeySpaceTest` is the property test that
+now holds the line.
+
+### The nine conflicts
+
+Eight were resolved by the recording session and one, the event rename, was put to the
+owner and decided the same day. All nine are written up in `DECISIONS.md`. The two
+worth knowing without opening that file:
+
+- **`APP_OPENED` must never count as activity.** Phase 3 shipped `isUserActivity`, and
+  `activeDays` counts only user activity. Had the new event counted, opening the app
+  and doing nothing would have marked a day active, `mo.steady` would have fired for
+  someone who did nothing for a fortnight, and `quietDay` would have been nearly
+  unreachable. It is a presence marker for gap detection and nothing else.
+- **Six of the addendum's items were assigned to phases 1 and 2, which are shipped.**
+  Hence phase 3b, inserted before phase 4, which depends on part of it.
+
+### Two open questions that are not the addendum's
+
+#20 and #21 predate it and still need the owner. #19 was folded into the schema window
+rather than left waiting.
 
 ---
 

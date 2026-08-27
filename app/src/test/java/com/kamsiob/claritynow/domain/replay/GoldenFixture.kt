@@ -1,5 +1,6 @@
 package com.kamsiob.claritynow.domain.replay
 
+import com.kamsiob.claritynow.data.event.AppOpened
 import com.kamsiob.claritynow.data.event.AreaArchived
 import com.kamsiob.claritynow.data.event.AreaCreated
 import com.kamsiob.claritynow.data.event.AreaDeleted
@@ -9,13 +10,16 @@ import com.kamsiob.claritynow.data.event.AreaReordered
 import com.kamsiob.claritynow.data.event.AreaUnarchived
 import com.kamsiob.claritynow.data.event.ClarityEvent
 import com.kamsiob.claritynow.data.event.EventPayload
-import com.kamsiob.claritynow.data.event.FocusAbandoned
 import com.kamsiob.claritynow.data.event.FocusCompleted
+import com.kamsiob.claritynow.data.event.FocusEndedEarly
+import com.kamsiob.claritynow.data.event.FocusExtended
 import com.kamsiob.claritynow.data.event.FocusStarted
 import com.kamsiob.claritynow.data.event.ItemAdded
 import com.kamsiob.claritynow.data.event.ItemCompleted
 import com.kamsiob.claritynow.data.event.ItemDeleted
 import com.kamsiob.claritynow.data.event.ItemEdited
+import com.kamsiob.claritynow.data.event.ItemEstimated
+import com.kamsiob.claritynow.data.event.ItemFiled
 import com.kamsiob.claritynow.data.event.ItemPromoted
 import com.kamsiob.claritynow.data.event.ItemQueued
 import com.kamsiob.claritynow.data.event.ItemReopened
@@ -29,6 +33,7 @@ import com.kamsiob.claritynow.data.event.ReflectionPeriod
 import com.kamsiob.claritynow.data.event.ReportGenerated
 import com.kamsiob.claritynow.data.event.ReportSectionSnapshot
 import com.kamsiob.claritynow.data.event.SettingChanged
+import com.kamsiob.claritynow.data.event.SubjectKind
 import com.kamsiob.claritynow.domain.engine.FactRef
 
 /**
@@ -42,7 +47,15 @@ import com.kamsiob.claritynow.domain.engine.FactRef
  * The stream is hand written rather than generated, so it reads as a small life:
  * three areas, a fortnight of ordinary use, one week closed with a report, and two
  * deliberate divergences from a second device at the end. It exercises all twenty
- * four event types and both conflict kinds.
+ * eight event types and both conflict kinds.
+ *
+ * The Addendum 01 vocabulary is woven into that life rather than appended to it, so
+ * the file still reads as something a person did. One thought is written down with
+ * no area on a Tuesday evening, given a rough estimate, revised down three days
+ * later, and filed into Personal in the second week. A session in Personal is
+ * extended once and then finishes. One morning is marked as opened. Those five
+ * transitions are the ones `docs/EVENT_FORMAT.md` 8 names as the ones nothing else
+ * in the fixture would reach.
  */
 object GoldenFixture {
 
@@ -72,6 +85,10 @@ object GoldenFixture {
         private val personalHeadA = OrderKey.between(null, "a0", phoneJitter)
         private val personalHeadB = OrderKey.between(null, personalHeadA, phoneJitter)
         private val personalHeadC = OrderKey.between(null, personalHeadB, phoneJitter)
+
+        // The tail of Personal's queue on day 12, which is where a filing lands: at
+        // the back, exactly where an add into that area would have gone.
+        private val personalTail = OrderKey.last("a2", phoneJitter)
 
         fun build(): List<ClarityEvent> {
             week1()
@@ -127,8 +144,19 @@ object GoldenFixture {
                 renderedQuestion = "Still the right thing?",
                 factSnapshot = mapOf("activeItemAgeDays" to "2"),
                 reflectionPeriod = ReflectionPeriod.YESTERDAY,
+                subjectId = "item-proposal",
+                subjectKind = SubjectKind.ITEM,
             ))
-            at(2, 9, payload = PulseAnswered("pulse-1", "yes", "Still the right thing", true))
+            // The subject is repeated on the answer rather than joined through the
+            // pulse id, deliberately. CLARITY_LOGIC_ENGINE.md 7.6 and issue 19.
+            at(2, 9, payload = PulseAnswered(
+                pulseId = "pulse-1",
+                responseKey = "yes",
+                responseLabel = "Still the right thing",
+                responseIsPositive = true,
+                subjectId = "item-proposal",
+                subjectKind = SubjectKind.ITEM,
+            ))
 
             at(2, 17, payload = ItemCompleted("item-dentist", "area-personal", "Book the dentist", "Personal", 2))
             at(2, 17, payload = ItemPromoted("item-tap", "area-personal", ItemStatus.QUEUED, null, null, "Fix the leaking tap", "Personal"))
@@ -136,11 +164,28 @@ object GoldenFixture {
             at(3, 10, payload = ItemEdited("item-printer", "Call the printer", "Call the printer about the covers", "before five", "before five, ask for Dan"))
             at(3, 11, payload = ItemReordered("item-notes", "area-work", "a2", OrderKey.between("a0", "a1", phoneJitter)))
 
+            // A thought written down in the evening with no decision attached to it.
+            // Addendum 01 4a: capture must never require choosing an area, so this
+            // one names none, and its area name snapshot is absent rather than
+            // empty. It carries a first step and a rough estimate, both optional.
+            at(3, 21, payload = ItemAdded(
+                itemId = "item-idea",
+                areaId = null,
+                title = "Look into the loft insulation",
+                note = null,
+                orderKey = OrderKey.first(phoneJitter),
+                areaNameSnapshot = null,
+                estimateMinutes = 90,
+                firstStep = "Find last winter heating bill",
+            ))
+
             at(4, 9, payload = FocusStarted("focus-2", "area-work", "item-proposal", 1500))
-            at(4, 9, payload = FocusAbandoned("focus-2", 320))
+            at(4, 9, payload = FocusEndedEarly("focus-2", 320))
 
             at(5, 20, payload = SettingChanged("afterCompleting", "AUTO_PROMOTE", "CHOOSE_FROM_QUEUE"))
             at(6, 9, payload = AreaRecolored("area-health", "#22C55E", "#10B981"))
+            // The guess revised, without editing what was originally written down.
+            at(6, 20, payload = ItemEstimated("item-idea", 90, 45))
         }
 
         // Day 7 to 13. A swap, an archive, a delete, a reopen.
@@ -161,6 +206,9 @@ object GoldenFixture {
             at(8, 10, payload = AreaReordered("area-scratch", "a3", OrderKey.between("a0", "a1", phoneJitter)))
             at(8, 11, payload = AreaArchived("area-scratch", "Workshop"))
 
+            // The first foreground of that day. A date key and nothing else, and it
+            // is never counted as activity anywhere. Addendum 01 2d, DECISIONS.md C7.
+            at(9, 8, payload = AppOpened("2026-01-13"))
             at(9, 9, payload = ItemDeleted("item-notes", "area-work", "Draft the release notes"))
             at(9, 12, payload = ItemReopened("item-dentist", "area-personal", personalHeadA))
 
@@ -172,7 +220,17 @@ object GoldenFixture {
             at(11, 9, payload = AreaArchived("area-scratch", "Workshop"))
             at(11, 10, payload = AreaDeleted("area-scratch", "Workshop"))
 
+            // Fifteen minutes was not enough, so ten more were added without ending
+            // the session or starting a new one. The payload states the new total,
+            // which is what the reducer applies. Addendum 01 4f.
+            at(11, 13, payload = FocusStarted("focus-3", "area-personal", "item-tap", 900))
+            at(11, 13, payload = FocusExtended("focus-3", 600, 1500))
+            at(11, 14, payload = FocusCompleted("focus-3", 1500))
+
             at(12, 9, payload = ItemAdded("item-letter", "area-personal", "Write the landlord a letter", null, "a2", "Personal"))
+            // The inbox thought gets a home, eight days after it was written down.
+            // Filing does not promote: Personal has an active item and keeps it.
+            at(12, 10, payload = ItemFiled("item-idea", "area-personal", personalTail, "Personal"))
 
             // Putting the active item back in the queue without promoting anything,
             // which leaves the area idle on purpose.
@@ -190,14 +248,31 @@ object GoldenFixture {
                         sectionKey = "observations",
                         sidehead = "Your week, honestly",
                         text = "Three things left Work this week and two arrived.",
+                        familyKey = "intakeVsOutput",
+                        variantKey = "ob.flow.s1.l08",
+                        escalationStage = 1,
+                        register = "PLAIN",
+                        subjectId = "area-work",
+                        subjectKind = SubjectKind.AREA,
                     ),
                     ReportSectionSnapshot(
                         sectionKey = "focus",
                         sidehead = "Focus",
-                        text = "You protected 25 minutes on Monday.",
+                        // The day name follows the log now that there is a session
+                        // in this week to name. Day 11 is Thursday January 15.
+                        text = "You protected 25 minutes on Thursday.",
+                        familyKey = "focusInvestment",
+                        variantKey = "ob.focus.s1.l03",
+                        escalationStage = 1,
+                        register = "OBSERVATIONAL",
+                        subjectId = null,
+                        subjectKind = null,
                     ),
                 ),
                 factSnapshot = mapOf("completions" to "3", "additions" to "2", "focusMinutes" to "25"),
+                // headlineKey names the family; the 90 day exclusion in
+                // CLARITY_LOGIC_ENGINE.md 7.6 step 1 needs the variant.
+                headlineVariantKey = "hd.steady.01",
             ))
             at(13, 8, payload = PlanOffered(
                 planId = "plan-1",
@@ -256,6 +331,8 @@ object GoldenFixture {
                 renderedQuestion = "New priority, or second thoughts?",
                 factSnapshot = mapOf("swaps" to "1"),
                 reflectionPeriod = ReflectionPeriod.TODAY_SO_FAR,
+                subjectId = "area-personal",
+                subjectKind = SubjectKind.AREA,
             ))
             lamport = pulseLamport - 1
             at(14, 20, LAPTOP, PulseGenerated(
@@ -269,6 +346,8 @@ object GoldenFixture {
                 renderedQuestion = "New priority, or second thoughts?",
                 factSnapshot = mapOf("swaps" to "1"),
                 reflectionPeriod = ReflectionPeriod.TODAY_SO_FAR,
+                subjectId = "area-personal",
+                subjectKind = SubjectKind.AREA,
             ))
         }
     }

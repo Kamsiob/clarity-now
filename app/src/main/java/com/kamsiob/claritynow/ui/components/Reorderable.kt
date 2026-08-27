@@ -123,7 +123,7 @@ fun Modifier.reorderableItem(
                     state.drag(dragAmount.y, itemHeightPx)
                 },
                 onDragEnd = {
-                    // A long press that never travelled is a request for the menu,
+                    // A long press that never traveled is a request for the menu,
                     // not a reorder. Both gestures start the same way, so the
                     // distinction has to be made on release.
                     if (moved < LONG_PRESS_TRAVEL_SLOP) {

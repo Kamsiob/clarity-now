@@ -1,6 +1,7 @@
 package com.kamsiob.claritynow.domain.query
 
 import com.kamsiob.claritynow.data.event.FocusCompleted
+import com.kamsiob.claritynow.data.event.FocusExtended
 import com.kamsiob.claritynow.data.event.FocusStarted
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -74,12 +75,66 @@ class TrailPageLoadingTest {
         )
         // The page holds only the terminal event; the start is older than the window
         // and arrives from the session lookup instead.
-        val abandoned = log.add(
+        val finished = log.add(
             wallClock = at(20),
             payload = FocusCompleted(sessionId = "focus-2", actualSeconds = 600),
         )
 
-        assertEquals(setOf("item-4"), itemIdsNeededBy(listOf(abandoned), listOf(started)))
+        assertEquals(setOf("item-4"), itemIdsNeededBy(listOf(finished), listOf(started)))
+    }
+
+    /**
+     * FOCUS_EXTENDED joined the family keyed by session rather than by item, and
+     * needs nothing new: the same second round through FOCUS_STARTED resolves it.
+     *
+     * Worth asserting rather than assuming, because it is keyed by its session like
+     * the two terminal types and so falls into exactly the case this whole file
+     * exists to cover. A page holding only an extension, from a session started
+     * before the window, has to know which item to fetch a title for.
+     */
+    @Test
+    fun `an extension resolves its item through the session start like a terminal event`() {
+        val log = TrailTestLog()
+        val started = log.add(
+            wallClock = at(1),
+            payload = FocusStarted(
+                sessionId = "focus-3",
+                areaId = "area-1",
+                itemId = "item-7",
+                plannedSeconds = 900,
+            ),
+        )
+        val extended = log.add(
+            wallClock = at(20),
+            payload = FocusExtended(sessionId = "focus-3", addedSeconds = 600, newPlannedSeconds = 1_500),
+        )
+
+        assertEquals(setOf("focus-3"), listOfNotNull(extended.entityId).toSet())
+        assertEquals(setOf("item-7"), itemIdsNeededBy(listOf(extended), listOf(started)))
+    }
+
+    /**
+     * ITEM_FILED and ITEM_ESTIMATED are keyed by their item like every other item
+     * event, and are needed because neither carries a title snapshot of its own.
+     *
+     * That is precisely the case this set exists for. A filing row names the item
+     * and the area it went into; the area comes from the payload and the title does
+     * not, so a page that failed to ask for it would render "Filed into Personal"
+     * with nothing before the preposition.
+     */
+    @Test
+    fun `a filing and an estimate both need the title of the item they name`() {
+        val log = TrailTestLog()
+        val captured = log.unfiled(at(1), "item-idea", "Look into the loft insulation")
+        val estimated = log.estimate(at(2), "item-idea", null, 90)
+        val filed = log.file(at(20), "item-idea", "area-1", orderKey = "a1", areaName = "Kitchen")
+
+        assertEquals(setOf("item-idea"), itemIdsNeededBy(listOf(filed), emptyList()))
+        assertEquals(setOf("item-idea"), itemIdsNeededBy(listOf(estimated), emptyList()))
+        assertEquals(
+            setOf("item-idea"),
+            itemIdsNeededBy(listOf(captured, estimated, filed), emptyList()),
+        )
     }
 
     @Test

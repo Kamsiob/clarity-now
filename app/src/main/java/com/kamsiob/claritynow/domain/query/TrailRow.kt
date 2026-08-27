@@ -1,5 +1,6 @@
 package com.kamsiob.claritynow.domain.query
 
+import com.kamsiob.claritynow.data.event.AppOpened
 import com.kamsiob.claritynow.data.event.AreaArchived
 import com.kamsiob.claritynow.data.event.AreaCreated
 import com.kamsiob.claritynow.data.event.AreaDeleted
@@ -9,13 +10,16 @@ import com.kamsiob.claritynow.data.event.AreaReordered
 import com.kamsiob.claritynow.data.event.AreaUnarchived
 import com.kamsiob.claritynow.data.event.ClarityEvent
 import com.kamsiob.claritynow.data.event.ClarityEventType
-import com.kamsiob.claritynow.data.event.FocusAbandoned
 import com.kamsiob.claritynow.data.event.FocusCompleted
+import com.kamsiob.claritynow.data.event.FocusEndedEarly
+import com.kamsiob.claritynow.data.event.FocusExtended
 import com.kamsiob.claritynow.data.event.FocusStarted
 import com.kamsiob.claritynow.data.event.ItemAdded
 import com.kamsiob.claritynow.data.event.ItemCompleted
 import com.kamsiob.claritynow.data.event.ItemDeleted
 import com.kamsiob.claritynow.data.event.ItemEdited
+import com.kamsiob.claritynow.data.event.ItemEstimated
+import com.kamsiob.claritynow.data.event.ItemFiled
 import com.kamsiob.claritynow.data.event.ItemPromoted
 import com.kamsiob.claritynow.data.event.ItemQueued
 import com.kamsiob.claritynow.data.event.ItemReopened
@@ -40,11 +44,20 @@ import kotlin.math.abs
  * string lives in `ui/trail/TrailStrings.kt` and the compiler enforces that it
  * covers every value here.
  *
- * There are twenty five values for twenty four event types. ITEM_PROMOTED is the
- * one type with two row shapes: a promotion into an empty seat and a swap that
+ * There are twenty eight values for twenty eight event types, and the match is a
+ * coincidence rather than a correspondence. Two things cancel out. ITEM_PROMOTED is
+ * the one type with two row shapes: a promotion into an empty seat and a swap that
  * displaced something read as different events to the person who made them, and
  * only `ItemPromoted.demotedItemId` tells them apart. That distinction exists in no
  * prose anywhere, which is exactly why it is encoded here rather than rediscovered.
+ * APP_OPENED runs the other way and has no value at all, because it prints no row.
+ *
+ * **APP_OPENED renders nothing, and that is a rule rather than an omission.** A
+ * daily "opened the app" line would be noise in a chronological log, and it would
+ * also be a visible tally of a person's presence, which is the same measurement
+ * Addendum 01 4d forbids turned inside out. `sentenceKeyFor` returns null for it
+ * and [trailRows] never builds a row, so it is absent from the day header count
+ * too, which counts rows. MASTER_BUILD_PROMPT 5.2 and 9, DECISIONS.md C7.
  *
  * Every one of these is a record of what happened, never an observation about it.
  * CLAUDE.md rule 8 draws that line: a transcript entry that names a verb and a
@@ -62,7 +75,10 @@ enum class TrailSentenceKey {
     AREA_DELETED,
 
     ITEM_ADDED,
+    ITEM_FILED,
     ITEM_EDITED,
+    ITEM_ESTIMATED,
+    ITEM_ESTIMATE_CLEARED,
     ITEM_QUEUED,
     ITEM_PROMOTED,
     ITEM_SWAPPED,
@@ -73,7 +89,14 @@ enum class TrailSentenceKey {
 
     FOCUS_STARTED,
     FOCUS_COMPLETED,
+
+    /**
+     * FOCUS_ENDED_EARLY. The key kept its name through the event rename, because
+     * the string it selects, "Stopped after N minutes", never contained the word
+     * that was renamed away and did not change.
+     */
     FOCUS_STOPPED,
+    FOCUS_EXTENDED,
 
     PULSE_GENERATED,
     PULSE_ANSWERED,
@@ -89,8 +112,8 @@ enum class TrailSentenceKey {
 /**
  * The values a row needs that the event's own payload does not carry.
  *
- * Resolved by folding the log, never by reading a live entity. Seven of the
- * twenty four payloads carry no title or name snapshot of their own, and the
+ * Resolved by folding the log, never by reading a live entity. Ten of the
+ * twenty eight payloads carry no title or name snapshot of their own, and the
  * tempting fix for those is `state.items[id]?.title`, which produces a correct
  * looking screen that silently rewrites its own history the first time anything is
  * renamed and shows nothing at all for anything deleted. Keeping the resolved
@@ -99,7 +122,7 @@ enum class TrailSentenceKey {
  * prohibition 4.
  */
 data class TrailRowContext(
-    /** The area this event belongs to, or null for the six types that have none. */
+    /** The area this event belongs to, or null for the types that have none. */
     val areaId: String?,
     /** The area's color as of this event, not as of now. */
     val areaColorHex: String?,
@@ -123,9 +146,15 @@ data class TrailRow(
     val sentence: TrailSentenceKey,
     /** The snapshot title or name. Never a live entity name. */
     val subject: String?,
-    /** The second slot, used only by a rename, which names both sides. */
+    /**
+     * The second slot, for the two rows that name two things: a rename, which names
+     * both sides of itself, and a filing, which names the destination area.
+     */
     val secondary: String?,
-    /** Whole minutes of focus, for the two terminal focus rows only. */
+    /**
+     * Whole minutes from a focus payload's own seconds. The two terminal rows read
+     * what the session ran for; the extension row reads what was added to it.
+     */
     val minutes: Int?,
     val areaId: String?,
     /** The area's color hex as of this event, or null when the event has no area. */
@@ -183,6 +212,14 @@ private const val CLUSTER_MILLIS = 10L * 60L * 1000L
  * and the second one inheriting a suppressed timestamp from the first would leave
  * the top row of a day with no time on it at all.
  *
+ * **An event that prints no row cannot anchor a cluster either.** APP_OPENED is
+ * written on the first foreground of a day, which is by definition a few
+ * milliseconds before whatever the person then did, so an invisible anchor would
+ * take the timestamp off the first real row of almost every day. The anchor is
+ * therefore advanced only once a row has actually been produced, which keeps the
+ * two facts in one place instead of relying on a filter here agreeing with the
+ * table in [trailRowFor].
+ *
  * [events] may arrive in any order; they are put into display order here so a
  * caller cannot get the clustering wrong by handing over a page it sorted itself.
  */
@@ -198,35 +235,43 @@ fun trailRows(
     for (event in ordered) {
         val date = Instant.ofEpochMilli(event.wallClock).atZone(zone).toLocalDate()
         val inCluster = anchorDate == date && abs(anchorMillis - event.wallClock) < CLUSTER_MILLIS
+        val row = trailRowFor(event, context(event), showsTimestamp = !inCluster) ?: continue
         if (!inCluster) {
             anchorMillis = event.wallClock
             anchorDate = date
         }
-        rows += trailRowFor(event, context(event), showsTimestamp = !inCluster)
+        rows += row
     }
     return rows
 }
 
 /**
- * One row from one event and the context resolved for it.
+ * One row from one event and the context resolved for it, or null for an event that
+ * prints no row.
  *
  * Two exhaustive `when` expressions rather than one, on purpose. The first is over
- * `ClarityEventType` and is the row shape table: adding a twenty fifth type breaks
+ * `ClarityEventType` and is the row shape table: adding a twenty ninth type breaks
  * it at compile time, which is the only mechanism that reliably stops a new event
  * being invisible in the transcript. The second is over the sealed `EventPayload`
- * hierarchy and reads the fields, which keeps twenty four downcasts out of this
+ * hierarchy and reads the fields, which keeps twenty eight downcasts out of this
  * file. Each guards the other.
+ *
+ * Null is returned only where the table says a type has no sentence at all, which
+ * today is APP_OPENED and nothing else. It is a return value rather than a filter
+ * on the caller's side so that a type deciding not to print is stated once, in the
+ * table, where the compiler is watching.
  */
 fun trailRowFor(
     event: ClarityEvent,
     context: TrailRowContext,
     showsTimestamp: Boolean = true,
-): TrailRow {
+): TrailRow? {
     val content = contentOf(event, context)
+    val sentence = sentenceKeyFor(event.type, content) ?: return null
     return TrailRow(
         eventId = event.id,
         wallClock = event.wallClock,
-        sentence = sentenceKeyFor(event.type, content.isSwap),
+        sentence = sentence,
         subject = content.subject,
         secondary = content.secondary,
         minutes = content.minutes,
@@ -240,8 +285,22 @@ fun trailRowFor(
 /**
  * The row shape table. One branch per event type, so a new type fails the build
  * here rather than rendering as nothing on a screen nobody rereads.
+ *
+ * Null means the type deliberately prints nothing. Deciding that here rather than
+ * by leaving a type out of a list somewhere is what keeps "invisible on purpose"
+ * and "invisible by accident" different states.
  */
-private fun sentenceKeyFor(type: ClarityEventType, isSwap: Boolean): TrailSentenceKey = when (type) {
+/**
+ * Two event types produce more than one row shape, so this takes the whole content
+ * rather than one flag: a promotion reads differently when it displaced something, and
+ * an estimate reads differently when it was removed rather than set. A row that said
+ * "Set a time estimate" about a removal would be a false sentence, which is the one
+ * thing a transcript may never be.
+ */
+private fun sentenceKeyFor(
+    type: ClarityEventType,
+    content: TrailRowContent,
+): TrailSentenceKey? = when (type) {
     ClarityEventType.AREA_CREATED -> TrailSentenceKey.AREA_CREATED
     ClarityEventType.AREA_RENAMED -> TrailSentenceKey.AREA_RENAMED
     ClarityEventType.AREA_RECOLORED -> TrailSentenceKey.AREA_RECOLORED
@@ -251,10 +310,17 @@ private fun sentenceKeyFor(type: ClarityEventType, isSwap: Boolean): TrailSenten
     ClarityEventType.AREA_DELETED -> TrailSentenceKey.AREA_DELETED
 
     ClarityEventType.ITEM_ADDED -> TrailSentenceKey.ITEM_ADDED
+    ClarityEventType.ITEM_FILED -> TrailSentenceKey.ITEM_FILED
     ClarityEventType.ITEM_EDITED -> TrailSentenceKey.ITEM_EDITED
+    ClarityEventType.ITEM_ESTIMATED ->
+        if (content.clearsValue) {
+            TrailSentenceKey.ITEM_ESTIMATE_CLEARED
+        } else {
+            TrailSentenceKey.ITEM_ESTIMATED
+        }
     ClarityEventType.ITEM_QUEUED -> TrailSentenceKey.ITEM_QUEUED
     ClarityEventType.ITEM_PROMOTED ->
-        if (isSwap) TrailSentenceKey.ITEM_SWAPPED else TrailSentenceKey.ITEM_PROMOTED
+        if (content.isSwap) TrailSentenceKey.ITEM_SWAPPED else TrailSentenceKey.ITEM_PROMOTED
     ClarityEventType.ITEM_COMPLETED -> TrailSentenceKey.ITEM_COMPLETED
     ClarityEventType.ITEM_REOPENED -> TrailSentenceKey.ITEM_REOPENED
     ClarityEventType.ITEM_REORDERED -> TrailSentenceKey.ITEM_REORDERED
@@ -262,7 +328,8 @@ private fun sentenceKeyFor(type: ClarityEventType, isSwap: Boolean): TrailSenten
 
     ClarityEventType.FOCUS_STARTED -> TrailSentenceKey.FOCUS_STARTED
     ClarityEventType.FOCUS_COMPLETED -> TrailSentenceKey.FOCUS_COMPLETED
-    ClarityEventType.FOCUS_ABANDONED -> TrailSentenceKey.FOCUS_STOPPED
+    ClarityEventType.FOCUS_ENDED_EARLY -> TrailSentenceKey.FOCUS_STOPPED
+    ClarityEventType.FOCUS_EXTENDED -> TrailSentenceKey.FOCUS_EXTENDED
 
     ClarityEventType.PULSE_GENERATED -> TrailSentenceKey.PULSE_GENERATED
     ClarityEventType.PULSE_ANSWERED -> TrailSentenceKey.PULSE_ANSWERED
@@ -273,6 +340,9 @@ private fun sentenceKeyFor(type: ClarityEventType, isSwap: Boolean): TrailSenten
     ClarityEventType.PLAN_ACCEPTED -> TrailSentenceKey.PLAN_ACCEPTED
 
     ClarityEventType.SETTING_CHANGED -> TrailSentenceKey.SETTING_CHANGED
+
+    // No row. See the note on TrailSentenceKey.
+    ClarityEventType.APP_OPENED -> null
 }
 
 /** The slots a row fills, read from the payload and the resolved context. */
@@ -281,17 +351,20 @@ private data class TrailRowContent(
     val secondary: String? = null,
     val minutes: Int? = null,
     val isSwap: Boolean = false,
+    /** Set when the event removed a value rather than setting one. */
+    val clearsValue: Boolean = false,
     /** Set only where the payload states the color more exactly than a fold can. */
     val areaColorHex: String? = null,
 )
 
 /**
- * Whole minutes from the payload's own `actualSeconds`, rounded to nearest.
+ * Whole minutes from a payload's own seconds, rounded to nearest.
  *
- * MASTER_BUILD_PROMPT 10 discards a session under sixty seconds as an abandonment,
- * so a zero minute row is legal and honest rather than a defect to round away.
+ * MASTER_BUILD_PROMPT 10 discards a session under sixty seconds rather than
+ * recording it as a completion, so a zero minute row is legal and honest rather
+ * than a defect to round away.
  */
-private fun minutesOf(actualSeconds: Int): Int = (actualSeconds + 30) / 60
+private fun minutesOf(seconds: Int): Int = (seconds + 30) / 60
 
 private fun contentOf(event: ClarityEvent, context: TrailRowContext): TrailRowContent =
     when (val payload = event.payload) {
@@ -316,7 +389,28 @@ private fun contentOf(event: ClarityEvent, context: TrailRowContext): TrailRowCo
 
         // Items.
         is ItemAdded -> TrailRowContent(subject = payload.title)
+        // The one item row that names two things. `areaNameSnapshot` is carried on
+        // this payload for exactly this, per MASTER_BUILD_PROMPT 5.2, so a filing
+        // from three months ago still names the area it went into even if that area
+        // has since been renamed or deleted. The title is folded, because filing
+        // carries no title snapshot of its own.
+        is ItemFiled -> TrailRowContent(
+            subject = context.itemTitle,
+            secondary = payload.areaNameSnapshot,
+        )
         is ItemEdited -> TrailRowContent(subject = payload.newTitle)
+        // The estimate itself is deliberately not shown, for the same reason
+        // `activeDurationDays` is not shown on a completion below: it is a figure
+        // the Report speaks about, and a transcript row carrying it would put the
+        // same number on screen from two paths. Addendum 01 7a additionally forbids
+        // any sentence stating a delta between an estimate and an actual, and a row
+        // reading "Estimated 30 minutes" sitting a few lines above one reading
+        // "Finished 50 minutes of focus" invites the reader to do the subtraction
+        // the corpus is forbidden from doing.
+        is ItemEstimated -> TrailRowContent(
+            subject = context.itemTitle,
+            clearsValue = payload.newEstimateMinutes == null,
+        )
         is ItemQueued -> TrailRowContent(subject = context.itemTitle)
         // A swap names only the item that moved to the front. `demotedItemId`
         // carries no title snapshot, and MASTER_BUILD_PROMPT 8.2's rule that the
@@ -341,9 +435,16 @@ private fun contentOf(event: ClarityEvent, context: TrailRowContext): TrailRowCo
             subject = context.itemTitle,
             minutes = minutesOf(payload.actualSeconds),
         )
-        is FocusAbandoned -> TrailRowContent(
+        is FocusEndedEarly -> TrailRowContent(
             subject = context.itemTitle,
             minutes = minutesOf(payload.actualSeconds),
+        )
+        // The minutes added, not the new total. The row records what the person
+        // did, and what they did was add ten minutes; the total is a state the
+        // focus screen was already showing them.
+        is FocusExtended -> TrailRowContent(
+            subject = context.itemTitle,
+            minutes = minutesOf(payload.addedSeconds),
         )
 
         // Pulse. The generated row names nothing: `factSnapshot` is an untyped
@@ -363,4 +464,10 @@ private fun contentOf(event: ClarityEvent, context: TrailRowContext): TrailRowCo
         is PlanAccepted -> TrailRowContent()
 
         is SettingChanged -> TrailRowContent()
+
+        // APP_OPENED prints no row, so this is never read. It is here because the
+        // `when` is exhaustive over the payload hierarchy, and that exhaustiveness
+        // is the mechanism that stops a new type being silently invisible. A type
+        // that genuinely should be invisible says so once, in `sentenceKeyFor`.
+        is AppOpened -> TrailRowContent()
     }

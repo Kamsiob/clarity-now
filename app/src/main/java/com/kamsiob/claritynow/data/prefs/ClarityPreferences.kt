@@ -32,6 +32,15 @@ enum class AfterCompleting {
  * event log, so that two devices holding the same log compute the same sentence.
  * DataStore does not merge, and getting this wrong does not fail loudly.
  *
+ * **The date the app was last opened belongs to that list and is the easiest of
+ * them to get wrong**, because it looks like a device preference and is one line to
+ * store here. It is engine state: Addendum 01 4d greets a person differently after
+ * a fortnight away, so a key here would have two devices disagreeing about whether
+ * someone had been absent, and the one they happened to open would decide. It lives
+ * in the log as `APP_OPENED`, written by `ClarityRepository.recordAppOpened`, which
+ * reads the log to decide whether today already has one. MASTER_BUILD_PROMPT 14b.4
+ * and DECISIONS.md C7.
+ *
  * The two values here that are not user settings, `originId` and `lamportCounter`,
  * are device identity rather than engine state. They are what a merge is performed
  * with, not something a merge has to agree about.

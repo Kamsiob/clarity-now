@@ -30,6 +30,28 @@ interface CacheDao {
     @Query("SELECT * FROM clarity_area ORDER BY orderKey ASC, id ASC")
     suspend fun allAreas(): List<AreaRow>
 
+    // Items, and the one thing to know before writing a query against them.
+    //
+    // `ItemRow.areaId` is nullable since schema 3, and an unfiled item, Addendum 01
+    // 4a, holds a real null there rather than a placeholder. SQL treats that null as
+    // unknown rather than as a value, so a comparison against it is never true in
+    // either direction:
+    //
+    //   WHERE areaId = :id    correct as written. The inbox is in no area.
+    //   WHERE areaId != :id   WRONG for "everything outside this area". It drops
+    //                         every unfiled row silently, and the query still runs,
+    //                         still returns rows, and still looks right.
+    //   WHERE areaId IS NULL  the inbox, and the only way to ask for it.
+    //
+    // Anything meaning "not in this area" has to say `OR areaId IS NULL` out loud,
+    // and anything grouping by areaId gets a null bucket it has to name or drop
+    // deliberately. There is no area scoped query in this file today; whoever adds
+    // the first one decides which of the three shapes above they meant.
+    //
+    // Both queries below are deliberately unscoped and return filed and unfiled rows
+    // together, which is what a cache of every item is for. The projection is where
+    // the two are told apart: `ClarityState.unfiledItems` against `queueIn`.
+
     @Query("SELECT * FROM clarity_item WHERE deletedAt IS NULL ORDER BY orderKey ASC, id ASC")
     fun observeItems(): Flow<List<ItemRow>>
 

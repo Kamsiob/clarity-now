@@ -51,7 +51,9 @@ object ClarityEventJson {
         ClarityEventType.AREA_UNARCHIVED -> AreaUnarchived.serializer()
         ClarityEventType.AREA_DELETED -> AreaDeleted.serializer()
         ClarityEventType.ITEM_ADDED -> ItemAdded.serializer()
+        ClarityEventType.ITEM_FILED -> ItemFiled.serializer()
         ClarityEventType.ITEM_EDITED -> ItemEdited.serializer()
+        ClarityEventType.ITEM_ESTIMATED -> ItemEstimated.serializer()
         ClarityEventType.ITEM_QUEUED -> ItemQueued.serializer()
         ClarityEventType.ITEM_PROMOTED -> ItemPromoted.serializer()
         ClarityEventType.ITEM_COMPLETED -> ItemCompleted.serializer()
@@ -60,13 +62,15 @@ object ClarityEventJson {
         ClarityEventType.ITEM_DELETED -> ItemDeleted.serializer()
         ClarityEventType.FOCUS_STARTED -> FocusStarted.serializer()
         ClarityEventType.FOCUS_COMPLETED -> FocusCompleted.serializer()
-        ClarityEventType.FOCUS_ABANDONED -> FocusAbandoned.serializer()
+        ClarityEventType.FOCUS_ENDED_EARLY -> FocusEndedEarly.serializer()
+        ClarityEventType.FOCUS_EXTENDED -> FocusExtended.serializer()
         ClarityEventType.PULSE_GENERATED -> PulseGenerated.serializer()
         ClarityEventType.PULSE_ANSWERED -> PulseAnswered.serializer()
         ClarityEventType.REPORT_GENERATED -> ReportGenerated.serializer()
         ClarityEventType.PLAN_OFFERED -> PlanOffered.serializer()
         ClarityEventType.PLAN_ACCEPTED -> PlanAccepted.serializer()
         ClarityEventType.SETTING_CHANGED -> SettingChanged.serializer()
+        ClarityEventType.APP_OPENED -> AppOpened.serializer()
     } as KSerializer<EventPayload>
 
     /** The exact string stored in the `payload` column. */

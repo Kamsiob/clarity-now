@@ -56,6 +56,14 @@ fun trailSentence(row: TrailRow): String {
         TrailSentenceKey.AREA_ARCHIVED -> stringResource(R.string.trail_area_archived, subject)
         TrailSentenceKey.AREA_UNARCHIVED -> stringResource(R.string.trail_area_unarchived, subject)
         TrailSentenceKey.AREA_DELETED -> stringResource(R.string.trail_area_deleted, subject)
+        TrailSentenceKey.ITEM_FILED ->
+            stringResource(R.string.trail_item_filed, subject, row.secondary.orEmpty())
+        TrailSentenceKey.ITEM_ESTIMATED ->
+            stringResource(R.string.trail_item_estimated, subject)
+        TrailSentenceKey.ITEM_ESTIMATE_CLEARED ->
+            stringResource(R.string.trail_item_estimate_cleared, subject)
+        TrailSentenceKey.FOCUS_EXTENDED ->
+            pluralStringResource(R.plurals.trail_focus_extended, minutes, minutes, subject)
 
         TrailSentenceKey.ITEM_ADDED -> stringResource(R.string.trail_item_added, subject)
         TrailSentenceKey.ITEM_EDITED -> stringResource(R.string.trail_item_edited, subject)

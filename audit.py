@@ -14,6 +14,24 @@ DOCS  = [p for p in sorted(ROOT.glob('*.md')) if p.name != 'audit_report.md']
 HTML  = sorted(ROOT.glob('*.html'))
 ALL   = DOCS + HTML
 TEXT  = {p.name: p.read_text(encoding='utf-8') for p in ALL}
+
+# Every markdown file that exists anywhere in the repository, not only the authority
+# set audited above. A reference to one of these resolves; a reference to anything
+# else is dangling.
+#
+# This replaces a hard-coded whitelist of ('DESIGN.md', 'EVENT_FORMAT.md'). That
+# whitelist existed because EVENT_FORMAT.md lives under docs/ and so was never in
+# TEXT, but it also silenced DESIGN.md, a file that does not exist anywhere and never
+# has. A whitelist cannot tell those two cases apart, so it would have hidden a real
+# dangling reference the first time one appeared. Existence is the actual question,
+# so ask it directly.
+#
+# docs/addenda holds transcribed source documents rather than specifications. They are
+# provenance, they are not audited, and nothing may cite them as authority.
+EXISTING_DOCS = {
+    q.name for q in ROOT.rglob('*.md')
+    if 'addenda' not in q.parts and '.git' not in q.parts
+}
 CORP  = "".join(TEXT[n] for n in TEXT if n.startswith('CORPUS_'))
 findings = []
 def fail(cls, msg): findings.append((cls, msg))
@@ -22,7 +40,7 @@ def fail(cls, msg): findings.append((cls, msg))
 # Something is declared to exist, and does not.
 for name, t in TEXT.items():
     for m in re.finditer(r'`([A-Za-z0-9_\-]+\.(?:md|html))`', t):
-        if m.group(1) not in TEXT and m.group(1) not in ('DESIGN.md','EVENT_FORMAT.md'):
+        if m.group(1) not in TEXT and m.group(1) not in EXISTING_DOCS:
             fail("dangling-file", f"{name} references {m.group(1)}, which does not exist")
 
 secs = {n: {m.group(1) for m in re.finditer(r'^#{2,4}\s+(\d+(?:\.\d+)*)', t, re.M)} for n, t in TEXT.items()}

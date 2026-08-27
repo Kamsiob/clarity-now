@@ -20,10 +20,32 @@ Visual and interaction source of truth. `MASTER_BUILD_PROMPT.md` defers to this 
 |---|---|
 | A2 | slim cards locked. The alternative row treatment considered in v2 is retired |
 | M1 | new app mark. The gradient square and check are gone |
-| S1 | swipe gestures fully specified, section 9.3.1 |
+| S1 | swipe gestures fully specified, section 10.3.1 |
 | P1 | area color picker rebuilt as two stages |
 | P2 | appearance picker rebuilt as real miniatures |
 | U1 | American English, including user-facing response labels |
+
+**v3.1** records **Addendum 01: Executive Function Support**, an owner directive transcribed at `docs/addenda/ADDENDUM_01_EXECUTIVE_FUNCTION.md`. It adds calm mode, the analog time rule, the platform-first rule, the Live Update surface and the eight-widget family, and it forbids one word. **Everything it adds is pending.** This revision is a record, not a build. The reasoning behind the direction, and the four things it deliberately rules out, are in `DECISIONS.md`.
+
+| # | v3.1 change | where |
+|---|---|---|
+| CM1 | calm mode, one switch that turns motion and saturation down together | 16 |
+| PF1 | platform first, and the six components this app builds by hand | 17 |
+| IC1 | Material Symbols wherever a symbol fits, and a mapping table | 7.1, 7.2 |
+| AT1 | analog time: duration reads as a shape before it reads as a number | 11.3 |
+| RE1 | the re-entry state, the highest-stakes screen in the app | 11.2 |
+| LU1 | the Live Update, and the standing rule that it is the only one | 11.4 |
+| WD1 | the widget family, eight specified and six required | 12 |
+| IB1 | the unfiled inbox, the first step field, the estimate | 10.16, 10.17 |
+| FC1 | add ten minutes, and the transition warning mark | 8.2, 10.18 |
+| ST1 | entrance animations fire once per session | 8.4 |
+| LG1 | one forbidden word, and the words this app cannot use | 13.1, 14 |
+| OB1 | a `Just start` path, and Pulse announced before it appears | 11 |
+| AX1 | where the accessibility investment goes, and one refusal | 13 |
+
+Two of those changes contradict something v3 had settled, and neither is resolved silently. The focus surface moves from five elements to six, 11. A focus session can now fire one haptic between start and end, section 9. Both are recorded where they land and both are logged in `DECISIONS.md`.
+
+**Sections 16 and 17 are appended rather than inserted**, because section numbers in this document are cited by the master prompt, by the engine document and by comments in the code, and renumbering would silently break every one of them.
 
 ---
 
@@ -31,7 +53,7 @@ Visual and interaction source of truth. `MASTER_BUILD_PROMPT.md` defers to this 
 
 Five words govern every decision: **calm, warm, honest, layered, restrained.**
 
-**Calm.** Nothing flashes, shakes, or shames. Motion is springy but soft. Empty states are welcoming.
+**Calm.** Nothing flashes, shakes, or shames. Motion is springy but soft. Empty states are welcoming. Calm is also a setting: section 16 states what calm mode turns down, and it exists so the expressive direction can be taken further everywhere else.
 
 **Warm.** Backgrounds are never pure white or pure black. Light surfaces lean slightly cool grey with warmth in the cards. Dark surfaces are warm blacks.
 
@@ -54,6 +76,8 @@ Five words govern every decision: **calm, warm, honest, layered, restrained.**
 These screens ignore Light, Dark and System entirely. Implement as a separate theme scope, never as a conditional inside the Daylight theme, so they can never be accidentally inverted.
 
 Entering a Contemplative surface feels like the room dimming: content fades and scales from 0.97, the dark background fades over roughly 350ms.
+
+In calm mode the dimming is a crossfade and the atmosphere is flatter, but the two worlds are still two worlds. Calm mode never turns a Contemplative surface into a Daylight one, and never turns either into grey. Section 16.
 
 ---
 
@@ -112,6 +136,8 @@ Area label text in dark mode uses a lightened accent (blend 30 percent white) to
 
 **Onboarding.** Warm black with a per beat glow: beat 1 actionBlue, beat 2 twilight violet, beat 4 cycles amber, blue, gold.
 
+Every accent and gradient in this table passes through the calm mode transform in 16.2. The gradients keep their geometry and lose their intensity, because a Contemplative surface with no center of light is not calmer, it is a black rectangle.
+
 ### 3.4 Area palette: 48 colors, 8 moods
 
 All 48 available to everyone. No locked subset.
@@ -130,6 +156,8 @@ Color appears only as: a 7dp dot, a 5 to 14 percent wash, a 60 percent tile in M
 Area label text uses the accent at full strength, 13sp semibold. Verify 4.5:1 against the card. If a color fails in light mode, darken the label variant only by blending 25 percent black. Never adjust the dot or wash to compensate.
 
 **Default assignment.** New areas walk the mood groups in order taking the first color of each, so the first four are distinct without the user choosing.
+
+**Calm mode leaves identity alone.** The 7dp dot and the area label text keep their accent at full strength, because they are how an area is recognized and they are the two places a contrast ratio was verified. Washes, tiles and every atmospheric use of the accent desaturate. The transform, and the list of what is excluded by name, are in 16.2.
 
 ---
 
@@ -245,6 +273,22 @@ Areas `home`, Momentum `arrow_outward`, Report `article`, Trail `history`, Add `
 
 **No sparkle or magic-wand iconography anywhere.** `auto_awesome` reads as an AI affordance, which is the opposite of what this app claims. The Report identifies itself with a line of text.
 
+### 7.1 A symbol first, a drawn glyph second
+
+Iconography follows the platform-first rule in 17. A Material Symbol is used wherever one carries the right meaning. Symbols are committed as vector drawables rather than pulled from an icon font at runtime, because that fetch would need a network permission this app does not have.
+
+The custom SVG icons in the reference mocks are illustrative and are not shipping assets.
+
+Where no symbol carries the right meaning, one is drawn: the same style, the same weight 500, the same optical size, the same corner treatment and the same 24dp grid as the set around it, and recorded as custom in 7.2. A drawer of mismatched stock icons is worse than one well drawn addition, and the failure this protects against is a set that is 90 percent Rounded and 10 percent something else, which reads as carelessness long before anyone can name why.
+
+**This is already the case.** Phase 2 committed 41 Material Symbols Rounded icons at weight 500 as vector drawables, named by meaning in `ui/components/ClarityIcons.kt` so that no screen reaches for a resource id directly and a mapping can change in one place. `docs/BUILD_STATE.md` records the set. There are no custom glyphs in it, and the only drawn asset in the app is the mark in section 4, which is a mark and not an icon.
+
+### 7.2 The mapping table
+
+**Pending, phase 3b.** Every icon the app ships, in one table: the name this app calls it, the Material Symbols name it comes from, and where it is used. Anything drawn by hand is marked custom and carries one line saying which symbol was considered and why it did not fit.
+
+The list in section 7 above covers the icons this design system names. The table must cover the icons the app actually ships, which is the larger set, and it is written by reading `ClarityIcons.kt` rather than from memory.
+
 ---
 
 ## 8. Motion
@@ -266,7 +310,7 @@ Areas `home`, Momentum `arrow_outward`, Report `article`, Trail `history`, Add `
 1. **Queue promotion, the hero.** Completed title strikes through and fades while sliding down 8dp over 250ms; the next queued title slides up with springStandard; the wash brightens to 11 percent and returns over 500ms. Old and new titles never both at full opacity. If only one thing is polished, it is this.
 2. **Press.** Cards and buttons scale to 0.97, springStandard.
 3. **Long press lift.** Scale 1.02, elevation deepens, springGentle.
-4. **Staggered entrance.** 40 to 60ms per item, fading from 0 and translating up 16dp over 350ms easeOut.
+4. **Staggered entrance.** 40 to 60ms per item, fading from 0 and translating up 16dp over 350ms easeOut. **First open per screen per app session only**, 8.4.
 5. **Sheet entrance.** springGentle from the bottom, scrim fades over 200ms.
 6. **World transition.** Outgoing fades, incoming scales 0.97 to 1.0, dark fades in over 350ms easeSlow.
 7. **Focus ring depletion.** Continuous at 1Hz from a single ticker Flow. Only the numeral and arc redraw.
@@ -289,10 +333,32 @@ Areas `home`, Momentum `arrow_outward`, Report `article`, Trail `history`, Add `
 24. **Tab content transition.** Switching tabs crossfades the content over 180ms with no slide. A slide implies spatial relationship between tabs and there is none; these are four views of the same data.
 25. **Empty state entrance.** Fades in over 400ms easeOut after a 150ms delay, so it never flashes during a load that resolves quickly.
 26. **Accept tap on the closing line.** The pill fills from the center over 250ms, the label crossfades to a confirmation, and it settles at reduced prominence. Never bounces, never celebrates, never produces a toast.
+27. **Transition mark reached.** Only when the transition warning is on, 10.18. The faint tick already sitting on the ring track at the five minute position brightens once over 400ms easeOut and holds. No color change, no pulse, no repeat, and nothing moves except the tick. Pending, phase 4.
+28. **Session extended.** The ring's remaining arc grows to its new length over 500ms springGentle rather than jumping, and the numeral rolls to its new value over the same interval. Nothing else acknowledges the tap. Pending, phase 4.
 
 ### 8.3 Reduce motion
 
-When the animator duration scale is 0 or the accessibility setting is on, every animation becomes a 150ms crossfade. The breathing glow holds at 0.92. The ribbon appears complete. Swipe still tracks the finger but the commit is instant. The timer still updates. **One global check, not 23 individual ones.**
+When the animator duration scale is 0 or the accessibility setting is on, every animation becomes a 150ms crossfade. The breathing glow holds at 0.92. The ribbon appears complete. Swipe still tracks the finger but the commit is instant. The timer still updates. **One global check, not one check per entry in 8.2.**
+
+### 8.4 Entrance animations fire once per session
+
+**Pending, phase 3b. This changes behavior that shipped in phase 2.**
+
+Items 4, 11, 12 and 13 are entrances. An entrance is a way of saying "this is new". A screen opened twenty times a day is not new, and an entrance that fires every time is not delight, it is a toll: it delays the content by its own duration, every time, for the reader least able to afford the wait.
+
+An entrance fires on the first open of its screen per app session and not again. Returning to a tab renders the list already settled, at rest, with no fade and no offset. Item 14, the Momentum number roll, already carries exactly this rule and is the precedent rather than the exception.
+
+An app session begins at process start and ends when the process ends. The alternative considered was re-arming after some period in the background. It is rejected: it invents a threshold no one asked for, it makes one screen behave two different ways for a reason the user cannot see, and predictable interface behavior is worth more to this audience than a second chance to show an animation.
+
+**One exception, and it is content, not time.** The Report reveal, item 12, fires again whenever the report being shown changes, because a different report is different content and the ribbon draw is the one animation this design is willing to spend on. Re-reading the same report does not re-animate it.
+
+Item 25, the empty state entrance, is not in this list. Its 150ms delay exists to stop a flash during a load that resolves quickly, not to announce anything, and it fires whenever an empty state appears.
+
+### 8.5 Calm mode
+
+Calm mode, section 16, takes the path 8.3 already defines. One flag is true when the system asks for reduced motion **or** calm mode is on, and every animation reads that one flag. There is no third motion level and no per-animation opt out.
+
+Calm mode goes further than 8.3 in two places: the entrances in 8.4 do not fire at all rather than firing as a crossfade, and the tutorial ring pulse holds, which 8.3 never says. 8.3's own rule for the breathing glow, holding at 0.92, is unchanged. What calm mode adds beyond motion is color and atmosphere, and that is in 16.2.
 
 ---
 
@@ -312,6 +378,7 @@ One `ClarityHaptics` abstraction. Checks primitive support once at startup, resp
 | swipeThreshold | `PRIMITIVE_TICK` 0.3 | crossing the commit point, once per gesture |
 | focusStart | `PRIMITIVE_LOW_TICK` twice, 90ms apart | session begins |
 | focusEnd | `PRIMITIVE_QUICK_RISE` 0.6 then `PRIMITIVE_THUD` 0.7 at 120ms | natural completion |
+| transitionWarn | `PRIMITIVE_LOW_TICK` 0.35, once | five minutes remain in a session, **only when the transition warning is on**, which is off by default. Pending, phase 4 |
 | reportReady | `PRIMITIVE_SPIN` 0.4, or `QUICK_RISE` if unsupported | generation finishes |
 | planAccepted | `PRIMITIVE_TICK` 0.5 | deliberately the same weight as an ordinary tap, because accepting is not an achievement |
 | warn | `PRIMITIVE_THUD` 0.7 | destructive confirmation arms |
@@ -319,7 +386,9 @@ One `ClarityHaptics` abstraction. Checks primitive support once at startup, resp
 | undo | `PRIMITIVE_TICK` 0.4 | the undo action in a snackbar is tapped |
 | step | `PRIMITIVE_TICK` 0.25 | a tutorial step or onboarding beat advances. The lightest event in the system, because it fires several times in a row |
 
-Never on scroll, screen entry, notification arrival, or more than once per user action. Focus sessions fire nothing between start and end. The Pulse reminder is silent.
+Never on scroll, screen entry, notification arrival, or more than once per user action. The Pulse reminder is silent.
+
+**Focus sessions fire nothing between start and end, with one exception the user has to switch on.** v3 stated that rule without an exception, and Addendum 01 4g adds a five minutes left signal that is off by default and lives behind a switch in Settings. The rule becomes: nothing fires during a session unless the user asked for one thing to fire, in which case exactly one event fires, once, at one known moment. A signal a person went looking for is not an interruption. Logged in `DECISIONS.md`.
 
 ---
 
@@ -327,6 +396,8 @@ Never on scroll, screen entry, notification arrival, or more than once per user 
 
 ### 10.1 Top of Areas
 Serif title at displayTitle, left aligned, archive and settings icons at inkSecondary on the right. Below, two pill chips: Focus and Pulse, card colored, **soft elevation only, no border**. The Pulse chip carries a 6dp warnAmber dot at its top right when a Pulse is ready and unanswered.
+
+**A third chip, reading `Inbox 4`, joins them when the unfiled inbox is not empty**, 10.16, and is absent when it is empty. It sits last so it can never displace the two permanent chips, and it carries no dot and no color. **Pending, phase 3b.**
 
 ### 10.2 Weekly banner
 Full width, parchment, 14dp radius, no border, no progress track. A bodyStrong sentence and a caption line, both from the Logic Engine.
@@ -338,7 +409,10 @@ Full width, parchment, 14dp radius, no border, no progress track. A bodyStrong s
 **Content.**
 - Row one: a 7dp color dot and the area name at label size in the area color
 - Row two: the active item title at itemTitle in inkPrimary. **This never shrinks.** It is the most important string on the screen
-- Row three: the status line, shown **only when it carries information**. Idle areas show `Last active 21 days ago`. In-session areas show the live countdown. An ordinary active area shows nothing
+- Row three: the item's **first step**, 10.17, when it has one, at caption in inkSecondary, one line, ellipsized. Absent entirely when there is none. Never a placeholder and never an invitation to add one, because a card is not a form. **Pending, phase 3b**
+- Row four: the status line, shown **only when it carries information**. Idle areas show `Last active 21 days ago`. In-session areas show the live countdown. An ordinary active area shows nothing
+
+The card never exceeds four lines. When a first step and a status line are both present, the first step truncates first, because the status line is about now and the first step is about what to do next, and now wins on a card that has to pass the three second test.
 
 **Idle state.** Title reads `Add your first item` at inkTertiary weight 500. No wash. The dot drops to 45 percent.
 
@@ -466,6 +540,9 @@ Four tabs at the root: Areas, Momentum, Report, Trail. Everything else is a bott
 | Report history | the history glyph on Report | back |
 | Swap chooser | swipe left then Swap, or the detail sheet | Never mind, or back |
 | Queue chooser | completing an item when the setting is Choose from queue | dismiss, which leaves the area idle |
+| Unfiled inbox | the Inbox chip in the Areas header, 10.16 | drag down, scrim tap, or back |
+| Area chooser for filing | Move to an area, on an inbox row | same, or after filing |
+| Re-entry state | opening the app after 14 or more days away, 11.2 | choosing one of its two options. There is no back |
 
 ### Back behavior
 
@@ -481,7 +558,7 @@ Four tabs at the root: Areas, Momentum, Report, Trail. Everything else is a bott
 
 ### Two states that are easy to leave unhandled
 
-**Zero areas.** Reachable by archiving or deleting everything. The Areas screen shows an empty state reading `No areas yet. An area is a part of your life you want to keep track of.` and **the FAB creates an area rather than an item** while this state holds. The tab bar stays visible and the other three tabs show their own empty states.
+**Zero areas.** Reachable by archiving or deleting everything. The Areas screen shows an empty state reading `No areas yet. An area is a part of your life you want to keep track of.` and **the FAB creates an area rather than an item** while this state holds. The tab bar stays visible and the other three tabs show their own empty states. The unfiled inbox is unaffected by this state and may still hold items, 10.16.
 
 **A queued item tapped.** Opens an edit sheet with title, note, a Delete row, and a Move to front action. This is the only way to edit a queued item and it must exist, since the queue is otherwise read-only.
 
@@ -489,15 +566,63 @@ Four tabs at the root: Areas, Momentum, Report, Trail. Everything else is a bott
 
 Cold start reads two flags in order. `hasCompletedOnboarding` false routes to onboarding. Otherwise, `hasSeenTutorial` false routes to Areas with the tutorial queued to start once the first frame has settled. Otherwise, Areas. **Onboarding beat 3 writes the selected areas as real events**, so a user who force-quits after beat 3 and relaunches lands on a populated Areas screen rather than starting over.
 
+**A third check joins them, after both flags. Pending, phase 6.** When onboarding and the tutorial are both behind the user and the gap since the last recorded open is 14 days or more, cold start routes to the re-entry state in 11.2 instead of to Areas. It runs once, on that open, and the ordinary route resumes afterward. It is checked last so that it can never delay or replace a first run.
+
+### 10.16 The unfiled inbox
+
+**Pending, phase 3b.** Addendum 01 4a. Capture must never require a decision. Adding an item does not require choosing an area, and an item with no area is an ordinary item in an unfinished state, not an error and not a problem.
+
+**Where it lives.** The third chip in the Areas header, 10.1, reading `Inbox 4`. The count is the label. It is present only while the inbox holds something.
+
+The obvious answer is a pinned row at the top of the area list carrying a count badge, which is what every inbox in every app does. It is rejected twice over. A badge is forbidden by 14 and by the addendum's own wording. And a pinned row puts the pile of things the user has not dealt with above the one thing they opened the app to see, every single time, which is the exact feeling this app exists to remove. Section 15.
+
+When the inbox is empty there is no entry point, and none is needed: there is nothing in it, and the next unfiled capture brings the chip back.
+
+**The inbox sheet.** Plain rows on the sheet surface, no cards, 10.6, each carrying its title and its first step when it has one, with the oldest last. Each row offers `Move to an area`, which opens an area chooser, plus edit and delete.
+
+**What an unfiled item cannot do.** It cannot be active and cannot be completed until it is filed. Complete, Swap and Focus are **absent** from an unfiled row rather than present and disabled, because a disabled control is a question the user then has to answer.
+
+**Filing.** One tap, one choice, never demanded and never scheduled. There is no review prompt, no weekly filing reminder and no sorting ceremony. An inbox that grows is not a finding: no surface in this document reports its size except the header chip and the Quick Capture widget, 12.2, and no observation is ever authored about it.
+
+**The zero areas case.** With zero areas, 10.15, the inbox can still hold items. The chip still appears, the sheet still opens, and `Move to an area` offers to create one first. The FAB still creates an area while that state holds.
+
+### 10.17 First step and estimate
+
+**Pending, phase 3b.** Addendum 01 4b and 4c. Two optional fields on an item, in the add sheet and the edit sheet, blank by default, deletable, never required and never prompted for.
+
+**First step.** One line: the first physical action. The label is `First step` and the placeholder is an example rather than an instruction, because an instruction to break a task down is a second task. It appears on the area card beneath the title, 10.3, in full in the detail sheet, on the First Step widget, 12.2, and nowhere else.
+
+The field earns its place at the moment the app is hardest to use. The title of a task is often the intimidating part of it: `Rewrite the proposal intro` is a wall, and `Open the doc and read what is there` is not.
+
+**Estimate.** Optional minutes, entered as a number. The card does not show it at all. Only the detail sheet does, as plain text. It is never rendered as a countdown against the item, never as a bar filling toward it, and never as a target.
+
+**The one hard rule this document owns:** no surface may draw the difference between an estimate and an actual. Not as a number, not as a bar, not as two marks on one track, not as a color change, not as an arrow. Addendum 01 7a states the same rule for language and puts a veto test behind it. This is the visual half, and it exists because a shape can accuse just as plainly as a sentence.
+
+### 10.18 The focus session controls
+
+**Pending, phase 4.** Addendum 01 4f and 4g.
+
+**Add 10 minutes.** A tertiary control, 10.7, text only in the Focus accent, sitting beneath the End session pill. It extends the running session: it never restarts it, never returns the arc to full and never begins a second session. The arc grows to its new length, 8.2 item 28. No confirmation, no toast, no acknowledgment beyond the ring itself. It may be tapped again, and there is no limit on how many times, because a limit is an argument with someone who is working.
+
+**The transition warning.** Off by default. One switch in Settings under Focus. When it is on, the ring track carries a faint tick at the five minute position **from the moment the session starts**, so the warning is a landmark the user has already seen rather than an event that arrives. When the arc reaches it the tick brightens once, 8.2 item 27, one haptic fires, section 9, and the word `remaining` beneath the numeral becomes `5 minutes left` and stays.
+
+The obvious answer is to turn the ring amber or red at five minutes. It is rejected three times over: warnAmber is scoped by 3.1 to the Pulse ready dot and nothing else, section 14 forbids red warning states for normal behavior, and an unannounced color change is precisely the surprise that this switch exists to prevent. A mark that has been sitting there since the start costs nothing and reads as information rather than as an alarm. Section 15.
+
+**Backgrounded.** With the app in the background the same moment is carried by the Live Update, 11.4, which shows the same mark on its track. A full notification is posted only when the app is backgrounded and no Live Update is available.
+
 ---
 
 ## 11. Surface Art Direction
 
 **Areas.** The Daylight home. Five areas fill the screen comfortably. Must pass a three second test: what is active everywhere, at a glance.
 
-**Focus.** The indigo night. Five elements only: area label with dot, item title in bold sans at 26sp, the 240dp ring with the timer numeral, the word `remaining` in textFaint, and the End session pill. Nothing else, ever.
+**Focus.** The indigo night. **Six elements only:** area label with dot, item title in bold sans at 26sp, the 240dp ring with the timer numeral, the word `remaining` in textFaint, the End session pill, and `Add 10 minutes` beneath it as a tertiary control, 10.18. Nothing else, ever.
+
+**The sixth element is a change, recorded rather than assumed.** v3 said five and said nothing else, ever. Addendum 01 4f requires a control that extends a running session, and there is no honest way to have it and keep the count at five: putting it behind a long press or a gesture would hide the one control whose whole purpose is to keep someone in flow, from the audience least likely to go looking for it. The count moves to six. The hierarchy does not: the new control is text only, subordinate, below the End pill, and the surface still reads ring first. **Pending, phase 4.** Logged in `DECISIONS.md`.
 
 **Focus complete.** Ring replaced by a circle bloom and check. `Session complete` in serif, item title, a small line reading duration and area, then `Mark item complete` in the accent and `Done` beneath.
+
+**A session ended early reaches this same screen, in the same words.** Addendum 01 4e. The serif line reads `Session complete`, the duration line reads the real duration, and there is no qualifier, no shortfall, no comparison against what was planned and no second, quieter version of the screen for a shorter session. Fourteen minutes is fourteen minutes. The word this rule exists to keep off the screen is named in 13.1. **Pending, phase 4.**
 
 **Pulse.** The amber night. The observation in readSerif centered, the question in body at textDim, then response pills. After answering, an acknowledgment fades in, then ambient mode: a 14 day rhythm row, today's answered card, and a History entry. Filled amber means answered, a hollow ring means generated but unanswered, faint means a silent day.
 
@@ -530,17 +655,137 @@ The background gradient extends under the status bar to the very top edge.
 
 **Onboarding and tutorial.** Contemplative. The tutorial uses a 56 percent black radial dim, a cutout with an 8dp feathered edge, a slowly pulsing 2dp white ring at 38 percent, and tooltip cards in surfaceRaised with a step indicator.
 
+**Two additions to the beats. Pending, phase 10.** Addendum 01 8a and 8b.
+
+First, a `Just start` path. Onboarding currently asks for two to four area names and a color for each, which is up to twelve decisions demanded of people whose central difficulty is deciding, before anything has happened. `Just start` creates one area named `Today` at the first default color, 3.4, and goes straight to adding the first item. Areas, names and colors become things discovered later.
+
+It is offered as a genuine equal alternative and not buried. Both paths take the **same** button treatment, 10.7 Secondary, stacked, the shorter one on top, and neither carries a recommended label or a heavier weight: a fork with a styled winner is not a fork. This is the one screen in the app that deliberately has no primary button.
+
+Second, one line at the end of onboarding announcing Pulse before it ever appears: once a day, one question, one tap, and it can be turned off in Settings. Predictability is worth a line of copy. Interface behavior that arrives unannounced is a real cost for autistic users, and the cheapest possible fix is telling someone first.
+
+### 11.2 The re-entry state
+
+**Pending. Detection phase 3b, surface phase 6.** Addendum 01 4d. **This is the highest-stakes screen in the app**, and it is the one that has to be right the first time, because the person seeing it already decided once to stop.
+
+This audience leaves and comes back. That is ordinary use, not failure, and the app has no opinion about it.
+
+**When.** The app opens 14 or more days after the last recorded open, 10.15. It replaces the first screen, once, and is reachable no other way.
+
+**What it does not do.** It does not state the length of the gap. It does not count anything: not days away, not items waiting, not what was left active, not what was missed, not what a streak would have been. **No number appears on the screen at all.** It does not ask where the user has been.
+
+**What it offers.** Two options. Keep everything exactly as it is, which is the default and sits first. Or clear active items and start fresh, secondary and text only. That is a hierarchy and it is deliberate: the default has to be the one that costs nothing. There is no third option and no skip control, because the first option already is the skip.
+
+**The world it lives in. Daylight, on canvas, with the Areas structure behind it. Not Contemplative.** The obvious answer is a dark ceremonial welcome, a serif line and a soft glow, which is exactly what this design system is good at and exactly the wrong instrument. Ceremony says the absence was an event. A quiet Daylight screen says the app kept the user's place and is ready when they are. Section 15.
+
+**Type and copy.** One readSerif line, one body line beneath, then the two options. No illustration, no mascot, no exclamation mark, 10.13. Whether that line is a fixed invitation in `strings.xml` or an authored observation is settled at the corpus phase and not here, and the test is simple: if it says anything at all about what happened while the user was away, it is an observation and it comes from a corpus through the engine like every other sentence about a person's own data.
+
+**Motion.** Item 25's entrance, and nothing else. No iris, no bloom, no transition into a different world.
+
+**What follows it.** Pulse generates nothing for the first two days back, and the Report suppresses every decline, neglect and gap observation for the first full week back. Those are engine rules and `CLARITY_LOGIC_ENGINE.md` owns the mechanism. They are named here because their entire purpose is that this screen is not followed three hours later by the measurement it just declined to make.
+
+**A returning user is never greeted by a measurement of their absence.** That sentence is the acceptance criterion for the screen.
+
+### 11.3 Analog time
+
+**Duration reads as a shape before it reads as a number.** Addendum 01 8d. Three surfaces show a session's remaining time, and all three make the depleting arc the primary carrier with the digits secondary: the focus ring in section 11, the Live Update track in 11.4, and the Focus Countdown widget in 12.2.
+
+The reason is specific to this audience. A number has to be read, subtracted from, and then converted into a feeling about how much room is left. That is three operations, and the third is exactly the one this app's users find expensive. A shrinking arc **is** the feeling, with no arithmetic in between. Time blindness is not an inability to read a clock.
+
+- The arc is never decorative and never absent. There is no digits-only state on any of the three surfaces. A surface too small for both shows the arc and drops the digits, never the reverse
+- The numeral never becomes the largest element. In app it is 64sp inside a 240dp ring, 5.3, and it does not grow past its 1.3x cap when the font scale does
+- **Minutes only outside the app.** The widget and the Live Update read minutes and never seconds. A seconds counter on a home screen is a pressure device, and it also promises a refresh cadence neither surface can honestly deliver, 12.2
+- The arc depletes **clockwise from the top**. Section 15 asks for the unobvious answer and this is the case it exempts: a countdown that runs the other way is a puzzle, and legibility outranks distinctiveness on the one element in this app that has to be read at a glance while doing something else. Recorded because 15 requires the reason to be written down when the obvious answer wins
+- In calm mode the arc still depletes. It is information. What stops is the tip blur and the glow behind it, 16.2
+
+### 11.4 The Live Update
+
+**Pending, phase 4, extended in phase 12.** Addendum 01 Step 5. A focus session is exactly the user-initiated, start-to-end, time-bound task that Android's Live Updates were designed for. On a Pixel it surfaces as a status bar chip that expands; on Samsung devices it appears in the Now Bar. For an audience with time blindness, a running session visible without opening the app is not a nicety. It is the point.
+
+It is a platform surface taken at step 1 of 17.1: the promoted-notification progress style, not a foreground notification dressed up to look like one. The API, the permission and the availability check belong to `MASTER_BUILD_PROMPT.md`. What it looks like belongs here.
+
+**What it shows.** Three things and no more: the area name, the item title, and the remaining time as a track that depletes, 11.3. The track takes the area color where the platform allows a color and the system accent where it does not. Neither case gets an edge treatment, a second color, or a gradient.
+
+**Segments and points.** One undivided track. The single exception is the transition warning, 10.18: while it is on, one point sits on the track at the five minute mark from the start of the session, and the track reaching that point **is** the state change. With the warning off there is no point and no state change at all. Nothing else is marked, because the feature list of a component is not a reason to use it.
+
+**Actions.** Two at most: `Add 10 min` and `End`. Both work without opening the app. The abbreviation is deliberate and is the only place it appears; the in-app control reads `Add 10 minutes`, 10.18, and the system action button is width constrained. Tapping the body opens the focus screen.
+
+**Calm mode**, 16.3. No color transition, nothing pulses. The track still depletes.
+
+**Degradation, required.** Where promoted notifications are unavailable or denied, the surface falls back to the ongoing notification with a chronometer that the session already had. The app is fully usable with no Live Update at all, nothing is gated behind it, and **the user is never told their device is missing out.** No upsell, no explanatory dialog, no `your device does not support` line. A person cannot act on that information and telling them only makes their phone feel worse.
+
+**It is silent**, it is dismissed when the session ends, and it never re-engages.
+
+**A standing constraint, recorded here because Addendum 01 5e asks for it in this document by name.** This is the only Live Update this app will ever post. Live Updates are for user-initiated ongoing tasks, and nothing else in this app is one: not the Pulse reminder, not a generated Report, not a backup reminder, not an inbox that has grown, not a plan that was accepted, not a session that has already ended. A later session reading this document should treat any proposal for a second one as a change requiring the owner's decision, not as a feature. Addendum 01 5e and 9d.
+
 ---
 
 ## 12. Widgets
 
+**Eight specified, six required in v1. Pending, phase 12.** Addendum 01 Step 6 supersedes the two-widget plan in `MASTER_BUILD_PROMPT.md` 13.3, and that supersession is logged in `DECISIONS.md`.
+
+**Why widgets, and not more notifications.** A notification is an event: it arrives once, it is swiped away, and for this audience that means it never happened. A widget is persistent and cannot be dismissed. It is still there tomorrow. It works **with** out of sight, out of mind rather than against it. That is the whole argument, and it is why this app spends its home screen budget here while keeping its notification budget to the Pulse reminder and the one Live Update in 11.4.
+
+The goal for every widget: **zero taps to see, one tap to act.**
+
+### 12.1 The shared DNA
+
 One design DNA: 16dp padding, serif for the single large element, sans for everything else, area tints at 3 to 5 percent light and 5 to 7 percent dark, 8dp inner radii, **no borders and no colored edges**. Every widget renders correctly in dark mode, scales text without clipping at the smallest grid size, and shows a sensible state when its area no longer exists.
+
+Added by Addendum 01, and required of all eight:
+
+- **Calm mode**, 16.3. The tint transform applies, nothing pulses, and there is no animated state to suppress in the first place
+- **The configured area can vanish.** An area can be archived or deleted while a widget points at it. The widget then shows one plain line naming what happened and offering to be reconfigured. Never an error, never a blank box, never a stale name that lies
+- **TalkBack.** Every widget is usable with a screen reader, with content descriptions that read as sentences rather than as labels: `Personal, in focus, seven minutes left`, not `Personal 7`
+- **A real preview image** in the widget picker, generated from the real widget with representative data. Never a mockup, never a screenshot at the wrong size, never the empty state
+- **One separation device**, 6.1, inside the widget as well as around it. A widget is already a card, so nothing inside one gets a second device
+
+**Data.** Every widget reads the widget snapshot, written on each meaningful change plus the periodic refresh. **Widgets never read a corpus and never run the engine.** A widget that needs a sentence receives it from the snapshot already rendered.
+
+**Taps.** Deep links open the surface named in each entry, with one override: while a focus session is running, any widget tap opens the focus screen.
+
+### 12.2 Required in v1
+
+**Next Up**, small, 2x2. One active item: the 7dp dot, the area name at label, the item title as the single serif element, and beneath it a plain count of what waits behind it. Configurable to a pinned area, or automatic, which shows the least recently touched active area and rotates daily. Tap opens that area.
+
+**First Step**, small, 2x2. The active item's **first step**, 10.17, not its title. With no first step set it shows the title and one quiet line inviting one. Tap starts a focus session on that item.
+
+The hardest moment is starting, and the title of a task is often the intimidating part of it. Putting the smallest possible action on the home screen removes the activation barrier at the exact moment it bites, which is a thing a widget can do and a list cannot.
+
+**Quick Capture**, small, 2x2 or 1x1. One large tap target that opens capture directly into the unfiled inbox, 10.16, keyboard already up, no area to choose. The inbox count sits beneath as plain text and is absent at zero. **Never a badge, never a red dot.**
+
+The principle it embodies: every decision standing between the thought and the record is a place the thought is lost.
+
+**Focus Countdown**, small, 2x2. Live during a session: the depleting arc as the primary carrier with the digits secondary, 11.3, matching the in-app ring. Digits read minutes. With no session running it is a `Start focus` tap target. Tap during a session opens the focus screen.
+
+Glance updates are throttled by the system. The cadence is chosen deliberately and the reasoning recorded, and the arc's granularity never implies a precision the refresh cannot deliver: an arc that jumps four minutes at a time is worse than one that moves in minutes and is honest about it.
+
+**All Areas**, medium, 4x2. Every non-archived area as a row: dot, name, and the active item title or `Idle`. Configurable to all areas or a chosen subset. Color carries area identity here so the list can be parsed without being read, which matters when reading is expensive. Tap a row opens that area. Where more areas exist than fit, the widget shows as many as fit and one final plain line reading `and 4 more`, never a scroll and never a truncated dot row.
+
+**Rhythm**, medium, 4x2. The 14 day dot row exactly as Momentum renders it, without item 13's cascade because widgets do not animate. Beneath it one plain line: `Active 11 of the last 14 days.` Tap opens Momentum.
+
+**This must never become a streak.** No consecutive count, no longest run, no flame, no chain, no comparison with the previous fortnight, no color change for a run of good days. **A gap is a lighter dot and nothing else is said about it.** The reason is in 14, and it is the strongest reason in that section.
+
+### 12.3 Optional, built if phase 12 has room
+
+**This Week**, small, 2x2. Three numbers from Momentum: completed, focus minutes, reflections. Typographic, no chart, no gauge, and **no ring filling toward a target, because there is no target.**
+
+**One Thing**, medium, 4x2. If the user accepted a plan from the most recent Report, it appears in its first-person committed form. If not, the Report headline appears instead.
+
+**Rule.** This is the only place guidance appears outside the Report, and it appears only because the user chose it. **It never shows an unaccepted plan and never shows a declined one**, and there is no state in which this widget asks the user to accept anything. A plan the user did not accept has no home screen presence at all.
+
+### 12.4 The other launcher surfaces
+
+**Pending, phase 12.** Same reasoning as the widgets: fewer steps between intention and action.
+
+**App shortcuts**, on a long press of the app icon. Three static shortcuts: Quick capture, Start focus, Today's Pulse. Icons come from the set in section 7, `add`, `play_arrow` and `graphic_eq`, rendered as the launcher requires. Short sentence-case labels, no counts, no dynamic shortcuts and no recents. This strikes home screen shortcuts from `MASTER_BUILD_PROMPT.md` 18, and that is logged in `DECISIONS.md`.
+
+**A quick settings tile.** One tile that starts or ends a focus session from the shade and reflects live session state in its label and its active state. It shows no count and no area color: a tile has one accent and it belongs to the system, 17.1.
 
 ---
 
 ## 13. Accessibility
 
-- Contrast minimum 4.5:1, verified per area color in both modes
+- Contrast minimum 4.5:1, verified per area color in both modes, **and in calm mode**, with the 16.2 transform applied. Calm mode is the one place where trying to serve an accessibility need could break another one, so it is measured rather than assumed
 - Touch targets minimum 48dp
 - Content descriptions everywhere, reading sensibly aloud
 - TalkBack order verified per screen. Pulse reads observation, question, options. The Report reads eyebrow, headline, **then a spoken summary of the ribbon** ("busiest on Wednesday, quiet at the weekend"), then sections
@@ -548,15 +793,36 @@ One design DNA: 16dp padding, serif for the single large element, sans for every
 - Font scale to 200 percent without clipping. The timer numeral caps at 1.3x
 - Color is never the only signal. Idle versus active differ in text and opacity. Completed Trail events carry the check icon. The Pulse ready state is a dot plus a changed chip label. **The ribbon is never the sole carrier of any claim; the caption beneath states the numbers**
 - Contemplative text stays at or above 55 percent opacity where it is meant to be read
-- Reduce motion honored globally
+- Reduce motion honored globally, 8.3, and calm mode with it, 8.5
+
+**Where the accessibility investment goes. Addendum 01 8f.**
+
+- **Size.** The system font scale to 200 percent is the floor, not the ceiling. An in-app text size control offers the same steps on top of it, for the person who needs larger text in the one app they read prose in rather than everywhere. The combined result is capped so that no surface exceeds the 200 percent condition already required above. **Pending, phase 3b**
+- **Spacing.** The 4dp grid, the 28dp section spacing and the 11dp card rhythm in section 6 are minimums, not targets to compress when a screen gets busy. Generous spacing is an accessibility feature here and not only a taste: a dense screen is a screen this audience cannot scan
+- **Contrast**, as above, in every theme
+- **No dyslexia-friendly typeface.** The evidence for specialized dyslexia typefaces is thin, and the same effort spent on size, spacing and contrast has evidence behind it and helps more people. This is a deliberate refusal, recorded here so a later session does not mistake it for an oversight and add one. Addendum 01 8f
+
+### 13.1 Language
+
+Two rules that belong in this document rather than in a corpus, because they govern every string the app can put on a screen, fixed interface labels included.
+
+**Plain, concrete, and never a verdict.** Empty states are invitations, 10.13. An error says what went wrong in one sentence. Nothing on any surface tells a person what they should have done. Every sentence about a person's own data comes from a corpus through the engine; this rule covers the strings that are not.
+
+**One forbidden word.** `abandoned` never appears anywhere a user can read it, in any form, on any surface. Not in the Trail, not on the completion screen, not in a content description read aloud, not in an export, and not in a log line an export writes. A session ended early is a completed short session, section 11, and the Trail says `Stopped after 14 minutes`, which is what happened and carries no verdict. Addendum 01 4e.
+
+**The event type was renamed to `FOCUS_ENDED_EARLY`.** No user visible string contained the word, but a raw type name is readable in an unencrypted export and appears in `docs/EVENT_FORMAT.md`, which the future Linux desktop app is built against. The name teaches the next implementer what the concept means, so it had to be the right one. Decided by the owner, recorded as C6 in `DECISIONS.md`.
 
 ---
 
 ## 14. What This Design Never Does
 
-No pure white or pure black backgrounds. **No colored stripe, bar or edge treatment on any element, ever.** No red warning states for normal behavior. No streak breaking or shame mechanics. No confetti. No emojis. No em or en dashes. **No all-caps section labels.** **No serif italic as a section-level accent.** **No element carrying two separation devices.** **No cards inside cards, and no cards inside sheets except the color picker preview in 10.9.** **No destructive action committed by a full swipe.** No default Material purple. No dynamic color from the wallpaper. No stock Material list rows on primary screens. No loading spinners where a shimmer can stand in. No sparkle or magic-wand iconography. No locked features, upgrade prompts, premium badges or comparison tables. No screen that fails the three second glance test.
+No pure white or pure black backgrounds. **No colored stripe, bar or edge treatment on any element, ever.** No red warning states for normal behavior. **No streaks, no consecutive-day counts, no chains, no badges, no XP, no levels, no confetti and no celebration of any kind.** No emojis. No em or en dashes. **No all-caps section labels.** **No serif italic as a section-level accent.** **No element carrying two separation devices.** **No cards inside cards, and no cards inside sheets except the color picker preview in 10.9.** **No destructive action committed by a full swipe.** No default Material purple. No dynamic color from the wallpaper. No stock Material list rows on primary screens. No loading spinners where a shimmer can stand in. No sparkle or magic-wand iconography. No locked features, upgrade prompts, premium badges or comparison tables. No screen that fails the three second glance test.
 
-And nothing that is still. An app that never moves is an app that feels broken.
+Added by Addendum 01: **no red dot and no numeric badge on any surface**, including the unfiled inbox count, 10.16, and every widget in section 12. The app has exactly one status dot, the amber Pulse dot in 10.1, and it carries no number and no count. **No progress ring or bar pointed at a target**, because there is no target. **No rendering of the difference between an estimate and an actual**, 10.17. **Never the word `abandoned`**, 13.1. **No second Live Update**, 11.4. And no dyslexia-friendly typeface, 13.
+
+**Two reasons for the streak rule, not one.** The first has always been that shame mechanics are the opposite of what this app is for. The second is specific and stronger: for people whose capacity fluctuates, **streak loss is a documented abandonment trigger.** A streak is a promise the app makes on the user's behalf and then breaks for them, on a day that was already going badly, and the app then displays the broken promise until they delete it. Addendum 01 9c. The consequences are concrete and testable: the Rhythm widget shows fourteen dots and no run length, 12.2; Momentum's dot row never says how many in a row; and a gap is rendered as a lighter dot with nothing said about it anywhere.
+
+And nothing that is still. An app that never moves is an app that feels broken, and that holds in calm mode too, 16.4.
 
 ---
 
@@ -597,7 +863,149 @@ Checked before every release. **Expect this list to change.** Treat it as a depe
 - A bounce on every hover or press, rather than overshoot reserved for weight
 - Weightless headline copy, the `Build faster. Ship smarter.` register
 - Interchangeable thin line icons with no relationship to the product
+- A flame glyph beside a consecutive-day count
+- A ring closing toward a daily target
+- A red numeric badge as the primary signal that something is waiting
+- An expressive motion system adopted at full strength with no setting to turn it down
+
+The last four entries arrive from Addendum 01 rather than from the August 2026 sweep, and their research entries in `docs/DESIGN_RESEARCH.md` are **pending**. They are listed here because all four are already ruled out by sections 14 and 16, and a tell that the design forbids is exactly the kind that comes back in through a component someone reached for without checking.
 
 ### 15.2 Release gate
 
 The verification checklist includes an anti-slop pass against the dated list above. **Update the list before each release** rather than trusting the version in this file.
+
+---
+
+## 16. Calm mode
+
+**Pending, phase 3b, the executive function retrofit. None of this is built.** Addendum 01 8c assigned calm mode to phase 1, which closed in August 2026, and phase 2 shipped the motion system it has to reach back into. The move to a retrofit phase is recorded in `DECISIONS.md`.
+
+Material 3 Expressive is this app's motion model, adopted in phase 2 and recorded in `docs/DESIGN_RESEARCH.md`. Expressive motion is the right direction for this product, and it is the wrong thing to impose on a person for whom movement and saturation are expensive. Both are true at once, and calm mode is how both stay true: **ship the expressive direction, and ship the exit.**
+
+That is also what makes an expressive direction defensible in the first place. Without an exit, every expressive decision has to be argued down to what the most sensitive user can tolerate, and the result is an app that is dull for everyone and still too much for someone. With an exit, section 8 can be as alive as it wants to be.
+
+**One switch, not a spectrum.** Calm mode is a single setting that turns the whole system down at once. It is never a per-animation preference, never a per-screen preference, and never a list of checkboxes. A person who needs it needs it before they have learned what any of the checkboxes mean.
+
+### 16.1 The switch
+
+One row in Settings under Appearance, 10.11, labeled `Calm mode`, with a caption reading `Less motion, softer color`. A plain two-state switch, `toggle` haptic, section 9.
+
+**The default follows the system.** While the user has never touched the switch, calm mode is on whenever the system reduce-motion setting is on and off when it is not, live, with no restart. The first time the user touches it, it takes a value of its own and stops following.
+
+The obvious answer here is a three-state control, On, Off, Follow system, matching the appearance picker in 10.10. It is rejected. A third state is a third decision on a settings screen already full of them, for the audience whose central difficulty is deciding, and the two-state switch already produces the correct behavior for everyone who never opens it. Section 15.
+
+**Reduce motion always wins on motion.** Calm mode is a superset of 8.3, never an override of it. Turning calm mode **off** while the system asks for reduced motion restores color, not movement. The app never animates against an accessibility setting because a preference inside the app said it could.
+
+### 16.2 What it changes
+
+The color half is one transform, applied in one place. **Chroma is multiplied by 0.6 in a perceptual color space, holding lightness.** Blending toward grey is the obvious implementation and is rejected: it darkens light colors and lightens dark ones, which moves every contrast ratio that section 13 has already verified per area color. Holding lightness means calm mode cannot break a measurement that passed. Section 15.
+
+**Two uses of the area accent and four tokens are excluded by name.** The 7dp area dot and the area label text, because they are how an area is recognized and they are the two places the contrast was measured. actionBlue, positiveGreen, warnAmber and deleteMuted, because 3.1 scopes each of those to exactly one job: they are function, not atmosphere, and a desaturated action color is a less legible action color.
+
+Everything else that takes an area accent or a surface accent takes it through the transform. At 5 to 7 percent the difference is barely visible, and that is fine: the rule is uniform, so there is no list of elements to keep in sync and nothing drifts back to full saturation later.
+
+| element | ordinary | calm mode |
+|---|---|---|
+| every animation in 8.2 | as specified | the 8.3 path, one 150ms crossfade |
+| entrances, items 4, 11, 12, 13 | first open per session, 8.4 | do not fire at all. The list renders already settled |
+| focus glow breathing, item 8 | 0.85 to 1.0 over 8 seconds | static at 0.92 |
+| tutorial ring pulse, item 19 | 0.25 to 0.45 over 2 seconds | static at 0.35 |
+| the undo snackbar's depleting line, item 20 | depletes over 5 seconds | still depletes. It is the only readout of a window that is closing, and that is information, not decoration |
+| the focus arc, 11.3 | depletes at 1Hz | still depletes, for the same reason |
+| cardWash | 5 to 7 percent light, 7 to 9 dark | transformed, and pinned to the low end of its range |
+| cardWashActive | 12 to 14 percent light, 15 to 17 dark | transformed, and pinned to the low end: 12 light, 15 dark |
+| the 7dp dot, the area label | full accent | **unchanged** |
+| Momentum's 60 percent area tile | full accent at 60 percent | transformed. This is where the transform is most visible in the Daylight world |
+| Contemplative radial gradients, 3.3 | three-stop radial per surface | transformed, geometry held. A surface with no center of light is not calmer, it is a black rectangle |
+| the specks, 3.3 | 8 to 14 dots at 3 to 6 percent | 8 dots at 3 percent, still one fixed seed |
+| focus ring stroke and tip | `#8BA4FF` stroke, `#B9C8FF` tip, soft blur | transformed, **and the tip blur removed** |
+| the Report's two gold glows, 11.1 | 6 to 8 percent, two centers of light | 4 percent, one, behind the headline only |
+| Pulse's time-of-day background shift | dawn, midday and evening blends | held at the midday neutral warm black all day |
+| the Pulse pill fill, item 10 | amber fills from the tap point | crossfade |
+| widget tints, 12.1 | 3 to 5 percent light, 5 to 7 dark | transformed, 16.3 |
+| the Live Update track, 11.4 | area color where the platform allows it | transformed. Still depletes |
+| canvas, card, raise, ink, hairline, parchment | as 3.1 and 3.2 | **unchanged.** Calm mode is not a theme |
+
+### 16.3 It reaches the widgets and the Live Update
+
+Calm mode is a device preference, not engine state, so it travels to the widgets in the widget snapshot like everything else a widget reads, 12.1. Glance has no animation system worth suppressing, so the widget half of calm mode is entirely color, plus the absence of any state that would have pulsed. The Live Update honors it the same way: no color transition, nothing pulsing, and a track that still depletes because that is the surface's only content.
+
+### 16.4 What calm mode is not
+
+- **Not a theme.** It changes no canvas, card, raise or ink token, no layout, no spacing and no type size. The same screens, with less atmosphere
+- **Not low contrast.** Every ratio required by section 13 must still clear 4.5:1 with the transform applied, verified per area color in light, dark and Contemplative. This is the one place where serving one accessibility need could break another, so it is measured
+- **Not still.** Presses still respond, swipes still track the finger, the timer still updates, the arc still depletes. Section 14 still holds: an app that never moves is an app that feels broken, and a calm app is not a dead one
+- **Not announced.** No banner, no badge, no chip reading `Calm mode is on`, no line in an empty state explaining why the screen looks different. The user turned it on and does not need to be told
+- **Not a simple mode.** It hides nothing, removes no feature and locks no control. It is not a drawer for future reductions, and anything proposing to become one is a different setting with a different name
+
+### 16.5 The obligation on everything else in this document
+
+**Anything this document defines needs a calm mode answer.** Every token in section 3, every curve in 8.1, every entry in 8.2, every component in section 10, every surface in section 11, every widget in section 12. The answer is very often `unchanged`, and `unchanged` is a real answer, but it is stated rather than assumed.
+
+The exit condition for the retrofit is that a reader can take any element in this document and say what it does in calm mode without guessing. Where the answer is not written next to the element, 16.2 is the default and the transform applies.
+
+**A test enforces the color half**, in the way 6.1's test walks the component set: any accent reaching the screen without passing through the transform fails the build. The motion half is already one flag, 8.5, so it needs no test beyond the one that reads it.
+
+---
+
+## 17. Platform first, and what this app builds by hand
+
+**A standing rule, in force from the day it was recorded rather than at a phase.** Addendum 01 Step 3. `MASTER_BUILD_PROMPT.md` carries it for behavior and dependencies. This section is the visual and interaction half, and it governs every component decision in section 10 and every surface in section 11.
+
+### 17.1 The order
+
+1. The official Material 3 Expressive component, unmodified
+2. The official component, themed with the tokens in sections 3, 5 and 6
+3. The official component, extended
+4. **Custom**
+
+Stop at the first step that fits. **Reaching step 4 is a legitimate and expected outcome**, not a failure and not evidence that the earlier steps were done badly.
+
+The platform comes first because platform components arrive with correct accessibility, RTL, dynamic type, predictive back and motion physics already handled; because they are hardware accelerated and tested at a scale one person cannot match; and because they keep the codebase small enough for one person to maintain. Every one of those is a reason this document's rules survive contact with a device rather than being true only on paper.
+
+### 17.2 The four reasons to go custom
+
+- **No platform equivalent exists.** Six of them, 17.3
+- **The platform component carries meaning this app rejects.** Anything implying achievement, scoring, celebration or progress toward a target is wrong here regardless of how well it is built. A determinate progress indicator aimed at a goal is the common case, and section 14 now has two reasons for refusing it
+- **The platform component fights a rule in this document.** If using it would put two separation devices on one element, 6.1, a colored edge treatment on anything, section 14, or an all-caps label, 5.3, the rule wins
+- **The platform component is worse for this audience.** Motion or saturation that cannot be tamed through theming is a reason to build something calmer. Since section 16 exists, a component that cannot honor calm mode is a component that cannot ship
+
+**Not a reason:** preferring the look of something drawn by hand. That instinct belongs in the polish pass, 17.4.
+
+### 17.3 What this app builds by hand, and why
+
+Six components have no platform equivalent. Reaching step 4 for each of them is the rule working, not a conflict with it, and none of them should be revisited as though the analysis had been skipped.
+
+| component | where | why no platform component fits |
+|---|---|---|
+| the depleting focus ring | section 11, 11.3 | a determinate progress indicator counts up toward a goal and is styled to say so. This counts down, holds a 64sp numeral inside a 240dp ring, carries the transition mark on its track, and has to read as a shape before it reads as a number |
+| the week ribbon | 11.1 | seven marks whose height and opacity encode one day each against the week's busiest, with no axes, no gridlines, no values and no container. Every charting component supplies exactly the parts this one deliberately omits |
+| the 14 day rhythm dot row | section 11, 12.2 | a row of independent states, not a progress or step indicator. A stepper implies sequence and completion. These are fourteen days and a gap is not a failure |
+| the area color wash | 3.1, 10.3 | a wash pooled toward a corner chosen by hashing the area id is a background treatment, not a container. Nothing in the platform pools color |
+| the two-stage color picker | 10.9 | the platform ships no color picker, and this one has a mood strip of six discrete slivers per pill and a live miniature of the real card above it. It is the premium moment of the app |
+| the tutorial spotlight | section 11, item 19 | a scrim with an animated feathered cutout that moves between targets. It is neither a dialog nor a tooltip, and building it out of either produces a worse version of both |
+
+**Everything else starts at step 1.** Sheets, buttons, chips, switches, text fields, the snackbar, ripples, predictive back, dynamic type and the system back preview are platform work, themed. Where this document states a dimension for one of them, the dimension is reached through theming, 17.4.
+
+### 17.4 The polish layer sits on top, not instead
+
+After the Material 3 Expressive layer works and has been verified on the device, a separate pass adds the distinctive Kamsiob look through theming, tokens, typography, spacing and considered motion choices.
+
+The distinction that matters: **17.2 governs what to build when the platform has no answer. 17.4 governs what not to rebuild when it does.** A polish pass never reimplements a working platform component in order to change how it looks, because theming almost always gets there. If a polish idea genuinely cannot be reached through theming, it is raised as a decision and recorded, not done quietly.
+
+### 17.5 Custom components inherit the platform's obligations
+
+Anything built by hand handles, to the standard the platform component would have met: content descriptions and a sensible TalkBack order, section 13; RTL mirroring; dynamic type to 200 percent without clipping, section 13; reduce motion, 8.3; and calm mode, section 16. **A custom component that skips these is not a custom component. It is a regression with a nicer shape.**
+
+That work is the real cost of going custom, and it is the reason the platform comes first whenever it fits.
+
+**RTL is stated here because this document has stated it nowhere else.** Mirroring applies to every layout with a leading and a trailing edge: the swipe directions in 10.3.1 mirror, so the action revealed at the start edge stays at the start edge; the sidehead hairline in 10.12 runs to the trailing edge whichever edge that is; the chevron in 10.11 points toward the trailing edge; the week ribbon in 11.1 and the dot row in item 13 fill in reading order, not left to right. The 7dp dot is leading, not left.
+
+### 17.6 Record the decision either way
+
+When step 4 is reached for something not already listed in 17.3, one line goes in `DECISIONS.md`: what was checked, and which of the four reasons in 17.2 applied. One line is enough. This exists so that a later session knows the platform was considered and does not redo the analysis, and not to discourage building what the app needs.
+
+### 17.7 Verify versions at build time
+
+No version named in this document, in the master prompt or in the addendum is to be trusted. Check the current stable release and the current recommended integration path before integrating, and record what was chosen and why. This document deliberately names Material 3 Expressive, Glance, the promoted-notification progress style and the quick settings tile service **by role and not by version**, for exactly that reason.
+

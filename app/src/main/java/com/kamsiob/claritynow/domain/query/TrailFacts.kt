@@ -7,6 +7,8 @@ import com.kamsiob.claritynow.data.event.ItemAdded
 import com.kamsiob.claritynow.data.event.ItemCompleted
 import com.kamsiob.claritynow.data.event.ItemDeleted
 import com.kamsiob.claritynow.data.event.ItemEdited
+import com.kamsiob.claritynow.data.event.ItemEstimated
+import com.kamsiob.claritynow.data.event.ItemFiled
 import com.kamsiob.claritynow.data.event.ItemPromoted
 import com.kamsiob.claritynow.data.event.ItemQueued
 import com.kamsiob.claritynow.data.event.ItemReopened
@@ -37,18 +39,25 @@ data class CompletedRecord(
 /**
  * Focus session outcomes in a window, attributed to the FOCUS_STARTED instant.
  *
- * [unresolved] exists so that no rule anywhere ever infers abandonment by
+ * [unresolved] exists so that no rule anywhere ever infers an early ending by
  * subtraction. A killed process leaves a started session with no terminal event, so
- * `started != completed + abandoned` is a legal state rather than a bug, and
+ * `started != completed + endedEarly` is a legal state rather than a bug, and
  * `ClarityReducer.focusEnded` already records the mirror case as a diagnostic.
- * MASTER_BUILD_PROMPT 10 treats abandonment neutrally everywhere; guessing that an
- * unresolved session was abandoned would put a number behind that language that the
- * log does not support.
+ * MASTER_BUILD_PROMPT 10 treats an early ending neutrally everywhere; guessing that
+ * an unresolved session ended early would put a number behind that language that
+ * the log does not support.
+ *
+ * [endedEarly] was `abandoned` until the Addendum 01 schema commit renamed the
+ * event, and this field moved with it. The comment above had already made the
+ * argument for the new name on its own grounds, before the addendum arrived: the
+ * log does not reliably know that a session was abandoned, so a counter that says
+ * it does is the wrong name for the number regardless of what a person can see.
+ * DECISIONS.md C6.
  */
 data class FocusCounts(
     val started: Int,
     val completed: Int,
-    val abandoned: Int,
+    val endedEarly: Int,
     val unresolved: Int,
 )
 
@@ -61,17 +70,37 @@ data class FocusCounts(
 data class TrailWindow(val fromMillis: Long, val toMillis: Long)
 
 /**
- * Events a person caused. Excludes the three the engine writes on its own.
+ * Events a person caused. Excludes the four the app writes without a user act.
  *
  * PULSE_GENERATED, REPORT_GENERATED and PLAN_OFFERED arrive with no user gesture.
  * If they counted, someone who opened the app daily and touched nothing would read
  * as active on every day of the fortnight, and CLARITY_LOGIC_ENGINE.md 6.1's
  * `quietDay` and `quietWeek` families could never fire at all.
  *
+ * **APP_OPENED is excluded for the same reason and it is the sharp case**, because
+ * for it that sentence is not a hypothetical. It is written on the first foreground
+ * of each local day, so counting it would literally mark a day active for someone
+ * who opened the app and did nothing. Three numbers would go wrong and each would
+ * still look plausible: CORPUS_3's `mo.steady`, active on 9 or more of the last 14
+ * days, would tell that person they had been steady; CORPUS_2's `ob.day.l03`,
+ * `{n} of seven days had activity`, would become a count of app opens presented as
+ * a count of activity; and `quietDay`, which fires below two events in a window,
+ * would be close to unreachable. Worse than any of those, APP_OPENED exists only to
+ * detect an absence for Addendum 01 4d, and a returning person must never be
+ * greeted by a measurement of their absence. DECISIONS.md C7.
+ *
  * PULSE_ANSWERED, PLAN_ACCEPTED and SETTING_CHANGED stay in: the person did those.
  * A single setting change on its own still leaves a day below `quietDay`'s bar of
  * two events, so including it costs nothing and excluding it would be an
- * interpretation this predicate is not entitled to make.
+ * interpretation this predicate is not entitled to make. ITEM_FILED, ITEM_ESTIMATED
+ * and FOCUS_EXTENDED stay in for the same reason: filing something, revising an
+ * estimate and adding ten minutes to a running session are all gestures.
+ *
+ * **This predicate is a negation, so a new event type counts as activity by
+ * default.** That is safe only while somebody is looking at it, which is why every
+ * type added from here on is classified against it deliberately, in the same commit
+ * that adds it, with the classification argued in a comment. APP_OPENED was one
+ * line away from shipping the other way.
  *
  * There is deliberately one predicate here, not two. A narrower "what counts as
  * movement" test, which would also drop ITEM_REORDERED and AREA_RECOLORED, is a
@@ -79,13 +108,23 @@ data class TrailWindow(val fromMillis: Long, val toMillis: Long)
  * meanings of the word active in the codebase with nothing to tell them apart.
  */
 val ClarityEventType.isUserActivity: Boolean
-    get() = !isEngineAuthored
+    get() = !isWrittenWithoutUserAct
 
-/** The three the engine writes on its own. The complement of [isUserActivity]. */
-val ClarityEventType.isEngineAuthored: Boolean
+/**
+ * The four the app writes with no gesture behind them. The complement of
+ * [isUserActivity].
+ *
+ * Named for what is true of all four rather than for who wrote them. Three are
+ * authored by the engine; APP_OPENED is written by the app shell on launch and is
+ * not engine authored at all. Folding it under the old name to get the right answer
+ * would have recorded a false reason, and the reason is the part a later session
+ * actually reads.
+ */
+val ClarityEventType.isWrittenWithoutUserAct: Boolean
     get() = this == ClarityEventType.PULSE_GENERATED ||
         this == ClarityEventType.REPORT_GENERATED ||
-        this == ClarityEventType.PLAN_OFFERED
+        this == ClarityEventType.PLAN_OFFERED ||
+        this == ClarityEventType.APP_OPENED
 
 /**
  * The Trail's pagination arithmetic. MASTER_BUILD_PROMPT 9.
@@ -126,12 +165,18 @@ object TrailPaging {
  *
  * This exists because one family does not follow the rule the rest of the log
  * follows. Every `ITEM_*` event is keyed by the item it is about, so the ids on a
- * page are enough to fetch the naming history for all of them. The three focus types
+ * page are enough to fetch the naming history for all of them. The four focus types
  * are keyed by their session instead, and the item they were run on is named only
  * inside the `FOCUS_STARTED` payload, which is itself only reachable by that session
  * id. So a page's own entity ids are not the set of items it needs to name, and a
  * loader that assumes they are renders "Finished 25 minutes of focus on" with nothing
  * after the preposition for any session whose item was added before the page began.
+ *
+ * FOCUS_EXTENDED joined that family and needs nothing new here: it is keyed by its
+ * session like the two terminal types, so the same second round resolves it.
+ * ITEM_FILED and ITEM_ESTIMATED are keyed by their item like every other `ITEM_*`
+ * type, and are listed below because neither carries a title snapshot of its own,
+ * which is precisely the case this set exists to cover.
  *
  * Stated here as a pure rule rather than inline in a loader, because the loader that
  * got this wrong could not be tested and this can.
@@ -143,7 +188,9 @@ fun itemIdsNeededBy(page: List<ClarityEvent>, focusStarts: List<ClarityEvent>): 
     val direct = page.mapNotNull { event ->
         when (val payload = event.payload) {
             is ItemAdded -> payload.itemId
+            is ItemFiled -> payload.itemId
             is ItemEdited -> payload.itemId
+            is ItemEstimated -> payload.itemId
             is ItemQueued -> payload.itemId
             is ItemPromoted -> payload.itemId
             is ItemCompleted -> payload.itemId

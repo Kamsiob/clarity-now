@@ -43,11 +43,11 @@ When two disagree: `design-v3.md` wins on anything visual or interactive.
 inside `domain.engine` and `domain.guidance`. The corpora win on the exact wording
 of any sentence. **If a genuine contradiction survives all of that, stop and ask.**
 
-`clarity-now-visual-reference-v2.html` and `-v3.html` are static mocks. Read them
-for structure, proportion and color relationships. **Never copy them into the
-project, and never take a number from them.** Their pixel values are not uniformly
-scaled. Every dimension is stated in dp in `design-v3.md`, which is the only source
-for a number.
+`clarity-now-visual-reference-v2.html` and `clarity-now-visual-reference-v3.html`
+are static mocks. Read them for structure, proportion and color relationships.
+**Never copy them into the project, and never take a number from them.** Their pixel
+values are not uniformly scaled. Every dimension is stated in dp in `design-v3.md`,
+which is the only source for a number.
 
 `rationale/` is superseded history. Not needed to build.
 

@@ -140,10 +140,14 @@ fun AreasRoute(
             if (item == null) {
                 sheet = null
             } else {
+                // An unfiled item has no area and therefore no queue to move to the
+                // front of. Addendum 01 4a: it can be filed, edited or deleted, and
+                // nothing else, until it is filed.
+                val queue = item.areaId?.let { viewModel.queueFor(it) }.orEmpty()
                 EditItemSheet(
                     item = item,
-                    canMoveToFront = viewModel.queueFor(item.areaId).firstOrNull()?.id != item.id &&
-                        viewModel.queueFor(item.areaId).any { it.id == item.id },
+                    canMoveToFront = queue.firstOrNull()?.id != item.id &&
+                        queue.any { it.id == item.id },
                     onSave = { title, note ->
                         viewModel.editItem(item.id, title, note)
                         sheet = null

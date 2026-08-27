@@ -107,6 +107,7 @@ so a warning is a failed build.
 ```
 app/                      the Android application, one module
 CLAUDE.md                 how to work on this repository, read first
+DECISIONS.md              why decisions were made, and what was ruled out
 docs/BUILD_STATE.md       what is done, what is half done, what is known broken
 docs/ARCHITECTURE.md      the code map and the layering rules
 docs/EVENT_FORMAT.md      the event log contract, in prose

@@ -1,5 +1,6 @@
 package com.kamsiob.claritynow.domain.replay
 
+import com.kamsiob.claritynow.data.event.AppOpened
 import com.kamsiob.claritynow.data.event.AreaArchived
 import com.kamsiob.claritynow.data.event.AreaCreated
 import com.kamsiob.claritynow.data.event.AreaDeleted
@@ -8,13 +9,16 @@ import com.kamsiob.claritynow.data.event.AreaRenamed
 import com.kamsiob.claritynow.data.event.AreaReordered
 import com.kamsiob.claritynow.data.event.AreaUnarchived
 import com.kamsiob.claritynow.data.event.ClarityEvent
-import com.kamsiob.claritynow.data.event.FocusAbandoned
 import com.kamsiob.claritynow.data.event.FocusCompleted
+import com.kamsiob.claritynow.data.event.FocusEndedEarly
+import com.kamsiob.claritynow.data.event.FocusExtended
 import com.kamsiob.claritynow.data.event.FocusStarted
 import com.kamsiob.claritynow.data.event.ItemAdded
 import com.kamsiob.claritynow.data.event.ItemCompleted
 import com.kamsiob.claritynow.data.event.ItemDeleted
 import com.kamsiob.claritynow.data.event.ItemEdited
+import com.kamsiob.claritynow.data.event.ItemEstimated
+import com.kamsiob.claritynow.data.event.ItemFiled
 import com.kamsiob.claritynow.data.event.ItemPromoted
 import com.kamsiob.claritynow.data.event.ItemQueued
 import com.kamsiob.claritynow.data.event.ItemReopened
@@ -53,6 +57,12 @@ object ClarityReducer {
      * Done in one place rather than in twenty branches, so a new event type cannot
      * quietly forget to keep the area's last activity honest. An event that
      * concerns no area, such as a Pulse or a setting, stamps nothing.
+     *
+     * Two of those now arrive from the same place. An unfiled item concerns no
+     * area, so adding, editing or estimating one stamps nothing, and APP_OPENED
+     * concerns no area by construction. Neither resolves to a placeholder: an area
+     * that had nothing happen in it must not have its last activity moved forward
+     * because the person opened the app or wrote something down for later.
      */
     private fun touchArea(state: ClarityState, event: ClarityEvent): ClarityState {
         val areaId = affectedAreaId(state, event) ?: return state
@@ -71,6 +81,7 @@ object ClarityReducer {
             is AreaUnarchived -> payload.areaId
             is AreaDeleted -> payload.areaId
             is ItemAdded -> payload.areaId
+            is ItemFiled -> payload.areaId
             is ItemQueued -> payload.areaId
             is ItemPromoted -> payload.areaId
             is ItemCompleted -> payload.areaId
@@ -78,11 +89,13 @@ object ClarityReducer {
             is ItemReordered -> payload.areaId
             is ItemDeleted -> payload.areaId
             is ItemEdited -> state.items[payload.itemId]?.areaId
+            is ItemEstimated -> state.items[payload.itemId]?.areaId
             is FocusStarted -> payload.areaId
             is FocusCompleted -> state.focusSessions[payload.sessionId]?.areaId
-            is FocusAbandoned -> state.focusSessions[payload.sessionId]?.areaId
+            is FocusEndedEarly -> state.focusSessions[payload.sessionId]?.areaId
+            is FocusExtended -> state.focusSessions[payload.sessionId]?.areaId
             is PulseGenerated, is PulseAnswered, is ReportGenerated,
-            is PlanOffered, is PlanAccepted, is SettingChanged,
+            is PlanOffered, is PlanAccepted, is SettingChanged, is AppOpened,
             -> null
         }
 
@@ -108,10 +121,21 @@ object ClarityReducer {
             is AreaDeleted -> areaDeleted(advanced, event, payload)
 
             is ItemAdded -> itemAdded(advanced, event, payload)
+            is ItemFiled -> itemFiled(advanced, event, payload)
             is ItemEdited -> withLiveItem(advanced, event, payload.itemId) { item ->
                 item.copy(
                     title = payload.newTitle,
                     note = payload.newNote,
+                    firstStep = payload.newFirstStep,
+                    lastEventLamport = event.lamport,
+                )
+            }
+            // The previous estimate is carried for the record and is not consulted,
+            // exactly as ItemEdited does not consult previousTitle. The event states
+            // the value after it, and that is what a projection is.
+            is ItemEstimated -> withLiveItem(advanced, event, payload.itemId) { item ->
+                item.copy(
+                    estimateMinutes = payload.newEstimateMinutes,
                     lastEventLamport = event.lamport,
                 )
             }
@@ -137,9 +161,10 @@ object ClarityReducer {
             is FocusCompleted -> focusEnded(
                 advanced, event, payload.sessionId, payload.actualSeconds, FocusOutcome.COMPLETED,
             )
-            is FocusAbandoned -> focusEnded(
-                advanced, event, payload.sessionId, payload.actualSeconds, FocusOutcome.ABANDONED,
+            is FocusEndedEarly -> focusEnded(
+                advanced, event, payload.sessionId, payload.actualSeconds, FocusOutcome.ENDED_EARLY,
             )
+            is FocusExtended -> focusExtended(advanced, event, payload)
 
             is PulseGenerated -> pulseGenerated(advanced, event, payload)
             is PulseAnswered -> pulseAnswered(advanced, event, payload)
@@ -151,6 +176,16 @@ object ClarityReducer {
             is SettingChanged -> advanced.copy(
                 settings = advanced.settings + (payload.key to payload.newValue),
             )
+
+            // APP_OPENED changes nothing, and has its own branch saying so rather
+            // than falling through a default, because there is no default here to
+            // fall through and there must never be one. Every other type in this
+            // `when` moves the projection; this one is a presence marker whose only
+            // reader is the gap detection in Addendum 01 4d, which folds the log
+            // itself. Storing a last opened date on the state would be a second
+            // path to the same fact and would put a tally of someone's presence in
+            // the projection every screen reads, which is what 4d exists to avoid.
+            is AppOpened -> advanced
         }
     }
 
@@ -202,26 +237,91 @@ object ClarityReducer {
 
     // Items -------------------------------------------------------------------
 
+    /**
+     * Adding an item, filed or unfiled.
+     *
+     * A null area is not a missing area and is not a failure to resolve one. It is
+     * the inbox, and it is the whole point of Addendum 01 4a: capture must never
+     * require a decision. So the area checks run only when the payload names one,
+     * and an unfiled add is never a diagnostic.
+     *
+     * A named area that is unknown or deleted still refuses the event, unchanged.
+     * The tempting shortcut, dropping the item into the inbox instead so nothing is
+     * lost, is wrong: it would silently move an item somewhere the person did not
+     * put it, and every device replaying the same log would have to make the same
+     * silent move for the states to agree. Refusing and recording is the behavior
+     * MASTER_BUILD_PROMPT 6.2 asks for and is the same answer on every device.
+     */
     private fun itemAdded(state: ClarityState, event: ClarityEvent, payload: ItemAdded): ClarityState {
-        val area = state.areas[payload.areaId]
-            ?: return state.note(event, "unknown area ${payload.areaId}")
-        if (area.deletedAt != null) {
-            return state.note(event, "area ${payload.areaId} is deleted")
+        val areaId = payload.areaId
+        if (areaId != null) {
+            val area = state.areas[areaId]
+                ?: return state.note(event, "unknown area $areaId")
+            if (area.deletedAt != null) {
+                return state.note(event, "area $areaId is deleted")
+            }
         }
         if (state.items.containsKey(payload.itemId)) {
             return state.note(event, "item ${payload.itemId} already exists")
         }
         val item = ItemState(
             id = payload.itemId,
-            areaId = payload.areaId,
+            areaId = areaId,
             title = payload.title,
             note = payload.note,
+            firstStep = payload.firstStep,
+            estimateMinutes = payload.estimateMinutes,
             orderKey = payload.orderKey,
             status = ItemStatus.QUEUED,
             createdAt = event.wallClock,
             lastEventLamport = event.lamport,
         )
         return state.copy(items = state.items + (item.id to item))
+    }
+
+    /**
+     * Filing an unfiled item into an area. The only transition into one.
+     *
+     * **It never promotes and never demotes.** The item arrives QUEUED and stays
+     * QUEUED, taking the order key the payload names, and whatever was active in
+     * that area is untouched. Filing is bookkeeping; promotion is a choice about
+     * what to do next. An inbox that could displace the one thing a person is
+     * working on would make the safest possible act, writing something down, the
+     * most disruptive one.
+     *
+     * Refused for an item that already has an area, because there is no unfile and
+     * no move, so a second filing is either a duplicate or a bug and either way the
+     * first answer is the one both devices already agree on. Refused for an area
+     * that is unknown, deleted or archived, per MASTER_BUILD_PROMPT 6.2, which
+     * leaves the item unfiled rather than losing it: an inbox item that stays in
+     * the inbox is visible and refilable, and one filed into an archived area is
+     * neither.
+     *
+     * The status is set rather than assumed. An unfiled item is always QUEUED, so
+     * this is a no-op on every log this build can write, and it is written down
+     * because the rule is worth stating where a later reader will see it.
+     */
+    private fun itemFiled(state: ClarityState, event: ClarityEvent, payload: ItemFiled): ClarityState {
+        val item = state.items[payload.itemId]
+            ?: return state.note(event, "unknown item ${payload.itemId}")
+        if (item.deletedAt != null) return state.note(event, "item ${payload.itemId} is deleted")
+        if (item.areaId != null) {
+            return state.note(event, "item ${payload.itemId} is already filed in ${item.areaId}")
+        }
+        val area = state.areas[payload.areaId]
+            ?: return state.note(event, "unknown area ${payload.areaId}")
+        if (area.deletedAt != null) return state.note(event, "area ${payload.areaId} is deleted")
+        if (area.archived) return state.note(event, "area ${payload.areaId} is archived")
+        return state.copy(
+            items = state.items + (
+                item.id to item.copy(
+                    areaId = payload.areaId,
+                    orderKey = payload.orderKey,
+                    status = ItemStatus.QUEUED,
+                    lastEventLamport = event.lamport,
+                )
+                ),
+        )
     }
 
     /**
@@ -232,11 +332,21 @@ object ClarityReducer {
      * independently: the event being applied has the higher order by construction,
      * so it wins, the sitting item goes to the head of the queue, and a conflict is
      * recorded for the Areas screen to explain.
+     *
+     * An unfiled item is refused outright. Addendum 01 4a: an item with no area
+     * cannot be active until it is filed, and this is the one branch that could
+     * otherwise reach that state, because it is the only place a status becomes
+     * ACTIVE. Left unguarded it would produce an item that is the one thing
+     * happening in no area at all, which `ClarityInvariants` would then report
+     * against a state that had already been shown to someone.
      */
     private fun itemPromoted(state: ClarityState, event: ClarityEvent, payload: ItemPromoted): ClarityState {
         val item = state.items[payload.itemId]
             ?: return state.note(event, "unknown item ${payload.itemId}")
         if (item.deletedAt != null) return state.note(event, "item ${payload.itemId} is deleted")
+        if (item.areaId == null) {
+            return state.note(event, "item ${payload.itemId} is unfiled and cannot be promoted")
+        }
         if (state.areas[payload.areaId]?.deletedAt != null) {
             return state.note(event, "area ${payload.areaId} is deleted")
         }
@@ -341,6 +451,38 @@ object ClarityReducer {
             lastEventLamport = event.lamport,
         )
         return state.copy(focusSessions = state.focusSessions + (session.id to session))
+    }
+
+    /**
+     * Adding time to a running session. Addendum 01 4f.
+     *
+     * The absolute [FocusExtended.newPlannedSeconds] is applied rather than adding
+     * [FocusExtended.addedSeconds] to what is already there. Applying the delta
+     * would make the result depend on how many times the event was folded, which is
+     * the failure mode idempotency exists to prevent: delivering the same event
+     * twice after a merge would add the time twice, and nothing on screen would say
+     * so. The absolute figure is also the number the person was shown.
+     *
+     * Extending a session that has already ended is recorded rather than silently
+     * applied. It is not the same case as a second terminal event, which is a
+     * benign duplicate the reducer swallows; this one means a plan was changed for
+     * something that was already over, and quietly moving a finished session's
+     * planned time would leave a session whose plan it never actually ran under.
+     */
+    private fun focusExtended(state: ClarityState, event: ClarityEvent, payload: FocusExtended): ClarityState {
+        val session = state.focusSessions[payload.sessionId]
+            ?: return state.note(event, "unknown focus session ${payload.sessionId}")
+        if (session.outcome != FocusOutcome.RUNNING) {
+            return state.note(event, "focus session ${payload.sessionId} is ${session.outcome}")
+        }
+        return state.copy(
+            focusSessions = state.focusSessions + (
+                session.id to session.copy(
+                    plannedSeconds = payload.newPlannedSeconds,
+                    lastEventLamport = event.lamport,
+                )
+                ),
+        )
     }
 
     private fun focusEnded(

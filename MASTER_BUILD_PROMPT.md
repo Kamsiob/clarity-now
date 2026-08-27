@@ -36,6 +36,8 @@ The two HTML files are static mocks. **Never copy them into the project.** Read 
 
 Where a mock disagrees with `design-v3.md` on anything at all, the design document wins.
 
+Two documents sit beside this set rather than inside it. `docs/addenda/ADDENDUM_01_EXECUTIVE_FUNCTION.md` is provenance: it records what was asked for on one date and carries no authority of its own. DECISIONS.md at the repository root is the dated decision register, and it is where a conflict between an addendum and this document is resolved and reasoned. Where an addendum and this document disagree on behavior or data, this document wins, and DECISIONS.md says why. Addendum 01 also names four documents by names this repository does not use: MASTER_SPEC.md is this file, DESIGN.md is `design-v3.md`, DECISIONS.md was created at the root for it, and tools/audit.py is `audit.py` at the root.
+
 `rationale/` holds the review panels and superseded drafts. Not needed to build.
 
 ---
@@ -97,6 +99,46 @@ Both faces are on Google Fonts under the SIL OFL. **Download the actual font fil
 - Subset if the tooling is available, and commit the `OFL.txt` for each alongside the files
 - **Verify tabular figures (`tnum`) in Hanken Grotesk before relying on them.** If absent, use a fixed-width numeral treatment rather than switching families
 
+### 3.2 Platform first, and when custom is right
+
+A standing architectural rule, applied to every decision from here on. `design-v3.md` carries the visual half of it. **Check for a platform solution first. Use it when it fits. Build custom when it does not.** In order:
+
+1. The official Material 3 Expressive component, unmodified
+2. The official component, themed with our tokens
+3. The official component, extended
+4. **Custom**
+
+The platform comes first for three reasons that have nothing to do with taste. Platform components get correct accessibility, right to left, dynamic type, predictive back and motion physics for free. They are hardware accelerated and tested at a scale this project cannot match. And they keep the codebase small enough for one person to maintain, which is the constraint every other constraint here answers to.
+
+**Go custom, without hesitation, for any of four reasons.**
+
+- **No platform equivalent exists.** Several things this app needs have none: the depleting focus ring, the week ribbon in the Report, the 14 day rhythm dot row, the area color wash, the two stage color picker, the tutorial spotlight. Do not contort a platform component into one of these shapes
+- **The platform component carries meaning the app rejects.** Anything implying achievement, scoring, celebration or progress toward a target is wrong here regardless of how well it is built
+- **The platform component fights a design rule.** If using it would put two separation devices on one element, a colored edge treatment, or an all caps label on a screen, the rule wins
+- **The platform component is worse for this audience.** Motion or saturation that cannot be tamed through theming is a reason to build something calmer
+
+**Reaching step 4 is the rule working, not a conflict.** The one reason that does not count is preferring the look of something you would draw yourself; that instinct belongs in the polish pass, which works through theming rather than replacement.
+
+**Custom components inherit the platform's obligations.** Anything built by hand handles accessibility, right to left, dynamic type, reduce motion and calm mode to the standard the component it replaced would have met. That work is the real cost of going custom, and it is why the platform comes first when it fits.
+
+**Record the decision either way**, one line in DECISIONS.md naming what was checked and which of the four reasons applied, so a later session does not redo the analysis.
+
+The platform sources this app uses:
+
+| for | use |
+|---|---|
+| components and motion physics | `androidx.compose.material3`, Material 3 Expressive, including its shape morphing and spring physics rather than hand rolled equivalents |
+| iconography | Material Symbols wherever a symbol carries the right meaning. The SVGs in the visual references are illustrative and are not shipping assets. The mapping, including anything drawn by hand, is recorded in `design-v3.md` |
+| widgets | `androidx.glance`, per 13.3 |
+| the Live Update | `Notification.ProgressStyle`, per 14b.6 |
+| app shortcuts | the androidx.core shortcuts APIs, per 13.5 |
+| the quick settings tile | the platform `TileService`, per 13.5 |
+| fonts | Google Fonts, downloaded and committed as files per 3.1. Never the Downloadable Fonts API |
+
+### 3.3 Verify every version at build time
+
+**Trust no library version, API level or platform requirement named in this document, in `design-v3.md`, or in any addendum.** They were written on one date and this project builds on another. Before integrating anything, check the current stable release and the current recommended integration path, and record what was chosen and why. This applies equally to a key derivation function's recommended parameters (14b.7) and to a Play Console policy (16.11), both of which move on their own schedule and neither of which announces that it has moved.
+
 ---
 
 ## 4. Project Structure
@@ -156,7 +198,7 @@ Indices on `lamport`, `type`, `entityId`, `wallClock`.
 
 Payloads carry **full before and after values**, so replay reconstructs state without reading any other table. This is the trap in event sourcing: a log that reads nicely is not the same as a log that replays correctly.
 
-**Display snapshots are carried where they are cheap, not everywhere.** Eight of the twenty four types carry enough of one to name both the subject and the area of a Trail row with no lookup: the five area events that carry a name, and `ITEM_ADDED`, `ITEM_PROMOTED` and `ITEM_COMPLETED`. The other sixteen resolve their display values by folding the log to the instant of the event, which is what `domain.query.TrailQueries` does. Neither path reads a live entity table, so a rename never rewrites an older Trail entry.
+**Display snapshots are carried where they are cheap, not everywhere.** Eight of the twenty eight types carry enough of one to name both the subject and the area of a Trail row with no lookup: the five area events that carry a name, and `ITEM_ADDED`, `ITEM_PROMOTED` and `ITEM_COMPLETED`. The other twenty resolve their display values by folding the log to the instant of the event, which is what `domain.query.TrailQueries` does. Neither path reads a live entity table, so a rename never rewrites an older Trail entry.
 
 | type | payload |
 |---|---|
@@ -167,8 +209,10 @@ Payloads carry **full before and after values**, so replay reconstructs state wi
 | `AREA_ARCHIVED` | areaId, nameSnapshot |
 | `AREA_UNARCHIVED` | areaId, nameSnapshot |
 | `AREA_DELETED` | areaId, nameSnapshot (tombstone, never a row removal) |
-| `ITEM_ADDED` | itemId, areaId, title, note, orderKey, areaNameSnapshot |
+| `ITEM_ADDED` | itemId, areaId (nullable), title, note, orderKey, areaNameSnapshot, estimateMinutes (nullable), firstStep (nullable) |
+| `ITEM_FILED` | itemId, areaId, orderKey, areaNameSnapshot |
 | `ITEM_EDITED` | itemId, previousTitle, newTitle, previousNote, newNote |
+| `ITEM_ESTIMATED` | itemId, previousEstimateMinutes, newEstimateMinutes |
 | `ITEM_QUEUED` | itemId, areaId, orderKey, previousStatus |
 | `ITEM_PROMOTED` | itemId, areaId, previousStatus, demotedItemId (nullable), demotedToOrderKey (nullable), titleSnapshot, areaNameSnapshot |
 | `ITEM_COMPLETED` | itemId, areaId, titleSnapshot, areaNameSnapshot, activeDurationDays |
@@ -177,15 +221,25 @@ Payloads carry **full before and after values**, so replay reconstructs state wi
 | `ITEM_DELETED` | itemId, areaId, titleSnapshot (tombstone) |
 | `FOCUS_STARTED` | sessionId, areaId, itemId, plannedSeconds |
 | `FOCUS_COMPLETED` | sessionId, actualSeconds |
-| `FOCUS_ABANDONED` | sessionId, actualSeconds |
+| `FOCUS_ENDED_EARLY` | sessionId, actualSeconds |
+| `FOCUS_EXTENDED` | sessionId, addedSeconds, newPlannedSeconds |
 | `PULSE_GENERATED` | pulseId, dateKey, family, escalationStage, register, variantKey, renderedObservation, renderedQuestion, factSnapshot, reflectionPeriod |
 | `PULSE_ANSWERED` | pulseId, responseKey, responseLabel, responseIsPositive |
 | `REPORT_GENERATED` | reportId, weekStartKey, headlineKey, renderedSections, factSnapshot |
 | `PLAN_OFFERED` | planId, weekStartKey, frameKey, cueKey, actionKey, familyKey, subjectId, offeredLine, committedLine, resolutionFactRef |
 | `PLAN_ACCEPTED` | planId |
 | `SETTING_CHANGED` | key, previousValue, newValue (only for settings affecting behavior history, such as afterCompleting) |
+| `APP_OPENED` | dateKey |
 
 `ITEM_PROMOTED` carrying `demotedItemId` is what makes swap replay correctly, and is exactly the detail a descriptive log would omit.
+
+**The four new types and the change to `ITEM_ADDED` come from Addendum 01**, and they are in the catalog now rather than in the phase that uses them because an event payload is nearly free to change before user data exists and expensive afterward. `docs/EVENT_FORMAT.md`, the golden fixture and the replay harness carry the same change, including replay coverage for an unfiled item, the filing transition and a session extension. The schema version those events are written at, and whether the event `schemaVersion` moves off 1, belong to that one schema commit, which also carries the payload questions already open as issue #19. A log written before the change must still replay: an absent optional field reads as null.
+
+**`APP_OPENED` is a presence marker and is never counted as activity.** It records a date key, no time and no count, written at most once per calendar day on the first foreground, and it exists only so a gap can be detected without any tracking. It is excluded from `ClarityEventType.isUserActivity`, joining `PULSE_GENERATED`, `REPORT_GENERATED` and `PLAN_OFFERED`, and the predicate's complement is therefore no longer only the three events the engine writes: it is every event the app writes without a user act. This is not a nicety. `activeDays` and `totalEvents` count user activity, so an `APP_OPENED` that counted would make `mo.steady`, active on 9 or more of the last 14 days, fire for someone who did nothing for a fortnight, would turn `ob.day.l03`, `{n} of seven days had activity`, into a count of app opens, and would put `quietDay` nearly out of reach. For the same reason `APP_OPENED` renders no Trail row and is excluded from the day header event count in section 9: a log of when someone was present is a measurement of absence turned inside out, which is exactly what 14b.4 forbids.
+
+**`ITEM_FILED` exists because `ITEM_ADDED` can now carry a null area.** An item with no area is real, is queryable, and is outside every area scoped invariant in 6.2 and outside every engine fact. It cannot be `ACTIVE` or `COMPLETED` until it is filed, and filing is the only transition into an area. `ITEM_FILED` carries `areaNameSnapshot` so a Trail row can name the destination without a lookup, and resolves the item title by folding, which is what every type without a full snapshot does. Room migrates to schema 3 for the nullable column.
+
+**`FOCUS_ABANDONED` was renamed to `FOCUS_ENDED_EARLY`.** Addendum 01 4e requires that the word `abandoned` appear nowhere a person can see. No user visible string contained it, because the Trail already reads `Stopped after N minutes`, so the exposure was the type name itself: in the export file of 14b.7, which the addendum requires be readable when no password is set, and more importantly in `docs/EVENT_FORMAT.md`, which is the contract the future Linux desktop app is built against in a separate session. A name in that document is an instruction to the next implementer about what the concept means, and `abandoned` teaches the wrong one. Renamed in the schema commit while the window was open. DECISIONS.md C6.
 
 ### 5.3 Order keys
 
@@ -199,7 +253,7 @@ Room tables `clarity_area`, `clarity_item`, `clarity_focus_session`, `clarity_pu
 
 They exist purely for query speed. Any can be dropped and rebuilt from the log with no data loss, and a debug menu action does exactly that as a proof.
 
-**DataStore holds only per-device values, never synced:** `theme`, `focusDurationMinutes` (default 25), `focusHighlightEnabled` (default true), `afterCompleting` (default AUTO_PROMOTE), `pulseRemindersEnabled` (default true), `pulseReminderHour` (default 20), `hasCompletedOnboarding`, `hasSeenTutorial`, `originId`, `lamportCounter`, `lastExportAt`.
+**DataStore holds only per-device values, never synced:** `theme`, `focusDurationMinutes` (default 25), `focusHighlightEnabled` (default true), `afterCompleting` (default AUTO_PROMOTE), `pulseRemindersEnabled` (default true), `pulseReminderHour` (default 20), `hasCompletedOnboarding`, `hasSeenTutorial`, `originId`, `lamportCounter`, `lastExportAt`. **Pending from Addendum 01:** `calmMode`, which defaults to following the OS reduce motion setting, in phase 3b, and `transitionWarningEnabled`, default false, in phase 4.
 
 **Nothing the Logic Engine reads may live in DataStore.** Variation history, escalation state, personal records, first-ever flags and plan history all derive from the log so two devices compute the same answer. This is a hard rule and it will not fail loudly if you get it wrong.
 
@@ -230,6 +284,7 @@ A pure function. No Android imports, no clock, no randomness. Given the same ord
 - Every queued item in an area has a distinct `orderKey`
 - A deleted or archived entity never appears in a live projection
 - An event referencing an unknown entity is skipped, logged to a replay diagnostics list, and never crashes the app
+- **Pending, phase 3b.** An item with no area sits outside every invariant above. It is never `ACTIVE`, never `COMPLETED`, and never counted in any area's queue. `ITEM_FILED` naming an area that is unknown, deleted or archived is skipped like any other event referencing an unknown entity, which leaves the item unfiled rather than losing it
 
 ### 6.3 Conflict resolution
 
@@ -294,6 +349,8 @@ There is no limit on the number of areas. The philosophy is carried by copy and 
 ### 8.2 Items and the queue
 
 **Add.** From the FAB or an area detail sheet. Title required, optional note, target area. If the area has no active item it becomes active immediately (`ITEM_ADDED` then `ITEM_PROMOTED`). Otherwise it appends to the queue. The add sheet states where the item will land before the user commits.
+
+**Pending, phase 3b.** Capture stops requiring an area at all. An item may be added with no area and sit in the inbox until it is filed, and the same sheet carries two optional fields, the first physical step and a time estimate. See 14b.1 to 14b.3.
 
 **Complete.** From swipe right, area detail, or the focus completion flow. Writes `ITEM_COMPLETED`. Then per `afterCompleting`: `AUTO_PROMOTE` takes the queue head and promotes it with the hero animation, or `CHOOSE_FROM_QUEUE` opens a chooser; dismissing leaves the area idle.
 
@@ -360,9 +417,11 @@ All engine reads go through `TrailQueries`, a pure facade with functions such as
 - An ongoing notification, low importance and silent, shows the item title and a countdown chronometer. Tapping it reopens the session
 - Natural completion: soft tone and the `focusEnd` haptic, `FOCUS_COMPLETED` written, then the completion state with `Mark item complete` and `Done`
 - If backgrounded at completion, post a gentle notification and resolve on next resume or from the notification
-- Early end: under 60 seconds discards silently as `FOCUS_ABANDONED`. Past 60 seconds, a small confirm reading `End this session?` with `End` and `Keep going`
+- Early end: under 60 seconds discards silently as `FOCUS_ENDED_EARLY`. Past 60 seconds, a small confirm reading `End this session?` with `End` and `Keep going`
 - **Abandonment is treated neutrally everywhere.** Pulse and Report language never blames
 - While running, the Areas card for that area shows the intensified wash and live countdown when `focusHighlightEnabled` is on. **There is no bar**
+
+**Pending, phase 4.** Four changes from Addendum 01 land in this flow: a session ended early is presented as a completed short session rather than as a stopped one, ten minutes can be added to a running session, an optional transition warning fires five minutes out, and the session becomes visible outside the app as a Live Update. See 14b.5 and 14b.6.
 
 ---
 
@@ -465,6 +524,8 @@ Once per day, one behavioral observation, one question, two or three answers. Da
 
 **Reminders.** When enabled, WorkManager schedules a daily notification at the chosen hour, **posted only if that day's entry exists and is unanswered.** Never posted when IDLE.
 
+**Pending, phase 6.** Pulse generates nothing for the first two days after a return from a long absence, which makes those days IDLE and posts no reminder. See 14b.4.
+
 ### 12.2 Momentum
 
 The calm daily mirror. **It observes and never interprets.** It must never say because, suggests, or means; that vocabulary belongs to the Report.
@@ -489,11 +550,13 @@ The calm daily mirror. **It observes and never interprets.** It must never say b
 
 **Edge cases.** A brand new user gets `Your first week` with whatever is honest. All areas empty and no activity shows the styled empty state with no generated observations. Intent-qualified insights require 3 or more answered pulses in the window; below that the report is trail data only.
 
+**Pending, phases 6 through 9.** Four changes from Addendum 01 reach this screen. For a full week after a return from a long absence, every decline, neglect and gap family is unavailable to selection (14b.4). A dip that has a precedent in the user's own history is a rhythm and not a decline, and the two speak differently (14b.9). Estimate observations may state a ratio or a tendency and may never state a delta (14b.8). And every section that needs history says plainly what it needs and roughly when it becomes useful, rather than showing a zero (14b.10).
+
 **Controls.** History (past reports by week), regenerate (spinner on the headline block, near instant), copy (plain text to the clipboard). The copy control is the app's only integration surface with anything else.
 
 ---
 
-## 13. Onboarding, Tutorial, Widgets, Notifications
+## 13. Onboarding, Tutorial, Widgets, Notifications, Shortcuts
 
 ### 13.1 Onboarding
 
@@ -509,6 +572,8 @@ Four beats, runs once, replayable from Settings. Entirely Contemplative. A persi
 
 Then it opens the app with the tutorial queued. **There is no paywall beat and no sheet at the end.**
 
+**Pending, phase 10.** Beat 2 gains a `Just start` path of equal standing, and beat 4 gains one line announcing Pulse before it ever appears. See 14b.11.
+
 ### 13.2 Tutorial
 
 Five spotlight steps on first arrival at Areas. A full screen overlay above everything including the tab bar: 56 percent black radial dim, a feathered cutout, a slowly pulsing 2dp white ring at 38 percent, a floating tooltip in surfaceRaised with a step indicator. Skip always visible top right. Tap anywhere advances.
@@ -519,17 +584,49 @@ Five spotlight steps on first arrival at Areas. A full screen overlay above ever
 
 ### 13.3 Widgets
 
-Data comes from a widget snapshot written to DataStore on every meaningful change plus a WorkManager refresh every 6 hours. Deep links open the right surface, except while a focus session is running, when any tap goes to the focus screen. If a configured area was deleted or archived, show a reconfigure prompt.
+**Widgets matter more than notifications for this audience, and the reason is specific.** A widget is persistent and cannot be dismissed, so it works with out of sight, out of mind rather than against it. A notification is a one time event that is swiped away and forgotten. A widget is still there tomorrow. Eight are specified below and **six are required in v1**. This section was rewritten by Addendum 01; DECISIONS.md C4 records what it replaced and why.
 
-**v1 ships two.** **Next Up** (small): one active item, configurable to a pinned area or automatic. **All Areas** (medium): each area as a row with dot, name, active item or `Idle`.
+The goal for every one of them is **zero taps to see**, and where an action exists, **one tap to act**.
 
-Deferred, listed so the snapshot format accommodates them: Area Focus, Action Board, Weekly Momentum, Weekly Insight. Glance is finicky and six widgets is a lot of grinding for early payoff.
+**Where the data comes from.** The widget snapshot written to DataStore on every meaningful change, plus a WorkManager refresh every 6 hours. **Widgets never read a corpus and never run the engine.** Any sentence a widget shows was produced by the engine, written into the snapshot, and is repeated verbatim, per 11.2. A widget that composed its own sentence would be a second path to the screen, which 11.1 does not allow, and it would be the one path with no validator on it.
+
+**Rules every widget follows.** Built with `androidx.glance`. Deep links open the right surface, except while a focus session is running, when any widget tap goes to the focus screen. If a configured area was deleted or archived, show a reconfigure prompt. Each one renders correctly in dark mode, honors calm mode, scales text without clipping at its smallest grid size, and shows a sensible state when it has nothing to show. Each one is usable with TalkBack and carries real content descriptions rather than a repeated label. **Every preview image in the widget picker is generated from the real widget and never from a mockup**, which is the same rule 16.6 applies to the README screenshots and for the same reason. The shared visual DNA is in `design-v3.md` 12; this section is the behavior.
+
+**Required in v1. All pending, phase 12.**
+
+| widget | size | what it shows | tap |
+|---|---|---|---|
+| **Next Up** | 2x2 | one active item: area dot, area name, title, and a count of what waits behind it. Configurable to a pinned area, or automatic, which shows the least recently touched active area and rotates daily | opens that area |
+| **First Step** | 2x2 | the active item's **first step** rather than its title. With no first step set, the title and a quiet prompt to add one | starts a focus session on that item |
+| **Quick Capture** | 2x2 or 1x1 | one large target, with the inbox count beneath it as plain text | opens capture straight into the unfiled inbox, keyboard up, no area to choose |
+| **Focus Countdown** | 2x2 | live during a session: a depleting arc as the primary carrier, digits secondary. Otherwise a `Start focus` target | opens the focus screen |
+| **All Areas** | 4x2 | every non-archived area as a row: dot, name, active item or `Idle`. Configurable to all areas or a chosen subset | opens that area |
+| **Rhythm** | 4x2 | the 14 day dot row exactly as Momentum renders it, and one plain line beneath: `Active 11 of the last 14 days.` | opens Momentum |
+
+**Optional, built if phase 12 has room.** **This Week** (2x2): three numbers from Momentum, completed, focus minutes and reflections, typographic, with no chart, no gauge and no ring toward a target, because there is no target. **One Thing** (4x2): the plan the user accepted from the most recent Report, in its first person committed form, or the Report headline when there is none. It is the only place guidance appears outside the Report, and it appears only because the user chose it. **Never an unaccepted plan. Never a declined one.**
+
+**Four rules inside that table are easy to lose.**
+
+- **First Step exists because the hardest moment is starting**, and the title of a task is often the intimidating part of it. `Rewrite the proposal intro` is a wall. `Open the doc and read what is there` is not. The smallest possible action on the home screen removes the activation barrier at the moment it bites
+- **Rhythm must never become a streak.** No consecutive count, no chain, no language about breaking one. A gap is a lighter dot and nothing else, exactly as in 12.2
+- **Quick Capture carries the whole capture principle.** Every decision between the thought and the record is a place the thought is lost, which is why it opens into the inbox and asks for nothing. The inbox count is plain text, **never a badge and never a dot**
+- **Focus Countdown reads as a shape before it reads as a number**, per `design-v3.md`. Glance updates are throttled by the system, so its refresh cadence is chosen deliberately and the reasoning is recorded rather than tuned until it looks right
 
 ### 13.4 Notifications
 
 Channels: **Focus** (session complete, default importance, gentle sound), **Reminders** (Pulse reminder), **Ongoing** (silent, the running session chronometer).
 
 Request `POST_NOTIFICATIONS` contextually, the first time the user starts a focus session or enables a reminder. **Never at launch.** Every notification deep links correctly. **No marketing notifications, ever. No re-engagement notifications, ever. Nothing that exists to pull the user back.**
+
+**Pending, phase 4.** One promoted notification joins these, the focus session Live Update, on the Ongoing channel and under the same rules: silent, dismissed when the session ends, never re-engaging. It needs `POST_PROMOTED_NOTIFICATIONS`, which is a notifications permission and therefore inside what section 18 allows. See 14b.6.
+
+### 13.5 App shortcuts and the quick settings tile
+
+**Both are pending, phase 12,** both are new in Addendum 01, and both supersede the line in section 18 that put home screen shortcuts out of scope for v1. The reasoning is the widgets' reasoning: fewer steps between an intention and an action.
+
+**Three static shortcuts** on a long press of the app icon, built with the androidx.core shortcuts APIs: `Quick capture`, `Start focus`, `Today's Pulse`. Each opens the destination its matching widget opens, so quick capture lands in the unfiled inbox and today's Pulse opens the Pulse surface in whatever state it is in, including its ambient state on a day the engine stayed silent. **Static, not dynamic.** A shortcut list that reordered itself around what the user did most would be a measurement of the user, and it would be one they never asked for.
+
+**One quick settings tile** that starts or ends a focus session from the notification shade, on the platform `TileService`, reflecting live session state. Tapping it with no active item anywhere opens the chooser rather than failing, which is the same degradation the Focus chip already performs in section 10.
 
 ---
 
@@ -548,6 +645,8 @@ A Daylight screen, rows on canvas under sentence-case sideheads, **no card conta
 **Appearance.** Three real-miniature tiles per `design-v3.md` 10.10. System is the default. A line below noting that Focus, Pulse and Report are always dark by design.
 
 **Your data.** `Export everything`, one JSON file via the Storage Access Framework, showing the last export date. `Import from a file`, validating schema version and integrity before a transactional full replace with a typed confirmation. `Erase all data`, per 14.2.
+
+**Pending from Addendum 01.** Two rows join this screen and one grows. Under **Focus**, `Five minute warning`, off by default, in phase 4 (14b.5). Under **Appearance**, `Calm mode`, following the OS reduce motion setting by default, in phase 3b (14b.12). Under **Your data**, export gains an optional password and a plain statement of what an unencrypted file is, import gains full pre validation and a choice of replace or merge, and one quiet line appears when the last export is older than 30 days and real data exists, in phase 11 (14b.7).
 
 **Privacy.** `Privacy policy` opening the in-app sheet with the text in 14.3. `Open source licenses` listing AGPL-3.0 for the app, SIL OFL for Newsreader and Hanken Grotesk, Apache 2.0 for Material Symbols and AndroidX. Then the permission card:
 
@@ -592,6 +691,8 @@ App mark at 62dp on `#141A2E`, name in displayTitle, `Version [x] · by Kamsiob`
 
 > One active item per area. Everything else waits its turn. No account, no cloud, no subscription, no ads, and nothing collected. Your history lives in one file on this phone until you delete it.
 
+**Pending, phase 13.** One sentence sits under that paragraph, required verbatim by 16.11 and in the store listing at the same time: `Clarity Now is a productivity tool. It does not provide medical advice, diagnosis or treatment.`
+
 **Then a quiet link list under an `Elsewhere` sidehead.** Each row: an outlined icon at 50 percent opacity, the label, and the destination trailing in caption inkTertiary.
 
 | label | trailing | destination |
@@ -613,6 +714,203 @@ Appears at the bottom of **Settings and About only.** A rounded card with a warm
 - Button: filled `#B45309`, label exactly `Support this work`, opening https://buymeacoffee.com/kamsiob
 
 **Copy rules, absolute.** No coffee or caffeine references anywhere, in the label or the body. No framing anchoring support to a small amount. No begging, no urgency, no counter, no goal bar, no `if you enjoy`, no exclamation marks. Never a dialog, never an interstitial, never after completing a task, never more than these two placements.
+
+---
+
+## 14b. Executive function support
+
+**Everything in this section is pending. None of it is built.** It comes from `docs/addenda/ADDENDUM_01_EXECUTIVE_FUNCTION.md`, a directive dated August 2026 produced from research on serving people with executive function challenges: ADHD, autism, brain fog from long COVID or ME/CFS, cognitive changes in perimenopause, TBI recovery, depression and anxiety, and burnout. It is written here as behavior and data because that is what this document is the authority on. The visual, motion and language halves are in `design-v3.md`. The reasoning, the market evidence, and the four things deliberately ruled out are in DECISIONS.md.
+
+**It is numbered 14b rather than 15** because sections 15 through 19 are cited by number from the source, the tests, `CLAUDE.md` and the other documents in the set, and renumbering them would break those citations silently. The project already uses this form for work inserted after a plan was set, as phase 9b and phase 3b do in section 19.
+
+**None of this is a rebuild.** The core mechanic is unchanged: one active item per area, everything else waits, complete the active item and the next is promoted. What follows does two things. It removes decisions from the path between an intention and a record, and it removes measurement from the path back after an absence.
+
+### 14b.1 Capture without a decision, the unfiled inbox
+
+**Pending, phase 3b.** From Addendum 01 4a.
+
+**Capture must never require a decision.** Adding an item does not require choosing an area. `ITEM_ADDED` is written with a null `areaId`, the item exists, and the thought is out of the person's head, which is the entire job of the capture path. Filing is a separate, later, optional act.
+
+**What an unfiled item may do.** It can be edited (`ITEM_EDITED`), deleted (`ITEM_DELETED`, with the same 5 second undo as anywhere else), and filed (`ITEM_FILED`).
+
+**What it may not do.** It cannot be `ACTIVE` and it cannot be `COMPLETED`. Completing an unfiled item is not offered anywhere, in the same way and for the same reason that completing a queued item is not offered in 8.2: the rule that only one thing is active at a time is the philosophical work this app does, and an inbox that could be worked straight through would be a second, unlimited queue with no area attached to it.
+
+**Filing.** `ITEM_FILED` carries the target area, an `orderKey` and an `areaNameSnapshot`. If the target area has no active item, filing promotes it in the same transaction, `ITEM_FILED` then `ITEM_PROMOTED`, matching what 8.2 does on add. The filing sheet states where the item will land before the user commits, exactly as the add sheet does.
+
+**The inbox is reachable from the Areas screen** and its count is shown quietly. **Never a badge, never a red dot, never a color that reads as an alert.** An inbox that nags is a worse place to put a thought than a notes app, and a person who has learned that capture produces a scolding number stops capturing.
+
+**An unfiled item is invisible to the engine.** It is outside every area scoped invariant in 6.2, outside every fact the engine extracts, never counted in a queue length, and never named in an observation. It is in the Trail, because `ITEM_ADDED` and `ITEM_FILED` are user activity and the Trail is the record of what happened.
+
+**One question this leaves open, and it is not settled here.** 8.4 says that at zero areas the FAB creates an area rather than an item, and that behavior is shipped and is in the checklist in section 17. Capture into the inbox works with no areas at all, and the Quick Capture widget in 13.3 depends on that. So at zero areas the FAB has two defensible meanings. The recommendation on the record is that capture always means capture, and that the Areas empty state carries its own create action, which removes a mode rather than adding one. **Until that is answered, 8.4 stands as written**, and phase 3b does not change it.
+
+### 14b.2 The first step
+
+**Pending, phase 3b.** From Addendum 01 4b.
+
+One optional line on an item: **the first physical action.** Shown on the active item card at caption weight when present, absent from the card entirely when not set. Never required, never prompted for, never inferred, and deletable at any time.
+
+It is the deterministic answer to the thing an AI task breakdown would be reached for, which is why DECISIONS.md rules that out and this in. The user writes the small action; the app stores it and shows it at the moment it is needed, which is the moment before starting, on the card and on the First Step widget in 13.3.
+
+Carried on `ITEM_ADDED` as `firstStep`, and edited through `ITEM_EDITED` like the title and the note.
+
+### 14b.3 The time estimate
+
+**Pending. Capture in phase 3b, observation in phase 8.** From Addendum 01 4c.
+
+An optional estimate in minutes on an item, carried on `ITEM_ADDED` as `estimateMinutes` and changed afterward with `ITEM_ESTIMATED`, which records the previous and the new value so a changed estimate does not edit history.
+
+**The actual comes free.** The Trail already records when an item became active and when it completed, so nothing new is measured and nothing new is asked for.
+
+**Never a required field. Never a countdown against the item.** An estimate that turns into a visible timer on the card is a deadline the person set for themselves in a hopeful moment and then has to watch expire. What the estimate is for is 14b.8, and what it may never say is also 14b.8.
+
+### 14b.4 Re-entry after an absence
+
+**Pending. Detection in phase 3b, the surface in phase 6.** From Addendum 01 4d.
+
+**This is the highest stakes screen in the app.** It is also the one screen nobody building or testing the app daily will ever see, which is exactly why it has to be specified rather than discovered.
+
+This audience leaves and comes back. A fortnight of nothing is not a failure of the user. It is what a fluctuating condition, a bad month, a hospital stay or an ordinary overwhelming stretch looks like from inside the data. The app has one chance to be the thing that did not keep score while they were gone, and one screen in which to spend it.
+
+**Detection.** `APP_OPENED` carries a date key and nothing else, written at most once per calendar day on the first foreground. The gap is the number of calendar days between the newest `APP_OPENED` before today's and today, read from the log through `TrailQueries` and never from a DataStore timestamp, so a restored backup or a second device reaches the same answer. **A gap of 14 or more days puts the app into the re-entry state**, on the foreground that writes today's `APP_OPENED` and only then, so it appears at most once per calendar day and in practice once per gap. It does not apply before onboarding is complete or when no earlier `APP_OPENED` exists.
+
+**What the re-entry state does.**
+
+- It offers to **keep everything exactly as it was**, and that is the default and the larger of the two choices
+- It offers, second and quieter, to clear the active items and start fresh. **Clearing demotes**: each active item returns to the head of its own queue with `ITEM_QUEUED`. Nothing is deleted, nothing is completed, and the wording says so. The obvious implementation of a fresh start is a delete, and a delete of a person's own work on the day they came back is the single most expensive thing this app could do
+- It is dismissed by either choice and is not shown again for that gap
+
+**What it must never do.**
+
+- **It does not state the length of the gap.** Not in days, not in weeks, not as a date, not as `since March`
+- **It does not count anything.** Not what waits, not what was completed before, not how many areas went idle
+- **It does not ask where the user has been**, in any wording, including a warm one
+- **Pulse generates nothing for the first two days back.** The engine returns Silent for those two date keys and writes no `PULSE_GENERATED`, so the days are IDLE, the chip shows no dot and no reminder is posted. These suppressed days sit outside the Pulse silence floor in section 17, in both the numerator and the denominator, because the floor measures how often the engine chose not to speak and this is not a choice it made
+- **The Report suppresses every decline, neglect and gap observation for a full week back.** For seven days from the re-entry date every rule in those families is unavailable to selection and the next ranked candidate is taken instead. The report is shorter when nothing else qualifies, because 11.4 forbids padding a section to reach a minimum. The same suppression applies to the Momentum headline and the Areas banner, which read from the same catalog
+- **It never appears alongside the tutorial, a conflict card, or anything else that wants the first moment.** It is the first screen and it is alone. A conflict card from 6.3 waits behind it rather than being dropped, because a conflict is never silent
+
+**A returning user must never be greeted by a measurement of their absence.** If a sentence, a number, a dot row or an empty chart on the first screen back can be read as a report on how long they were gone, it is wrong, whatever else is true about it.
+
+### 14b.5 Focus sessions: ending early, adding time, the transition warning
+
+**Pending, phase 4.** From Addendum 01 4e, 4f and 4g. Section 10 is otherwise unchanged.
+
+**Ending early is a success state.** A session ended early is a **completed short session**, and the completion screen says so in the same shape a natural completion uses, with the same actions. Fourteen minutes is fourteen minutes. The rule in 10 that discards a session under 60 seconds silently stands, because that is a mis-tap rather than a short session.
+
+**The word `abandoned` appears nowhere a person can see it**, including the Trail, every accessibility label, and the export file in 14b.7. The Trail already reads `Stopped after N minutes`. The event type itself was renamed from `FOCUS_ABANDONED` to `FOCUS_ENDED_EARLY`, because a raw type name is visible in a readable export and, more importantly, in `docs/EVENT_FORMAT.md`, which a second implementation is built from. DECISIONS.md C6.
+
+**Adding time.** An `Add 10 minutes` control extends the running session without resetting it and without starting a new one. It writes `FOCUS_EXTENDED` with the added seconds and the new planned total, and the persisted end timestamp is recomputed so the session still survives process death per section 10. It is repeatable and uncapped. The reducer folds extensions, so a session's planned duration is the newest `newPlannedSeconds` rather than the value in `FOCUS_STARTED`, and every later reader, the completion path, the Trail, the engine and the widget, reads the folded value. **Ending a timer should not have to break flow.** It is reachable from the focus screen, from the Live Update and from the ongoing notification.
+
+**The transition warning is optional and off by default.** A quiet five minutes left signal before a session ends, controlled in Settings. **Never a full notification unless the app is backgrounded.** It does not fire when fewer than five minutes remain at the moment the session starts or the moment it is switched on, which would make it fire immediately and teach the person to distrust it. Switching from one task to another is the expensive act for this audience, and a warning is the difference between a transition and an interruption. It is off by default because an unannounced signal is also an interruption.
+
+### 14b.6 The Live Update
+
+**Pending, phase 4, extended in phase 12.** From Addendum 01 Step 5. The surface itself is specified in `design-v3.md`.
+
+A focus session is exactly the user initiated, start to end, time bound task that Android's Live Updates exist for. On a Pixel it surfaces as a status bar chip that expands, and on Samsung devices in the Now Bar. **For an audience with time blindness, the session being visible outside the app is not a nicety, it is the point.**
+
+**Use the platform API, not a custom notification dressed to look like one.** `Notification.ProgressStyle`, introduced in Android 16, API 36. Declare `POST_PROMOTED_NOTIFICATIONS`. Check `NotificationManager.canPostPromotedNotifications()` before posting and degrade silently when it is false. Verify the current API details before implementing, per 3.3.
+
+**What it shows.** The area name, the item title, and the remaining time as a depleting track. A single track is the likely right answer; use segments or points only if they genuinely add clarity. When the transition warning is enabled, the track changes state at the five minute mark.
+
+**Actions, two at most.** `Add 10 min` and `End`. Both work without opening the app. Tapping the body opens the focus screen.
+
+**Degradation is required, not optional.** Below API 36, or where promoted notifications are unavailable or denied, fall back to the ongoing notification with a chronometer that section 10 already specifies. The app is fully usable with no Live Update at all. **Never gate a feature behind it and never tell the user their device is missing out.**
+
+**This is the only Live Update the app will ever post.** Not for Pulse, not for the Report, not for a reminder, not for anything the user did not just start. It is silent, it is dismissed when the session ends, it never re-engages, and it is not a marketing surface.
+
+### 14b.7 Backup, export and import, as a safety feature
+
+**Pending, phase 11.** From Addendum 01 4h. This replaces the two sentence description of export and import in 14.1 with the requirements they have to meet.
+
+Because everything is local, **the user's data has exactly one copy unless they make another**. Export is a safety feature, not a convenience feature, and it is treated with that seriousness. Everything else in this app is recoverable by rebuilding from the log. This is the one path where a mistake is permanent.
+
+**Export.**
+
+- Writes the **entire** database, every event and all derived state, to one portable file through the Storage Access Framework
+- Offers an **optional password**. When set, the file is encrypted with a key derived from the password by a modern KDF at its current recommended parameters, verified at build time per 3.3, never at the parameters written in a document. When not set, the file is readable, **and the export screen says so plainly** rather than implying a safety it does not provide
+- The file carries a schema version, a creation date, an item count, an event count, and a checksum
+- The export path runs a full rebuild from event zero as a correctness check, which 6.4 already requires of it
+
+**Import.**
+
+- Validates schema version, checksum and the internal integrity of the event log **before touching anything**. Nothing is written until validation passes
+- A corrupt, truncated or foreign file is refused with **one plain sentence saying what was wrong**. That sentence is about a file rather than about the person's own data, so it is a fixed string in `strings.xml` and not a corpus line. It is one of the few places rule 11.1 does not reach, and the reason it does not is worth stating rather than leaving to be rediscovered
+- Offers **replace or merge**. Replace is one transaction. Merge is the deterministic event union the sync design already specifies in 6.3 and section 7: union by event id, order by `(lamport, originId)`, advance the local lamport to `max(local, seen) + 1`
+- **A wrong password fails clearly and destroys nothing**
+
+**Tests, both required.** One performs a full round trip, encrypted and unencrypted, and asserts byte identical state. One feeds it deliberately corrupted files, at minimum a truncation, a flipped bit inside the payload, a wrong checksum, an unknown schema version, a foreign JSON document and a wrong password, and asserts a clean refusal with the database unchanged.
+
+**The reminder, and its limits.** Settings shows the date of the last export, from `lastExportAt`. If more than 30 days have passed **and** real data exists, one quiet line appears **in Settings only**. Never a notification, never a nag, never a badge, never a card on Areas.
+
+### 14b.8 Estimates are calibration, never error
+
+**Pending. The facts and the veto in phase 8, the language in phase 9.** From Addendum 01 7a.
+
+**Hard rule, enforced in the validator: no rendered sentence may state a delta between an estimate and an actual.**
+
+| | |
+|---|---|
+| permitted | `Things you estimate at an hour tend to take about three.` |
+| forbidden | `You underestimated by two hours.` |
+| forbidden | `You were off by 140 percent.` |
+
+Only ratios and tendencies. The difference is not politeness and it is not tone. A ratio is a description of how this person's estimates map onto their days, which is useful and which they can do something with. A delta is a score against a target they set themselves, and time blindness is the reason the estimate was wrong in the first place, so the delta measures the symptom and reports it as a mistake.
+
+**Floor.** No estimate observation may fire until **at least five completed items carry an estimate inside the window the sentence describes**, and the count travels as a `FactRef` so the validator re-reads it, per 11.4.
+
+**A new observation family** is authored in phase 9 with the rest of the corpus, and **a veto test constructs the forbidden form and proves it cannot render**, which is the same shape as the Report integrity vetoes in 12.3 and is listed in section 17.
+
+### 14b.9 Capacity aware decline detection
+
+**Pending, phase 8.** From Addendum 01 7b.
+
+**This is a correctness fix, not politeness.**
+
+A fluctuating condition looks identical to decline in the data. Both are a fall in completions, a rise in idle days, an area going quiet. Without this check, the app will tell someone with a cyclical or relapsing condition that they are deteriorating, **on a fixed schedule, forever, and it will be technically accurate every time**. Every individual report passes its integrity rules. The claim the sequence makes is still false, because the shape it is reading is a cycle and it has read only half of one.
+
+**The rule.** Before any decline, neglect or fading family may fire, the engine asks whether this shape has occurred before in this user's history for this subject. If a comparable dip has happened before, **it is a rhythm, not a decline**, and a different family fires with different language.
+
+This needs a new fact, rules for both branches, and tests for both. The fact's definition, what makes a dip comparable in depth and in duration, belongs in `CLARITY_LOGIC_ENGINE.md` with the other fact definitions; what this document requires is that the fact exist, that it gate those families rather than merely re-word them, and that the gate be reachable in a test.
+
+**The test that proves it** is a persona whose activity is cyclical across a simulated year, who must receive no decline, neglect or fading observation at all, because every dip they have has a precedent. It is listed in section 17 beside the non-compliance test in 9b, which it resembles: both assert that a whole year of output contains no sentence of a given kind.
+
+### 14b.10 Tone, and the first weeks
+
+**Pending. The tone pass in phase 9, the honest empty states in phases 6, 7 and 8.** From Addendum 01 7c and 7d.
+
+**Rejection sensitivity is common in this population, and an observation read as a verdict is how someone deletes the app.** The corpus is where this is fixed, so the work is a corpus batch presented for approval like any other, per 11.4. Four changes:
+
+- **Widen the `unflattering` flag** to cover every rule concerning a decline, a gap, a neglect, an imbalance or an unmet expectation. The enumeration this is checked against lives in `CLARITY_LOGIC_ENGINE.md` 7.4 and is amended with it, because section 17 asserts the two match
+- **Author the missing `NEUTRAL_AGENT` variants.** Any family that can now fire unflattering at a stage where it has no neutral agent variant needs them written
+- **Soften `pt.gone`.** `Personal is not on pause. It is stopped.` is the strongest line in the corpus for a general reader and the worst line in it for this one. The flagship becomes a factual form. The pointed version survives only where the user has previously indicated that the area is deliberately paused, which means it needs a fact with a real source behind it, and a Pulse response is the only source the app has. **If no response can supply that fact, the pointed variant does not ship**, because inferring that someone meant to stop is the inference this whole section exists to prevent
+- **Ship the `hardStretch` family** with every constraint already specified for it. Nothing in the corpus can currently acknowledge that a hard month was hard
+
+**The first weeks are honest.** The reflective layer needs history, so it is emptiest exactly when a person is deciding whether to keep the app. Every reflective surface states plainly what it needs and roughly when it becomes useful, in the shape of `Patterns show up after about three weeks.` or `This fills in as the days do.` **Never an empty chart. Never a zero with no explanation.** These sentences are about the person's own data, or the absence of it, so they are corpus lines from the edge state sections of `CORPUS_2_REPORT.md`, reached through the engine like everything else. They are not `strings.xml` copy, and rule 11.1 has no exception here.
+
+### 14b.11 First run without a decision
+
+**Pending, phase 10.** From Addendum 01 8a and 8b. Section 13.1 is otherwise unchanged.
+
+**The zero decision path.** Onboarding beat 2 asks for two to four area names plus a color each, which is up to twelve decisions demanded from people whose central difficulty is deciding. Beat 2 gains a **`Just start`** option offered as a genuine equal alternative, **not buried, not a text link under the real button**. It creates one area named `Today` with the color the mood walk in 8.1 yields first, writes it as a real `AREA_CREATED` exactly as beat 3 would, and drops the user straight into adding their first item. Areas, names and colors become things discovered later, which is the order most people would have chosen anyway.
+
+**Announce Pulse before it appears.** One line at the end of onboarding: once a day, one question, one tap, and it can be turned off in Settings. **Predictability matters enormously to autistic users, and interface behavior that arrives unannounced is a real cost**, not a delightful surprise. This line is fixed copy about how the app works rather than an observation about the person, so it lives in `strings.xml`, per 11.2. This is the exact kind of sentence a session will be tempted to route through the engine, and it must not be.
+
+### 14b.12 What this adds to Settings and to DataStore
+
+**Pending, phases 3b, 4 and 11.**
+
+Two per-device keys join the list in 5.4, and neither is engine state, so neither violates the rule that nothing the engine reads may live in DataStore.
+
+| key | default | phase | row |
+|---|---|---|---|
+| `calmMode` | follow the OS reduce motion setting | 3b | Appearance |
+| `transitionWarningEnabled` | false | 4 | Focus |
+
+**Calm mode** is a Settings toggle in addition to and independent of the OS reduce motion setting, which `design-v3.md` 8.3 already honors. It reduces motion to crossfades, reduces the saturation of washes and accents, disables the staggered list entrance and the breathing glow, and **applies to the widgets and the Live Update as well as to the app**. `design-v3.md` owns every value it changes. It is what makes Material 3 Expressive safe for this audience rather than overwhelming: **ship the expressive direction and the exit.**
+
+Phase 3b also carries one motion change from Addendum 01 8e that has no setting behind it: **the staggered list entrance fires on the first open of a screen per session, not on every return to a tab.** An entrance animation on a screen opened twenty times a day stops being an entrance and becomes noise.
+
+**Export's rows** grow as 14b.7 describes, in phase 11.
 
 ---
 
@@ -759,6 +1057,28 @@ The app must be created manually in Play Console and one build uploaded through 
 
 Developer name is **Kamsiob** under the **B7 Collective** organization account. Automation runs through the service account `kamsiob@kamsiob-503213.iam.gserviceaccount.com` in Google Cloud project `kamsiob-503213`, with the Android Publisher API enabled. A release build requires an upload keystore, which must be generated and stored outside the repository per 16.3.
 
+### 16.11 Positioning and the store listing
+
+**Pending, phase 13.** From Addendum 01 Step 10, recorded now because the words chosen here constrain copy written long before the listing is, and because this is the one mistake in the project that gets the app removed rather than reviewed.
+
+**Use the words people actually search for. Do not make medical claims.** These are different things, and the distinction is exactly what Google Play's health policy turns on. **A claim triggers it. A keyword does not.**
+
+**Permitted and encouraged**, in the long description and the keywords:
+
+> ADHD, autism, executive function, executive dysfunction, task paralysis, time blindness, brain fog, neurodivergent, overwhelm, procrastination, focus, one thing at a time
+
+Phrasing of this shape: `Built for people who find long lists paralyzing. Designed with ADHD, autism and brain fog in mind.`
+
+**Forbidden**, anywhere in the listing, in app copy, or in anything published about the app:
+
+> treats, manages, cures, therapy, therapeutic, clinically proven, medically, symptoms, diagnosis, disorder used as a claim, and any statement that the app improves or reduces anything clinical
+
+**Required, verbatim, in the listing and in About:**
+
+> Clarity Now is a productivity tool. It does not provide medical advice, diagnosis or treatment.
+
+**Complete Google Play's Health Apps Declaration.** With no data collection, no account, no health data access and no network permission, this app should certify cleanly, and the Data Safety answers in 14.3 already say so. **Verify the current requirements in Play Console rather than trusting this note.** The policy moved through 2025 and added medical device labeling in January 2026. 3.3 applies to a policy exactly as it applies to a library version.
+
 ---
 
 ## 17. Verification Checklist
@@ -793,6 +1113,18 @@ Developer name is **Kamsiob** under the **B7 Collective** organization account. 
 - Silence floors: Pulse 8 to 25 percent of days, guidance at least 15 percent of reports
 - Simulator: a full year dumps without a crash and without a repeated variant inside 90 days
 
+**Executive function support, per 14b. Each becomes live when its phase lands**
+- **No rendered sentence states a delta between an estimate and an actual.** A veto test constructs the forbidden form and asserts it cannot render
+- No estimate observation fires below five completed items carrying an estimate inside the window the sentence describes
+- **A persona whose activity is cyclical across a simulated year receives no decline, neglect or fading observation**, because every dip they have has a precedent
+- **A re-entry persona receives no Pulse for two days and no decline, neglect or gap observation for a week**, and no surface states the length of the gap, counts anything, or asks where they were
+- **The word `abandoned` reaches nothing a person can see**, including the Trail and every accessibility label. Whether it also has to be absent from the export file follows the open naming decision in 5.2
+- Export and import round trip, encrypted and unencrypted, to byte identical state, and a corruption suite refuses cleanly and leaves the database unchanged
+- An unfiled item is never `ACTIVE`, never `COMPLETED`, never counted in an area's queue, and never named by the engine
+- **`APP_OPENED` is excluded from `isUserActivity`**, from the Trail, and from every day header count
+- **No widget reads a corpus or runs the engine.** Automated over the imports of the `widget` package
+- Calm mode is honored in the app, in every widget and in the Live Update, and the staggered entrance fires once per session per screen
+
 **Manual**
 - Promotion animation clean with no double text
 - Focus session survives process kill
@@ -813,39 +1145,45 @@ Developer name is **Kamsiob** under the **B7 Collective** organization account. 
 
 ## 18. Out of Scope for v1
 
-Sync of any kind, the data model is ready but the transport is not built. Any networking. Any permission beyond notifications. Any account. Wear OS. Tablet layouts, though the phone layout must not break. Locales beyond English. The four deferred widgets. Home screen shortcuts. Macrobenchmark harnesses. Analytics of any kind, permanently.
+Sync of any kind, the data model is ready but the transport is not built. Any networking. Any permission beyond notifications, which includes `POST_PROMOTED_NOTIFICATIONS` and therefore permits the Live Update in 14b.6. Any account. Wear OS. Tablet layouts, though the phone layout must not break. Locales beyond English. Macrobenchmark harnesses. Analytics of any kind, permanently.
+
+**Permanently out of scope, and now for a second reason.** Real time social presence of any kind, including body doubling, because it needs networking and would cost the no internet permission guarantee, which is this app's strongest claim. AI task breakdown, per non-negotiable 5; the first step field in 14b.2 is the deterministic version of the same idea. Streaks, badges, XP, levels, confetti and celebration, which were already forbidden by the design and are now also a documented abandonment trigger for this audience. DECISIONS.md holds the full reasoning for all four.
 
 ---
 
 ## 19. Build Order
 
-**Phase 1. Foundations.** Scaffold. Theme: every token, type scale, shape, `ClarityMotion`, `ClarityHaptics`, reduce motion local. Event log schema, payload serialization, order keys. Reducer and all invariants. Replay test harness and golden fixture. `docs/EVENT_FORMAT.md`. **Git configured with the identity in 16.1, repo created public, everything committed.**
+**This is the single place a session reads to know what is next**, so every item Addendum 01 adds is written into the phase that owns it rather than left in the addendum. A phase marked done here is shipped and installed. `docs/BUILD_STATE.md` is the live record of what is half done, what is known broken and what the last session left behind; this list is the plan.
 
-**Phase 2. Core mechanics.** Areas, items, queue. Repository write path, cache projection. Detail sheet, add item, edit, the two stage color picker, archive, tombstoned delete, drag reorder, **swipe gestures with state gating and non-swipe fallbacks**, undo snackbar. The Areas screen with the promotion animation.
+**Phase 1. Foundations. Done.** Scaffold. Theme: every token, type scale, shape, `ClarityMotion`, `ClarityHaptics`, reduce motion local. Event log schema, payload serialization, order keys. Reducer and all invariants. Replay test harness and golden fixture. `docs/EVENT_FORMAT.md`. **Git configured with the identity in 16.1, repo created public, everything committed.**
 
-**Phase 3. Trail.** Queries facade, screen, filters, day grouping, clustering, pagination.
+**Phase 2. Core mechanics. Done.** Areas, items, queue. Repository write path, cache projection. Detail sheet, add item, edit, the two stage color picker, archive, tombstoned delete, drag reorder, **swipe gestures with state gating and non-swipe fallbacks**, undo snackbar. The Areas screen with the promotion animation.
 
-**Phase 4. Focus.** Sessions, process death persistence, ongoing notification, completion flow, the indigo surface and its motion.
+**Phase 3. Trail. Done.** Queries facade, screen, filters, day grouping, clustering, pagination.
+
+**Phase 3b. Executive function retrofit.** Pending, and next. **It exists because Addendum 01 assigned six of its items to phases 1 and 2, and both are closed and shipped**, and because phase 4 and phase 6 depend on parts of it. It carries: capture with no area and the unfiled inbox (14b.1), the first step field (14b.2), the estimate on capture (14b.3), re-entry detection, meaning `APP_OPENED`, the gap query and the `isUserActivity` exclusion, with the surface deferred to phase 6 (14b.4), calm mode as a setting honored everywhere after it (14b.12), and the staggered entrance fired once per screen per session. Trail rows for the new event types, and none for `APP_OPENED`. It assumes the Addendum 01 event schema in 5.2 is already in the log, landed in the schema commit that also settles issue #19.
+
+**Phase 4. Focus.** Sessions, process death persistence, ongoing notification, completion flow, the indigo surface and its motion. **Plus Addendum 01:** early ending as a completed short session, `Add 10 minutes` writing `FOCUS_EXTENDED`, the transition warning off by default (14b.5), and the Live Update on `Notification.ProgressStyle` with its required silent fallback (14b.6).
 
 **Phase 5. Engine skeleton and simulator.** Fact extraction, rule catalog structure, selection, realization, validation. **The simulator in `devtools` before any corpus work.** Roughly 40 rules and 150 sentences to prove the shape end to end.
 
-**Phase 6. Pulse.** Generation lifecycle per 11.3, the sheet, ambient mode, history, reminders.
+**Phase 6. Pulse.** Generation lifecycle per 11.3, the sheet, ambient mode, history, reminders. **Plus Addendum 01:** the re-entry surface and the two day Pulse silence after a return (14b.4), and an empty state that says what it needs and roughly when it becomes useful (14b.10).
 
-**Phase 7. Momentum.** All five blocks plus the empty state.
+**Phase 7. Momentum.** All five blocks plus the empty state. **Plus Addendum 01:** the same honest first weeks treatment on every block that needs history, and no empty chart anywhere (14b.10).
 
-**Phase 8. Snapshots and Report.** Week snapshots doubling as checkpoints, the integrity layer with tests written first, the screen with all four treatments including the week ribbon and the pattern grid break, history, regenerate, copy.
+**Phase 8. Snapshots and Report.** Week snapshots doubling as checkpoints, the integrity layer with tests written first, the screen with all four treatments including the week ribbon and the pattern grid break, history, regenerate, copy. **Plus Addendum 01:** capacity aware decline detection and its cyclical persona test (14b.9), the estimate calibration facts, their floor and the delta veto (14b.8), and the week long suppression after a return (14b.4).
 
-**Phase 9. Corpus.** Grow toward the sizing targets in batches of forty, one family at a time, judged against simulator output, presented for approval.
+**Phase 9. Corpus.** Grow toward the sizing targets in batches of forty, one family at a time, judged against simulator output, presented for approval. **Plus Addendum 01:** the tone pass, meaning the widened `unflattering` enumeration, the missing `NEUTRAL_AGENT` variants, the softened `pt.gone` flagship and the `hardStretch` family, plus the estimate observation family in ratio and tendency form only (14b.8, 14b.10).
 
 **Phase 9b. Guidance.** Cue fact extraction with confidence thresholds. Layer 6 and its composition rules. Plan events, the nominal offer frame, first-person storage on accept, the explicit decline. Non-evaluative follow-through by priority boost. **The non-compliance test written before the follow-through code, not after.**
 
-**Phase 10. First run.** Onboarding four beats and the tutorial.
+**Phase 10. First run.** Onboarding four beats and the tutorial. **Plus Addendum 01:** the `Just start` path at equal standing on beat 2, and the line that announces Pulse before it ever appears (14b.11).
 
-**Phase 11. Settings, About, data.** Every group, the appearance miniatures, the privacy sheet, licenses, the permission card, export, import, erase with the reset test, the links, the support block.
+**Phase 11. Settings, About, data.** Every group, the appearance miniatures, the privacy sheet, licenses, the permission card, export, import, erase with the reset test, the links, the support block. **Plus Addendum 01:** export as a safety feature, meaning the optional password and its KDF, the checksum and full pre validation, replace or merge, the round trip and corruption tests and the quiet last export line (14b.7), and the disclaimer sentence in About that 16.11 requires.
 
-**Phase 12. Widgets and notifications.** Next Up and All Areas, the snapshot writer, the refresh job, channels and contextual permission.
+**Phase 12. Widgets and notifications.** Six required widgets and two optional ones per 13.3, the snapshot writer, the refresh job, real preview images, channels and contextual permission. **Plus Addendum 01:** three static app shortcuts and the quick settings tile (13.5), and the phase 12 extension of the Live Update (14b.6).
 
-**Phase 13. Ship.** Baseline Profile, R8, accessibility pass, the full checklist, real screenshots, README, release.
+**Phase 13. Ship.** Baseline Profile, R8, accessibility pass, the full checklist, real screenshots, README, release. **Plus Addendum 01:** the store listing and its keywords, the forbidden claim words, the required disclaimer and the Play Health Apps Declaration, all per 16.11.
 
 **The follow-through in phase 9b is the last thing built and the first thing removed** if it reads as supervision when tested. That reservation was formally registered by the review panel and it stands.
 

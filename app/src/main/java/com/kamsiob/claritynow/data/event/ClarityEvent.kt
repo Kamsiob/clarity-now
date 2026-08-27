@@ -31,6 +31,15 @@ data class ClarityEvent(
         /**
          * Present from the first event ever written. A log that starts without a
          * version cannot be migrated later without guessing.
+         *
+         * **Still 1 after the Addendum 01 schema commit, deliberately.** A version
+         * exists so that a reader can tell two shapes apart and accept both, and
+         * nothing has to. Every field that commit added is optional with a null
+         * default, `ClarityEventJson` decodes with `ignoreUnknownKeys`, and an
+         * absent key reads as the default, so a log written by an earlier build
+         * replays unchanged. The one type that was renamed, FOCUS_ABANDONED, is
+         * written by a phase that has not shipped, so no log anywhere contains it.
+         * Moving the number with nothing to distinguish would spend the signal.
          */
         const val SCHEMA_VERSION = 1
 
@@ -53,7 +62,9 @@ data class ClarityEvent(
                 ClarityEventType.AREA_UNARCHIVED -> payload is AreaUnarchived
                 ClarityEventType.AREA_DELETED -> payload is AreaDeleted
                 ClarityEventType.ITEM_ADDED -> payload is ItemAdded
+                ClarityEventType.ITEM_FILED -> payload is ItemFiled
                 ClarityEventType.ITEM_EDITED -> payload is ItemEdited
+                ClarityEventType.ITEM_ESTIMATED -> payload is ItemEstimated
                 ClarityEventType.ITEM_QUEUED -> payload is ItemQueued
                 ClarityEventType.ITEM_PROMOTED -> payload is ItemPromoted
                 ClarityEventType.ITEM_COMPLETED -> payload is ItemCompleted
@@ -62,13 +73,15 @@ data class ClarityEvent(
                 ClarityEventType.ITEM_DELETED -> payload is ItemDeleted
                 ClarityEventType.FOCUS_STARTED -> payload is FocusStarted
                 ClarityEventType.FOCUS_COMPLETED -> payload is FocusCompleted
-                ClarityEventType.FOCUS_ABANDONED -> payload is FocusAbandoned
+                ClarityEventType.FOCUS_ENDED_EARLY -> payload is FocusEndedEarly
+                ClarityEventType.FOCUS_EXTENDED -> payload is FocusExtended
                 ClarityEventType.PULSE_GENERATED -> payload is PulseGenerated
                 ClarityEventType.PULSE_ANSWERED -> payload is PulseAnswered
                 ClarityEventType.REPORT_GENERATED -> payload is ReportGenerated
                 ClarityEventType.PLAN_OFFERED -> payload is PlanOffered
                 ClarityEventType.PLAN_ACCEPTED -> payload is PlanAccepted
                 ClarityEventType.SETTING_CHANGED -> payload is SettingChanged
+                ClarityEventType.APP_OPENED -> payload is AppOpened
             }
 
         fun typeOf(payload: EventPayload): ClarityEventType = when (payload) {
@@ -80,7 +93,9 @@ data class ClarityEvent(
             is AreaUnarchived -> ClarityEventType.AREA_UNARCHIVED
             is AreaDeleted -> ClarityEventType.AREA_DELETED
             is ItemAdded -> ClarityEventType.ITEM_ADDED
+            is ItemFiled -> ClarityEventType.ITEM_FILED
             is ItemEdited -> ClarityEventType.ITEM_EDITED
+            is ItemEstimated -> ClarityEventType.ITEM_ESTIMATED
             is ItemQueued -> ClarityEventType.ITEM_QUEUED
             is ItemPromoted -> ClarityEventType.ITEM_PROMOTED
             is ItemCompleted -> ClarityEventType.ITEM_COMPLETED
@@ -89,13 +104,15 @@ data class ClarityEvent(
             is ItemDeleted -> ClarityEventType.ITEM_DELETED
             is FocusStarted -> ClarityEventType.FOCUS_STARTED
             is FocusCompleted -> ClarityEventType.FOCUS_COMPLETED
-            is FocusAbandoned -> ClarityEventType.FOCUS_ABANDONED
+            is FocusEndedEarly -> ClarityEventType.FOCUS_ENDED_EARLY
+            is FocusExtended -> ClarityEventType.FOCUS_EXTENDED
             is PulseGenerated -> ClarityEventType.PULSE_GENERATED
             is PulseAnswered -> ClarityEventType.PULSE_ANSWERED
             is ReportGenerated -> ClarityEventType.REPORT_GENERATED
             is PlanOffered -> ClarityEventType.PLAN_OFFERED
             is PlanAccepted -> ClarityEventType.PLAN_ACCEPTED
             is SettingChanged -> ClarityEventType.SETTING_CHANGED
+            is AppOpened -> ClarityEventType.APP_OPENED
         }
 
         /** Builds an event from a payload, deriving type and entityId. */

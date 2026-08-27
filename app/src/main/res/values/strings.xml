@@ -135,6 +135,9 @@
     <string name="trail_area_deleted">Deleted %1$s</string>
     <string name="trail_item_added">Added %1$s</string>
     <string name="trail_item_edited">Edited %1$s</string>
+    <string name="trail_item_filed">Filed %1$s in %2$s</string>
+    <string name="trail_item_estimated">Set a time estimate on %1$s</string>
+    <string name="trail_item_estimate_cleared">Removed the time estimate on %1$s</string>
     <string name="trail_item_queued">Queued %1$s</string>
     <string name="trail_item_promoted">Made %1$s active</string>
     <string name="trail_item_swapped">Swapped %1$s to the front</string>
@@ -146,6 +149,10 @@
     <plurals name="trail_focus_completed">
         <item quantity="one">Finished %1$d minute of focus on %2$s</item>
         <item quantity="other">Finished %1$d minutes of focus on %2$s</item>
+    </plurals>
+    <plurals name="trail_focus_extended">
+        <item quantity="one">Added %1$d minute to a focus session on %2$s</item>
+        <item quantity="other">Added %1$d minutes to a focus session on %2$s</item>
     </plurals>
     <plurals name="trail_focus_stopped">
         <item quantity="one">Stopped after %1$d minute on %2$s</item>

@@ -3,12 +3,21 @@ package com.kamsiob.claritynow.domain.replay
 import com.kamsiob.claritynow.data.event.ItemStatus
 
 /**
- * The five things that must be true of any state the reducer produces.
+ * The things that must be true of any state the reducer produces.
  * MASTER_BUILD_PROMPT 6.2.
  *
  * Checked in tests after every generated scenario, and available from the debug
  * menu against real data. Not checked on every write in a release build, because a
  * check that runs on the hot path either gets weakened or gets removed.
+ *
+ * **Every area scoped rule below is scoped to an area, which is not the tautology
+ * it sounds like.** Since Addendum 01 an item may have no area at all, and an
+ * unfiled item sits outside all of them: it is in no area's queue, it is not the
+ * one active thing anywhere, and it shares an order key space with nothing. 6.2
+ * states that qualifier in writing rather than by implication, because an invariant
+ * that is silently conditional is an invariant nobody can check. What replaces the
+ * area scoped rules for an unfiled item is one rule of its own: it is never ACTIVE
+ * and never COMPLETED. DECISIONS.md C8.
  */
 data class InvariantViolation(val rule: String, val detail: String)
 
@@ -53,10 +62,21 @@ object ClarityInvariants {
                     detail = "item ${item.id} is completed and still carries activeSince",
                 )
             }
-            if (item.areaId !in state.areas) {
+            val itemAreaId = item.areaId
+            // An unfiled item is not an item with a broken reference. It is the
+            // inbox, and the only thing to check about it is that it has not
+            // reached a state that only an area can give it.
+            if (itemAreaId == null) {
+                if (item.status == ItemStatus.ACTIVE || item.status == ItemStatus.COMPLETED) {
+                    violations += InvariantViolation(
+                        rule = "an unfiled item is never active or completed",
+                        detail = "item ${item.id} has no area and is ${item.status}",
+                    )
+                }
+            } else if (itemAreaId !in state.areas) {
                 violations += InvariantViolation(
-                    rule = "every item belongs to a known area",
-                    detail = "item ${item.id} references unknown area ${item.areaId}",
+                    rule = "every filed item belongs to a known area",
+                    detail = "item ${item.id} references unknown area $itemAreaId",
                 )
             }
             if (!OrderKey.isValid(item.orderKey)) {

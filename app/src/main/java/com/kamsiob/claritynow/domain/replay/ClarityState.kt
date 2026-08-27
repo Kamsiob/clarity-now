@@ -45,14 +45,52 @@ data class ClarityState(
             .filter { it.deletedAt == null && it.archived }
             .sortedWith(compareBy({ it.orderKey }, { it.id }))
 
+    /**
+     * Items with no area, oldest first. The inbox. Addendum 01 4a.
+     *
+     * The three area scoped projections below take a non null area id and compare
+     * it against a nullable field, so an unfiled item is excluded from all of them
+     * by the type system rather than by a filter someone has to remember. This is
+     * the one projection that can see them, and it is the reason a null is a better
+     * answer than a synthetic inbox area: there is exactly one place that knows
+     * about the state, instead of a special case in every enumeration of areas.
+     * DECISIONS.md C8.
+     *
+     * Ordered by [ItemState.orderKey] like every other list of items, so filing
+     * from the inbox and reordering inside it work the same way they do in a queue.
+     */
+    val unfiledItems: List<ItemState>
+        get() = items.values
+            .filter { it.areaId == null && it.deletedAt == null }
+            .sortedWith(compareBy({ it.orderKey }, { it.id }))
+
+    /**
+     * The one thing happening in an area, or null.
+     *
+     * An unfiled item can never be the answer, and not only because `null` never
+     * equals a real area id: an item with no area cannot be ACTIVE at all, which
+     * `ClarityInvariants` checks and the reducer refuses to produce.
+     */
     fun activeItemIn(areaId: String): ItemState? = items.values.firstOrNull {
         it.areaId == areaId && it.status == ItemStatus.ACTIVE && it.deletedAt == null
     }
 
-    /** The queue for an area, head first. */
+    /** The queue for an area, head first. Unfiled items are in no area's queue. */
     fun queueIn(areaId: String): List<ItemState> = items.values
         .filter { it.areaId == areaId && it.status == ItemStatus.QUEUED && it.deletedAt == null }
         .sortedWith(compareBy({ it.orderKey }, { it.id }))
+
+    /**
+     * Every live item in an area, active first, then the queue in order.
+     *
+     * The active item and the queued items share one ordering space: a promoted item
+     * keeps the key it had, and a demoted one rejoins the queue carrying a key from
+     * that same space. Anything choosing a new key for this area has to look at all
+     * of them, and looking at [queueIn] alone is how two items end up holding one
+     * key. See `OrderKeyCollisionTest`.
+     */
+    fun liveItemsIn(areaId: String): List<ItemState> =
+        listOfNotNull(activeItemIn(areaId)) + queueIn(areaId)
 
     fun completedIn(areaId: String): List<ItemState> = items.values
         .filter { it.areaId == areaId && it.status == ItemStatus.COMPLETED && it.deletedAt == null }
@@ -99,12 +137,28 @@ data class AreaState(
     val lastEventLamport: Long,
 )
 
+/**
+ * One item, filed or not.
+ *
+ * [areaId] is null for an unfiled item, which is the inbox state Addendum 01 4a
+ * added so that capture never requires a decision. An unfiled item is real: it can
+ * be edited, estimated, reordered and deleted, and it is the only item state that
+ * sits outside every area scoped rule in MASTER_BUILD_PROMPT 6.2. It is always
+ * QUEUED, because ACTIVE and COMPLETED are area scoped states and there is no area
+ * for it to be the one thing in. `ITEM_FILED` is the only transition out.
+ *
+ * [firstStep] is Addendum 01 4b, the first physical action, shown at caption weight
+ * on the active item card when present and simply absent otherwise. [estimateMinutes]
+ * is 4c and moves through `ITEM_ESTIMATED`. Both are optional forever.
+ */
 @Serializable
 data class ItemState(
     val id: String,
-    val areaId: String,
+    val areaId: String?,
     val title: String,
     val note: String? = null,
+    val firstStep: String? = null,
+    val estimateMinutes: Int? = null,
     val orderKey: String,
     val status: ItemStatus,
     val createdAt: Long,
@@ -115,8 +169,24 @@ data class ItemState(
     val lastEventLamport: Long,
 )
 
-enum class FocusOutcome { RUNNING, COMPLETED, ABANDONED }
+/**
+ * How a focus session finished, or that it has not.
+ *
+ * ENDED_EARLY rather than ABANDONED, renamed with the event type in the Addendum 01
+ * schema commit. DECISIONS.md C6 and [com.kamsiob.claritynow.data.event.FocusEndedEarly].
+ * RUNNING is not a terminal value and a session sitting in it forever is a legal
+ * state, because a killed process leaves exactly that and nothing is allowed to
+ * infer an ending from its absence.
+ */
+enum class FocusOutcome { RUNNING, COMPLETED, ENDED_EARLY }
 
+/**
+ * [plannedSeconds] is what the session is currently planned to run for, not what it
+ * was planned to run for when it started. `FOCUS_EXTENDED` moves it, and the event
+ * carries the absolute figure so a replay of two extensions cannot disagree with
+ * the number the person was shown. The original figure is in the session's own
+ * FOCUS_STARTED, which is where anything needing it should read.
+ */
 @Serializable
 data class FocusSessionState(
     val id: String,
