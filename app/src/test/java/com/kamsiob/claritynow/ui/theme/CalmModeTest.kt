@@ -255,6 +255,12 @@ class CalmModeTest {
             // The filter chip's dot, excluded; the event circle's 12 percent tint,
             // transformed.
             "ui/trail/TrailScreen.kt" to 2,
+            // Both are the area dot: the one on a chooser row and the one above the
+            // ring. Identity, so both excluded. The Focus surface takes no area wash
+            // at all, because design-v3.md 11 allows it six elements and a tinted
+            // ground is not one of them.
+            "ui/focus/FocusChooserScreen.kt" to 1,
+            "ui/focus/FocusSessionScreen.kt" to 1,
         )
 
         val root = File("src/main/java/com/kamsiob/claritynow/ui")

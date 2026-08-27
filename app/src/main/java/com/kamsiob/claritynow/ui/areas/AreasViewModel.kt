@@ -6,20 +6,25 @@ import androidx.lifecycle.viewModelScope
 import com.kamsiob.claritynow.data.prefs.ClarityPreferences
 import com.kamsiob.claritynow.data.repo.ClarityRepository
 import com.kamsiob.claritynow.data.repo.CompletionOutcome
+import com.kamsiob.claritynow.data.repo.FocusCountdown
 import com.kamsiob.claritynow.domain.ClarityClock
 import com.kamsiob.claritynow.domain.daysBetween
 import com.kamsiob.claritynow.domain.replay.ClarityConflict
 import com.kamsiob.claritynow.domain.replay.ClarityState
-import com.kamsiob.claritynow.domain.replay.FocusOutcome
 import com.kamsiob.claritynow.domain.replay.ItemState
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlin.math.ceil
 
 /**
  * One area card. design-v3.md 10.3. Everything the card draws, and nothing else.
@@ -109,16 +114,73 @@ class AreasViewModel(
     private val _queueChoiceFor = MutableStateFlow<String?>(null)
     val queueChoiceFor: StateFlow<String?> = _queueChoiceFor.asStateFlow()
 
+    /**
+     * This device's running session with the app's one ticker attached, and null the
+     * rest of the time. design-v3.md 8.2 item 7.
+     *
+     * **The ticker is attached only while a session is actually running**, which is
+     * what the `flatMapLatest` over the session id is for and is the same shape
+     * `ClarityNotifications` uses. `ClarityRepository.focusCountdown` is a hot flow
+     * that wakes once a second for as long as anything collects it, so collecting it
+     * at rest would hold a coroutine open for the life of the process to publish the
+     * same null over and over.
+     *
+     * Everything on this screen that changes during a session is derived from this
+     * one flow, so the card and the shell cannot disagree about a session by a second.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val liveCountdown: StateFlow<FocusCountdown?> =
+        repository.runningFocusSession
+            .map { it?.id }
+            .distinctUntilChanged()
+            .flatMapLatest { sessionId ->
+                if (sessionId == null) flowOf(null) else repository.focusCountdown
+            }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /**
+     * Whether a session is running and whether its planned time has run out, for the
+     * app shell. See [FocusPresence].
+     *
+     * **The shell reads this from here rather than from the repository**, because
+     * composables do not touch a repository in this app and the Areas screen is the
+     * surface that owns focus at the root: the Focus chip is in its header,
+     * design-v3.md 10.1, and the live countdown is on its cards, 10.3. What the shell
+     * adds on top is only the question of which surface is showing.
+     *
+     * It carries no countdown, so it changes twice in a session rather than once a
+     * second: when the session begins and when its time is up.
+     */
+    internal val focusPresence: StateFlow<FocusPresence?> = liveCountdown
+        .map { countdown -> countdown?.let { FocusPresence(it.sessionId, it.hasElapsed) } }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /**
+     * The in session card state, or null. MASTER_BUILD_PROMPT section 10.
+     *
+     * `distinctUntilChanged` is what keeps a value arriving once a second from
+     * rebuilding every card on the screen once a second: the card renders whole
+     * minutes, so fifty nine of those sixty ticks produce a value equal to the last
+     * one and go no further. The tick is still the one ticker; this is a filter on it
+     * and not a second clock.
+     */
+    private val focusHighlight: Flow<FocusHighlight?> =
+        combine(liveCountdown, preferences.focusHighlightEnabled) { countdown, enabled ->
+            focusHighlightFor(countdown, highlightEnabled = enabled)
+        }.distinctUntilChanged()
+
     val uiState: StateFlow<AreasUiState> =
         combine(
             repository.state,
             loading,
             promotions,
             repository.openConflicts,
-        ) { state, isLoading, cues, conflicts ->
+            focusHighlight,
+        ) { state, isLoading, cues, conflicts, focus ->
             AreasUiState(
                 loading = isLoading,
-                areas = state.liveAreas.map { area -> area.toCardModel(state) },
+                areas = state.liveAreas.map { area -> area.toCardModel(state, focus) },
                 conflicts = conflicts.mapNotNull { it.toCardModel() },
                 promotions = cues,
                 unfiledCount = state.unfiledItems.size,
@@ -300,18 +362,22 @@ class AreasViewModel(
 
     // Mapping -----------------------------------------------------------------
 
+    /**
+     * [focus] is the one running session on this device, already filtered by the
+     * `focusHighlightEnabled` setting, and it reaches at most one card.
+     *
+     * It is matched by area rather than looked up from the projection, deliberately.
+     * A merged log can legitimately hold two running sessions, one per device, and the
+     * card must show the one this phone is running: reading `state.focusSessions` here
+     * would put a countdown on a card for a session running on a different phone,
+     * ticking down to an end nobody on this device is working toward.
+     */
     private fun com.kamsiob.claritynow.domain.replay.AreaState.toCardModel(
         state: ClarityState,
+        focus: FocusHighlight?,
     ): AreaCardModel {
         val active = state.activeItemIn(id)
-        val session = state.focusSessions.values.firstOrNull {
-            it.areaId == id && it.outcome == FocusOutcome.RUNNING
-        }
-        val remaining = session?.let {
-            val elapsed = (clock.nowMillis() - it.startedAt) / 1000
-            val left = it.plannedSeconds - elapsed
-            if (left <= 0) 0 else ceil(left / 60.0).toInt()
-        }
+        val remaining = focus?.takeIf { it.areaId == id }?.minutesRemaining
         return AreaCardModel(
             id = id,
             name = name,

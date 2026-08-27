@@ -130,7 +130,9 @@ Area label text in dark mode uses a lightened accent (blend 30 percent white) to
 | textFaint | `#F3F1EC` at 32 percent |
 | specks | 8 to 14 dots, 1 to 2dp, white at 3 to 6 percent, fixed seed per surface so they never re-randomize |
 
-**Focus, indigo.** Radial gradient `#262A5E` center through `#191C42` to `#10122B` at the edges over deepBlack. Ring track white at 16 percent. Progress stroke `#8BA4FF`. Tip a filled circle in `#B9C8FF` with a soft blur.
+**Focus, indigo. Built, phase 4.** Radial gradient `#262A5E` center through `#191C42` to `#10122B` at the edges over deepBlack. Ring track white at 16 percent. Progress stroke `#8BA4FF`. Tip a filled circle in `#B9C8FF` with a soft blur.
+
+The gradient's center sits at 0.5 across and **0.42 down**, above the middle, because that is where the ring is and the pool of light is the room the ring sits in. It is in the same place on the chooser and on the completion screen, which have no ring, since a light that moved when the content changed would make the room itself feel like it had moved. It reaches 0.72 of the surface diagonal, so the darkest stop arrives before the corners and the corners are the edge color rather than a fourth value. The blur on the tip is drawn as a radial falloff at 15dp and 38 percent rather than as a mask filter, which is what a blurred point of light looks like and costs one draw call instead of an off screen pass. The specks are placed by hashing a per speck key with `StableHash` rather than by a seeded random, which gives one arrangement per surface that survives a recomposition, a rotation and a process death with nothing to store.
 
 **Pulse, amber.** Accent `#E8A15C`. Background shifts with time of day and must be felt rather than noticed: dawn 05 to 11 blends a whisper of `#2B2340` into the top; midday 11 to 17 stays neutral warm black; evening 17 to 05 blends `#2E1F14` upward from the bottom.
 
@@ -369,8 +371,8 @@ The list in section 7 above covers the icons this design system names. The table
 24. **Tab content transition.** Switching tabs crossfades the content over 180ms with no slide. A slide implies spatial relationship between tabs and there is none; these are four views of the same data.
 25. **Empty state entrance.** Fades in over 400ms easeOut after a 150ms delay, so it never flashes during a load that resolves quickly.
 26. **Accept tap on the closing line.** The pill fills from the center over 250ms, the label crossfades to a confirmation, and it settles at reduced prominence. Never bounces, never celebrates, never produces a toast.
-27. **Transition mark reached.** Only when the transition warning is on, 10.18. The faint tick already sitting on the ring track at the five minute position brightens once over 400ms easeOut and holds. No color change, no pulse, no repeat, and nothing moves except the tick. Pending, phase 4.
-28. **Session extended.** The ring's remaining arc grows to its new length over 500ms springGentle rather than jumping, and the numeral rolls to its new value over the same interval. Nothing else acknowledges the tap. Pending, phase 4.
+27. **Transition mark reached.** Only when the transition warning is on, 10.18. The faint tick already sitting on the ring track at the five minute position brightens once over 400ms easeOut and holds. No color change, no pulse, no repeat, and nothing moves except the tick. **Built, phase 4.** The haptic that fires at the same moment is in section 9 and is not built; this animation does not depend on it.
+28. **Session extended.** The ring's remaining arc grows to its new length over 500ms springGentle rather than jumping, and the numeral rolls to its new value over the same interval. Nothing else acknowledges the tap. **Built, phase 4.** Every other second is a snap rather than an animation, because item 7 puts the depletion at 1Hz from one ticker and animating between ticks would turn the countdown into a per frame animation.
 
 ### 8.3 Reduce motion
 
@@ -416,7 +418,7 @@ One `ClarityHaptics` abstraction. Checks primitive support once at startup, resp
 | swipeThreshold | `PRIMITIVE_TICK` 0.3 | crossing the commit point, once per gesture |
 | focusStart | `PRIMITIVE_LOW_TICK` twice, 90ms apart | session begins |
 | focusEnd | `PRIMITIVE_QUICK_RISE` 0.6 then `PRIMITIVE_THUD` 0.7 at 120ms | natural completion |
-| transitionWarn | `PRIMITIVE_LOW_TICK` 0.35, once | five minutes remain in a session, **only when the transition warning is on**, which is off by default. Pending, phase 4 |
+| transitionWarn | `PRIMITIVE_LOW_TICK` 0.35, once | five minutes remain in a session, **only when the transition warning is on**, which is off by default. **Still pending after phase 4**, and it is the one row in this table with no implementation: `ClarityHaptics` carries the other sixteen events and not this one. Everything visible about the moment is built, 10.18, and the notifications layer publishes the moment as an in app signal with nothing collecting it |
 | reportReady | `PRIMITIVE_SPIN` 0.4, or `QUICK_RISE` if unsupported | generation finishes |
 | planAccepted | `PRIMITIVE_TICK` 0.5 | deliberately the same weight as an ordinary tap, because accepting is not an achievement |
 | warn | `PRIMITIVE_THUD` 0.7 | destructive confirmation arms |
@@ -427,6 +429,8 @@ One `ClarityHaptics` abstraction. Checks primitive support once at startup, resp
 Never on scroll, screen entry, notification arrival, or more than once per user action. The Pulse reminder is silent.
 
 **Focus sessions fire nothing between start and end, with one exception the user has to switch on.** v3 stated that rule without an exception, and Addendum 01 4g adds a five minutes left signal that is off by default and lives behind a switch in Settings. The rule becomes: nothing fires during a session unless the user asked for one thing to fire, in which case exactly one event fires, once, at one known moment. A signal a person went looking for is not an interruption. Logged in `DECISIONS.md`.
+
+**Phase 4 built the rule and not the exception.** A running session fires no haptic between start and end, which is the half that matters most and the half a defect would be invisible in. `focusStart` fires as a session begins and `focusEnd` fires at a natural completion while the person is watching the ring, and neither fires on screen entry, so a session restored after a process death arrives silent. **A session ended by a person fires the ordinary `tap` on the End control and nothing on the completion screen after it**, which is a choice this document did not make and `DECISIONS.md` carries as an open question rather than as a settled one.
 
 ---
 
@@ -640,15 +644,17 @@ The field earns its place at the moment the app is hardest to use. The title of 
 
 ### 10.18 The focus session controls
 
-**Pending, phase 4.** Addendum 01 4f and 4g.
+**Built, phase 4, with one exception named at the foot of this section.** Addendum 01 4f and 4g.
 
 **Add 10 minutes.** A tertiary control, 10.7, text only in the Focus accent, sitting beneath the End session pill. It extends the running session: it never restarts it, never returns the arc to full and never begins a second session. The arc grows to its new length, 8.2 item 28. No confirmation, no toast, no acknowledgment beyond the ring itself. It may be tapped again, and there is no limit on how many times, because a limit is an argument with someone who is working.
 
-**The transition warning.** Off by default. One switch in Settings under Focus. When it is on, the ring track carries a faint tick at the five minute position **from the moment the session starts**, so the warning is a landmark the user has already seen rather than an event that arrives. When the arc reaches it the tick brightens once, 8.2 item 27, one haptic fires, section 9, and the word `remaining` beneath the numeral becomes `5 minutes left` and stays.
+**The transition warning.** Off by default. One switch in Settings under Focus. When it is on, the ring track carries a faint tick at the five minute position **from the moment the session starts**, so the warning is a landmark the user has already seen rather than an event that arrives. When the arc reaches it the tick brightens once, 8.2 item 27, one haptic fires, section 9, and the word `remaining` beneath the numeral becomes `5 minutes left` and stays. The mark is white and 12dp long by 2dp wide, sitting across the track, at 20 percent when it is ahead and 55 percent once it has been reached. A session five minutes long or shorter carries no mark at all, which is this rule expressed as a value the ring cannot draw rather than as a condition each surface has to remember.
 
 The obvious answer is to turn the ring amber or red at five minutes. It is rejected three times over: warnAmber is scoped by 3.1 to the Pulse ready dot and nothing else, section 14 forbids red warning states for normal behavior, and an unannounced color change is precisely the surprise that this switch exists to prevent. A mark that has been sitting there since the start costs nothing and reads as information rather than as an alarm. Section 15.
 
 **Backgrounded.** With the app in the background the same moment is carried by the Live Update, 11.4, which shows the same mark on its track. A full notification is posted only when the app is backgrounded and no Live Update is available.
+
+**The exception, stated rather than left to be discovered.** Every visible part of this section is built: the control, the mark, the tick brightening, the word changing, the point on the Live Update track, the silent notification, and an extension re-arming the moment exactly once. **The haptic is not**, because `ClarityHaptics` does not carry a `transitionWarn` event yet, and the signal the notifications layer publishes for the in app case has nothing collecting it. The switch that turns any of this on is a Settings row and Settings is phase 11, so on the built app the whole feature is off and reachable only by writing the preference by hand.
 
 ---
 
@@ -656,13 +662,17 @@ The obvious answer is to turn the ring amber or red at five minutes. It is rejec
 
 **Areas.** The Daylight home. Five areas fill the screen comfortably. Must pass a three second test: what is active everywhere, at a glance.
 
-**Focus.** The indigo night. **Six elements only:** area label with dot, item title in bold sans at 26sp, the 240dp ring with the timer numeral, the word `remaining` in textFaint, the End session pill, and `Add 10 minutes` beneath it as a tertiary control, 10.18. Nothing else, ever.
+**Focus. Built, phase 4.** The indigo night. **Six elements only:** area label with dot, item title in bold sans at 26sp, the 240dp ring with the timer numeral, the word `remaining` in textFaint, the End session pill, and `Add 10 minutes` beneath it as a tertiary control, 10.18. Nothing else, ever.
 
-**The sixth element is a change, recorded rather than assumed.** v3 said five and said nothing else, ever. Addendum 01 4f requires a control that extends a running session, and there is no honest way to have it and keep the count at five: putting it behind a long press or a gesture would hide the one control whose whole purpose is to keep someone in flow, from the audience least likely to go looking for it. The count moves to six. The hierarchy does not: the new control is text only, subordinate, below the End pill, and the surface still reads ring first. **Pending, phase 4.** Logged in `DECISIONS.md`.
+**The ring's own numbers, which v3 left open and phase 4 had to choose.** The diameter is 240dp and was always stated; the stroke is **6dp** and the tip is a **10dp** filled circle with the 15dp falloff in 3.3. The obvious answer is a heavy ring, twelve to sixteen dp, which is what an activity ring looks like and what 15.1 warns about under a ring closing toward a daily target. This one is deliberately thin with the weight spent on the tip instead: a fine line of light with a bright point traveling it reads as time passing rather than as a target filling. Section 15, and logged in `DECISIONS.md`.
 
-**Focus complete.** Ring replaced by a circle bloom and check. `Session complete` in serif, item title, a small line reading duration and area, then `Mark item complete` in the accent and `Done` beneath.
+**The sixth element is a change, recorded rather than assumed.** v3 said five and said nothing else, ever. Addendum 01 4f requires a control that extends a running session, and there is no honest way to have it and keep the count at five: putting it behind a long press or a gesture would hide the one control whose whole purpose is to keep someone in flow, from the audience least likely to go looking for it. The count moves to six. The hierarchy does not: the new control is text only, subordinate, below the End pill, and the surface still reads ring first. **Built, phase 4.** Logged in `DECISIONS.md`.
 
-**A session ended early reaches this same screen, in the same words.** Addendum 01 4e. The serif line reads `Session complete`, the duration line reads the real duration, and there is no qualifier, no shortfall, no comparison against what was planned and no second, quieter version of the screen for a shorter session. Fourteen minutes is fourteen minutes. The word this rule exists to keep off the screen is named in 13.1. **Pending, phase 4.**
+**Focus complete. Built, phase 4.** Ring replaced by a circle bloom and check. `Session complete` in serif, item title, a small line reading duration and area, then `Mark item complete` in the accent and `Done` beneath. There is no dot and no color on this screen: the area is already in the words, and a 7dp dot here would be an unrequested embellishment on the quietest screen in the app. `Mark item complete` is absent, rather than present and inert, when the item was completed, swapped or deleted while the session ran, and `Done` is still there and still leaves.
+
+**A session ended early reaches this same screen, in the same words.** Addendum 01 4e. The serif line reads `Session complete`, the duration line reads the real duration, and there is no qualifier, no shortfall, no comparison against what was planned and no second, quieter version of the screen for a shorter session. Fourteen minutes is fourteen minutes. The word this rule exists to keep off the screen is named in 13.1. **Built, phase 4.**
+
+**The screen is not told which kind of ending it is drawing**, and that absence is how the rule is kept rather than remembered. The value it is handed carries the duration, the area and the item and carries no field recording whether the planned time ran out, so there is no fact on this surface that a later edit could teach it to render. A session ended under sixty seconds is the one case that does not reach this screen at all, per section 10, because forty seconds is a mis-tap rather than a short session.
 
 **Pulse.** The amber night. The observation in readSerif centered, the question in body at textDim, then response pills. After answering, an acknowledgment fades in, then ambient mode: a 14 day rhythm row, today's answered card, and a History entry. Filled amber means answered, a hollow ring means generated but unanswered, faint means a silent day.
 
@@ -731,7 +741,7 @@ This audience leaves and comes back. That is ordinary use, not failure, and the 
 
 ### 11.3 Analog time
 
-**Duration reads as a shape before it reads as a number.** Addendum 01 8d. Three surfaces show a session's remaining time, and all three make the depleting arc the primary carrier with the digits secondary: the focus ring in section 11, the Live Update track in 11.4, and the Focus Countdown widget in 12.2.
+**Duration reads as a shape before it reads as a number.** Addendum 01 8d. Three surfaces show a session's remaining time, and all three make the depleting arc the primary carrier with the digits secondary: the focus ring in section 11, the Live Update track in 11.4, and the Focus Countdown widget in 12.2. **The first two are built, phase 4. The widget is phase 12.**
 
 The reason is specific to this audience. A number has to be read, subtracted from, and then converted into a feeling about how much room is left. That is three operations, and the third is exactly the one this app's users find expensive. A shrinking arc **is** the feeling, with no arithmetic in between. Time blindness is not an inability to read a clock.
 
@@ -741,15 +751,21 @@ The reason is specific to this audience. A number has to be read, subtracted fro
 - The arc depletes **clockwise from the top**. Section 15 asks for the unobvious answer and this is the case it exempts: a countdown that runs the other way is a puzzle, and legibility outranks distinctiveness on the one element in this app that has to be read at a glance while doing something else. Recorded because 15 requires the reason to be written down when the obvious answer wins
 - In calm mode the arc still depletes. It is information. What stops is the tip blur and the glow behind it, 16.2
 
+**What primary means here, as a number rather than as a preference.** The ring is 240dp across and the numeral is 64sp, a ratio of 3.75 to one, and the numeral is capped at 1.3x the font scale while the ring does not grow with the text, so the closest a person can bring them is 83sp inside 240dp, 2.88 to one. A later session can check that with a ruler and does not have to agree with anybody's taste.
+
+**Contrast runs the other way, and it is stated rather than left as a gap.** The numeral is `textBright` on the indigo ground and the arc is `#8BA4FF` at 6dp, so the digits are the higher contrast element and the arc is the larger one by the ratio above. **Size carries primary on this surface and contrast is spent on legibility**, which is the deliberate answer rather than the tidy one: making the arc the brighter of the two means either dropping the numeral below section 13's floor or brightening a 6dp line until it glares in a dark room, for an audience that runs sessions at night. Section 15 asks for the reason to be written down whenever the obvious symmetry loses. Addendum 01 8d asks for this relationship to be stated, and this paragraph is where it is stated.
+
 ### 11.4 The Live Update
 
-**Pending, phase 4, extended in phase 12.** Addendum 01 Step 5. A focus session is exactly the user-initiated, start-to-end, time-bound task that Android's Live Updates were designed for. On a Pixel it surfaces as a status bar chip that expands; on Samsung devices it appears in the Now Bar. For an audience with time blindness, a running session visible without opening the app is not a nicety. It is the point.
+**Built, phase 4, extended in phase 12.** Addendum 01 Step 5. A focus session is exactly the user-initiated, start-to-end, time-bound task that Android's Live Updates were designed for. On a Pixel it surfaces as a status bar chip that expands; on Samsung devices it appears in the Now Bar. For an audience with time blindness, a running session visible without opening the app is not a nicety. It is the point.
 
 It is a platform surface taken at step 1 of 17.1: the promoted-notification progress style, not a foreground notification dressed up to look like one. The API, the permission and the availability check belong to `MASTER_BUILD_PROMPT.md`. What it looks like belongs here.
 
 **What it shows.** Three things and no more: the area name, the item title, and the remaining time as a track that depletes, 11.3. The track takes the area color where the platform allows a color and the system accent where it does not. Neither case gets an edge treatment, a second color, or a gradient.
 
 **Segments and points.** One undivided track. The single exception is the transition warning, 10.18: while it is on, one point sits on the track at the five minute mark from the start of the session, and the track reaching that point **is** the state change. With the warning off there is no point and no state change at all. Nothing else is marked, because the feature list of a component is not a reason to use it.
+
+**Built as one segment carrying the area color, with progress set to the time remaining rather than the time spent**, which is what makes the track deplete rather than fill. The point takes no color of its own, because this section allows the track one color and no second one. Logged in `DECISIONS.md`.
 
 **Actions.** Two at most: `Add 10 min` and `End`. Both work without opening the app. The abbreviation is deliberate and is the only place it appears; the in-app control reads `Add 10 minutes`, 10.18, and the system action button is width constrained. Tapping the body opens the focus screen.
 
@@ -1063,7 +1079,7 @@ The **crossfade** below is 8.3's one path: a 150ms fade with no travel, no scale
 
 **One row is specified here and not yet true in the code.** Item 1's calm path currently snaps both titles rather than crossfading them, which loses the struck-through title and with it the answer to "which one did I just finish". The specification above is the requirement; `ui/areas/AreaCard.kt` is where it lands. Nothing else in this table is aspirational.
 
-Fifteen of the twenty eight belong to surfaces that phases 4 and later build. They are audited now rather than when they arrive, because the point of 16.5 is that a reader can take any element in this document and say what it does in calm mode without guessing.
+Eight of the twenty eight now belong to surfaces that phases 6 and later build, phase 4 having built items 6, 7, 8, 9, 27 and 28. They are audited before they arrive rather than when they do, because the point of 16.5 is that a reader can take any element in this document and say what it does in calm mode without guessing.
 
 ### 16.7 The color token audit: every token in section 3
 
@@ -1088,7 +1104,7 @@ Fifteen of the twenty eight belong to surfaces that phases 4 and later build. Th
 | parchment | unchanged | 0 |
 | deleteMuted | **excluded by name** | 0 |
 
-**3.3, Contemplative.** None of these surfaces exists before phase 4, so every row is a specification rather than a measurement.
+**3.3, Contemplative.** **The Focus rows are built, phase 4, and are measurements.** The Pulse, Report and Onboarding rows below them belong to phases 6, 8 and 10 and are still specifications.
 
 | token | calm mode | number |
 |---|---|---|
@@ -1159,6 +1175,8 @@ Every component built in phases 1, 2 and 3, named, with what calm mode does to i
 | `washBrush` and `Modifier.areaWash` | **the transform's one application point.** Every wash in the app arrives here |
 | `SwipeableRow` | the Swap face's accent is transformed. The three action backgrounds are excluded tokens. The card still tracks the finger and the commit is instant, item 21 |
 | `UndoSnackbar` | the rise and fall become a fade with no travel. The depleting line still depletes, item 20 |
+
+**Phase 4 added five drawn things that are not in `ui/components/`**, because they belong to one surface and nothing else may use them. They are audited here so that 16.5 still holds. The **backdrop** keeps its geometry and loses its chroma, and its specks drop to the low end of both ranges, 16.7; the breathing glow holds at 0.92 and the repeating animation is never started, item 8. The **ring** still depletes, item 7, and loses the falloff behind its tip, 16.7. The **completion bloom** becomes the check appearing with no collapse and no expanding circle, item 9. The **Contemplative pill and text action** take the ring's progress color through the same transform and are otherwise unchanged, their press scale running on the crossfade spec like every other press. The **chooser rows** carry no color but the 7dp area dot, which is excluded by name, 16.2.
 
 Three pieces sit in `ui/theme/` rather than `ui/components/` and complete the picture: `CalmMode.kt` holds the transform and the switch; `ClarityMotion.kt` holds the one flag, which calm mode joins with an `or` rather than adding a level beside; and `ClarityEntrance.kt` holds 8.4's rule and is where entrances are removed rather than shortened.
 

@@ -25,6 +25,43 @@ enum class AfterCompleting {
 }
 
 /**
+ * The focus session this device is running, and the instant its planned time runs
+ * out. MASTER_BUILD_PROMPT 10, "the computed end timestamp persists so the session
+ * survives process death".
+ *
+ * **Read `CLAUDE.md` rule 6 first and then read this, because the rule makes anyone
+ * who finds this key suspicious and the distinction is real.** No engine state may
+ * live in DataStore, and this is not engine state.
+ *
+ * The session's truth is the log: `FOCUS_STARTED` gives the start and the item, and
+ * the folded `FOCUS_EXTENDED` events give the planned duration, so any device
+ * holding the log computes the same end instant with no help from here. What this
+ * key adds is the one fact in a focus session that is genuinely about a phone
+ * rather than about a person: **which running session this device is the one
+ * running.** A merged log can legitimately carry two running sessions, one per
+ * device, and each phone must show its own; a stored id answers that in a map
+ * lookup where the log answers it with a query against the origin of a
+ * `FOCUS_STARTED`. [endsAtMillis] rides along because the ongoing notification and
+ * the completion alarm need an absolute instant at moments in the process lifecycle
+ * where no projection has been loaded yet.
+ *
+ * **The log wins whenever the two disagree.** `ClarityRepository.pickDeviceSession`
+ * falls back to the log when this key is missing or names a session that is no
+ * longer running, and repairs the key from what it finds. Nothing reads
+ * [endsAtMillis] in preference to the folded value, so a stale copy cannot move a
+ * countdown, a Trail row or a duration a person is shown.
+ *
+ * No corpus line, no observation and no engine layer reads this, which is the test
+ * `CLAUDE.md` rule 6 is really applying: two devices holding the same log still
+ * compute the same sentence about focus while showing different countdowns, because
+ * only one of them is running the session.
+ *
+ * Both halves are written and cleared in one `edit`, so a reader can never see an
+ * id with no instant or an instant with no id.
+ */
+data class FocusHandle(val sessionId: String, val endsAtMillis: Long)
+
+/**
  * Per device settings and flags. MASTER_BUILD_PROMPT 5.4.
  *
  * Nothing the Logic Engine reads may live here. Variation history, escalation
@@ -54,6 +91,9 @@ class ClarityPreferences(private val context: Context) {
         val calmMode = booleanPreferencesKey("calmMode")
         val focusDurationMinutes = intPreferencesKey("focusDurationMinutes")
         val focusHighlightEnabled = booleanPreferencesKey("focusHighlightEnabled")
+        val focusSessionId = stringPreferencesKey("focusSessionId")
+        val focusSessionEndsAt = longPreferencesKey("focusSessionEndsAt")
+        val transitionWarningEnabled = booleanPreferencesKey("transitionWarningEnabled")
         val afterCompleting = stringPreferencesKey("afterCompleting")
         val pulseRemindersEnabled = booleanPreferencesKey("pulseRemindersEnabled")
         val pulseReminderHour = intPreferencesKey("pulseReminderHour")
@@ -106,6 +146,25 @@ class ClarityPreferences(private val context: Context) {
     val focusHighlightEnabled: Flow<Boolean> =
         context.store.data.map { it[Keys.focusHighlightEnabled] ?: true }
 
+    /** The running session this device owns, or null. See [FocusHandle]. */
+    val focusHandle: Flow<FocusHandle?> = context.store.data.map { prefs ->
+        val sessionId = prefs[Keys.focusSessionId]
+        val endsAt = prefs[Keys.focusSessionEndsAt]
+        if (sessionId != null && endsAt != null) FocusHandle(sessionId, endsAt) else null
+    }
+
+    /**
+     * The optional five minute transition warning. Addendum 01 4g, design-v3.md 10.18.
+     *
+     * **Off by default, and that is the specified default rather than a placeholder.**
+     * Switching from one task to another is the expensive act for this audience, so a
+     * warning is the difference between a transition and an interruption; an
+     * unannounced signal is also an interruption, which is why it is opt in. The
+     * Settings row that turns it on is phase 11.
+     */
+    val transitionWarningEnabled: Flow<Boolean> =
+        context.store.data.map { it[Keys.transitionWarningEnabled] ?: false }
+
     val afterCompleting: Flow<AfterCompleting> = context.store.data.map { prefs ->
         prefs[Keys.afterCompleting]?.let { name ->
             AfterCompleting.entries.firstOrNull { it.name == name }
@@ -132,6 +191,28 @@ class ClarityPreferences(private val context: Context) {
     suspend fun setCalmMode(value: Boolean) = put(Keys.calmMode, value)
     suspend fun setFocusDurationMinutes(value: Int) = put(Keys.focusDurationMinutes, value)
     suspend fun setFocusHighlightEnabled(value: Boolean) = put(Keys.focusHighlightEnabled, value)
+
+    /**
+     * Records that this device is running [sessionId] until [endsAtMillis]. Both
+     * halves in one transaction, so no reader sees half a handle.
+     */
+    suspend fun setFocusHandle(sessionId: String, endsAtMillis: Long) {
+        context.store.edit { prefs ->
+            prefs[Keys.focusSessionId] = sessionId
+            prefs[Keys.focusSessionEndsAt] = endsAtMillis
+        }
+    }
+
+    /** Cleared when a session ends, by any of the ways a session can end. */
+    suspend fun clearFocusHandle() {
+        context.store.edit { prefs ->
+            prefs.remove(Keys.focusSessionId)
+            prefs.remove(Keys.focusSessionEndsAt)
+        }
+    }
+
+    suspend fun setTransitionWarningEnabled(value: Boolean) =
+        put(Keys.transitionWarningEnabled, value)
     suspend fun setAfterCompleting(value: AfterCompleting) = put(Keys.afterCompleting, value.name)
     suspend fun setPulseRemindersEnabled(value: Boolean) = put(Keys.pulseRemindersEnabled, value)
     suspend fun setPulseReminderHour(value: Int) = put(Keys.pulseReminderHour, value)

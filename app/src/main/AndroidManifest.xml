@@ -22,6 +22,26 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!--
+        The focus session Live Update, MASTER_BUILD_PROMPT 14b.6 and design-v3.md
+        11.4. `Notification.ProgressStyle` is a promoted ongoing notification and
+        the platform gates promotion on this permission.
+
+        **It is a notifications permission and not a network one**, which is what
+        keeps it inside what MASTER_BUILD_PROMPT 18 allows and what keeps
+        verifyNoInternetPermission green on both variants: that gate matches five
+        exact permission names, INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE,
+        CHANGE_NETWORK_STATE and CHANGE_WIFI_STATE, and this is none of them.
+
+        A normal permission, so it is granted at install and shows no prompt. It
+        grants nothing beyond asking the system to promote a notification the app is
+        already allowed to post, and the system may still refuse:
+        NotificationManagerCompat.canPostPromotedNotifications is checked before
+        every post and a false answer degrades to the ongoing notification with no
+        word to the user, per design-v3.md 11.4.
+    -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+
+    <!--
         Required by design-v3.md section 9, which specifies sixteen haptic events.
         A normal permission: it is granted at install, shows no prompt, and gives
         access to nothing but the vibrator on this device.
@@ -50,5 +70,21 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--
+            The two Live Update actions, `Add 10 min` and `End`, and the dismissal of
+            the ongoing notification. Addendum 01 5c requires both actions to work
+            without opening the app, so they arrive here rather than at an Activity.
+
+            **Not exported.** Every intent that reaches it is built by this app with
+            an explicit component, so there is no filter to match and nothing outside
+            the app can start a session, end one or add time to one.
+
+            It writes through ClarityRepository like every other writer in the app,
+            per CLAUDE.md rule on the single write path. It is not a second one.
+        -->
+        <receiver
+            android:name=".notifications.FocusActionReceiver"
+            android:exported="false" />
     </application>
 </manifest>

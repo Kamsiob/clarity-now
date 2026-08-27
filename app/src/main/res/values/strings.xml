@@ -161,6 +161,66 @@
     <string name="settings_calm_mode">Calm mode</string>
     <string name="settings_calm_mode_caption">Less motion, softer color</string>
 
+    <!--
+        Notifications, MASTER_BUILD_PROMPT 13.4 and 14b.6, design-v3.md 11.4.
+
+        Three channel names and three descriptions, then the copy the focus session
+        notifications carry. Every line here is a fixed label or a direct readout of a
+        queried number. None of it interprets a session: there is no line that says a
+        session was long, short, kept or broken, and there is no line anywhere in this
+        file or in the notifications package that names the state a session was left
+        in. Addendum 01 4e, and CLAUDE.md rule 8.
+
+        A channel name and description are permanent for an install once the channel
+        exists, so these are written to be true of the feature rather than of the
+        phase that shipped it.
+    -->
+    <string name="channel_focus_name">Focus</string>
+    <string name="channel_focus_description">When a focus session finishes while you are somewhere else.</string>
+    <string name="channel_reminders_name">Reminders</string>
+    <string name="channel_reminders_description">The daily Pulse, at the time you choose.</string>
+    <string name="channel_ongoing_name">Running session</string>
+    <string name="channel_ongoing_description">A focus session while it is running. Silent.</string>
+
+    <!--
+        The running session. The depleting track carries the time and these carry the
+        digits, which is the order Addendum 01 8d asks for and design-v3.md 11.3
+        states again: the shape first, the number second.
+
+        Minutes and never seconds, per design-v3.md 11.3. The status bar chip is the
+        one place the abbreviation is used, because the platform gives it about seven
+        characters, and design-v3.md 11.4 already permits the same abbreviation on the
+        action button beside it.
+    -->
+    <plurals name="focus_notification_minutes_left">
+        <item quantity="one">%d minute left</item>
+        <item quantity="other">%d minutes left</item>
+    </plurals>
+    <string name="focus_notification_chip_minutes">%1$dm</string>
+
+    <!--
+        Two actions and no more, per design-v3.md 11.4 and Addendum 01 5c. The
+        abbreviation is deliberate and is scoped to the system action button; the in
+        app control reads `Add 10 minutes`, per design-v3.md 10.18.
+    -->
+    <string name="focus_action_add_ten">Add 10 min</string>
+    <string name="focus_action_end">End</string>
+
+    <!--
+        The completion notification, posted only when the planned time runs out while
+        the app is somewhere else. The words are the completion screen's own, per
+        design-v3.md 11, and they are the same words whether the session ran its full
+        planned length or a person ended it sooner. There is no second, quieter
+        version of this line for a shorter session.
+    -->
+    <string name="focus_complete_notification_title">Session complete</string>
+
+    <!--
+        The transition warning, off by default, per Addendum 01 4g. The exact phrase
+        design-v3.md 10.18 puts beneath the numeral at the same moment.
+    -->
+    <string name="focus_transition_notification_title">5 minutes left</string>
+
     <!-- Conflict card, MASTER_BUILD_PROMPT 6.3 -->
     <string name="conflict_dismiss">Got it</string>
     <string name="conflict_two_active">While you were away, two things became active in %1$s. %2$s is active. %3$s is back at the top of the queue.</string>
@@ -227,5 +287,58 @@
     <string name="cd_trail_filter_all">Show everything</string>
     <string name="cd_trail_filter_area">Show only %1$s</string>
     <string name="cd_trail_entry_at">%1$s, at %2$s</string>
+
+    <!--
+        Focus, MASTER_BUILD_PROMPT section 10 and 14b.5, design-v3.md section 11 and
+        10.18.
+
+        Every line here is a fixed interface label or a direct readout of a number the
+        app already holds. Nothing here interprets a session, compares one session with
+        another, or says anything about the person who ran it.
+
+        **There is one completion title and one duration line, and that is deliberate.**
+        Addendum 01 4e: a session ended before its planned time is a completed short
+        session and reaches the same screen in the same words, with no qualifier and no
+        shortfall. A second, quieter set of strings for a shorter session is the thing
+        this file must never grow.
+
+        The word design-v3.md 13.1 forbids appears in none of these, including every
+        content description read aloud.
+    -->
+    <string name="focus_title">Focus</string>
+    <plurals name="focus_chooser_duration">
+        <item quantity="one">Sessions run for %d minute. You can add more time without stopping.</item>
+        <item quantity="other">Sessions run for %d minutes. You can add more time without stopping.</item>
+    </plurals>
+    <string name="focus_chooser_needs_item">Add an item first</string>
+    <string name="focus_chooser_empty_title">Nothing to focus on yet</string>
+    <string name="focus_chooser_empty_body">An area with an active item appears here, ready to start.</string>
+    <!-- Lowercase, and beneath the numeral rather than beneath the ring. design-v3.md 10.18. -->
+    <string name="focus_remaining">remaining</string>
+    <string name="focus_transition_mark">5 minutes left</string>
+    <string name="focus_end_session">End session</string>
+    <string name="focus_add_ten_minutes">Add 10 minutes</string>
+    <string name="focus_end_confirm_title">End this session?</string>
+    <string name="focus_end_confirm_end">End</string>
+    <string name="focus_end_confirm_keep">Keep going</string>
+    <string name="focus_complete_title">Session complete</string>
+    <plurals name="focus_complete_duration">
+        <item quantity="one">%1$d minute in %2$s</item>
+        <item quantity="other">%1$d minutes in %2$s</item>
+    </plurals>
+    <string name="focus_complete_mark_item">Mark item complete</string>
+
+    <!--
+        Focus content descriptions. The ring, the numeral and the word beneath it are
+        one node to a screen reader rather than four, and the figure is spoken in whole
+        minutes: a description that changed once a second would be a description nobody
+        could follow.
+    -->
+    <plurals name="cd_focus_remaining">
+        <item quantity="one">%d minute remaining</item>
+        <item quantity="other">%d minutes remaining</item>
+    </plurals>
+    <string name="cd_focus_under_a_minute">Under a minute remaining</string>
+    <string name="cd_focus_start">Start a focus session on %1$s</string>
 
 </resources>

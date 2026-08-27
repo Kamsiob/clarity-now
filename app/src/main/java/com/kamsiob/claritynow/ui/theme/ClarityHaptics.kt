@@ -39,8 +39,20 @@ enum class ClarityHapticEvent {
     SWIPE_THRESHOLD,
     FOCUS_START,
 
-    /** Natural completion of a focus session only. Abandoning is silent. */
+    /** Natural completion of a focus session only. Ending early is silent. */
     FOCUS_END,
+
+    /**
+     * Five minutes left, and only when the person turned the warning on.
+     *
+     * design-v3.md 9 otherwise says a focus session fires nothing between its start
+     * and its end, and this is the single authorized exception, added by Addendum 01
+     * 4g and recorded in the v3.1 history entry. It is the lightest primitive in the
+     * catalogue on purpose: a transition warning that startles is worse than none,
+     * because the whole point is to let someone finish a thought rather than be
+     * pulled out of one.
+     */
+    TRANSITION_WARN,
     REPORT_READY,
 
     /** Deliberately the weight of an ordinary tap. Accepting a plan is not an achievement. */
@@ -139,6 +151,7 @@ class AndroidClarityHaptics(context: Context) : ClarityHaptics {
 
     private fun stepsFor(event: ClarityHapticEvent): List<Step> = when (event) {
         ClarityHapticEvent.TAP -> listOf(Step(TICK, 0.4f))
+        ClarityHapticEvent.TRANSITION_WARN -> listOf(Step(LOW_TICK, 0.35f))
         ClarityHapticEvent.SELECT -> listOf(Step(CLICK, 0.6f))
         ClarityHapticEvent.TOGGLE_ON -> listOf(Step(CLICK, 0.5f))
         ClarityHapticEvent.TOGGLE_OFF -> listOf(Step(TICK, 0.5f))

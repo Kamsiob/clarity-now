@@ -2,14 +2,18 @@
 
 Where the build actually is. Updated at the end of every phase.
 
-**Last updated:** August 27, 2026, end of phase 3c.
-awaiting the device check that closes it**, so everything this file says about tokens
-and type is true of the source and is not yet true of anything installed.
-**Version:** 0.4.1, versionCode 401.
-catalog went from 24 types to 28 and one was renamed, which changes the contract in
-`docs/EVENT_FORMAT.md` that a second implementation is built from. Phase 3c's version is
-chosen when its device check passes.
+**Last updated:** August 27, 2026, end of phase 4.
+is awaiting the device check that closes it**, so everything this file says about focus
+sessions is true of the source and is not yet true of anything installed.
+**Version:** 0.5.0, versionCode 500.
+when its device check passes.
 **Installed and verified on:** Pixel 8 (`shiba`), over USB.
+
+**A note on the three lines above**, because the last edit to them left the file
+misleading for a day: the closing commit for phase 3c replaced the first line of each
+paragraph and left the continuation lines behind, so the header said phase 3c was
+awaiting a check it had already passed. Repaired here. A status line that is stitched
+from two states is worse than either of them.
 
 ---
 
@@ -22,7 +26,7 @@ chosen when its device check passes.
 | 3. Trail | done | closed |
 | 3b. Executive function retrofit | done | closed |
 | 3c. Design foundations, the polish pass | done | closed |
-| 4. Focus sessions | not started | #2 |
+| 4. Focus sessions | built, awaiting the device check | #2 |
 | 5. Engine skeleton and simulator | not started | #3 |
 | 6. Pulse | not started | #4 |
 | 7. Momentum | not started | #5 |
@@ -65,6 +69,33 @@ and an enumeration test that had not seen a new call site. A fifth was a genuine
 defect: three invariant tests built their attempt event before their fixture, so the
 attempt sorted first and was applied to an empty log, and one of them was passing for
 the wrong reason.
+
+---
+
+## What the device check found in phase 4
+
+Run on the Pixel 8 at 0.5.0. **Zero fatal exceptions** across the whole session
+lifecycle. The two criteria the specification insists are verified by gesture rather
+than by reasoning both pass.
+
+- **Back mid session leaves the session running.** The Areas card showed the
+  intensified wash and `In focus, 25 minutes left`, with no bar, and the ongoing
+  notification stayed posted. This is called out twice in the specification because
+  ending the session on navigation is the obvious implementation and it is wrong
+- **A force stop mid session restores it.** Killed at 24:38 and relaunched straight
+  into the focus screen at 23:46, with the time that passed while the process was
+  dead correctly accounted for and the arc depleted to match
+- `POST_NOTIFICATIONS` was requested on the first session start, never at launch
+- **Add 10 minutes did not restart the session and did not return the arc to full.**
+  23:46 became 33:18 and the elapsed gap stayed where it was, against the new longer
+  total
+- Ending past 60 seconds showed `End this session?` with `Keep going` before `End`
+- **A session ended early after two minutes reads `Session complete`.** Not
+  abandoned, not ended early, nothing implying failure. Addendum 01 4e, and it is the
+  most important sentence in the phase
+- The Trail rendered all three focus rows, and each resolved its item title. That is
+  the dangling preposition defect adversarial review found in phase 3 and which was
+  fixed before any focus event existed to expose it
 
 ---
 
@@ -152,9 +183,7 @@ Verified by hand on the device, not only in tests.
 - The Trail: filter chips, day grouping with an inline count, ten minute timestamp
   clustering, the mint completed row, and pagination by fourteen local day windows
 
-**Built in phase 3b and not yet checked by hand on the device.** They are in the code
-and under test, and the closing step in `MASTER_BUILD_PROMPT.md` 16.8 is what moves
-them into the list above.
+**Also working, added in phase 3b and checked on the device when that phase closed.**
 
 - Add an item without choosing an area. It goes to the inbox, the Areas header carries
   a plain `Inbox 3` chip while anything is in there, and filing it into an area is one
@@ -169,14 +198,44 @@ them into the list above.
   switch. Switching tabs twenty times should show it twice, once for Areas and once
   for the Trail
 
+**Built in phase 4 and not yet checked by hand on the device.** They are in the code
+and under test, and the closing step in `MASTER_BUILD_PROMPT.md` 16.8 is what moves
+them into the list above.
+
+- The **Focus chip** in the Areas header, which opens a chooser listing every area,
+  with the ones that have no active item dimmed, inert and reading `Add an item first`
+- A **focus session**: the indigo room, the 240dp ring depleting clockwise from the
+  top, the timer numeral inside it, `remaining` beneath the numeral, `End session` and
+  `Add 10 minutes`. Six elements and nothing else
+- The session **survives the app being killed**. The end instant is stored per device
+  and the remaining time is recomputed from the log, so a relaunch lands back on the
+  ring at the right number
+- **Back leaves the session running.** It does not end it, prompt or warn. The ongoing
+  notification is the way back in and the area card carries the countdown meanwhile
+- The **ongoing notification**, silent and low importance, with a countdown
+  chronometer, `Add 10 min` and `End` that both work without opening the app, and a
+  body that reopens the session
+- The **Live Update** on Android 16 and later, one depleting track in the area color,
+  degrading to the chronometer above with no word to the person about it
+- **Ending early is a completed short session** in the same words a full one uses.
+  Under a minute it is discarded silently; past a minute it asks once, `End this
+  session?`, with `End` and `Keep going` at equal weight
+- The **area card** shows the intensified wash and a live countdown while a session
+  runs on it, with no bar anywhere
+- Calm mode reaches all of it: the gradient keeps its geometry and loses its chroma,
+  the glow holds still, the bloom becomes a check appearing, and **the arc still
+  depletes**, because it is information
+
 ## What is deliberately not there yet
 
 Each of these is a phase, not an oversight. See the linked issue for why.
 
-- The **Focus chip** and **Pulse chip** in the Areas header. They arrive with their
-  features in phases 4 and 6 rather than sitting inert. `AreaCardModel` already
-  carries `focusMinutesRemaining`, so the in session card state is plumbed and
-  waiting.
+- The **Pulse chip** in the Areas header, which arrives with Pulse in phase 6 rather
+  than sitting inert. The Focus chip beside it landed in phase 4 and is permanent.
+- The **`Session length` selector** and the **`Five minute warning`** row, both under
+  Focus in Settings, phase 11, issue #10. The preferences behind them are built and
+  honored, so every session today is the stored default of 25 minutes and the
+  transition warning is off and reachable only by writing the key by hand.
 - The **settings glyph** in the Areas header, which arrives with phase 11.
 - The **archived areas view**, issue #15. Archiving works and removes the area from
   the list, but there is currently no way back. Worth knowing before archiving
@@ -217,17 +276,205 @@ Each of these is a phase, not an oversight. See the linked issue for why.
   would be a change to every screen in the app rather than a calm mode change, so it
   is pinned in `CalmModeContrastTest` instead: the day a caption lands on an in session
   card the build fails, rather than the screen quietly missing the floor.
-- **Nothing reads the stored `calmMode` key into the theme yet.**
-  `ClarityPreferences.calmMode` exists and `ClarityTheme` accepts the value, but
-  `MainActivity` does not pass it, because until phase 11 there is no control that can
-  set it. **The phase 11 Settings row has to wire it**, and `CalmModeTest` asserts the
-  resolution rule in the meantime.
+- **Nothing can set the stored `calmMode` key yet.** `MainActivity` reads it and
+  passes it to the theme, which phase 3c wired, but until the phase 11 Settings row
+  exists nothing writes it, so it is always absent and calm mode follows the OS reduce
+  motion setting, which is its specified default. `CalmModeTest` asserts the
+  resolution rule in the meantime. This entry previously said `MainActivity` did not
+  pass the value, which stopped being true in phase 3c.
+- **The soft tone at a natural completion is not built.**
+  `MASTER_BUILD_PROMPT.md` 10 asks for a soft tone and the `focusEnd` haptic. The
+  haptic fires. Nothing makes a sound while the person is looking at the ring, and the
+  only audible completion is the notification posted when the app is somewhere else,
+  which carries the phone's own notification sound through the Focus channel. Recorded
+  on issue #2.
+- **The `transitionWarn` haptic is not built**, which is the one row in
+  `design-v3.md` 9's table of seventeen with no implementation. `ClarityHaptics` does
+  not carry the event, and the in app signal the notifications layer publishes for
+  that moment has nothing collecting it. Everything visible about the five minute mark
+  is built. Recorded on issue #30.
+- **`transitionWarningStep` has no test**, and it is the piece of the transition
+  warning that is worth one: it is a pure function of three values, its own KDoc says
+  so, and issue #30 asks by name for a test that a five minute session fires nothing
+  and a session extended twice fires exactly twice. The mark's own arithmetic is
+  covered in `FocusSessionTest`; the arming rule is not.
+- **A session whose planned time runs out while the process is dead posts nothing.**
+  There is nothing alive to post it. The ongoing notification stays in the shade with
+  its chronometer at zero, because the platform draws that without help, and the
+  session resolves at the next resume, which is the other half of what
+  `MASTER_BUILD_PROMPT.md` 10 allows. The fix would be an alarm: an exact one needs a
+  permission section 18 puts out of scope, and an inexact one can be held by Doze for
+  a quarter of an hour and would announce the end of a session long after it ended.
+  **Telling someone with time blindness the wrong time is worse than telling them
+  nothing.** Recorded here rather than hidden in a comment.
+- **`FOCUS_ENDED_EARLY` from the notification action has no confirm**, where the same
+  act on the focus screen asks once past sixty seconds. Addendum 01 5c requires the
+  action to work without opening the app, and a confirm there could only be a second
+  notification or a screen, so the two requirements cannot both be met on that
+  surface. A notification action is already a deliberate tap on a labeled control
+  rather than a gesture that can complete by accident.
 - **The platform bottom sheet does not honor calm mode.** Its entrance and dismiss are
   Material's own, they honor the system animator scale and therefore reduce motion, and
   they expose no hook an app preference can reach. Recorded as a decision in
   `DECISIONS.md` and in `design-v3.md` 16.8 rather than left to be rediscovered.
 
 ---
+
+## Phase 4 delivered
+
+Focus sessions and the first Contemplative surface in the app, issue #2, with five
+Addendum 01 issues landing inside it rather than after it because retrofitting them
+into a finished focus surface would have cost more than building them in: **#28**
+early ending as a success state, **#29** add ten minutes, **#30** the transition
+warning, **#32** the Live Update, and **#49** the arc reading before the digits.
+
+**Nothing here is a rebuild of anything.** The event types, the reducer's focus fold,
+`FocusSessionState`, `FocusOutcome.ENDED_EARLY`, the Trail's focus rows and
+`AreaCardModel.focusMinutesRemaining` all existed before this phase and were built for
+it. What phase 4 added is the surface, the persistence, the notifications and the one
+ticker underneath all three.
+
+- **The Focus surface**, `ui/focus/`. One entry point rather than three destinations,
+  because the chooser, a running session and a finished one are the same room and
+  which is showing is a fact about the log rather than about navigation.
+  `FocusRoute.kt` enters `ContemplativeTheme`, which is a theme and not a branch
+  inside the Daylight theme, so the theme setting can never invert it.
+  `FocusBackdrop.kt` draws the indigo night in one Canvas that never recomposes,
+  `FocusRing.kt` holds the ring, the numeral and the completion bloom,
+  `FocusChooserScreen.kt`, `FocusSessionScreen.kt` and `FocusCompleteScreen.kt` are
+  the three faces, and `FocusControls.kt` is the two Contemplative controls.
+- **The session's arithmetic**, `data/repo/FocusSession.kt`. A file with no `android.`
+  and no `androidx.` import, holding the countdown, the restore decision, which
+  running session belongs to this device, whether a session may start, whether an
+  ending is shown or discarded, and the one ticker. It sits in `data` rather than in
+  `domain` because it answers what one device should show and write right now, which
+  `domain.replay` and `domain.query` do not do. It is a separate file so that a unit
+  test can reach every one of those rules without Room or DataStore.
+- **The write paths**, in `ClarityRepository`. `startFocus`, `completeFocus`,
+  `endFocusEarly` and `extendFocus`, plus `restoreFocus`, which is what a cold start
+  or a resume asks. **One running session at a time is enforced in the repository and
+  nowhere else**, because a chooser is not the only door in: a notification action,
+  and later a shortcut and a tile, all reach the same object, and a rule enforced in a
+  screen holds until the next screen.
+- **One ticker in the process.** `focusTicks` is shared and private, and everything
+  reads `focusCountdown`, so the ring, the ongoing notification, the Live Update and
+  the area card cannot derive remaining time four slightly different ways. The ticker
+  is attached only while a session is running and re-aligns to the second boundary on
+  every emission, so it cannot drift over an hour the way a fixed one second loop
+  does.
+- **Persistence across process death.** `focusSessionId` and `focusSessionEndsAt` join
+  DataStore as a per device handle. **They are a cache, not engine state**: the log
+  holds the start and the folded extensions, so any device computes the same end
+  instant without them, and `restoreFocus` falls back to the log and repairs the
+  handle whenever the two disagree. What they add is the one fact in a session that is
+  about a phone rather than about a person, which is which of the running sessions in
+  a merged log this device is the one running.
+- **The notifications**, `notifications/`. Three channels created at process start,
+  the ongoing notification with its countdown chronometer, the Live Update on
+  `Notification.ProgressStyle` where the platform allows it, one completion
+  notification and one transition warning, and a receiver that performs `Add 10 min`
+  and `End` without opening the app. All of it collects the same countdown and writes
+  through the repository, so it is not a second clock and not a second write path.
+- **The shell's half**, `ui/nav/FocusEntry.kt` and `ClarityShell.kt`. The surface is
+  not a tab; it covers the tabs and the tab bar while it shows, gets a ViewModel store
+  of its own that is cleared when it goes, and the system bars flip to light content
+  over the indigo night whatever the theme setting says.
+- **The area card in session**, `ui/areas/AreasFocus.kt`. Two values and two pure
+  functions, in a file with no Android import, deciding which card carries the
+  intensified wash and how many whole minutes it reads. **The card is handed minutes
+  and no denominator**, so the fraction a progress bar would need is not on that side
+  of the boundary at all.
+- **Forty five unit tests** across `FocusSessionTest` (20), `FocusFoldTest` (10),
+  `FocusEntryTest` (9) and `AreasFocusTest` (6), and every one of them exists because
+  the thing it holds is invisible in a screenshot.
+
+### The five things the specification said would go wrong
+
+Each of these is called out in `MASTER_BUILD_PROMPT.md` or `design-v3.md` because it
+is the obvious implementation and it is wrong. What stops each is structural rather
+than remembered.
+
+1. **Back ending the session.** There is no method on `FocusViewModel` a back handler
+   could call that ends anything, and `FocusEntry` is a value with no Compose, no
+   Android and no coroutine in it whose only job is remembering that somebody walked
+   away. The subtler version of the same failure is a shell that re-opens the surface
+   on the next frame because a session is running, which is a back button that does
+   nothing; `FocusEntry.leftSessionId` is what stops it, and `FocusEntryTest` holds
+   both.
+2. **A per frame countdown.** The tick is read inside the dial and inside two click
+   handlers and nowhere above them, so a value arriving once a second reaches the
+   numeral and the arc and nothing else. The session's unchanging facts live in a
+   separate value the tick cannot touch, and the notification layer throttles to a
+   render key so the shade is written once a minute rather than sixty times.
+3. **A conditional Contemplative theme.** `ContemplativeTheme` is entered by the route
+   and `LocalContemplativeColors` is what every composable on the surface reads. No
+   file in `ui/focus/` reads `LocalClarityColors`.
+4. **The word this app does not use.** No string in `strings.xml`, no content
+   description and nothing in the notifications package contains it, the type is
+   `FOCUS_ENDED_EARLY`, and the completion model carries no field saying which kind of
+   ending it was, so there is nothing for a later edit to render.
+5. **The digits outranking the shape.** The arc is 240dp and the numeral is 64sp,
+   capped at 1.3x the font scale while the ring does not grow, and
+   `design-v3.md` 11.3 now states that as a ratio a later session can check with a
+   ruler.
+
+### Eleven decisions where the obvious answer was rejected
+
+All eleven are written up in `DECISIONS.md` with the losing option named. In short:
+calm mode takes the collapse and the expanding circle and leaves the check; the Live
+Update is one segment and at most one point; the completion screen has one wording and
+is not told which ending it is drawing; the ring is thin and the weight goes to the
+tip; both actions on the end confirm carry the same weight; the Contemplative primary
+uses one of `design-v3.md` 10.7's two forms everywhere; the Focus chip is permanent
+and never becomes a countdown; nothing stores whether the notification permission has
+been asked for; the completion notification takes the phone's own sound; and the
+chooser names an area in `textDim` rather than in the area color.
+
+**The eleventh is recorded as open rather than settled**, because it is not a
+builder's to settle: a session a person ends themself fires the ordinary tap on the
+End control and nothing on the completion screen after it, while a natural completion
+fires `focusEnd`. Issue #28 asks for the two to be the same or deliberately gentler
+and says plainly that they are not to be absent. The recommendation is stated in
+`DECISIONS.md` and not taken.
+
+### What is deliberately not in this phase
+
+- **The `Session length` selector and the `Five minute warning` row**, both phase 11,
+  because there is no Settings screen. The preferences behind them are built and
+  honored, so every session today runs at the stored default of 25 minutes and the
+  transition warning is off.
+- **The Focus Countdown widget**, phase 12, which is the third of the three surfaces
+  `design-v3.md` 11.3 requires to read a session as a shape.
+- **The Pulse chip** beside the Focus chip, phase 6.
+- **The soft tone and the `transitionWarn` haptic**, which are not deferrals but
+  omissions, and are in the defects list above rather than here.
+
+### What the device check still has to find
+
+It has not run. Phase 2 found seven defects on the device that the build had passed,
+phase 3 found five more after the build was green, and phase 3b found four in the seam
+between two agents. **This phase is the one where a screenshot is least likely to
+catch anything**, because most of what it added is timing, process lifetime and the
+notification shade.
+
+Two of the checks are named in the specification and close the phase:
+
+- **`adb shell am force-stop` mid session, then relaunch.** The ring must come back at
+  the right remaining time. Repeat it after an `Add 10 minutes`, per issue #29, since
+  the stored instant has to have moved with the extension.
+- **The back gesture during a session.** The surface goes, the session keeps running,
+  the ongoing notification stays in the shade and the area card keeps counting down.
+  Then the notification body brings it back.
+
+The rest of what is worth pointing a phone at: the indigo room against the Daylight
+one it fades out of, the status bar glyphs over both, the numeral not jittering as the
+seconds change, the ongoing notification's chronometer agreeing with the ring, the
+Live Update chip on a device that can promote one and the chronometer on one that
+cannot, `Add 10 min` and `End` from the shade with the app closed, a completion
+arriving while the app is in the background, TalkBack reading the ring as one node in
+whole minutes, and calm mode over all of it. `adb logcat` after every step, per
+`CLAUDE.md`: several defects in this project were silent app exits that a screenshot
+passed.
 
 ## Phase 3c delivered
 

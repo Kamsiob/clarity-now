@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.kamsiob.claritynow.ui.areas.AreasViewModel
+import com.kamsiob.claritynow.ui.focus.FocusViewModel
 import com.kamsiob.claritynow.ui.trail.TrailViewModel
 
 /**
@@ -22,6 +23,11 @@ object ClarityViewModelFactory : ViewModelProvider.Factory {
                 repository = ClarityGraph.repository,
                 preferences = ClarityGraph.preferences,
                 clock = ClarityGraph.clock,
+            ) as T
+
+            FocusViewModel::class.java -> FocusViewModel(
+                repository = ClarityGraph.repository,
+                preferences = ClarityGraph.preferences,
             ) as T
 
             TrailViewModel::class.java -> TrailViewModel(

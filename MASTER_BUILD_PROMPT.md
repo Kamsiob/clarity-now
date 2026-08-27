@@ -255,7 +255,15 @@ Room tables `clarity_area`, `clarity_item`, `clarity_focus_session`, `clarity_pu
 
 They exist purely for query speed. Any can be dropped and rebuilt from the log with no data loss, and a debug menu action does exactly that as a proof.
 
-**DataStore holds only per-device values, never synced:** `theme`, `focusDurationMinutes` (default 25), `focusHighlightEnabled` (default true), `afterCompleting` (default AUTO_PROMOTE), `pulseRemindersEnabled` (default true), `pulseReminderHour` (default 20), `hasCompletedOnboarding`, `hasSeenTutorial`, `originId`, `lamportCounter`, `lastExportAt`, and `calmMode`, which joined the list in phase 3b. `calmMode` is **absent** until the user sets it, and while it is absent calm mode follows the OS reduce motion setting live, per 14b.12. **Pending from Addendum 01:** `transitionWarningEnabled`, default false, in phase 4.
+**DataStore holds only per-device values, never synced:** `theme`, `focusDurationMinutes` (default 25), `focusHighlightEnabled` (default true), `afterCompleting` (default AUTO_PROMOTE), `pulseRemindersEnabled` (default true), `pulseReminderHour` (default 20), `hasCompletedOnboarding`, `hasSeenTutorial`, `originId`, `lamportCounter`, `lastExportAt`, and `calmMode`, which joined the list in phase 3b. `calmMode` is **absent** until the user sets it, and while it is absent calm mode follows the OS reduce motion setting live, per 14b.12. `transitionWarningEnabled`, default false, joined in phase 4; its Settings row is
+phase 11. **Phase 4 added two more, `focusSessionId` and `focusSessionEndsAt`**, which
+together name the running session this device is the one running and the instant its
+planned time ends. They are a cache rather than engine state, which is the distinction
+rule 6 in `CLAUDE.md` is really applying: the log holds the start and the folded
+extensions, so any device computes the same end instant with no help from these, and
+the log wins whenever the two disagree. What they add is the one fact in a session that
+is about a phone rather than about a person, since a merged log can legitimately carry
+one running session per device. See 10 and 14b.5.
 
 **Nothing the Logic Engine reads may live in DataStore.** Variation history, escalation state, personal records, first-ever flags and plan history all derive from the log so two devices compute the same answer. This is a hard rule and it will not fail loudly if you get it wrong.
 
@@ -423,7 +431,11 @@ All engine reads go through `TrailQueries`, a pure facade with functions such as
 - **Abandonment is treated neutrally everywhere.** Pulse and Report language never blames
 - While running, the Areas card for that area shows the intensified wash and live countdown when `focusHighlightEnabled` is on. **There is no bar**
 
-**Pending, phase 4.** Four changes from Addendum 01 land in this flow: a session ended early is presented as a completed short session rather than as a stopped one, ten minutes can be added to a running session, an optional transition warning fires five minutes out, and the session becomes visible outside the app as a Live Update. See 14b.5 and 14b.6.
+**Built, phase 4, and awaiting the device check that closes it.** Four changes from Addendum 01 landed with it rather than after it: a session ended early is presented as a completed short session rather than as a stopped one, ten minutes can be added to a running session, an optional transition warning fires five minutes out, and the session is visible outside the app as a Live Update. See 14b.5 and 14b.6.
+
+**One thing in the list above is not built, and it is the tone.** A natural completion fires the `focusEnd` haptic and shows the completion state, and it makes no sound at all while the person is looking at the ring. The gentle notification posted when the app is somewhere else does sound, because the Focus channel in 13.4 carries the phone's own notification sound, so the audible half of a completion exists on that path and only on that path. It is the smaller of the two signals this phase owes and did not deliver; the other is the `transitionWarn` haptic in `design-v3.md` 9. Both are recorded on issue #2 rather than left to be noticed.
+
+**Two of the mechanics above can only be confirmed on the phone**, and the phase does not close until they are: killing the app mid session with `adb shell am force-stop` and relaunching restores the ring at the right remaining time, and the back gesture during a session leaves the session running with the ongoing notification and the card countdown both still correct.
 
 ---
 
@@ -620,7 +632,9 @@ Channels: **Focus** (session complete, default importance, gentle sound), **Remi
 
 Request `POST_NOTIFICATIONS` contextually, the first time the user starts a focus session or enables a reminder. **Never at launch.** Every notification deep links correctly. **No marketing notifications, ever. No re-engagement notifications, ever. Nothing that exists to pull the user back.**
 
-**Pending, phase 4.** One promoted notification joins these, the focus session Live Update, on the Ongoing channel and under the same rules: silent, dismissed when the session ends, never re-engaging. It needs `POST_PROMOTED_NOTIFICATIONS`, which is a notifications permission and therefore inside what section 18 allows. See 14b.6.
+**Built, phase 4.** One promoted notification joined these, the focus session Live Update, on the Ongoing channel and under the same rules: silent, dismissed when the session ends, never re-engaging. It needs `POST_PROMOTED_NOTIFICATIONS`, which is a notifications permission and therefore inside what section 18 allows, and which the no internet gate does not match. See 14b.6.
+
+**All three channels are created at process start, in one place**, and creating them posts nothing, alerts nobody and needs no permission. A channel's importance and sound are fixed for an install the moment it is created and cannot be raised afterwards, so a channel created late by whichever code path happened to need it is a channel whose settings were chosen by that code path. Reminders therefore exists from phase 4 with nothing behind it until phase 6, which is the price of the rule and is the smaller cost. If a later phase needs different settings on a channel it changes the id, deletes the old one and creates the new one, which is the platform's only escape from that immutability.
 
 ### 13.5 App shortcuts and the quick settings tile
 
@@ -648,7 +662,7 @@ A Daylight screen, rows on canvas under sentence-case sideheads, **no card conta
 
 **Your data.** `Export everything`, one JSON file via the Storage Access Framework, showing the last export date. `Import from a file`, validating schema version and integrity before a transactional full replace with a typed confirmation. `Erase all data`, per 14.2.
 
-**Pending from Addendum 01.** Two rows join this screen and one grows. Under **Focus**, `Five minute warning`, off by default, in phase 4 (14b.5). Under **Appearance**, `Calm mode`, following the OS reduce motion setting by default. **The setting was built in phase 3b and is honored everywhere in the app; the row is pending here, in phase 11, because this screen does not exist yet** (14b.12). Under **Your data**, export gains an optional password and a plain statement of what an unencrypted file is, import gains full pre validation and a choice of replace or merge, and one quiet line appears when the last export is older than 30 days and real data exists, in phase 11 (14b.7).
+**Pending from Addendum 01.** Two rows join this screen and one grows. Under **Focus**, `Five minute warning`, off by default. **The setting behind it was built in phase 4 and is honored by the running session, the ring and the notifications; the row is pending here, in phase 11, because this screen does not exist yet** (14b.5). The `Session length` selector above it is pending for the same reason: phase 4 reads `focusDurationMinutes` and starts every session at it, so today every session is the stored default of 25 minutes and the eight options in section 10 have no control to be chosen from. Under **Appearance**, `Calm mode`, following the OS reduce motion setting by default. **The setting was built in phase 3b and is honored everywhere in the app; the row is pending here, in phase 11, because this screen does not exist yet** (14b.12). Under **Your data**, export gains an optional password and a plain statement of what an unencrypted file is, import gains full pre validation and a choice of replace or merge, and one quiet line appears when the last export is older than 30 days and real data exists, in phase 11 (14b.7).
 
 **Privacy.** `Privacy policy` opening the in-app sheet with the text in 14.3. `Open source licenses` listing AGPL-3.0 for the app, SIL OFL for Newsreader and Hanken Grotesk, Apache 2.0 for Material Symbols and AndroidX. Then the permission card:
 
@@ -800,7 +814,7 @@ This audience leaves and comes back. A fortnight of nothing is not a failure of 
 
 ### 14b.5 Focus sessions: ending early, adding time, the transition warning
 
-**Pending, phase 4.** From Addendum 01 4e, 4f and 4g. Section 10 is otherwise unchanged.
+**Built, phase 4, except where this section says otherwise.** From Addendum 01 4e, 4f and 4g. Section 10 is otherwise unchanged.
 
 **Ending early is a success state.** A session ended early is a **completed short session**, and the completion screen says so in the same shape a natural completion uses, with the same actions. Fourteen minutes is fourteen minutes. The rule in 10 that discards a session under 60 seconds silently stands, because that is a mis-tap rather than a short session.
 
@@ -810,9 +824,11 @@ This audience leaves and comes back. A fortnight of nothing is not a failure of 
 
 **The transition warning is optional and off by default.** A quiet five minutes left signal before a session ends, controlled in Settings. **Never a full notification unless the app is backgrounded.** It does not fire when fewer than five minutes remain at the moment the session starts or the moment it is switched on, which would make it fire immediately and teach the person to distrust it. Switching from one task to another is the expensive act for this audience, and a warning is the difference between a transition and an interruption. It is off by default because an unannounced signal is also an interruption.
 
+**What of it is built, stated plainly because the halves shipped apart.** The mark on the ring track, the tick brightening when the arc reaches it, the word beneath the numeral changing to `5 minutes left` and staying, the point on the Live Update track, the silent notification when the app is elsewhere with no Live Update, and the arming rule that makes an extension re-arm the signal exactly once are all built, phase 4. **The haptic is not.** `design-v3.md` 9 gives the moment one `transitionWarn` event, `ClarityHaptics` does not carry it yet, and nothing collects the in app signal the notifications layer publishes. The setting is stored and defaults to false; its Settings row is phase 11, per 14.1. Recorded on issue #30.
+
 ### 14b.6 The Live Update
 
-**Pending, phase 4, extended in phase 12.** From Addendum 01 Step 5. The surface itself is specified in `design-v3.md`.
+**Built, phase 4, extended in phase 12.** From Addendum 01 Step 5. The surface itself is specified in `design-v3.md`.
 
 A focus session is exactly the user initiated, start to end, time bound task that Android's Live Updates exist for. On a Pixel it surfaces as a status bar chip that expands, and on Samsung devices in the Now Bar. **For an audience with time blindness, the session being visible outside the app is not a nicety, it is the point.**
 
@@ -823,6 +839,8 @@ A focus session is exactly the user initiated, start to end, time bound task tha
 **Actions, two at most.** `Add 10 min` and `End`. Both work without opening the app. Tapping the body opens the focus screen.
 
 **Degradation is required, not optional.** Below API 36, or where promoted notifications are unavailable or denied, fall back to the ongoing notification with a chronometer that section 10 already specifies. The app is fully usable with no Live Update at all. **Never gate a feature behind it and never tell the user their device is missing out.**
+
+**How the built version answers the availability question**, since 3.3 asks for the platform to be verified rather than trusted. `NotificationManagerCompat.canPostPromotedNotifications` on androidx core 1.19.0 answers both cases in one call: it returns false below API 36 without touching the platform and asks the platform above it. It is checked before every post rather than once, because promotion can be revoked in system settings while a session is running. Both renderings carry one notification id, so a revocation mid session changes the notification a person is already looking at rather than adding a second one. The device this project builds for runs API 36 or later; every device below it takes the chronometer path, which is why that path is the base and the promoted half is the branch.
 
 **This is the only Live Update the app will ever post.** Not for Pulse, not for the Report, not for a reminder, not for anything the user did not just start. It is silent, it is dismissed when the session ends, it never re-engages, and it is not a marketing surface.
 
@@ -905,14 +923,14 @@ This needs a new fact, rules for both branches, and tests for both. The fact's d
 
 ### 14b.12 What this adds to Settings and to DataStore
 
-**Calm mode and the entrance rule are built, phase 3b. Both Settings rows are pending, phases 4 and 11.**
+**Calm mode and the entrance rule are built, phase 3b. The transition warning key is built, phase 4. Both Settings rows are pending, phase 11.**
 
 Two per-device keys join the list in 5.4, and neither is engine state, so neither violates the rule that nothing the engine reads may live in DataStore.
 
 | key | default | phase | row |
 |---|---|---|---|
 | `calmMode` | follow the OS reduce motion setting | key 3b, row 11 | Appearance |
-| `transitionWarningEnabled` | false | 4 | Focus |
+| `transitionWarningEnabled` | false | key 4, row 11 | Focus |
 
 **Calm mode** is a Settings toggle in addition to and independent of the OS reduce motion setting, which `design-v3.md` 8.3 already honors. It reduces motion to crossfades, reduces the saturation of washes and accents, disables the staggered list entrance and the breathing glow, and **applies to the widgets and the Live Update as well as to the app**. `design-v3.md` owns every value it changes. It is what makes Material 3 Expressive safe for this audience rather than overwhelming: **ship the expressive direction and the exit.**
 
@@ -1128,23 +1146,23 @@ Phrasing of this shape: `Built for people who find long lists paralyzing. Design
 - No estimate observation fires below five completed items carrying an estimate inside the window the sentence describes
 - **A persona whose activity is cyclical across a simulated year receives no decline, neglect or fading observation**, because every dip they have has a precedent
 - **A re-entry persona receives no Pulse for two days and no decline, neglect or gap observation for a week**, and no surface states the length of the gap, counts anything, or asks where they were
-- **The word `abandoned` reaches nothing a person can see**, including the Trail and every accessibility label. Whether it also has to be absent from the export file follows the open naming decision in 5.2
+- **The word `abandoned` reaches nothing a person can see**, including the Trail and every accessibility label. The naming decision in 5.2 is settled and the type is `FOCUS_ENDED_EARLY`, so it is absent from the export file too. Phase 4 built the Focus surface and every string on it, and `EndedEarlyRenameTest` holds the line
 - Export and import round trip, encrypted and unencrypted, to byte identical state, and a corruption suite refuses cleanly and leaves the database unchanged
 - An unfiled item is never `ACTIVE`, never `COMPLETED`, never counted in an area's queue, and never named by the engine
 - **`APP_OPENED` is excluded from `isUserActivity`**, from the Trail, and from every day header count
 - **No widget reads a corpus or runs the engine.** Automated over the imports of the `widget` package
-- Calm mode is honored in the app, in every widget and in the Live Update, and the staggered entrance fires once per session per screen
+- Calm mode is honored in the app, in every widget and in the Live Update, and the staggered entrance fires once per session per screen. The app is phase 3b, the Live Update and the whole Contemplative surface are phase 4, the widgets are phase 12
 
 **Manual**
 - Promotion animation clean with no double text
-- Focus session survives process kill
+- Focus session survives process kill. **This is one of the two checks that close phase 4** and it cannot be met by reasoning: `adb shell am force-stop` mid session, then relaunch, then read the remaining time off the ring
 - **Swipe right completes; full swipe left swaps; delete requires a tap and offers undo; all three reachable without swiping**
 - Widgets update after a completion
 - Tutorial spotlights align on the smallest and largest screens
 - Font scale 200 percent; dark mode across all Daylight screens; Contemplative screens identical in both system themes
 - TalkBack pass, reduce motion pass, haptics correct and never repeated
 - **Predictive back shows the correct destination from every screen**, verified by gesture on the device
-- **Back during a focus session leaves the session running**, with the ongoing notification and the live countdown on the card both still correct
+- **Back during a focus session leaves the session running**, with the ongoing notification and the live countdown on the card both still correct. The other of the two checks that close phase 4, and it is a gesture on the device rather than a unit test, though `FocusEntryTest` holds the decision underneath it
 - **Every screen can be left without the tab bar**, verified by walking each destination and pressing back
 - **Zero areas is reachable and usable**, with the FAB creating an area
 - **A queued item opens an edit sheet**
@@ -1183,7 +1201,11 @@ It carries **tokens and type only**, and every item in it is a `design-v3.md` ch
 
 **What it deliberately leaves alone is phase 12b**, below, and the split is argued for there.
 
-**Phase 4. Focus.** Sessions, process death persistence, ongoing notification, completion flow, the indigo surface and its motion. **Plus Addendum 01:** early ending as a completed short session, `Add 10 minutes` writing `FOCUS_EXTENDED`, the transition warning off by default (14b.5), and the Live Update on `Notification.ProgressStyle` with its required silent fallback (14b.6).
+**Phase 4. Focus. Built, and awaiting the device check that closes it.** Issue #2. Sessions, process death persistence, the ongoing notification, the completion flow, the indigo surface and its motion. **Plus Addendum 01:** early ending as a completed short session (#28), `Add 10 minutes` writing `FOCUS_EXTENDED` (#29), the transition warning off by default (14b.5, #30), the Live Update on `Notification.ProgressStyle` with its required silent fallback (14b.6, #32), and the arc reading before the digits on every surface that shows a session (11.3, #49).
+
+**Two things it owes and did not deliver**, both named where they belong rather than dropped: the soft tone at a natural completion, section 10, and the `transitionWarn` haptic, `design-v3.md` 9. Both are signals rather than structure, both are one call each once `ClarityHaptics` carries the event, and neither gates anything. **Two things belong to phase 11 rather than to this phase**, and the preferences behind them exist and are honored: the `Session length` selector and the `Five minute warning` row, 14.1.
+
+**The two checks that close it are on the phone and nowhere else.** A force stop mid session followed by a relaunch, and the back gesture during a session. Both are in the manual list in section 17, both are the specification's own words, and neither can be met by reading the code.
 
 **Phase 5. Engine skeleton and simulator.** Fact extraction, rule catalog structure, selection, realization, validation. **The simulator in `devtools` before any corpus work.** Roughly 40 rules and 150 sentences to prove the shape end to end.
 

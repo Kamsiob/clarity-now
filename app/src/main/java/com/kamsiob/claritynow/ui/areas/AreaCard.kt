@@ -304,13 +304,28 @@ private fun StatusLine(area: AreaCardModel, accent: Color) {
  * screen reader user gets the same hierarchy the sighted card has: the thing itself,
  * then the way in. Reversing them would announce a fragment of a task before naming
  * the task, which is disorienting in exactly the way the card's type scale avoids.
+ *
+ * **[focusStatus] is the status line and it is read out**, because the in session
+ * state is carried visually by an intensified wash and a colored line, design-v3.md
+ * 10.3, and section 13 does not let color be the only signal. It is the same sentence
+ * the card draws, taken from `strings.xml` by the caller, so there is no second wording
+ * of it here to drift or to editorialize: a session is `In focus, 7 minutes left` and
+ * nothing about it is ever a judgment.
  */
-fun areaCardDescription(area: AreaCardModel, idleTitle: String): String = buildString {
+fun areaCardDescription(
+    area: AreaCardModel,
+    idleTitle: String,
+    focusStatus: String? = null,
+): String = buildString {
     append(area.name)
     append(". ")
     append(area.activeItemTitle ?: idleTitle)
     if (!area.isIdle) {
         area.activeItemFirstStep?.let {
+            append(". ")
+            append(it)
+        }
+        focusStatus?.let {
             append(". ")
             append(it)
         }
@@ -326,8 +341,14 @@ fun areaCardDescription(area: AreaCardModel, idleTitle: String): String = buildS
 @Composable
 fun AreaCardSemantics(area: AreaCardModel, modifier: Modifier = Modifier): Modifier {
     val idleTitle = stringResource(R.string.area_idle_title)
+    val minutes = area.focusMinutesRemaining
+    val focusStatus = if (minutes == null) {
+        null
+    } else {
+        pluralStringResource(R.plurals.area_in_focus_minutes, minutes, minutes)
+    }
     return modifier.clearAndSetSemantics {
-        contentDescription = areaCardDescription(area, idleTitle)
+        contentDescription = areaCardDescription(area, idleTitle, focusStatus)
     }
 }
 

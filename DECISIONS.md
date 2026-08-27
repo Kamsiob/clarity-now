@@ -71,6 +71,300 @@ The old entry stays where it is, wrong, dated, and useful.
 
 ---
 
+## August 27, 2026: the eleven open choices in the focus surface
+
+Phase 4, issues #2, #28, #29, #30, #32 and #49. Addendum 01 4e, 4f, 4g, Step 5 and 8d,
+`MASTER_BUILD_PROMPT.md` 10, 13.4, 14b.5 and 14b.6, `design-v3.md` 3.3, 8.2, 9, 10.18,
+11, 11.3, 11.4 and 16. Ten things those documents leave to the builder, settled here
+under `design-v3.md` 15, and one that is not a builder's to settle and is recorded as
+open.
+
+**Two platform first checks, recorded so nobody redoes them.** The Live Update is
+the platform's own promoted notification progress style, taken at step 1 of
+`design-v3.md` 17.1, and the end of session confirm is the platform `AlertDialog`
+themed, taken at step 2. Neither earns a register row, because the register at the foot
+of this file records components built by hand. What the availability check turned out
+to be is worth writing down, since `MASTER_BUILD_PROMPT.md` 3.3 asks for the platform
+to be verified rather than trusted: on androidx core 1.19.0,
+`NotificationManagerCompat.canPostPromotedNotifications` answers both halves of the
+question in one call, returning false below API 36 without touching the platform and
+asking the platform above it. The register's `Depleting focus ring` row moves to built
+in the same commit as this entry.
+
+### Calm mode takes the collapse and the expanding circle, and leaves the check
+
+**Decided.** In calm mode and under reduce motion the completion bloom is the check
+appearing over 150ms. The ring does not collapse, the soft circle does not expand, and
+the check does not scale from 0.6. Implemented in `ui/focus/FocusRing.kt` and stated in
+`design-v3.md` 16.6 item 9, which this entry did not have to change because the row was
+already written.
+
+**Why.** The row in 16.6 says crossfade to the completed state and the check still
+appears, and the question this phase actually had to answer is what "still appears"
+means when the thing it appears out of is gone. A check that faded in where a bloom
+would have been is the answer, because the check is the information and the bloom is
+the atmosphere. Calm mode removes motion, not information, 16.4, and this surface has
+exactly one piece of information at that moment: the session finished.
+
+**Considered and rejected: keeping a shortened bloom.** Compressing 700ms to 150ms
+produces a fast flare, which is more startling than the slow one it replaces and is the
+opposite of what a person switched calm mode on for. **Also rejected: holding the ring
+in place at zero.** It reads as a session that has not finished yet, which is a false
+statement rather than a quieter one.
+
+**Revisit if** anyone reports that the completion screen arrives with no sense that
+anything happened. The honest fix then is the tone `MASTER_BUILD_PROMPT.md` 10 already
+asks for and phase 4 did not build, not a return of the motion.
+
+### The Live Update track is one segment and at most one point
+
+**Decided.** One undivided segment carrying the area color, with progress set to the
+seconds **remaining** rather than the seconds spent, so the track depletes. One point,
+only when the transition warning is on, at the five minute position, taking no color of
+its own. Implemented in `notifications/FocusNotificationPoster.kt` and stated in
+`design-v3.md` 11.4.
+
+**Why.** `MASTER_BUILD_PROMPT.md` 14b.6 says a single track is the likely right answer
+and asks for segments or points to be used only if they genuinely add clarity, and the
+two halves come out differently. Dividing the track would invent a structure inside a
+session that the session does not have: nothing happens at the boundary between one
+segment and the next, so a person would be reading a shape that means nothing. The
+single point is the opposite case, because 11.4 makes the track reaching that point the
+state change the transition warning asks for. The point is the mechanism rather than
+decoration, and with the warning off there is no point and no state change at all.
+
+**Considered and rejected: a segment per five minutes**, which is the demonstration
+every platform release note leads with. It would put four boundaries on a twenty five
+minute session, none of which is an event, for an audience that reads a shape rather
+than a number precisely because arithmetic is expensive. **Also rejected: coloring the
+point**, which 11.4 forbids in the same sentence that allows the track one color.
+
+**Revisit if** a later session finds a real interval inside a session worth marking. A
+platform feature is not one.
+
+### The completion screen has one wording, and is not told which ending it is drawing
+
+**Decided.** The value the completion screen is handed carries the session id, the area
+name, the item, the real duration in minutes and whether the item can still be
+completed. **It carries no field recording whether the planned time ran out.**
+Implemented in `ui/focus/FocusViewModel.kt` and stated in `design-v3.md` 11.
+
+**Why.** Addendum 01 4e requires a session ended early to reach the same screen in the
+same words with the same actions, and the obvious implementation passes a boolean and
+branches on nothing today. The problem with that is not this phase, it is the next one:
+a fact a screen holds is a fact a later edit can render, and the edit that renders it
+will look reasonable at the time. Not handing the screen the fact is the only version
+of the rule that cannot rot. The duration line is the real duration, rounded to nearest
+the way `domain/query/TrailRow.kt` rounds it so the same session does not read as
+fourteen on one surface and fifteen on the other, and it is never a comparison against
+what was planned.
+
+The one asymmetry that survives is the sixty second threshold in
+`MASTER_BUILD_PROMPT.md` 10, and it is deliberately about the interface rather than
+about the log: both endings write `FOCUS_ENDED_EARLY`, and what changes under a minute
+is that there is no confirm before it and no completion screen after it, because forty
+seconds is a mis-tap rather than a short session somebody meant to have.
+
+**Considered and rejected: a second, gentler completion screen for a short session.**
+It is what a well meaning designer would build and it is the exact failure 4e names.
+Fourteen minutes is fourteen minutes, and a quieter acknowledgment is a verdict
+delivered in a whisper.
+
+**Revisit if** the owner decides a person should be able to see, on the screen, that a
+session ran its full planned length. That is a change to 4e and an owner's call, and it
+would start with the corpus rather than with this model.
+
+### The ring is thin and the weight is spent on the tip
+
+**Decided.** A 6dp stroke on the 240dp ring, a 10dp filled tip, and a 15dp radial
+falloff behind the tip at 38 percent. Implemented in `ui/focus/FocusRing.kt` and stated
+in `design-v3.md` 11.
+
+**Why.** v3 fixed the diameter and said nothing about the stroke, and the statistically
+common answer is a heavy ring at twelve to sixteen dp, which is what an activity ring
+looks like and what `design-v3.md` 15.1 names under a ring closing toward a daily
+target. A heavy ring reads as a target filling even when it is depleting, because the
+weight is what makes it look like a container being filled. A fine line with a bright
+point traveling it reads as time passing, and it is the treatment that belongs in a
+room lit by a radial glow and eight specks.
+
+**Considered and rejected: a heavy ring with a lighter track**, which would have read
+as the thing 15.1 warns about with an extra step. **Also rejected: no tip at all.** The
+tip is what makes the direction of travel legible at a glance, which is the whole claim
+in `design-v3.md` 11.3.
+
+**Revisit if** the arc turns out to be hard to read at arm's length on the device. The
+first move then is the tip, not the stroke.
+
+### Both actions on the end confirm carry the same weight
+
+**Decided.** `End` and `Keep going` are two text buttons in the same treatment.
+Neither is filled, neither is styled as the recommendation, and neither carries the
+`warn` haptic. Implemented in `ui/focus/FocusSessionScreen.kt`.
+
+**Why.** The obvious answer is a filled confirm and a quiet dismiss, and it fails in
+both directions at once. Filling `Keep going` recommends carrying on, which is the app
+having an opinion about how long somebody should work. Filling `End` and dressing it as
+destructive says ending is a loss, which is what Addendum 01 4e exists to deny. The
+`warn` haptic is scoped by `design-v3.md` 9 to a destructive confirmation arming, and
+this confirmation guards against a mis-tap rather than against a loss.
+
+**Considered and rejected: no confirm at all past sixty seconds**, which
+`MASTER_BUILD_PROMPT.md` 10 rules out by naming the dialog and its two words.
+
+**Revisit if** the two equal actions test as hard to tell apart. The answer then is the
+order and the spacing, not the weight.
+
+### The Contemplative primary uses one of 10.7's two forms everywhere
+
+**Decided.** Every filled control on the Focus surface is the surface accent at 14
+percent with a bright label. The translucent white pill at 9 percent, which
+`design-v3.md` 10.7 offers beside it, is not used anywhere in this app. Implemented in
+`ui/focus/FocusControls.kt`.
+
+**Why.** 10.7 offers two forms and does not say when each applies, and section 11
+settles it by specifying `Mark item complete` on the completion screen as being in the
+accent. A control that changed its treatment between two screens of the same surface
+would read as two different controls, and the End session pill and the Mark item
+complete pill are one component in this app with one appearance. One separation device,
+6.1: a background lightness shift, no border, and no shadow, because the Contemplative
+world has none.
+
+**Considered and rejected: the white pill for End and the accent for Mark item
+complete**, on the argument that ending is a different kind of act from completing. It
+is not: both are ordinary, both are what the screen is for, and giving one of them a
+different container would say otherwise.
+
+**Revisit if** a later Contemplative surface needs two filled controls on one screen at
+different ranks. Pulse in phase 6 is the first test of that.
+
+### The Focus chip is permanent, and never becomes a countdown
+
+**Decided.** The Focus chip is present in the Areas header at all times, including when
+no area has an active item, and it keeps its label while a session runs rather than
+becoming a live timer. Implemented in `ui/areas/AreasScreen.kt`.
+
+**Why.** `design-v3.md` 10.1 calls the chip permanent, and the chooser has an empty
+state of its own reading `Nothing to focus on yet`, which is a sentence that explains
+the situation where a missing chip would leave a person wondering where the feature
+went. A disabled control is a question somebody has to answer; a permanent one that
+leads to an explanation is an answer. As for the countdown, it would be one line of
+code, and the area card two thumbs below already carries the live countdown beside the
+name of the item the session is on. **Two surfaces reporting the same number in one
+screenful is how a person learns to read neither**, and the chip's job is to be the way
+back in, which it does under the same label either way.
+
+**Considered and rejected: hiding or dimming the chip with no active item anywhere.**
+`design-v3.md` 10.16 settles the same question for the inbox chip in the opposite
+direction, and the difference is real: the inbox chip is a count, so with nothing in
+the inbox it has nothing to say, while the Focus chip is a door.
+
+**Revisit if** the quick settings tile in phase 12 makes a second countdown surface
+unavoidable anyway.
+
+### Nothing stores whether the notification permission has been asked for
+
+**Decided.** The request is made at one moment, the first tick of a session a person
+just started, and no flag records that it happened. Implemented in
+`notifications/NotificationPermission.kt`.
+
+**Why.** The obvious implementation keeps a "we have asked" key so the prompt appears
+exactly once, and it does not survive the check `design-v3.md` 15 asks for. From
+Android 13 the platform already caps the prompt at two appearances for the life of the
+install and denies silently afterwards, so the key would buy one fewer dialog in
+exchange for a value in DataStore that has to be erased, exported and reasoned about.
+It would also be wrong in the one case where asking again is right, which is a person
+who granted the permission and later revoked it.
+
+The moment is derived rather than announced, which is the part worth keeping: a session
+whose elapsed time is under five seconds was started here, and a session restored after
+a process death was not. Written as "the session id went from null to something" it
+would fire at launch, because on a cold start the restore is asynchronous and the id
+does go from null to something. `MASTER_BUILD_PROMPT.md` 13.4 forbids asking at launch
+in the same sentence that asks for a contextual request.
+
+**Considered and rejected: asking on the chooser rather than on the session.** It is
+earlier and therefore feels safer, and it asks people who opened the chooser and
+changed their mind.
+
+**Revisit if** the platform changes its own cap, which is the only thing this reasoning
+rests on.
+
+### The completion notification takes the phone's own sound
+
+**Decided.** The Focus channel is created at default importance with no call to
+`setSound`, so a completion arriving while the app is elsewhere makes the sound the
+person already chose for notifications. No tone is bundled. Implemented in
+`notifications/ClarityNotificationChannels.kt`.
+
+**Why.** `MASTER_BUILD_PROMPT.md` 13.4 asks for a gentle sound and the obvious answer
+is to ship a soft chime. It loses for a specific reason rather than a stylistic one: a
+person who has already set their phone to a quiet notification sound has told the
+device what gentle means to them, and an app supplied tone overrides that decision on
+the one notification this app posts that makes any sound at all. All three channels are
+created together at process start, because a channel's importance and sound are frozen
+for an install the moment it is created, and a channel created late by whichever code
+path needed it is a channel whose settings were chosen by that code path.
+
+**Considered and rejected: a bundled chime**, and **low importance for the completion
+channel**, which would have made it silent and would have made the one moment this app
+is allowed to interrupt for arrive as nothing.
+
+**Revisit if** a person reports the completion sound is jarring, at which point the
+answer is their own system setting and this decision is what makes that true.
+
+### The chooser names an area in `textDim`, not in the area color
+
+**Decided.** On the Focus chooser the area name is `textDim` and the 7dp dot beside it
+carries the identity at full saturation. Implemented in `ui/focus/FocusChooserScreen.kt`.
+
+**Why.** `design-v3.md` 3.4 permits an area label in the accent as one of four forms an
+area color may take, and the helper that computes that variant was measured against a
+Daylight card. On the indigo gradient it would be a fifth application point on a ground
+nothing has measured, which is exactly the defect the phase 3c contrast audit found on
+a surface that had been reasoned about rather than measured. The dot is excluded from
+calm mode's transform by name, 16.2, because it is how an area is recognized, and it is
+enough on its own.
+
+**Considered and rejected: measuring the accent variant against the indigo ground and
+using it.** It is the better looking answer and it is a contrast audit this phase did
+not run. It can be done later with a number in hand.
+
+**Revisit if** the phase 12b surface pass measures the Contemplative ground and finds
+headroom.
+
+### Open, and not a builder's to settle: a session a person ends fires no haptic
+
+**Not decided. This is the owner's.** At a natural completion, with the person watching
+the ring, the completion screen fires `focusEnd`, which is `design-v3.md` 9's row for
+that moment. At a session the person ends themself, the End control fires the ordinary
+`tap` and the completion screen that follows fires nothing. A session resolved on the
+next resume fires nothing either, and that part is settled: section 9 forbids a haptic
+on screen entry.
+
+**Why it is open.** Issue #28 asks for the completion haptic and tone for an early end
+to be the same as for a natural completion **or deliberately gentler**, and says
+plainly that they are not to be absent, because absence reads as the app withholding
+acknowledgment. What was built is absent. There is a real argument for it, which is
+that section 9 fires nothing more than once per user action and the tap on End is that
+action, so firing `focusEnd` a beat later would be a second event for one gesture. That
+argument was never written down as a decision, and the requirement it collides with is
+explicit, so recording it as settled would be recording a choice nobody made.
+
+**The recommendation, stated and not taken:** fire `focusEnd` on the completion screen
+for both endings, and let the End control fire nothing, so the acknowledgment lands
+where the completion is rather than where the tap was. That is one event per gesture,
+it satisfies #28 without a new haptic row, and it makes the two endings identical on
+the one surface Addendum 01 4e cares most about. The alternative, a deliberately
+gentler event, needs a row in section 9 that does not exist and would make the two
+endings distinguishable by feel, which is the thing 4e is against.
+
+**Revisit if:** it is open, so it does not need one. It should be closed before phase
+13's accessibility and haptics pass, which is where a missing acknowledgment is found
+by hand.
+
+---
+
 ## August 27, 2026: the polish pass, and the design foundations under it
 
 Phase 3c, issue #53, and the split that puts the rest of it in phase 12b, issue #54.
@@ -1506,7 +1800,7 @@ does not have to redo the analysis. It is not a list of exceptions to apologize 
 
 | date | component | reason | state |
 |---|---|---|---|
-| August 27, 2026 | Depleting focus ring | 1, no platform equivalent exists | pending, phase 4 |
+| August 27, 2026 | Depleting focus ring | 1, no platform equivalent exists | built, phase 4 |
 | August 27, 2026 | Week ribbon, in the Report | 1, no platform equivalent exists | pending, phase 8 |
 | August 27, 2026 | Fourteen day rhythm dot row | 1, no platform equivalent exists | pending, phase 7 |
 | August 27, 2026 | Area color wash | 1, no platform equivalent exists | built, phase 2 |

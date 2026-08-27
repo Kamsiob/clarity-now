@@ -53,10 +53,17 @@ private sealed interface AreaSheet {
  *
  * The screen itself takes plain values and callbacks, so it can be looked at in
  * isolation and has no idea a repository exists.
+ *
+ * **[onOpenFocus] leaves this screen rather than opening a sheet**, which is why it is
+ * a parameter and not one more entry in [AreaSheet]. design-v3.md 10.15 makes the
+ * Focus surface a destination reached from the Focus chip, and section 2 makes it the
+ * Contemplative world: it is a room the app moves into and not a panel over this one,
+ * so the shell owns it and this screen only asks.
  */
 @Composable
 fun AreasRoute(
     viewModel: AreasViewModel,
+    onOpenFocus: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -83,6 +90,7 @@ fun AreasRoute(
             onPromotionPlayed = { viewModel.promotionPlayed(it) },
             onDismissConflict = { viewModel.dismissConflict(it) },
             onOpenInbox = { sheet = AreaSheet.Inbox },
+            onOpenFocus = onOpenFocus,
             // MASTER_BUILD_PROMPT 14b.1 and 8.4. At zero areas the FAB creates an
             // area, which 8.4 states and this phase does not change.
             //

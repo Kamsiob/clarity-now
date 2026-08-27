@@ -17,7 +17,10 @@ import com.kamsiob.claritynow.data.event.AreaUnarchived
 import com.kamsiob.claritynow.data.event.ClarityEvent
 import com.kamsiob.claritynow.data.event.ClarityEventType
 import com.kamsiob.claritynow.data.event.EventPayload
+import com.kamsiob.claritynow.data.event.FocusCompleted
+import com.kamsiob.claritynow.data.event.FocusEndedEarly
 import com.kamsiob.claritynow.data.event.FocusExtended
+import com.kamsiob.claritynow.data.event.FocusStarted
 import com.kamsiob.claritynow.data.event.ItemAdded
 import com.kamsiob.claritynow.data.event.ItemCompleted
 import com.kamsiob.claritynow.data.event.ItemDeleted
@@ -40,13 +43,22 @@ import com.kamsiob.claritynow.domain.replay.ClarityReducer
 import com.kamsiob.claritynow.domain.replay.ClarityReplay
 import com.kamsiob.claritynow.domain.replay.ClarityState
 import com.kamsiob.claritynow.domain.replay.FocusOutcome
+import com.kamsiob.claritynow.domain.replay.FocusSessionState
 import com.kamsiob.claritynow.domain.replay.ItemState
 import com.kamsiob.claritynow.domain.replay.OrderKey
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
@@ -674,6 +686,149 @@ class ClarityRepository(
     }
 
     // Focus -------------------------------------------------------------------
+    //
+    // MASTER_BUILD_PROMPT 10 and 14b.5. Four write paths and one read model, and the
+    // rules they apply are pure functions in FocusSession.kt so that a unit test can
+    // reach them without Room or DataStore.
+    //
+    // **One running session at a time is enforced here and nowhere else.** The
+    // chooser is not the only door: a notification action, an app shortcut and a
+    // widget all reach this object, and a rule that lives in a screen is a rule that
+    // holds until the next screen.
+
+    /**
+     * The scope the shared ticker and the shared countdown live in.
+     *
+     * Process lifetime, because ClarityGraph builds one repository for the
+     * process and the countdown has to outlive any one Activity: backing out of a
+     * focus session leaves it running, per design-v3.md 10.15, and the ongoing
+     * notification keeps reading it while no screen exists. Every flow started in
+     * it uses `WhileSubscribed`, so at rest it holds no coroutine at all.
+     */
+    private val focusScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    /**
+     * The single 1Hz ticker. design-v3.md 8.2 item 7.
+     *
+     * Private on purpose. Everything reads [focusCountdown] instead, so the focus
+     * screen, the ongoing notification and the Live Update cannot derive remaining
+     * time three slightly different ways.
+     */
+    private val focusTicks: Flow<Long> = secondTicks(clock::nowMillis)
+        .shareIn(focusScope, SharingStarted.WhileSubscribed(), replay = 1)
+
+    /**
+     * The running session this device owns, with no ticker attached.
+     *
+     * Collect this when all you need is whether a session exists and which item it
+     * is on. Collecting [focusCountdown] instead would keep the ticker awake once a
+     * second for a screen that only redraws once a minute.
+     *
+     * Driven by the stored handle rather than by the log fallback, because the
+     * fallback needs a query and this is a hot flow. [restoreFocus] runs the
+     * fallback on every foreground and repairs the handle, so the two agree by the
+     * time any screen is looking.
+     */
+    val runningFocusSession: StateFlow<FocusSessionState?> =
+        combine(state, prefs.focusHandle) { current, handle ->
+            handle?.sessionId
+                ?.let { current.focusSessions[it] }
+                ?.takeIf { it.outcome == FocusOutcome.RUNNING }
+        }.stateIn(focusScope, SharingStarted.WhileSubscribed(SUBSCRIPTION_GRACE_MILLIS), null)
+
+    /**
+     * The one countdown in the app, shared. design-v3.md 8.2 item 7.
+     *
+     * There is exactly one `combine` and one ticker behind this no matter how many
+     * collectors it has, which is the point: a notification that disagrees with the
+     * screen by a second is a notification a person stops trusting. Only the numeral
+     * and the arc are meant to redraw on a tick, so a collector should read
+     * [FocusCountdown.fractionRemaining] and [FocusCountdown.remainingSeconds] and
+     * leave the rest of its surface alone.
+     *
+     * Null when this device has no running session, which is the ordinary state.
+     */
+    val focusCountdown: StateFlow<FocusCountdown?> =
+        combine(runningFocusSession, focusTicks) { session, now -> session?.countdownAt(now) }
+            .stateIn(focusScope, SharingStarted.WhileSubscribed(SUBSCRIPTION_GRACE_MILLIS), null)
+
+    /**
+     * Starts a session on an area's active item. Returns the session id, or null if
+     * it was refused.
+     *
+     * Refused when the area has no active item, when [itemId] is not that item,
+     * when [plannedSeconds] is not a duration, or when this device already has a
+     * session running. The check and the append are taken under one lock, so two
+     * taps a frame apart cannot both pass the one at a time rule.
+     *
+     * The end instant is stored the moment the session exists, which is what makes
+     * the session survive the process being killed. See [ClarityPreferences] and
+     * `data.prefs.FocusHandle` for why a per device instant is not engine state.
+     * The handle is written after the event rather than before, so the worst
+     * failure leaves a session in the log with no handle, and [restoreFocus] finds
+     * that one from the log and repairs it.
+     */
+    suspend fun startFocus(areaId: String, itemId: String, plannedSeconds: Int): String? =
+        mutex.withLock {
+            if (!loaded) return@withLock null
+            val current = _state.value
+            val running = deviceSessionLocked(current)
+            if (!canStartFocus(current, areaId, itemId, plannedSeconds, running)) return@withLock null
+            val sessionId = UUID.randomUUID().toString()
+            commitLocked(
+                FocusStarted(
+                    sessionId = sessionId,
+                    areaId = areaId,
+                    itemId = itemId,
+                    plannedSeconds = plannedSeconds,
+                ),
+            )
+            val started = _state.value.focusSessions[sessionId] ?: return@withLock null
+            prefs.setFocusHandle(sessionId, started.plannedEndsAt)
+            sessionId
+        }
+
+    /**
+     * A session that ran its planned course. Writes `FOCUS_COMPLETED`.
+     *
+     * [actualSeconds] is a real duration and never a comparison against the plan.
+     * Pass [FocusCountdown.elapsedSeconds], which is the same arithmetic the numeral
+     * on the ring was drawn from.
+     */
+    suspend fun completeFocus(sessionId: String, actualSeconds: Int) =
+        endSession(sessionId, actualSeconds, completed = true)
+
+    /**
+     * A session a person ended before its planned time. Writes `FOCUS_ENDED_EARLY`.
+     *
+     * **This is a completed short session and the surfaces above it say so.**
+     * Addendum 01 4e: fourteen minutes is fourteen minutes. The event type carries
+     * no judgment either, which is why it was renamed out of `FOCUS_ABANDONED` while
+     * the schema window was open. DECISIONS.md C6.
+     *
+     * Under [FOCUS_DISCARD_UNDER_SECONDS] the ending is a mis-tap and the interface
+     * shows neither a confirm before it nor a completion screen after it, but the
+     * event is still written, because the log records what happened. The threshold
+     * is a constant in `FocusSession.kt` so that the screen and this agree on it.
+     */
+    suspend fun endFocusEarly(sessionId: String, actualSeconds: Int) =
+        endSession(sessionId, actualSeconds, completed = false)
+
+    private suspend fun endSession(sessionId: String, actualSeconds: Int, completed: Boolean) {
+        val seconds = actualSeconds.coerceAtLeast(0)
+        mutex.withLock {
+            val session = _state.value.focusSessions[sessionId] ?: return@withLock
+            if (session.outcome != FocusOutcome.RUNNING) return@withLock
+            commitLocked(
+                if (completed) {
+                    FocusCompleted(sessionId = sessionId, actualSeconds = seconds)
+                } else {
+                    FocusEndedEarly(sessionId = sessionId, actualSeconds = seconds)
+                },
+            )
+            releaseHandleFor(sessionId)
+        }
+    }
 
     /**
      * Adds time to a running session without ending it. Addendum 01 4f, 14b.5.
@@ -681,14 +836,8 @@ class ClarityRepository(
      * A session has exactly one `FOCUS_STARTED` and at most one terminal event, and
      * an extension is neither, so nothing here restarts a timer or opens a second
      * session. Ending a timer must never be the price of needing ten more minutes.
-     * Repeatable and uncapped, per 14b.5.
-     *
-     * **This writes the event and nothing else, and phase 4 owes it one more
-     * thing.** 14b.5 requires the persisted end timestamp that lets a session
-     * survive process death to be recomputed on every extension. That timestamp is
-     * a running timer's business rather than the log's, so it belongs to the focus
-     * service when there is one, and an extension that moved the planned total
-     * without moving it would give back the added minutes at the next cold start.
+     * Repeatable and uncapped, per 14b.5, because a limit is an argument with
+     * someone who is working.
      *
      * The payload carries the absolute new figure as well as the delta, and this
      * computes it from the session's current `plannedSeconds` in the projection
@@ -696,20 +845,121 @@ class ClarityRepository(
      * then agree, and a replay cannot arrive at a different number from the one the
      * person was shown, which is what applying a delta at fold time would risk.
      *
+     * **The stored end instant moves with it**, which 14b.5 requires: an extension
+     * that moved the planned total without moving the stored instant would give the
+     * added minutes back at the next cold start. Both happen under one lock.
+     *
      * Refused for a session that has already ended, matching the reducer, and for a
      * non positive [addedSeconds], which is not an extension.
      */
     suspend fun extendFocus(sessionId: String, addedSeconds: Int) {
         if (addedSeconds <= 0) return
-        val session = _state.value.focusSessions[sessionId] ?: return
-        if (session.outcome != FocusOutcome.RUNNING) return
-        commit(
-            FocusExtended(
-                sessionId = sessionId,
-                addedSeconds = addedSeconds,
-                newPlannedSeconds = session.plannedSeconds + addedSeconds,
-            ),
-        )
+        mutex.withLock {
+            val session = _state.value.focusSessions[sessionId] ?: return@withLock
+            if (session.outcome != FocusOutcome.RUNNING) return@withLock
+            commitLocked(
+                FocusExtended(
+                    sessionId = sessionId,
+                    addedSeconds = addedSeconds,
+                    newPlannedSeconds = session.plannedSeconds + addedSeconds,
+                ),
+            )
+            val extended = _state.value.focusSessions[sessionId] ?: return@withLock
+            if (prefs.focusHandle.first()?.sessionId == sessionId) {
+                prefs.setFocusHandle(sessionId, extended.plannedEndsAt)
+            }
+        }
+    }
+
+    /**
+     * What to do about a focus session on a cold start or a resume. Called by the
+     * app shell on every foreground, beside `recordAppOpened`.
+     *
+     * Three answers, and the third is the case MASTER_BUILD_PROMPT 10 calls being
+     * backgrounded at completion:
+     *
+     * - [FocusRestore.None]: nothing is running. The ordinary route stands.
+     * - [FocusRestore.Running]: restore the focus screen at the countdown returned.
+     *   This is the process death case, and the remaining time is computed from the
+     *   log rather than from anything that had to survive the kill.
+     * - [FocusRestore.Completed]: the planned time ran out while the process was
+     *   dead or the app was away. `FOCUS_COMPLETED` has been written here, with
+     *   `actualSeconds` equal to the **planned** seconds rather than the wall clock
+     *   gap since the session started, because the session ran for the time it was
+     *   planned to run and the gap is a fact about the phone. The completion state
+     *   is what a person should see, in the same words a session that finished
+     *   while they watched would use.
+     *
+     * Safe to call on every resume: with nothing running it is one preference read
+     * and one map lookup, and it writes nothing.
+     *
+     * A handle that names no running session is cleared, so a preference that
+     * outlived its session cannot keep the one at a time rule locked shut.
+     */
+    suspend fun restoreFocus(): FocusRestore = mutex.withLock {
+        if (!loaded) return@withLock FocusRestore.None
+        val current = _state.value
+        val session = deviceSessionLocked(current)
+        if (session == null) {
+            releaseHandle()
+            return@withLock FocusRestore.None
+        }
+        when (val decision = focusRestoreFor(session, clock.nowMillis())) {
+            is FocusRestore.Running -> {
+                // Repairs a handle the fallback found in the log, and is a no op
+                // when the handle was already right.
+                prefs.setFocusHandle(session.id, session.plannedEndsAt)
+                decision
+            }
+
+            is FocusRestore.Completed -> {
+                commitLocked(
+                    FocusCompleted(
+                        sessionId = session.id,
+                        actualSeconds = session.plannedSeconds,
+                    ),
+                )
+                releaseHandle()
+                FocusRestore.Completed(_state.value.focusSessions[session.id] ?: session)
+            }
+
+            FocusRestore.None -> {
+                releaseHandle()
+                FocusRestore.None
+            }
+        }
+    }
+
+    /**
+     * The running session this device owns, resolved the expensive way.
+     *
+     * The stored handle answers it in a map lookup on the ordinary path. When it
+     * cannot, the log answers it: the `FOCUS_STARTED` rows for the sessions that are
+     * still running carry the origin id of the device that wrote them, and one of
+     * them is this phone. That fallback is what keeps the stored instant a cache
+     * rather than a second source of truth, and it is the reason `CLAUDE.md` rule 6
+     * is not violated by storing it. The query runs only when the handle misses.
+     */
+    private suspend fun deviceSessionLocked(current: ClarityState): FocusSessionState? {
+        val handle = prefs.focusHandle.first()
+        val byHandle = pickDeviceSession(current, handle?.sessionId, originId) { null }
+        if (byHandle != null) return byHandle
+        val running = current.focusSessions.values
+            .filter { it.outcome == FocusOutcome.RUNNING }
+            .map { it.id }
+        if (running.isEmpty()) return null
+        val startedBy = focusOriginsFor(running)
+            .mapNotNull { event -> event.entityId?.let { it to event.originId } }
+            .toMap()
+        return pickDeviceSession(current, null, originId) { startedBy[it] }
+    }
+
+    private suspend fun releaseHandleFor(sessionId: String) {
+        if (prefs.focusHandle.first()?.sessionId == sessionId) prefs.clearFocusHandle()
+    }
+
+    private suspend fun releaseHandle() {
+        if (prefs.focusHandle.first() != null) prefs.clearFocusHandle()
     }
 
     // Presence ----------------------------------------------------------------
@@ -980,6 +1230,16 @@ class ClarityRepository(
     companion object {
         const val MAX_AREA_NAME = 40
         const val MAX_ITEM_TITLE = 200
+
+        /**
+         * How long a shared focus flow stays alive after its last collector goes.
+         *
+         * Long enough that a rotation or a tab change does not tear down the ticker
+         * and build it again, short enough that a backgrounded app stops waking once
+         * a second. The ongoing notification keeps its own collector while a session
+         * runs, so nothing depends on this value to stay correct.
+         */
+        private const val SUBSCRIPTION_GRACE_MILLIS = 5_000L
 
         /**
          * Distinguishes "leave the first step alone" from "clear it". Identity

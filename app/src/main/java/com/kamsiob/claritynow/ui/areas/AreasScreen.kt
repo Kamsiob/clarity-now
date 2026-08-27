@@ -113,6 +113,7 @@ fun AreasScreen(
     onPromotionPlayed: (String) -> Unit,
     onDismissConflict: (String) -> Unit,
     onOpenInbox: () -> Unit,
+    onOpenFocus: () -> Unit,
     onFabClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -165,6 +166,7 @@ fun AreasScreen(
             item(key = "header") {
                 AreasHeader(
                     unfiledCount = state.unfiledCount,
+                    onOpenFocus = onOpenFocus,
                     onOpenArchive = onOpenArchive,
                     onOpenInbox = onOpenInbox,
                     modifier = Modifier.clarityEntrance(HEADER_ENTRANCE_INDEX),
@@ -309,15 +311,15 @@ private fun AreaRow(
 /**
  * design-v3.md 10.1. The serif title, the archive glyph, and the chip row beneath.
  *
- * The chip row holds the Focus and Pulse chips in phases 4 and 6. Today it holds one
- * chip or none: the unfiled inbox, 10.16, present only while the inbox has something
- * in it. It is written as a row rather than as a lone chip so the two permanent chips
- * prepend to it later without this shape being redrawn, and the inbox chip stays last
- * so it can never displace them.
+ * The row was written in phase 2 as a shape the permanent chips could prepend to
+ * without it being redrawn, and this is the first of them arriving. Focus is first and
+ * permanent, Pulse joins it in phase 6, and the unfiled inbox chip, 10.16, stays last
+ * and present only while the inbox holds something, so it can never displace them.
  */
 @Composable
 private fun AreasHeader(
     unfiledCount: Int,
+    onOpenFocus: () -> Unit,
     onOpenArchive: () -> Unit,
     onOpenInbox: () -> Unit,
     modifier: Modifier = Modifier,
@@ -353,6 +355,64 @@ private fun AreasHeader(
             }
         }
 
+        AreasChipRow(
+            unfiledCount = unfiledCount,
+            onOpenFocus = onOpenFocus,
+            onOpenInbox = onOpenInbox,
+        )
+    }
+}
+
+/**
+ * design-v3.md 10.1 and 10.8. Pill chips in a horizontally scrolling row.
+ *
+ * **Every chip here is an ordinary unselected `ClarityChip` and none of them carries a
+ * count badge, a dot or an accent.** 10.1 gives the permanent chips soft elevation and
+ * no border, and phase 3c moved app chrome down one step of the value ladder, so an
+ * unselected chip sits at `raise` rather than at `card` and this row inherits that from
+ * the component rather than restating it. The one dot in this row's future is the
+ * warnAmber Pulse dot in 10.1, which arrives with Pulse in phase 6 and is scoped by
+ * 3.1 to that one use.
+ *
+ * **Focus is permanent and is present even when nothing can be focused on.** The
+ * obvious answer is to hide it, or to dim it, while there is no area with an active
+ * item. 10.1 calls it permanent, and the chooser has an empty state of its own,
+ * `Nothing to focus on yet`, which is a sentence that explains the situation where a
+ * missing chip would leave a person wondering where the feature went. 10.16 settles
+ * the same question for the inbox rows in the opposite direction, and the difference
+ * is real: a disabled control is a question a person has to answer, while a permanent
+ * one that leads to an explanation is an answer.
+ *
+ * **The chip does not become a countdown while a session is running**, and that is the
+ * deliberate choice rather than the obvious one, per section 15. It would be one line,
+ * and the area card two thumbs below it already carries the live countdown, 10.3, next
+ * to the name of the item the session is on. Two surfaces reporting the same number in
+ * one screenful is how a person learns to read neither, and the chip's job is to be the
+ * way back in, which it does under the same label either way.
+ */
+@Composable
+private fun AreasChipRow(
+    unfiledCount: Int,
+    onOpenFocus: () -> Unit,
+    onOpenInbox: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(top = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ClarityChip(
+            label = stringResource(R.string.areas_chip_focus),
+            onClick = onOpenFocus,
+        )
+
+        // The Pulse chip, design-v3.md 10.1, is phase 6. It is absent rather than
+        // present and inert, which is what phase 2 decided about both of these and why
+        // the Focus chip was not built until it had a surface to open.
+
         if (unfiledCount > 0) {
             InboxChip(count = unfiledCount, onClick = onOpenInbox)
         }
@@ -379,20 +439,11 @@ private fun AreasHeader(
 @Composable
 private fun InboxChip(count: Int, onClick: () -> Unit) {
     val description = pluralStringResource(R.plurals.cd_areas_chip_inbox, count, count)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(top = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        ClarityChip(
-            label = stringResource(R.string.areas_chip_inbox, count),
-            onClick = onClick,
-            modifier = Modifier.semantics { contentDescription = description },
-        )
-    }
+    ClarityChip(
+        label = stringResource(R.string.areas_chip_inbox, count),
+        onClick = onClick,
+        modifier = Modifier.semantics { contentDescription = description },
+    )
 }
 
 /**

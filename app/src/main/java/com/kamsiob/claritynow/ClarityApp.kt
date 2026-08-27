@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import com.kamsiob.claritynow.di.ClarityGraph
+import com.kamsiob.claritynow.notifications.ClarityNotifications
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -29,6 +30,14 @@ class ClarityApp : Application() {
     override fun onCreate() {
         super.onCreate()
         ClarityGraph.install(this)
+        // Creates the notification channels and starts watching for a focus session.
+        // **It posts nothing and asks for nothing**: a channel needs no permission and
+        // shows no prompt, and the first notification of any kind waits for a person to
+        // start a session. It is here rather than in an Activity because a session
+        // outlives every screen, per design-v3.md 10.15, and because the two Live
+        // Update actions reach this process through a broadcast receiver that can wake
+        // it with no Activity at all. See ClarityNotifications.install.
+        ClarityNotifications.install(this)
         registerActivityLifecycleCallbacks(ForegroundPresence())
     }
 

@@ -20,9 +20,12 @@ plugins {
 // minor bump because nothing new can be done with the app: the value ladder, the
 // tracking and the type steps correct things that were already specified or already
 // wrong, and no contract, capability or event changed.
+// 0.5.0: phase 4, focus sessions and the first Contemplative surface. A minor bump
+// because the app can now do something it could not do before, and because the
+// Contemplative world arrives with it.
 val versionMajor = 0
-val versionMinor = 4
-val versionPatch = 1
+val versionMinor = 5
+val versionPatch = 0
 
 android {
     namespace = "com.kamsiob.claritynow"
