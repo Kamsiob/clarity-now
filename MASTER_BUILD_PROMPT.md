@@ -255,7 +255,7 @@ Room tables `clarity_area`, `clarity_item`, `clarity_focus_session`, `clarity_pu
 
 They exist purely for query speed. Any can be dropped and rebuilt from the log with no data loss, and a debug menu action does exactly that as a proof.
 
-**DataStore holds only per-device values, never synced:** `theme`, `focusDurationMinutes` (default 25), `focusHighlightEnabled` (default true), `afterCompleting` (default AUTO_PROMOTE), `pulseRemindersEnabled` (default true), `pulseReminderHour` (default 20), `hasCompletedOnboarding`, `hasSeenTutorial`, `originId`, `lamportCounter`, `lastExportAt`. **Pending from Addendum 01:** `calmMode`, which defaults to following the OS reduce motion setting, in phase 3b, and `transitionWarningEnabled`, default false, in phase 4.
+**DataStore holds only per-device values, never synced:** `theme`, `focusDurationMinutes` (default 25), `focusHighlightEnabled` (default true), `afterCompleting` (default AUTO_PROMOTE), `pulseRemindersEnabled` (default true), `pulseReminderHour` (default 20), `hasCompletedOnboarding`, `hasSeenTutorial`, `originId`, `lamportCounter`, `lastExportAt`, and `calmMode`, which joined the list in phase 3b. `calmMode` is **absent** until the user sets it, and while it is absent calm mode follows the OS reduce motion setting live, per 14b.12. **Pending from Addendum 01:** `transitionWarningEnabled`, default false, in phase 4.
 
 **Nothing the Logic Engine reads may live in DataStore.** Variation history, escalation state, personal records, first-ever flags and plan history all derive from the log so two devices compute the same answer. This is a hard rule and it will not fail loudly if you get it wrong.
 
@@ -286,7 +286,7 @@ A pure function. No Android imports, no clock, no randomness. Given the same ord
 - Every queued item in an area has a distinct `orderKey`
 - A deleted or archived entity never appears in a live projection
 - An event referencing an unknown entity is skipped, logged to a replay diagnostics list, and never crashes the app
-- **Pending, phase 3b.** An item with no area sits outside every invariant above. It is never `ACTIVE`, never `COMPLETED`, and never counted in any area's queue. `ITEM_FILED` naming an area that is unknown, deleted or archived is skipped like any other event referencing an unknown entity, which leaves the item unfiled rather than losing it
+- **Built in phase 3b.** An item with no area sits outside every invariant above. It is never `ACTIVE`, never `COMPLETED`, and never counted in any area's queue. `ITEM_FILED` naming an area that is unknown, deleted or archived is skipped like any other event referencing an unknown entity, which leaves the item unfiled rather than losing it
 
 ### 6.3 Conflict resolution
 
@@ -352,7 +352,7 @@ There is no limit on the number of areas. The philosophy is carried by copy and 
 
 **Add.** From the FAB or an area detail sheet. Title required, optional note, target area. If the area has no active item it becomes active immediately (`ITEM_ADDED` then `ITEM_PROMOTED`). Otherwise it appends to the queue. The add sheet states where the item will land before the user commits.
 
-**Pending, phase 3b.** Capture stops requiring an area at all. An item may be added with no area and sit in the inbox until it is filed, and the same sheet carries two optional fields, the first physical step and a time estimate. See 14b.1 to 14b.3.
+**Built in phase 3b.** Capture no longer requires an area at all. The FAB opens the add sheet with **no area chosen** and the item is written unfiled, where it sits in the inbox until it is filed; adding straight into a known area is reached from that area's detail sheet instead. The same sheet carries two optional fields, the first physical step and a time estimate. See 14b.1 to 14b.3.
 
 **Complete.** From swipe right, area detail, or the focus completion flow. Writes `ITEM_COMPLETED`. Then per `afterCompleting`: `AUTO_PROMOTE` takes the queue head and promotes it with the hero animation, or `CHOOSE_FROM_QUEUE` opens a chooser; dismissing leaves the area idle.
 
@@ -648,7 +648,7 @@ A Daylight screen, rows on canvas under sentence-case sideheads, **no card conta
 
 **Your data.** `Export everything`, one JSON file via the Storage Access Framework, showing the last export date. `Import from a file`, validating schema version and integrity before a transactional full replace with a typed confirmation. `Erase all data`, per 14.2.
 
-**Pending from Addendum 01.** Two rows join this screen and one grows. Under **Focus**, `Five minute warning`, off by default, in phase 4 (14b.5). Under **Appearance**, `Calm mode`, following the OS reduce motion setting by default, in phase 3b (14b.12). Under **Your data**, export gains an optional password and a plain statement of what an unencrypted file is, import gains full pre validation and a choice of replace or merge, and one quiet line appears when the last export is older than 30 days and real data exists, in phase 11 (14b.7).
+**Pending from Addendum 01.** Two rows join this screen and one grows. Under **Focus**, `Five minute warning`, off by default, in phase 4 (14b.5). Under **Appearance**, `Calm mode`, following the OS reduce motion setting by default. **The setting was built in phase 3b and is honored everywhere in the app; the row is pending here, in phase 11, because this screen does not exist yet** (14b.12). Under **Your data**, export gains an optional password and a plain statement of what an unencrypted file is, import gains full pre validation and a choice of replace or merge, and one quiet line appears when the last export is older than 30 days and real data exists, in phase 11 (14b.7).
 
 **Privacy.** `Privacy policy` opening the in-app sheet with the text in 14.3. `Open source licenses` listing AGPL-3.0 for the app, SIL OFL for Newsreader and Hanken Grotesk, Apache 2.0 for Material Symbols and AndroidX. Then the permission card:
 
@@ -721,7 +721,7 @@ Appears at the bottom of **Settings and About only.** A rounded card with a warm
 
 ## 14b. Executive function support
 
-**Everything in this section is pending. None of it is built.** It comes from `docs/addenda/ADDENDUM_01_EXECUTIVE_FUNCTION.md`, a directive dated August 2026 produced from research on serving people with executive function challenges: ADHD, autism, brain fog from long COVID or ME/CFS, cognitive changes in perimenopause, TBI recovery, depression and anxiety, and burnout. It is written here as behavior and data because that is what this document is the authority on. The visual, motion and language halves are in `design-v3.md`. The reasoning, the market evidence, and the four things deliberately ruled out are in DECISIONS.md.
+**Part of this section is now built.** Phase 3b landed 14b.1, 14b.2, the capture half of 14b.3, the detection half of 14b.4, and calm mode itself out of 14b.12. Everything else here is pending, and each part below states its own state. It comes from `docs/addenda/ADDENDUM_01_EXECUTIVE_FUNCTION.md`, a directive dated August 2026 produced from research on serving people with executive function challenges: ADHD, autism, brain fog from long COVID or ME/CFS, cognitive changes in perimenopause, TBI recovery, depression and anxiety, and burnout. It is written here as behavior and data because that is what this document is the authority on. The visual, motion and language halves are in `design-v3.md`. The reasoning, the market evidence, and the four things deliberately ruled out are in DECISIONS.md.
 
 **It is numbered 14b rather than 15** because sections 15 through 19 are cited by number from the source, the tests, `CLAUDE.md` and the other documents in the set, and renumbering them would break those citations silently. The project already uses this form for work inserted after a plan was set, as phase 9b and phase 3b do in section 19.
 
@@ -729,7 +729,7 @@ Appears at the bottom of **Settings and About only.** A rounded card with a warm
 
 ### 14b.1 Capture without a decision, the unfiled inbox
 
-**Pending, phase 3b.** From Addendum 01 4a.
+**Built in phase 3b.** From Addendum 01 4a.
 
 **Capture must never require a decision.** Adding an item does not require choosing an area. `ITEM_ADDED` is written with a null `areaId`, the item exists, and the thought is out of the person's head, which is the entire job of the capture path. Filing is a separate, later, optional act.
 
@@ -743,11 +743,13 @@ Appears at the bottom of **Settings and About only.** A rounded card with a warm
 
 **An unfiled item is invisible to the engine.** It is outside every area scoped invariant in 6.2, outside every fact the engine extracts, never counted in a queue length, and never named in an observation. It is in the Trail, because `ITEM_ADDED` and `ITEM_FILED` are user activity and the Trail is the record of what happened.
 
+**What the FAB means, with at least one area.** It opens the add sheet with **no area chosen**, and the item is written with a null `areaId`. The sheet carries no area control at all, because a picker with N options is the decision this whole path exists to remove, and an unselected row of areas reads as an unanswered question. Adding straight into a known area is unchanged and is one tap away, on that area's detail sheet, where the area is context rather than a choice. Before phase 3b the FAB added into whichever area sorted first, which was a decision the app made on the person's behalf and got right only by accident. DECISIONS.md.
+
 **One question this leaves open, and it is not settled here.** 8.4 says that at zero areas the FAB creates an area rather than an item, and that behavior is shipped and is in the checklist in section 17. Capture into the inbox works with no areas at all, and the Quick Capture widget in 13.3 depends on that. So at zero areas the FAB has two defensible meanings. The recommendation on the record is that capture always means capture, and that the Areas empty state carries its own create action, which removes a mode rather than adding one. **Until that is answered, 8.4 stands as written**, and phase 3b does not change it.
 
 ### 14b.2 The first step
 
-**Pending, phase 3b.** From Addendum 01 4b.
+**Built in phase 3b.** From Addendum 01 4b.
 
 One optional line on an item: **the first physical action.** Shown on the active item card at caption weight when present, absent from the card entirely when not set. Never required, never prompted for, never inferred, and deletable at any time.
 
@@ -757,23 +759,27 @@ Carried on `ITEM_ADDED` as `firstStep`, and edited through `ITEM_EDITED` like th
 
 ### 14b.3 The time estimate
 
-**Pending. Capture in phase 3b, observation in phase 8.** From Addendum 01 4c.
+**Capture built in phase 3b. The observation half is pending, phase 8.** From Addendum 01 4c.
 
 An optional estimate in minutes on an item, carried on `ITEM_ADDED` as `estimateMinutes` and changed afterward with `ITEM_ESTIMATED`, which records the previous and the new value so a changed estimate does not edit history.
 
 **The actual comes free.** The Trail already records when an item became active and when it completed, so nothing new is measured and nothing new is asked for.
 
+**The input is a free number field, digits only and four of them at most, rather than a set of preset durations.** The obvious answer is a row of chips, and it loses twice: it is a decision with five options placed in the capture path, which is what this work exists to remove, and the buckets somebody else chose would silently become the shape of the data 14b.8 reads as a ratio. DECISIONS.md.
+
 **Never a required field. Never a countdown against the item.** An estimate that turns into a visible timer on the card is a deadline the person set for themselves in a hopeful moment and then has to watch expire. What the estimate is for is 14b.8, and what it may never say is also 14b.8.
 
 ### 14b.4 Re-entry after an absence
 
-**Pending. Detection in phase 3b, the surface in phase 6.** From Addendum 01 4d.
+**Detection built in phase 3b. The surface is pending, phase 6.** From Addendum 01 4d.
 
 **This is the highest stakes screen in the app.** It is also the one screen nobody building or testing the app daily will ever see, which is exactly why it has to be specified rather than discovered.
 
 This audience leaves and comes back. A fortnight of nothing is not a failure of the user. It is what a fluctuating condition, a bad month, a hospital stay or an ordinary overwhelming stretch looks like from inside the data. The app has one chance to be the thing that did not keep score while they were gone, and one screen in which to spend it.
 
 **Detection.** `APP_OPENED` carries a date key and nothing else, written at most once per calendar day on the first foreground. The gap is the number of calendar days between the newest `APP_OPENED` before today's and today, read from the log through `TrailQueries` and never from a DataStore timestamp, so a restored backup or a second device reaches the same answer. **A gap of 14 or more days puts the app into the re-entry state**, on the foreground that writes today's `APP_OPENED` and only then, so it appears at most once per calendar day and in practice once per gap. It does not apply before onboarding is complete or when no earlier `APP_OPENED` exists.
+
+**What detection landed as.** `ClarityApp` counts started activities and writes the marker when that count crosses zero, rather than writing it in `Application.onCreate`. The difference is not academic: from phase 12 this process is created by a widget update and by a scheduled refresh as well as by a person, and a process kept alive across midnight would never write the second day's marker at all, which would report an absence nobody had. `TrailQueries.reEntryOn(dateKey)` answers the question the surface asks on the day it appears; `TrailQueries.lastReEntryOnOrBefore(dateKey)` answers the one the two suppression windows ask for days afterward. Both run the same arithmetic over calendar dates, so the day the screen appears and the day the Report starts withholding can never be two different days. **The value they return carries the date of the return and not the length of the absence.** There is no field holding the number and no function handing it out, because a prohibition that rests on somebody remembering it is a prohibition with a shelf life. The onboarding gate above belongs to the surface rather than to the query: the query has no way to know.
 
 **What the re-entry state does.**
 
@@ -899,18 +905,20 @@ This needs a new fact, rules for both branches, and tests for both. The fact's d
 
 ### 14b.12 What this adds to Settings and to DataStore
 
-**Pending, phases 3b, 4 and 11.**
+**Calm mode and the entrance rule are built, phase 3b. Both Settings rows are pending, phases 4 and 11.**
 
 Two per-device keys join the list in 5.4, and neither is engine state, so neither violates the rule that nothing the engine reads may live in DataStore.
 
 | key | default | phase | row |
 |---|---|---|---|
-| `calmMode` | follow the OS reduce motion setting | 3b | Appearance |
+| `calmMode` | follow the OS reduce motion setting | key 3b, row 11 | Appearance |
 | `transitionWarningEnabled` | false | 4 | Focus |
 
 **Calm mode** is a Settings toggle in addition to and independent of the OS reduce motion setting, which `design-v3.md` 8.3 already honors. It reduces motion to crossfades, reduces the saturation of washes and accents, disables the staggered list entrance and the breathing glow, and **applies to the widgets and the Live Update as well as to the app**. `design-v3.md` owns every value it changes. It is what makes Material 3 Expressive safe for this audience rather than overwhelming: **ship the expressive direction and the exit.**
 
-Phase 3b also carries one motion change from Addendum 01 8e that has no setting behind it: **the staggered list entrance fires on the first open of a screen per session, not on every return to a tab.** An entrance animation on a screen opened twenty times a day stops being an entrance and becomes noise.
+**What was built, and the one piece that was not.** The switch, the color transform, the entrance rule and the three audits in `design-v3.md` 16.6 to 16.8 are in the code, and calm mode joins the one global motion flag with an `or` rather than adding a motion level beside it, so **reduce motion always wins on motion**. The `Calm mode` row itself is pending, phase 11, because there is no Settings screen to put it on, and the two carry-forwards named above are pending with their own surfaces: the Live Update honors it in phase 4 and the widgets in phase 12, both by reading it out of the widget snapshot rather than out of DataStore, which is not multi process safe. Until then the key has no stored value, which means calm mode follows the OS reduce motion setting live, which is its specified default. **The stored value is nullable rather than a boolean, and that is load bearing:** a `Boolean` defaulting to false would mean off for every person who has the system setting on and never opens Settings, which is precisely the person the feature exists for. Absence is a state the storage carries and the interface never shows.
+
+Phase 3b also built one motion change from Addendum 01 8e that has no setting behind it: **an entrance fires on the first open of its tab per app session, not on every return to a tab.** An entrance animation on a screen opened twenty times a day stops being an entrance and becomes noise. A session is the process lifetime, so a rotation does not re-arm it and a process death does. The rule is stated once in `design-v3.md` 8.4 and governs every entrance in 8.2 rather than being repeated beside each one. Calm mode removes those entrances entirely rather than reducing them.
 
 **Export's rows** grow as 14b.7 describes, in phase 11.
 
@@ -1163,7 +1171,9 @@ Sync of any kind, the data model is ready but the transport is not built. Any ne
 
 **Phase 3. Trail. Done.** Queries facade, screen, filters, day grouping, clustering, pagination.
 
-**Phase 3b. Executive function retrofit.** Pending, and next. **It exists because Addendum 01 assigned six of its items to phases 1 and 2, and both are closed and shipped**, and because phase 4 and phase 6 depend on parts of it. It carries: capture with no area and the unfiled inbox (14b.1), the first step field (14b.2), the estimate on capture (14b.3), re-entry detection, meaning `APP_OPENED`, the gap query and the `isUserActivity` exclusion, with the surface deferred to phase 6 (14b.4), calm mode as a setting honored everywhere after it (14b.12), and the staggered entrance fired once per screen per session. Trail rows for the new event types, and none for `APP_OPENED`. It assumes the Addendum 01 event schema in 5.2 is already in the log, landed in the schema commit that also settles issue #19.
+**Phase 3b. Executive function retrofit. Built, and awaiting the device check that closes it.** **It exists because Addendum 01 assigned six of its items to phases 1 and 2, and both are closed and shipped**, and because phase 4 and phase 6 depend on parts of it. It carried: capture with no area and the unfiled inbox (14b.1), the first step field (14b.2), the estimate on capture (14b.3), re-entry detection, meaning `APP_OPENED`, the gap query and the `isUserActivity` exclusion (14b.4), calm mode with its color transform, its one motion flag and the three audits in `design-v3.md` 16.6 to 16.8 (14b.12), and the staggered entrance fired once per tab per app session. Trail rows for the new event types, and none for `APP_OPENED`. It assumed the Addendum 01 event schema in 5.2 was already in the log, and it was, landed in the schema commit that also settled issue #19.
+
+**Two pieces named in this phase are deliberately not in it, and neither is an oversight.** The re-entry **surface** is phase 6, because a screen that has to be able to say nothing is an engine decision and the engine does not exist until phase 5. The `Calm mode` **Settings row** is phase 11, because there is no Settings screen to put it on; the setting behind it is built and honored everywhere, and until the row exists it follows the OS reduce motion setting, which is its specified default.
 
 **Phase 4. Focus.** Sessions, process death persistence, ongoing notification, completion flow, the indigo surface and its motion. **Plus Addendum 01:** early ending as a completed short session, `Add 10 minutes` writing `FOCUS_EXTENDED`, the transition warning off by default (14b.5), and the Live Update on `Notification.ProgressStyle` with its required silent fallback (14b.6).
 

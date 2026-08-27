@@ -2,6 +2,7 @@ package com.kamsiob.claritynow.ui.theme
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import com.kamsiob.claritynow.domain.engine.StableHash
 import kotlin.math.max
 import kotlin.math.min
@@ -70,19 +71,54 @@ fun washCornerFor(areaId: String): WashCorner =
     WashCorner.entries[StableHash.bucket(areaId, WashCorner.entries.size)]
 
 /**
- * Area label text uses the accent at full strength. design-v3.md 3.4 requires
- * 4.5:1 against the card, and specifies the only permitted remedy: darken the
- * label variant by blending 25 percent black in light mode, lighten it by blending
- * 30 percent white in dark mode. The dot and the wash are never adjusted.
+ * The deepest ground an area label can ever sit on, per world: the card carrying that
+ * area's own wash at the in-session opacity from design-v3.md 3.1 and 3.2.
+ *
+ * These are the **ordinary** opacities, not calm mode's. design-v3.md 16.2 leaves the
+ * label unchanged in calm mode and pins the wash under it shallower, so a variant that
+ * clears the floor here clears it there too, and the label does not change color when
+ * the switch is thrown. It also covers the 11 percent peak of the promotion in 8.2
+ * item 1, which is shallower than both.
+ */
+private const val LABEL_GROUND_ALPHA_LIGHT = 0.13f
+private const val LABEL_GROUND_ALPHA_DARK = 0.16f
+
+/**
+ * Area label text uses the accent at full strength. design-v3.md 3.4 requires 4.5:1,
+ * and specifies the only permitted remedy: darken the label variant by blending 25
+ * percent black in light mode, lighten it by blending 30 percent white in dark mode.
+ * The dot and the wash are never adjusted.
+ *
+ * **The ratio is measured against the wash, not against the bare card**, and that is a
+ * defect this function shipped with. design-v3.md 3.4 says "verify 4.5:1 against the
+ * card", and the card a label actually sits on carries the area's own accent at up to
+ * 13 percent in light and 16 in dark. Measured against `colors.card` the worst of the
+ * 48 colors clears at 4.58:1 and looks fine; measured against the card as drawn, the
+ * same label on an in-session area is `#E11D48` at **3.83:1**, well under the floor in
+ * design-v3.md 13, and 3.95:1 at the peak of a promotion. It is the same class of
+ * mistake phase 3 found in the Trail's mint completed row, where a wash was composited
+ * over the wrong ground and cost 0.1 of a contrast ratio; here it costs 0.75.
+ *
+ * It surfaced during the calm mode audit, issue #48, because calm mode's transform has
+ * to be measured on the ground it lands on and measuring it exposed that nothing else
+ * ever had been. Calm mode is not the cause and does not fix it: with the transform
+ * applied the same label reads 4.41:1, better and still failing.
+ *
+ * With the ground corrected the worst case is 4.55:1 in light and 4.56:1 in dark, on
+ * every one of the 48 colors, in ordinary and in calm mode, on every wash opacity the
+ * design permits. Twenty three of the 48 light labels move as a result and five of the
+ * dark ones. `CalmModeContrastTest` holds all of it.
  */
 fun areaLabelColor(accent: Color, colors: ClarityColors): Color {
+    val groundAlpha = if (colors.isDark) LABEL_GROUND_ALPHA_DARK else LABEL_GROUND_ALPHA_LIGHT
+    val ground = accent.copy(alpha = groundAlpha).compositeOver(colors.card)
     if (colors.isDark) {
         val lightened = accent.blendWith(Color.White, 0.30f)
-        return if (contrastRatio(lightened, colors.card) >= 4.5) lightened else accent.forceContrast(colors.card, Color.White)
+        return if (contrastRatio(lightened, ground) >= 4.5) lightened else accent.forceContrast(ground, Color.White)
     }
-    if (contrastRatio(accent, colors.card) >= 4.5) return accent
+    if (contrastRatio(accent, ground) >= 4.5) return accent
     val darkened = accent.blendWith(Color.Black, 0.25f)
-    return if (contrastRatio(darkened, colors.card) >= 4.5) darkened else accent.forceContrast(colors.card, Color.Black)
+    return if (contrastRatio(darkened, ground) >= 4.5) darkened else accent.forceContrast(ground, Color.Black)
 }
 
 /** Blends further toward [toward] in 5 percent steps until 4.5:1 is met or the blend is spent. */

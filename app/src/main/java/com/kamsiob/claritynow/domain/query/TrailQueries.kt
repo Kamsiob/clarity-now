@@ -111,6 +111,24 @@ class TrailQueries(
      */
     private var memo: Pair<Long, ClarityState>? = null
 
+    /**
+     * Every day the log says the app was opened, parsed once and sorted once.
+     *
+     * Held as calendar dates rather than as the raw keys so that the gap arithmetic
+     * has no string in it. Keys that do not parse are dropped here, which is the
+     * only place they could be: an imported file or a second implementation writing
+     * against `docs/EVENT_FORMAT.md` can put a malformed key in the log, and one bad
+     * marker must cost that marker and not the first screen a returning person sees.
+     */
+    private val openedDates: List<LocalDate> by lazy {
+        log.asSequence()
+            .mapNotNull { (it.payload as? AppOpened)?.dateKey }
+            .mapNotNull(::parseDayKey)
+            .distinct()
+            .sorted()
+            .toList()
+    }
+
     // Completions -------------------------------------------------------------
 
     /** ITEM_COMPLETED events in `[startMillis, endMillis)`. */
@@ -443,6 +461,107 @@ class TrailQueries(
     /** The active days themselves, for the fourteen dot grid. */
     fun activeDayKeys(startMillis: Long, endMillis: Long): Set<String> =
         eventsPerDay(startMillis, endMillis).filterValues { it > 0 }.keys
+
+    // Presence ----------------------------------------------------------------
+    //
+    // The one section in this class that reads no wall clock at all, not even
+    // through [zone]. Every answer below is folded from `AppOpened.dateKey`, the
+    // string the device that was there computed in the zone it was in, and the
+    // arithmetic is calendar dates from end to end. Two consequences, and both are
+    // the reason MASTER_BUILD_PROMPT 14b.4 asks for it this way.
+    //
+    // A restored backup and a second device reach the same answer, because the
+    // answer never passes through the reader's zone or the reader's clock. And a
+    // person who opens the app at 23:00 and again at 00:30 fourteen days later has
+    // been away fourteen days, which is what a calendar says and not what thirteen
+    // and a bit times 86400000 milliseconds says. The obvious implementation, which
+    // subtracts the two wall clocks, is wrong on that person, wrong across every
+    // spring forward, and right on the author's own phone in August.
+    //
+    // Nothing here counts. `openedDayKeys` is a list of days somebody was present,
+    // which is a measurement of an absence turned inside out, and 14b.4 forbids a
+    // returning person from being greeted by one. It exists so a gap can be found
+    // and so a test can see its own fixture. It never reaches a screen, the Trail
+    // renders no row for the event, and section 9's day header does not count it.
+
+    /**
+     * Every local day the log holds an APP_OPENED for, ascending and distinct.
+     *
+     * Distinct because two devices holding one log may each have written the marker
+     * for the same day, which is correct: each of them was opened, and every reader
+     * of this event asks which days appear rather than how many rows a day has.
+     * Ascending because these keys are ISO-8601, so string order is calendar order,
+     * and the newest is therefore the last.
+     */
+    fun openedDayKeys(): List<String> = openedDates.map(LocalDate::toString)
+
+    /**
+     * True when the log already holds the presence marker for [dateKey].
+     *
+     * The pure statement of the rule `ClarityRepository.recordAppOpened` enforces on
+     * the way in: at most once per calendar day. The repository answers the same
+     * question with one seek of the `entityId` index rather than by folding the
+     * whole log, because it runs on the first foreground and the log is the largest
+     * table in the app. This is the form a test can drive, and the two agree by
+     * construction: `AppOpened` uses its own date key as its entity id.
+     */
+    fun hasOpenedOn(dateKey: String): Boolean = dateKey in openedDayKeys()
+
+    /**
+     * The most recent return after a long absence, on or before [dateKey]. Null when
+     * there has not been one. MASTER_BUILD_PROMPT 14b.4.
+     *
+     * A return is an open with an open before it and [ReEntry.MIN_GAP_DAYS] or more
+     * calendar days between the two. Walked newest first, so a log with two
+     * absences answers with the later one, which is the only one anything is still
+     * suppressing for.
+     *
+     * **A first ever open is not a return, and this cannot be made to say otherwise.**
+     * The oldest open in the log has nothing before it, the loop leaves rather than
+     * substituting anything for the missing end, and [gapDays] has no overload that
+     * accepts a missing one. The two shapes that mistake would take are both
+     * plausible and both cost somebody something: a missing previous open defaulted
+     * to the same day makes every return a gap of zero, so the state never appears
+     * for anyone, and defaulted to the epoch makes every brand new user a person
+     * coming back from an absence of decades.
+     *
+     * @param dateKey the day being asked about, `yyyy-MM-dd`. It comes from
+     *   `ClarityClock.dateKey()` at the one call site that has a clock; a key this
+     *   package cannot parse is a programming error rather than bad data, because
+     *   unlike the payload keys it did not come from the log.
+     */
+    fun lastReEntryOnOrBefore(dateKey: String): ReEntry? {
+        val asOf = requireNotNull(parseDayKey(dateKey)) {
+            "a date key is yyyy-MM-dd, and this one is '$dateKey'"
+        }
+        val opens = openedDates.filter { !it.isAfter(asOf) }
+        for (index in opens.indices.reversed()) {
+            val previousOpen = opens.getOrNull(index - 1) ?: return null
+            if (gapDays(previousOpen, opens[index]) >= ReEntry.MIN_GAP_DAYS) {
+                return ReEntry(returnedOn = opens[index].toString())
+            }
+        }
+        return null
+    }
+
+    /**
+     * The return that [dateKey]'s own open triggers, or null on every other day.
+     *
+     * 14b.4 puts the app into the re-entry state "on the foreground that writes
+     * today's APP_OPENED and only then, so it appears at most once per calendar day
+     * and in practice once per gap". This is that question, and
+     * [lastReEntryOnOrBefore] is the one the suppression windows ask for days
+     * afterward. Both run the same arithmetic, once, so the day the screen appears
+     * and the day the Report starts withholding can never be two different days.
+     *
+     * **The trap this restates from `ClarityRepository.recordAppOpened`.** The app
+     * writes today's marker on the first foreground, so by the time any screen can
+     * ask, the newest key in the log is already today. The absence is measured to
+     * the newest open strictly before today, which the loop above gets right by
+     * comparing consecutive pairs rather than by comparing anything to today.
+     */
+    fun reEntryOn(dateKey: String): ReEntry? =
+        lastReEntryOnOrBefore(dateKey)?.takeIf { it.returnedOn == dateKey }
 
     // Focus -------------------------------------------------------------------
 
@@ -796,6 +915,21 @@ class TrailQueries(
         is FocusExtended -> itemIdOfFocusSession(payload.sessionId)
         else -> null
     }
+
+    /**
+     * The absence between two consecutive presence markers, in calendar days.
+     *
+     * **Both ends are required, and that is the whole design of this function.**
+     * There is no overload taking a nullable previous open and no default for a
+     * missing one, so the first ever open cannot reach the arithmetic at all. See
+     * [lastReEntryOnOrBefore] for what the two available defaults would each cost.
+     *
+     * Counted between calendar dates, never by subtracting the two wall clocks, so
+     * the answer does not depend on the time of day either open happened at and
+     * does not move when the clocks do.
+     */
+    private fun gapDays(previousOpen: LocalDate, thisOpen: LocalDate): Int =
+        ChronoUnit.DAYS.between(previousOpen, thisOpen).toInt()
 
     private fun localDateOf(atMillis: Long): LocalDate =
         Instant.ofEpochMilli(atMillis).atZone(zone).toLocalDate()

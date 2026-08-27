@@ -29,7 +29,8 @@ import androidx.compose.runtime.compositionLocalOf
  * an issue rather than worked around, because a reflective workaround here would
  * break silently on the next alpha.
  *
- * Reduce motion is one global check, not twenty six individual ones.
+ * Reduce motion is one global check, not twenty six individual ones, and calm mode
+ * joins that same check rather than adding a second one. design-v3.md 8.5.
  */
 interface ClarityMotion {
     /** Presses, promotions, selections, the tab pill. design-v3.md springStandard. */
@@ -117,11 +118,41 @@ object ReducedMotion : ClarityMotion {
 const val REDUCED_GLOW_OPACITY = 0.92f
 
 /**
+ * The tutorial ring pulse holds here rather than animating. design-v3.md 16.2.
+ *
+ * The midpoint of the 0.25 to 0.45 range in 8.2 item 19, which is the same treatment
+ * [REDUCED_GLOW_OPACITY] gives the breathing glow. Unlike the glow, this one is calm
+ * mode's addition rather than 8.3's, because 8.3 never says what the pulse does.
+ */
+const val CALM_TUTORIAL_PULSE_OPACITY = 0.35f
+
+/**
  * True when the system animator duration scale is 0 or the accessibility setting
  * asks for reduced motion. Set once at the top of the tree by ClarityTheme.
  */
 val LocalReduceMotion = compositionLocalOf { false }
 
+/**
+ * The one global motion check. design-v3.md 8.3 and 8.5.
+ *
+ * **Calm mode joins this flag rather than adding a level beside it.** One boolean is
+ * true when the system asks for reduced motion **or** calm mode is on, and every
+ * animation in the app reads it through this function. There is no third motion level,
+ * no per-animation opt out, and nothing anywhere that reads `LocalCalmMode` in order to
+ * pick a different curve.
+ *
+ * The `or` is also what makes design-v3.md 16.1's rule true in code: **reduce motion
+ * always wins on motion.** Calm mode is a superset of 8.3, never an override of it, so
+ * turning calm mode off while the system asks for reduced motion restores color and not
+ * movement. There is no arrangement of the two switches that animates against an
+ * accessibility setting.
+ *
+ * Calm mode goes beyond this flag in exactly two places, and neither is a curve: the
+ * entrances in 8.4 do not fire at all rather than firing as a crossfade, which
+ * `ClarityEntrance.kt` handles, and the tutorial ring pulse holds at
+ * [CALM_TUTORIAL_PULSE_OPACITY].
+ */
 @Composable
 @ReadOnlyComposable
-fun clarityMotion(): ClarityMotion = if (LocalReduceMotion.current) ReducedMotion else FullMotion
+fun clarityMotion(): ClarityMotion =
+    if (LocalReduceMotion.current || LocalCalmMode.current) ReducedMotion else FullMotion

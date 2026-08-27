@@ -21,6 +21,17 @@
     <string name="areas_title">Areas</string>
     <string name="areas_chip_focus">Focus</string>
     <string name="areas_chip_pulse">Pulse</string>
+    <!--
+        The unfiled inbox chip, design-v3.md 10.1 and 10.16. The count is the label
+        and the label is plain text: never a badge, never a dot, never a color that
+        reads as an alert. Addendum 01 4a says this twice and design-v3.md 14 forbids
+        the color treatment that would carry it.
+    -->
+    <string name="areas_chip_inbox">Inbox %1$d</string>
+    <plurals name="cd_areas_chip_inbox">
+        <item quantity="one">Inbox, %d item</item>
+        <item quantity="other">Inbox, %d items</item>
+    </plurals>
     <string name="areas_open_settings">Settings</string>
     <string name="areas_open_archive">Archived areas</string>
     <string name="areas_empty_title">No areas yet</string>
@@ -70,15 +81,28 @@
     <string name="sheet_swap_title">Swap</string>
     <string name="sheet_queue_choice_title">What is next</string>
     <string name="sheet_delete_area_title">Delete this area?</string>
+    <string name="sheet_inbox_title">Inbox</string>
+    <string name="sheet_file_item_title">Move to an area</string>
 
     <string name="field_title">Title</string>
     <string name="field_note">Note</string>
     <string name="field_note_optional">Note, optional</string>
     <string name="field_area_name">Name</string>
     <string name="field_area">Area</string>
+    <!--
+        The two optional fields, design-v3.md 10.17. The first step label is the one
+        that document names verbatim, and its placeholder is an example rather than an
+        instruction, because an instruction to break a task down is a second task.
+    -->
+    <string name="field_first_step">First step</string>
+    <string name="field_first_step_example">Open the doc and read what is there</string>
+    <string name="field_estimate_minutes">Estimate in minutes</string>
 
     <string name="add_item_lands_active">This becomes the active item right away.</string>
     <string name="add_item_lands_queue">This joins the queue.</string>
+    <string name="add_item_lands_inbox">This goes to your inbox.</string>
+    <string name="file_lands_active">Becomes the active item</string>
+    <string name="file_lands_queue">Joins the queue</string>
 
     <string name="sidehead_active">Active</string>
     <string name="sidehead_queue">Queue</string>
@@ -92,6 +116,20 @@
     <string name="completed_empty">Nothing completed yet.</string>
     <string name="swap_demoting">This goes back to the top of the queue</string>
     <string name="queue_choice_dismiss">Leave it idle</string>
+
+    <!--
+        The inbox, design-v3.md 10.16 and 10.13. An empty state is an invitation and
+        never a scold, so this one says what the place is for and then says there is
+        no hurry, which is the whole point of an inbox nothing ever nags about.
+    -->
+    <string name="inbox_empty_title">Nothing in your inbox</string>
+    <string name="inbox_empty_body">Anything you add without choosing an area waits here. There is no hurry to file it.</string>
+    <string name="action_move">Move</string>
+    <string name="cd_move_to_area">Move to an area</string>
+    <plurals name="item_estimate_minutes">
+        <item quantity="one">Estimated at %d minute</item>
+        <item quantity="other">Estimated at %d minutes</item>
+    </plurals>
 
     <!-- Archive and delete -->
     <string name="archive_empty_title">Nothing archived</string>
@@ -108,6 +146,20 @@
     <string name="cd_edit_area">Edit this area</string>
     <string name="cd_reorder">Reorder</string>
     <string name="cd_more_actions">More actions</string>
+
+    <!--
+        Settings, Appearance. design-v3.md 10.11 and 16.1.
+
+        A label and a caption for a switch, which is fixed interface copy and not an
+        observation, so it belongs here. The caption says what the setting does and
+        nothing about the person who turns it on: design-v3.md 16.4 forbids the app
+        announcing calm mode anywhere else, and that rule starts with this string.
+
+        The row itself lands with the Settings screen in phase 11, issue #10. These are
+        the words it uses, fixed here in phase 3b alongside the setting they name.
+    -->
+    <string name="settings_calm_mode">Calm mode</string>
+    <string name="settings_calm_mode_caption">Less motion, softer color</string>
 
     <!-- Conflict card, MASTER_BUILD_PROMPT 6.3 -->
     <string name="conflict_dismiss">Got it</string>

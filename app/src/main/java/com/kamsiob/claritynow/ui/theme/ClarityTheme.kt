@@ -1,5 +1,9 @@
 package com.kamsiob.claritynow.ui.theme
 
+import android.content.ContentResolver
+import android.database.ContentObserver
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -9,6 +13,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -50,10 +55,18 @@ object ClarityElevation {
  * Material You dynamic color is explicitly not used. The color scheme below exists
  * only so Material 3 components that read from it do not fall back to the default
  * purple; every color the app actually draws comes from [LocalClarityColors].
+ *
+ * **[calmMode] is null until the user has touched the switch**, and while it is null
+ * calm mode follows the system reduce-motion setting, live, per design-v3.md 16.1. That
+ * is why the parameter is nullable rather than defaulting to `false`: a `false` default
+ * would silently mean "off" for every caller that has not been taught about the setting
+ * yet, and the specified default is not "off", it is "whatever the system asks for".
+ * [resolveCalmMode] holds that rule in one place so a test can assert both halves of it.
  */
 @Composable
 fun ClarityTheme(
     setting: ClarityThemeSetting = ClarityThemeSetting.SYSTEM,
+    calmMode: Boolean? = null,
     content: @Composable () -> Unit,
 ) {
     val systemDark = isSystemInDarkTheme()
@@ -62,9 +75,12 @@ fun ClarityTheme(
         ClarityThemeSetting.DARK -> true
         ClarityThemeSetting.SYSTEM -> systemDark
     }
-    val colors = if (dark) ClarityDarkColors else ClarityLightColors
-    val context = LocalContext.current
-    val reduceMotion = remember(context) { shouldReduceMotion(context) }
+    val reduceMotion = rememberSystemReduceMotion()
+    val calm = resolveCalmMode(calmMode, reduceMotion)
+    val colors = remember(dark, calm) {
+        val world = if (dark) ClarityDarkColors else ClarityLightColors
+        if (calm) world.calmed() else world
+    }
 
     CompositionLocalProvider(
         LocalClarityColors provides colors,
@@ -72,6 +88,7 @@ fun ClarityTheme(
         LocalClarityTypography provides ClarityTypeScale,
         LocalClarityShapes provides ClarityShapeScale,
         LocalReduceMotion provides reduceMotion,
+        LocalCalmMode provides calm,
     ) {
         MaterialTheme(
             colorScheme = materialSchemeFor(colors, dark),
@@ -89,9 +106,12 @@ fun ClarityTheme(
  * conditionally, so it can never be accidentally inverted. design-v3.md section 2.
  */
 @Composable
-fun ContemplativeTheme(content: @Composable () -> Unit) {
-    val context = LocalContext.current
-    val reduceMotion = remember(context) { shouldReduceMotion(context) }
+fun ContemplativeTheme(
+    calmMode: Boolean? = null,
+    content: @Composable () -> Unit,
+) {
+    val reduceMotion = rememberSystemReduceMotion()
+    val calm = resolveCalmMode(calmMode, reduceMotion)
     val contemplative = ClarityContemplativeColors
 
     CompositionLocalProvider(
@@ -99,6 +119,7 @@ fun ContemplativeTheme(content: @Composable () -> Unit) {
         LocalClarityTypography provides ClarityTypeScale,
         LocalClarityShapes provides ClarityShapeScale,
         LocalReduceMotion provides reduceMotion,
+        LocalCalmMode provides calm,
     ) {
         MaterialTheme(
             colorScheme = darkColorScheme(
@@ -177,13 +198,38 @@ private fun materialTypographyFor(type: ClarityTypography) = Typography(
 )
 
 /**
- * design-v3.md 8.3. One global check. The animator duration scale is the setting
- * Android actually exposes for this, and developer options set it to zero for the
- * same reason an accessibility user would.
+ * design-v3.md 8.3. One global check, and it is live.
+ *
+ * The animator duration scale is the setting Android actually exposes for this, and
+ * developer options set it to zero for the same reason an accessibility user would.
+ *
+ * **It is observed rather than read once**, which phase 3b changed, because
+ * design-v3.md 16.1 says calm mode follows the system setting "live, with no restart"
+ * while the user has never touched the switch. Read once at composition, a person who
+ * turned the system setting on, opened this app to see the difference and found none
+ * would reasonably conclude the app ignores it.
  */
-private fun shouldReduceMotion(context: android.content.Context): Boolean {
+@Composable
+private fun rememberSystemReduceMotion(): Boolean {
+    val resolver = LocalContext.current.contentResolver
+    return produceState(initialValue = animationsAreOff(resolver), resolver) {
+        val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean) {
+                value = animationsAreOff(resolver)
+            }
+        }
+        resolver.registerContentObserver(
+            Settings.Global.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE),
+            false,
+            observer,
+        )
+        awaitDispose { resolver.unregisterContentObserver(observer) }
+    }.value
+}
+
+private fun animationsAreOff(resolver: ContentResolver): Boolean {
     val scale = Settings.Global.getFloat(
-        context.contentResolver,
+        resolver,
         Settings.Global.ANIMATOR_DURATION_SCALE,
         1f,
     )

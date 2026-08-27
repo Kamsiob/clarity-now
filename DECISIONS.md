@@ -71,6 +71,272 @@ The old entry stays where it is, wrong, dated, and useful.
 
 ---
 
+## August 27, 2026: six open choices in the calm mode and entrance retrofit
+
+Phase 3b, issues #48, #50 and #27. Addendum 01 8c, 8e and 4d,
+`MASTER_BUILD_PROMPT.md` 14b.4 and 14b.12, `design-v3.md` 8.4 and 16. Six things
+those documents leave to the builder, settled here under `design-v3.md` 15.
+
+**The capture path's four choices are the entry below this one** and are not repeated
+here: the FAB captures into the inbox, deleting an area does not orphan its items, the
+first step truncates on the card and wraps in the sheet, and the estimate is a free
+number field.
+
+### An app session is the process lifetime
+
+**Decided.** An entrance fires on the first open of its tab per app session, and a
+session begins at process start and ends when the process ends. A rotation or a theme
+switch does not re-arm it. A process death does. Implemented in
+`ui/theme/ClarityEntrance.kt` and stated in `design-v3.md` 8.4.
+
+**Why.** The flag is stored as **which session spent it** rather than as a boolean,
+and that is the whole trick. `design-v3.md` 8.4 wants a rotation to leave the entrance
+spent and a process death to re-arm it, and those pull in opposite directions: a
+`remember` loses a rotation and would re-fire on every one, a `rememberSaveable`
+survives a system initiated process death and would therefore never re-arm. Holding a
+token read once per process settles both, because a bundle restored into a new process
+carries a token that matches nothing. The token is `SystemClock.elapsedRealtimeNanos`,
+read once when the holder initializes: two launches cannot read the same nanosecond,
+and a reboot resets the clock but also discards every saved bundle.
+
+It is keyed to the tab rather than to the screen, in the per tab saveable state the
+shell has held since phase 3, so a sheet opening over Areas is not a first open.
+
+**Considered and rejected: re-arming after some period in the background**, which is
+what a person would guess if asked, and which several apps do. It invents a threshold
+nobody asked for, it makes one screen behave two ways for a reason the user cannot
+see, and predictable interface behavior is worth more to this audience than a second
+chance to show an animation.
+
+**Revisit if** phase 8's Report reveal needs its content key, which `design-v3.md` 8.4
+already carves out as the one entrance that re-arms on a content change. That is a key
+alongside the session token, not a change to what a session means.
+
+### Calm mode does not go back to following the system
+
+**Decided.** Calm mode follows the OS reduce motion setting, live, until the user sets
+the switch. The first explicit choice gives the switch a value of its own and it stops
+following. There is no path back to following, short of erasing all data. Implemented
+in `data/prefs/ClarityPreferences.kt` and `ui/theme/CalmMode.kt`, and stated in
+`design-v3.md` 16.1.
+
+**Why.** A control that silently changes state because something outside the app
+changed is a control this audience cannot rely on. Predictability is worth more here
+than saving somebody one tap. The storage carries three states, absent or true or
+false, and the interface shows two, which is what makes both halves true at once: the
+default is not off, it is whatever the system asks for, and a `Boolean` defaulting to
+false would have meant off for every person who has the system setting on and never
+opens Settings. That is precisely the person the feature exists for.
+
+**Considered and rejected: keeping the switch tracking the system whenever the two
+happen to agree.** It is the tidier model and it is unpredictable in the one way that
+matters: the app would look different tomorrow because of something the person changed
+in a different app last week. A three-state control, On, Off, Follow system, was
+rejected separately in `design-v3.md` 16.1, because a third state is a third decision
+on a settings screen already full of them.
+
+**Revisit if** anyone asks for a way back to following the system. `Erase all data`
+clears the key with everything else, which is a real answer but a heavy one.
+
+### The entrance starts at the screen title, not at the first card
+
+**Decided.** The Areas header takes entrance index 0 and the cards follow at 1 and
+after, so the screen arrives as one sequence. Implemented in `ui/areas/AreasScreen.kt`.
+The conflict cards deliberately take no entrance index at all.
+
+**Why.** The obvious answer, and the one most list screens use, is to stagger the rows
+and leave the header fixed. A fixed title with rows pouring in underneath reads as
+content loading into a frame. What this entrance is for is the app arriving. Starting
+at the title costs one stagger step, 50ms, and makes the screen one thing rather than
+two. A conflict card is an interruption that arrives because a merge produced one,
+carrying its own reveal, rather than part of the screen's resting content, so it is
+outside the sequence.
+
+**Considered and rejected: a fixed header.** Cheaper by 50ms and it reads as a loading
+state, which is the one thing an entrance must not look like.
+
+**Revisit if** a header ever carries something a person needs before the list, at
+which point the thing that needs to be immediate is the argument, not the header.
+
+### The color picker's swatches keep their true color in calm mode
+
+**Decided.** The 48 swatches and the selection ring are not transformed. The live
+preview card beside the grid is. Implemented in `ui/areas/ColorPicker.kt`, where the
+preview goes through `Modifier.areaWash` and the swatches call `parseAreaColor`
+directly, and recorded in `design-v3.md` 16.7.
+
+**Why.** `design-v3.md` 16.2 sorts every use of an area accent into atmosphere, which
+takes the transform, and identity, which does not. A swatch is neither. It is a
+**choice**, and a person picking a color has to see the color they are picking. A
+desaturated grid would have somebody choose one accent and receive a different one the
+moment they turned the switch off. The preview card takes the transform for the
+opposite reason: it is a miniature of the real card and its job is showing what the
+card will look like, which in calm mode is calm.
+
+**Considered and rejected: transforming the grid too, for consistency.** Consistency
+is the argument, and it is the wrong one: it would make the picker consistent with the
+card at the cost of making it inconsistent with the thing it is picking.
+
+**Revisit if** the swatch grid is ever shown without the live preview beside it, which
+is the arrangement that makes the distinction legible.
+
+### The platform bottom sheet cannot honor calm mode, and it ships anyway
+
+**Decided.** `ClaritySheet` stays on Material's `ModalBottomSheet`. With calm mode on
+and the system reduce motion setting off, the sheet's own entrance and dismiss still
+travel. The 42 percent scrim and everything drawn inside the sheet do honor calm mode.
+Recorded in `design-v3.md` 16.8.
+
+**Why.** The sheet's animation is the platform's, it honors the system animator scale
+and therefore honors reduce motion, and it exposes no specification an app preference
+can reach. Two standing rules point in opposite directions here: `design-v3.md` 17.2's
+fourth reason says a component that cannot honor calm mode is a component that cannot
+ship, and 17.4 says a polish pass never reimplements a working platform component.
+Both are true, which makes this a decision rather than a defect to fix quietly. The
+person calm mode exists for almost certainly has the system setting on as well, which
+is the case where the gap does not arise; the gap is real only for somebody who wants
+the app calm and the rest of their phone lively.
+
+**Considered and rejected: hand-building the sheet.** It would be the most used
+component in the app rebuilt to change one curve, and it would put predictive back,
+the insets behavior, the drag to dismiss and the accessibility handling on this
+project's own maintenance. The standing register at the foot of this file exists for
+components with no platform equivalent, and a bottom sheet is not one of them.
+
+**Revisit if** the platform grows a hook for its own sheet animation, or if the sheet
+turns out to be the one thing a calm mode user says bothers them.
+
+### Re-entry detection hands out the date of the return, never the length of the absence
+
+**Decided.** `ReEntry` carries `returnedOn` and nothing else. There is no field, no
+function and no overload anywhere in `domain.query` that yields the number of days a
+person was gone. `daysSince(dateKey)` exists, counts forward from the return, and
+every caller of it is a suppression window. Implemented in
+`domain/query/TrailFacts.kt` and `domain/query/TrailQueries.kt`.
+
+**Why.** `MASTER_BUILD_PROMPT.md` 14b.4 forbids stating the length of the gap "not in
+days, not in weeks, not as a date, not as `since March`". The statistically common
+shape for this is `fun gapDays(): Int?`, and it is the shape that makes the forbidden
+screen a one line mistake four phases from now, when somebody who has not read 14b.4
+is building the surface and finds a number sitting there that looks like it wants to
+be rendered. A prohibition that rests on somebody remembering it has a shelf life. This
+one rests on the number not existing.
+
+**Considered and rejected: carrying the gap and marking it forbidden in KDoc.** It is
+the version that survives review and fails in six months. The comparison against the
+14 day threshold happens inside the query and the number does not survive the return.
+
+**Revisit if** 14b.4 itself changes, because nothing short of that could make the
+length of somebody's absence a thing this app is allowed to say.
+
+---
+
+## August 27, 2026: the four open choices in the capture path
+
+Phase 3b, issues #24, #25 and #26. Addendum 01 4a, 4b and 4c, `MASTER_BUILD_PROMPT.md`
+14b.1 to 14b.3, `design-v3.md` 10.16 and 10.17. Four things those documents leave to
+the builder, settled here under `design-v3.md` 15: identify the statistically common
+answer, and take something else unless the common one is genuinely best.
+
+### The FAB captures into the inbox, not into the first area
+
+**Decided.** With at least one area, the FAB opens the add sheet with **no area
+chosen**, and the item is written with a null `areaId`. The add sheet carries no area
+control at all. Adding straight into a known area stays where it already is, on that
+area's detail sheet, where the area is context rather than a choice. At zero areas the
+FAB still creates an area, which `MASTER_BUILD_PROMPT.md` 8.4 states and 14b.1 leaves
+standing until its own open question is answered.
+
+**Why.** The obvious answer is an area picker on the add sheet with the inbox as one of
+its options, and it is the wrong one twice. It puts a decision with N options between
+the thought and the record, which is the exact thing 4a exists to remove, and it makes
+the inbox look like a place you file into rather than the absence of filing. What the
+FAB did before this was worse than either: it added into whichever area sorted first,
+which is a decision the app made on the person's behalf and got right only by
+accident. Nothing is lost by removing it, because there was never a picker to lose.
+The FAB now means one thing everywhere, and it means capture.
+
+**Considered and rejected: a row of area chips at the foot of the add sheet**,
+deselectable, nothing selected by default. It is defensible and it was close. It loses
+on the same ground the picker does: a control that is visible is a decision that has
+been offered, and an audience whose difficulty is deciding will read an unselected row
+of areas as an unanswered question. It also grows the sheet at 200 percent font past
+what one screen holds.
+
+**Revisit if** 14b.1's own open question is answered the other way, or if the Quick
+Capture widget in phase 12 makes the FAB's meaning ambiguous again.
+
+### Deleting an area does not orphan its items into the inbox
+
+**Decided.** `AREA_DELETED` tombstones the area's items with it, which is what
+`ClarityReducer.areaDeleted` already does. Nothing moves to the inbox. Asserted in
+`ClarityInvariantsTest` so that reversing it is a deliberate act rather than a side
+effect of an edit somewhere else.
+
+**Why.** The obvious answer is to orphan, on the reasoning that nothing is lost that
+way. It loses anyway. Deleting an area is already the most deliberate act in the app:
+it takes a typed confirmation, it has no undo, and the sheet says in plain words that
+the area and everything in it goes and that the history stays in the Trail. Thirty
+queued items reappearing in the inbox would contradict a sentence the person read and
+typed DELETE against, which is worse than either behavior chosen honestly. And it would
+turn one deliberate act into a pile of work nobody captured, at the top of the one
+surface `design-v3.md` 10.16 built specifically so that a pile never sits above the
+thing a person opened the app to see.
+
+**Considered and rejected: orphan, and say so in the delete copy.** Honest, but it
+makes delete a bulk unfile, which means there are then two ways to empty an area and
+one of them is spelled `delete`. Archive already exists as the non destructive path and
+its copy already says what it does.
+
+**Revisit if** anyone ever reports losing work to this. The undo window does not cover
+an area delete, so the evidence would arrive as a person saying so rather than as a
+metric, and there are no metrics.
+
+### The first step truncates on the card and wraps in the sheet
+
+**Decided.** One line, ellipsized, at `caption` on the area card and on an inbox row.
+In full, wrapping, in the area detail sheet. The field itself has no length limit.
+
+**Why.** `design-v3.md` 10.3 caps the card at four lines and names this the row that
+truncates first when a status line is also present, because the status line is about
+now and the first step is about next, and now wins on a card that has to pass a three
+second test. The sheet has no such job and is where reading happens, so it wraps. The
+field is unbounded because `MAX_ITEM_TITLE` exists to protect the line every surface
+prints, and refusing a capture over a long second line would lose the thought this
+whole path exists to keep.
+
+**Considered and rejected: a character limit on the field**, which is the common
+answer and would make both surfaces easy. It moves the cost to the wrong place: the
+person typing, at the moment of capture, rather than the layout.
+
+**Revisit if** a surface ever needs the first step in a fixed height slot. A widget
+might, and phase 12 owns that.
+
+### The estimate is a free number field, not a set of durations
+
+**Decided.** Optional minutes, typed as digits, four at most. No chips, no stepper, no
+presets. `design-v3.md` 10.17 says `entered as a number` and this is that.
+
+**Why.** The statistically common answer is a row of duration chips: 15, 30, 60, and
+so on. It loses twice. It is a decision with five options placed in the capture path,
+which is what this phase exists to remove, and it silently makes the buckets somebody
+else chose into the shape of the data. `MASTER_BUILD_PROMPT.md` 14b.8 has phase 8 read
+these numbers as ratios and tendencies, and a ratio computed over five preset values is
+a fact about the presets. Typing `20` is one gesture; picking the nearest chip to 20 is
+a comparison.
+
+**Also decided, and it is the harder half:** no surface counts down against the number,
+anywhere. The card does not show it at all. The detail sheet shows it once, as plain
+text, and no surface renders it beside an actual. An estimate that becomes a deadline
+is a worse instrument than no estimate, and it is a deadline the person set for
+themselves in a hopeful moment and then has to watch expire.
+
+**Revisit if** phase 8's calibration facts turn out to need a coarser input to be
+stable at low counts. That would be an argument for rounding what is read, not for
+bucketing what is typed.
+
+---
+
 ## August 27, 2026: a key is chosen against the whole space, not the visible part
 
 **Decided.** Any order key is computed against **every entity that can occupy that

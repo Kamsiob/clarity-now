@@ -22,7 +22,13 @@ class MainActivity : ComponentActivity() {
         setContent {
             val theme by ClarityGraph.preferences.theme
                 .collectAsStateWithLifecycle(initialValue = ClarityThemeSetting.SYSTEM)
-            ClarityTheme(setting = theme) {
+            // Null means the person has never touched the switch, which is a storage
+            // state rather than an interface state: while it is null, calm mode
+            // follows the system reduce motion setting, which design-v3.md 16.1 makes
+            // the default. The theme resolves that, not this call site.
+            val calmMode by ClarityGraph.preferences.calmMode
+                .collectAsStateWithLifecycle(initialValue = null)
+            ClarityTheme(setting = theme, calmMode = calmMode) {
                 CompositionLocalProvider(LocalClarityHaptics provides haptics) {
                     ClarityShell()
                 }

@@ -1,5 +1,6 @@
 package com.kamsiob.claritynow.domain.replay
 
+import com.kamsiob.claritynow.data.event.AppOpened
 import com.kamsiob.claritynow.data.event.AreaCreated
 import com.kamsiob.claritynow.data.event.ClarityEvent
 import com.kamsiob.claritynow.data.event.ClarityEventJson
@@ -14,12 +15,15 @@ import com.kamsiob.claritynow.data.event.ItemFiled
 import com.kamsiob.claritynow.data.event.ItemPromoted
 import com.kamsiob.claritynow.data.event.ItemStatus
 import com.kamsiob.claritynow.data.event.inTotalOrder
+import com.kamsiob.claritynow.domain.query.TrailQueries
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.time.LocalDate
+import java.time.ZoneId
 
 /**
  * The replay test harness, MASTER_BUILD_PROMPT 6.5.
@@ -82,6 +86,221 @@ class ReplayHarnessTest {
         )
         assertTrue("no areas were created", state.areas.isNotEmpty())
         assertTrue("no items were created", state.items.isNotEmpty())
+    }
+
+    // Presence and re-entry ---------------------------------------------------
+    //
+    // MASTER_BUILD_PROMPT 14b.4, Addendum 01 4d, issue #27.
+    //
+    // These three sit in the harness rather than beside the query tests because the
+    // guarantee they are about is this file's guarantee. CLAUDE.md rule 6 says the
+    // gap derives from the log and never from DataStore, and the sentence that rule
+    // exists for is that a restored backup and a second device reach the same
+    // answer. That is a replay property: same events, any arrival order, any number
+    // of deliveries, any reader, one answer.
+    //
+    // They are also the only tests in this file that cannot assert against
+    // `ClarityState`. The reducer folds APP_OPENED into nothing at all, deliberately,
+    // because a last opened date on the projection would be a tally of somebody's
+    // presence sitting in the object every screen reads. So the answer is read back
+    // through `TrailQueries`, and the first assertion in each test is that the
+    // projection really is empty, or the rest would be proving nothing.
+
+    /** The zone the fixture was written in. Never the zone it is read in. */
+    private val newYork: ZoneId = ZoneId.of("America/New_York")
+
+    /**
+     * A log of nothing but presence markers, one per key, written by [originId].
+     *
+     * Each row's instant is half past eight in the evening in New York, which is
+     * half past one the next morning in UTC. **Every row's wall clock therefore
+     * falls on a different calendar day from the key it carries**, for anyone
+     * reading it in UTC. That is not a broken fixture, it is what a phone in New
+     * York writes every evening, and it is the case that tells an implementation
+     * reading the payload apart from one reading the row's instant. On a fixture
+     * written at noon UTC the two agree and only one of them is right.
+     */
+    private fun opens(originId: String, vararg keys: String): List<ClarityEvent> =
+        keys.mapIndexed { index, key ->
+            ClarityEvent.of(
+                id = "$originId-open-$key",
+                wallClock = LocalDate.parse(key)
+                    .atTime(20, 30)
+                    .atZone(newYork)
+                    .toInstant()
+                    .toEpochMilli(),
+                lamport = index + 1L,
+                originId = originId,
+                payload = AppOpened(key),
+            )
+        }
+
+    /** Straight, reversed, shuffled and delivered twice. Every arrival a merge makes. */
+    private fun deliveries(log: List<ClarityEvent>): List<List<ClarityEvent>> = listOf(
+        log,
+        log.reversed(),
+        log.shuffled(java.util.Random(29L)),
+        log + log,
+    )
+
+    private val readers: List<ZoneId> = listOf(
+        ZoneId.of("UTC"),
+        newYork,
+        ZoneId.of("Australia/Sydney"),
+        // An offset that is not a whole number of hours, so a reader that divides
+        // milliseconds is wrong here even with no daylight saving to help it.
+        ZoneId.of("Asia/Kathmandu"),
+    )
+
+    /**
+     * The presence markers changed nothing anybody can see, which is what makes the
+     * rest of the test worth running.
+     */
+    private fun assertProjectionUntouched(log: List<ClarityEvent>) {
+        val state = ClarityReplay.replay(log)
+        assertEquals(
+            "a log of nothing but presence markers must replay to nothing at all",
+            serialize(ClarityState.EMPTY),
+            serialize(state.copy(lastLamport = 0L, eventsApplied = 0)),
+        )
+        assertTrue(state.diagnostics.isEmpty())
+    }
+
+    /**
+     * A fourteen day absence, found identically however the log arrives and whoever
+     * reads it.
+     *
+     * March 1 to March 15 is the fourteen the specification names, and it spans the
+     * United States spring forward, so the two instants are a fourteenth of a day
+     * short of fourteen days. An implementation that subtracts wall clocks calls it
+     * thirteen and shows a returning person the ordinary queue screen. One that
+     * converts those instants through the reader's zone gets a different answer in
+     * Sydney from the one it gets in New York, which is the two device disagreement
+     * CLAUDE.md rule 6 is written to prevent.
+     *
+     * March 16 is in the fixture so that the day after a return is asserted as an
+     * ordinary day. The state appears on the open that noticed the absence and only
+     * then, and a log that ends on the return day cannot tell the difference between
+     * that rule and one that keeps answering forever.
+     */
+    @Test
+    fun `a fourteen day absence is the same absence in every delivery order and zone`() {
+        val log = opens("device-a", "2026-03-01", "2026-03-15", "2026-03-16")
+        assertProjectionUntouched(log)
+
+        deliveries(log).forEachIndexed { delivery, arrived ->
+            readers.forEach { zone ->
+                val queries = TrailQueries(arrived, zone)
+                assertEquals(
+                    "delivery $delivery in $zone",
+                    listOf("2026-03-01", "2026-03-15", "2026-03-16"),
+                    queries.openedDayKeys(),
+                )
+                assertEquals(
+                    "delivery $delivery in $zone",
+                    "2026-03-15",
+                    queries.reEntryOn("2026-03-15")?.returnedOn,
+                )
+                assertNull("delivery $delivery in $zone", queries.reEntryOn("2026-03-16"))
+                // The return outlives its own day, because the suppression windows
+                // 14b.4 attaches to it run for two days and for a week.
+                assertEquals(
+                    "2026-03-15",
+                    queries.lastReEntryOnOrBefore("2026-03-16")?.returnedOn,
+                )
+            }
+        }
+    }
+
+    /**
+     * A thirteen day absence is not a return, and no arrival order makes it one.
+     *
+     * One day short of the threshold in MASTER_BUILD_PROMPT 14b.4, so this is the
+     * half of the boundary that has to answer nothing. It matters more than it
+     * looks: the failure here is showing the welcome back screen to somebody who was
+     * away for under a fortnight, which reads as the app having noticed and
+     * commented on a long weekend.
+     *
+     * The absence spans a fall back, where the two instants are an hour more than
+     * thirteen days apart rather than an hour less. Millisecond subtraction gets
+     * this one right, which is exactly why it is here: the pair of daylight saving
+     * tests fails in only one direction under the wrong implementation, and a suite
+     * that tested only the direction that fails would leave the reason unstated.
+     */
+    @Test
+    fun `a thirteen day absence is not a return in any delivery order or zone`() {
+        val log = opens("device-a", "2026-10-26", "2026-11-08")
+        assertProjectionUntouched(log)
+
+        deliveries(log).forEachIndexed { delivery, arrived ->
+            readers.forEach { zone ->
+                val queries = TrailQueries(arrived, zone)
+                assertEquals(listOf("2026-10-26", "2026-11-08"), queries.openedDayKeys())
+                assertNull("delivery $delivery in $zone", queries.reEntryOn("2026-11-08"))
+                assertNull(
+                    "delivery $delivery in $zone",
+                    queries.lastReEntryOnOrBefore("2026-11-08"),
+                )
+            }
+        }
+    }
+
+    /**
+     * Two absences, on a log two devices wrote, merged.
+     *
+     * This is the shape the whole harness exists for. One phone marked January 5,
+     * came back on January 25 after twenty days away and used the app the next day.
+     * A second phone marked that same January 26, then nothing until March 6, thirty
+     * nine days later. Neither device holds the whole story and the merged log does.
+     *
+     * Three things are asserted that a single device log cannot reach.
+     *
+     * The later return is the answer. The windows 14b.4 attaches to a return are all
+     * measured forward from it, so a walk that found the older one first would hold
+     * the Report's decline and neglect families closed on the strength of an absence
+     * six weeks gone.
+     *
+     * The older return is still the answer when the question is asked from a day
+     * before the newer one happened, which is what a Report regenerated over an old
+     * week does.
+     *
+     * And January 26 appears once in the answer although two rows carry it. Both
+     * devices were opened that day and both were right to say so; every reader of
+     * this event asks which days appear, never how many rows a day has. A fold that
+     * counted rows would turn presence into a tally, which is the thing 14b.4 exists
+     * to keep out of this feature.
+     */
+    @Test
+    fun `two absences on a merged two device log answer with the later return`() {
+        val deviceA = opens("device-a", "2026-01-05", "2026-01-25", "2026-01-26")
+        val deviceB = opens("device-b", "2026-01-26", "2026-03-06")
+        val merged = deviceA + deviceB
+        assertProjectionUntouched(merged)
+        assertEquals(5, merged.size)
+
+        deliveries(merged).forEachIndexed { delivery, arrived ->
+            readers.forEach { zone ->
+                val queries = TrailQueries(arrived, zone)
+                assertEquals(
+                    "delivery $delivery in $zone",
+                    listOf("2026-01-05", "2026-01-25", "2026-01-26", "2026-03-06"),
+                    queries.openedDayKeys(),
+                )
+                assertEquals("2026-01-25", queries.reEntryOn("2026-01-25")?.returnedOn)
+                assertEquals("2026-03-06", queries.reEntryOn("2026-03-06")?.returnedOn)
+                assertEquals(
+                    "delivery $delivery in $zone",
+                    "2026-03-06",
+                    queries.lastReEntryOnOrBefore("2026-03-06")?.returnedOn,
+                )
+                assertEquals(
+                    "asked from a day before the second return, the first is still it",
+                    "2026-01-25",
+                    queries.lastReEntryOnOrBefore("2026-03-05")?.returnedOn,
+                )
+                assertNull(queries.reEntryOn("2026-01-26"))
+            }
+        }
     }
 
     // Idempotency -------------------------------------------------------------

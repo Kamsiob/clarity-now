@@ -112,6 +112,7 @@ docs/BUILD_STATE.md       what is done, what is half done, what is known broken
 docs/ARCHITECTURE.md      the code map and the layering rules
 docs/EVENT_FORMAT.md      the event log contract, in prose
 docs/DESIGN_RESEARCH.md   the standing design review behind the visual decisions
+docs/addenda/            directives as they arrived, provenance and not authority
 testdata/                 the golden log and the exact state it must produce
 rationale/                review panels and superseded drafts, not needed to build
 ```

@@ -21,16 +21,31 @@ import com.kamsiob.claritynow.ui.components.UndoRequest
 import com.kamsiob.claritynow.ui.components.UndoSnackbar
 import com.kamsiob.claritynow.ui.theme.AreaPalette
 
-/** Which secondary surface is open. Everything here is a bottom sheet. */
+/**
+ * Which secondary surface is open. Everything here is a bottom sheet.
+ *
+ * **[fromInbox] is a return address rather than a mode.** Editing and filing are
+ * reached from two places now, an area's queue and the inbox, and dismissing either
+ * has to land back where the person came from. One flag beats a navigation stack for
+ * a set of sheets this small, and it beats duplicating the sheets, which is how the
+ * two copies drift apart. Nothing about the sheet itself changes because of it.
+ */
 private sealed interface AreaSheet {
     data class Detail(val areaId: String) : AreaSheet
-    data class AddItem(val areaId: String) : AreaSheet
-    data class EditItem(val itemId: String) : AreaSheet
+
+    /** A null area is a capture into the inbox. Addendum 01 4a. */
+    data class AddItem(val areaId: String?) : AreaSheet
+    data class EditItem(val itemId: String, val fromInbox: Boolean = false) : AreaSheet
     data class EditArea(val areaId: String) : AreaSheet
     data object NewArea : AreaSheet
     data class Swap(val areaId: String) : AreaSheet
     data class DeleteArea(val areaId: String) : AreaSheet
     data class LongPressMenu(val areaId: String) : AreaSheet
+
+    /** design-v3.md 10.16. The unfiled inbox and the two sheets it leads to. */
+    data object Inbox : AreaSheet
+    data class FileItem(val itemId: String) : AreaSheet
+    data class NewAreaForFiling(val itemId: String) : AreaSheet
 }
 
 /**
@@ -67,12 +82,20 @@ fun AreasRoute(
             onMoveArea = { areaId, index -> viewModel.moveArea(areaId, index) },
             onPromotionPlayed = { viewModel.promotionPlayed(it) },
             onDismissConflict = { viewModel.dismissConflict(it) },
+            onOpenInbox = { sheet = AreaSheet.Inbox },
+            // MASTER_BUILD_PROMPT 14b.1 and 8.4. At zero areas the FAB creates an
+            // area, which 8.4 states and this phase does not change.
+            //
+            // Otherwise **the FAB captures, and capture means the inbox.** It used to
+            // add into whichever area happened to sort first, which is a decision the
+            // app made on the person's behalf and got right only by accident. A null
+            // area is the honest version of the same gesture: the thought is recorded,
+            // nothing is guessed, and the destination is chosen later or never.
+            // Adding straight into a known area is still one tap away, from that
+            // area's own detail sheet, where the area is context rather than a choice.
+            // Recorded in `DECISIONS.md`.
             onFabClick = {
-                sheet = if (state.isEmpty) {
-                    AreaSheet.NewArea
-                } else {
-                    AreaSheet.AddItem(state.areas.first().id)
-                }
+                sheet = if (state.isEmpty) AreaSheet.NewArea else AreaSheet.AddItem(areaId = null)
             },
         )
 
@@ -119,15 +142,18 @@ fun AreasRoute(
         }
 
         is AreaSheet.AddItem -> {
-            val area = state.areas.firstOrNull { it.id == current.areaId }
-            if (area == null) {
+            val areaId = current.areaId
+            val area = areaId?.let { id -> state.areas.firstOrNull { it.id == id } }
+            // An area that vanished under an open sheet is a dismissal. A capture with
+            // no area is not: it has nothing to lose.
+            if (areaId != null && area == null) {
                 sheet = null
             } else {
                 AddItemSheet(
-                    areaName = area.name,
-                    landsActive = viewModel.wouldBecomeActive(area.id),
-                    onAdd = { title, note ->
-                        viewModel.addItem(area.id, title, note)
+                    areaName = area?.name,
+                    landsActive = area != null && viewModel.wouldBecomeActive(area.id),
+                    onAdd = { title, note, firstStep, estimateMinutes ->
+                        viewModel.addItem(area?.id, title, note, firstStep, estimateMinutes)
                         sheet = null
                     },
                     onDismiss = { sheet = null },
@@ -137,8 +163,9 @@ fun AreasRoute(
 
         is AreaSheet.EditItem -> {
             val item = viewModel.itemFor(current.itemId)
+            val back = if (current.fromInbox) AreaSheet.Inbox else null
             if (item == null) {
-                sheet = null
+                sheet = back
             } else {
                 // An unfiled item has no area and therefore no queue to move to the
                 // front of. Addendum 01 4a: it can be filed, edited or deleted, and
@@ -148,14 +175,16 @@ fun AreasRoute(
                     item = item,
                     canMoveToFront = queue.firstOrNull()?.id != item.id &&
                         queue.any { it.id == item.id },
-                    onSave = { title, note ->
-                        viewModel.editItem(item.id, title, note)
-                        sheet = null
+                    onSave = { title, note, firstStep, estimateMinutes ->
+                        viewModel.saveItem(item.id, title, note, firstStep, estimateMinutes)
+                        sheet = back
                     },
                     onDelete = {
-                        sheet = null
+                        sheet = back
                         // Nothing is written until the window closes, so undo has
-                        // nothing to compensate for and the log stays honest.
+                        // nothing to compensate for and the log stays honest. This is
+                        // the delete an unfiled item gets too, per Addendum 01 4a:
+                        // the same five second window as anywhere else.
                         undo = UndoRequest(
                             id = item.id,
                             message = undoMessage,
@@ -165,9 +194,9 @@ fun AreasRoute(
                     },
                     onMoveToFront = {
                         viewModel.moveItemToFront(item.id)
-                        sheet = null
+                        sheet = back
                     },
-                    onDismiss = { sheet = null },
+                    onDismiss = { sheet = back },
                 )
             }
         }
@@ -238,6 +267,47 @@ fun AreasRoute(
         }
 
         is AreaSheet.LongPressMenu -> sheet = AreaSheet.Detail(current.areaId)
+
+        AreaSheet.Inbox -> InboxSheet(
+            items = viewModel.inboxItems(),
+            onOpenItem = { sheet = AreaSheet.EditItem(it.id, fromInbox = true) },
+            onMoveItem = { sheet = AreaSheet.FileItem(it.id) },
+            onDismiss = { sheet = null },
+        )
+
+        is AreaSheet.FileItem -> {
+            val item = viewModel.itemFor(current.itemId)
+            // Already filed, or deleted under the sheet. Either way the inbox behind
+            // this is the right place to land, and it is where the person was.
+            if (item == null || item.areaId != null) {
+                sheet = AreaSheet.Inbox
+            } else {
+                FileItemSheet(
+                    itemTitle = item.title,
+                    areas = state.areas,
+                    onChoose = { area ->
+                        viewModel.fileItem(item.id, area.id)
+                        sheet = AreaSheet.Inbox
+                    },
+                    onCreateArea = { sheet = AreaSheet.NewAreaForFiling(item.id) },
+                    onDismiss = { sheet = AreaSheet.Inbox },
+                )
+            }
+        }
+
+        // design-v3.md 10.16's zero areas case. The same editor a new area always
+        // uses, and the item is filed into what it creates in the same gesture.
+        is AreaSheet.NewAreaForFiling -> AreaEditorSheet(
+            initialName = "",
+            initialColorHex = AreaPalette.defaultColorForIndex(viewModel.suggestedColorIndex()),
+            isNew = true,
+            previewItemTitle = viewModel.itemFor(current.itemId)?.title,
+            onSave = { name, hex ->
+                viewModel.createAreaAndFile(current.itemId, name, hex)
+                sheet = AreaSheet.Inbox
+            },
+            onDismiss = { sheet = AreaSheet.Inbox },
+        )
     }
 
     queueChoiceFor?.let { areaId ->

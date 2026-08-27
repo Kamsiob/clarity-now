@@ -36,8 +36,10 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.kamsiob.claritynow.R
@@ -61,30 +63,59 @@ private val SheetPadding = 20.dp
 // Add an item ----------------------------------------------------------------
 
 /**
- * The add sheet states where the item will land before the person commits, because
- * an item that silently becomes active is a surprise and an item that silently
- * joins a queue is a different surprise.
+ * Capture. MASTER_BUILD_PROMPT 8.2 and 14b.1, design-v3.md 10.17.
+ *
+ * **Capture must never require a decision.** A null [areaName] is the ordinary case
+ * and not a degraded one: the item is written with no area, it exists, and the
+ * thought is out of the person's head, which is the entire job of this path. Filing
+ * is a separate, later, optional act, and the inbox sheet is where it happens.
+ *
+ * The sheet states where the item will land before the person commits, in all three
+ * cases, because an item that silently becomes active is a surprise, an item that
+ * silently joins a queue is a different surprise, and an item that silently goes
+ * somewhere the person has not seen yet is the worst of the three.
+ *
+ * **The two optional fields are last on purpose.** design-v3.md 10.17 puts the first
+ * step and the estimate on this sheet and Addendum 01 4b is blunt that nothing may
+ * prompt for either. Order is the quietest form of prompting there is: a field
+ * directly beneath the title reads as the next thing to fill in. These sit below the
+ * note, in decreasing order of how often they will be used, so a person who types a
+ * title and taps Add never passes through them at all. Nothing here is required,
+ * nothing is marked incomplete, and the primary action is live from the first
+ * character of the title.
  */
 @Composable
 fun AddItemSheet(
-    areaName: String,
+    areaName: String?,
     landsActive: Boolean,
-    onAdd: (String, String?) -> Unit,
+    onAdd: (String, String?, String?, Int?) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val colors = LocalClarityColors.current
     val type = LocalClarityTypography.current
     var title by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
+    var firstStep by remember { mutableStateOf("") }
+    var estimate by remember { mutableStateOf("") }
     val focus = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(Unit) { focus.requestFocus() }
 
     ClaritySheet(onDismiss = onDismiss, title = stringResource(R.string.sheet_add_item_title)) {
-        Column(modifier = Modifier.padding(horizontal = SheetPadding)) {
-            Text(text = areaName, style = type.label, color = colors.inkSecondary)
-            Spacer(Modifier.height(16.dp))
+        Column(
+            modifier = Modifier
+                .heightIn(max = 620.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = SheetPadding),
+        ) {
+            // Nothing stands here when there is no area. The destination line below
+            // says where the item goes, and a second line naming the inbox would be
+            // the app mentioning the inbox twice on the way to writing one sentence.
+            if (areaName != null) {
+                Text(text = areaName, style = type.label, color = colors.inkSecondary)
+                Spacer(Modifier.height(16.dp))
+            }
             ClarityTextField(
                 value = title,
                 onValueChange = { title = it },
@@ -99,10 +130,18 @@ fun AddItemSheet(
                 label = stringResource(R.string.field_note_optional),
                 singleLine = false,
             )
+            Spacer(Modifier.height(20.dp))
+            FirstStepField(value = firstStep, onValueChange = { firstStep = it })
+            Spacer(Modifier.height(20.dp))
+            EstimateField(value = estimate, onValueChange = { estimate = it })
             Spacer(Modifier.height(18.dp))
             Text(
                 text = stringResource(
-                    if (landsActive) R.string.add_item_lands_active else R.string.add_item_lands_queue,
+                    when {
+                        areaName == null -> R.string.add_item_lands_inbox
+                        landsActive -> R.string.add_item_lands_active
+                        else -> R.string.add_item_lands_queue
+                    },
                 ),
                 style = type.caption,
                 color = colors.inkTertiary,
@@ -113,34 +152,121 @@ fun AddItemSheet(
                 enabled = title.isNotBlank(),
                 onClick = {
                     keyboard?.hide()
-                    onAdd(title, note.ifBlank { null })
+                    onAdd(title, note.ifBlank { null }, firstStep.ifBlank { null }, estimate.toMinutes())
                 },
             )
+            Spacer(Modifier.height(10.dp))
         }
     }
 }
+
+/**
+ * design-v3.md 10.17 and Addendum 01 4b. One optional line: the first physical
+ * action.
+ *
+ * The label is the one design-v3.md names verbatim and the placeholder is an example
+ * rather than an instruction. That distinction is the whole design of this field.
+ * `Break this down into steps` is an instruction, and an instruction to break a task
+ * down is a second task handed to the person least able to take one on. An example
+ * of what somebody else wrote is a demonstration, and it costs nothing to ignore.
+ *
+ * It is deterministic task breakdown: the user writes the small action, the app
+ * stores it and shows it at the moment it is needed. Addendum 01 9b rules out AI
+ * breakdown permanently, on both the no-AI and the no-network commitments, and this
+ * is the version of the same idea that needs neither.
+ *
+ * One composable shared by the add and the edit sheets, so the label, the example
+ * and the keyboard behavior cannot drift between the two places it appears.
+ */
+@Composable
+private fun FirstStepField(value: String, onValueChange: (String) -> Unit) {
+    ClarityTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = stringResource(R.string.field_first_step),
+        placeholder = stringResource(R.string.field_first_step_example),
+        imeAction = ImeAction.Next,
+    )
+}
+
+/**
+ * design-v3.md 10.17 and Addendum 01 4c. Optional minutes, entered as a number.
+ *
+ * **A free number field rather than a set of durations**, which design-v3.md 10.17
+ * settles and `DECISIONS.md` records. The chip set is the statistically common answer
+ * and it loses twice: it is a decision with five options placed in the capture path,
+ * and the buckets it imposes would become the shape of the calibration facts phase 8
+ * reads, per MASTER_BUILD_PROMPT 14b.8.
+ *
+ * Digits only, four of them at most. The filter is on input rather than on save
+ * because a field that accepts what it will silently discard is a field that lies.
+ * Four digits is just under seven days, which is past the point where an estimate in
+ * minutes is the right instrument at all.
+ *
+ * **Nothing anywhere counts down against this number.** Not this sheet, not the card,
+ * not the area card, not a widget, not a notification. An estimate that becomes a
+ * deadline is a worse instrument than no estimate, and it is a deadline the person
+ * set for themselves in a hopeful moment and then has to watch expire.
+ */
+@Composable
+private fun EstimateField(value: String, onValueChange: (String) -> Unit) {
+    ClarityTextField(
+        value = value,
+        onValueChange = { input -> if (input.length <= 4 && input.all(Char::isDigit)) onValueChange(input) },
+        label = stringResource(R.string.field_estimate_minutes),
+        keyboardType = KeyboardType.Number,
+    )
+}
+
+/**
+ * The typed field as an estimate, or null.
+ *
+ * Blank and zero reach the same answer, which is the answer the repository reaches
+ * too: zero minutes is not an estimate. Clearing the field on an edit therefore
+ * writes `ITEM_ESTIMATED` with a null new value rather than writing nothing, per
+ * Addendum 01 2b.
+ */
+private fun String.toMinutes(): Int? = trim().toIntOrNull()?.takeIf { it > 0 }
 
 // Edit a queued or active item ------------------------------------------------
 
 /**
  * design-v3.md 10.15. A queued item is tappable and this is the only way to edit
  * one. Without it the queue is read only, which nobody expects.
+ *
+ * It is also the only way to edit an unfiled item, reached from a row in the inbox
+ * sheet. Addendum 01 4a allows an unfiled item to be edited and deleted, and this
+ * sheet is where both happen. `Move to front` is absent for one, because an item in
+ * no area has no queue to be at the front of, and the caller decides that rather than
+ * this sheet guessing from a null.
+ *
+ * **Saving can write two events.** The title, the note and the first step move
+ * together on `ITEM_EDITED`. The estimate moves on its own `ITEM_ESTIMATED`, which is
+ * what lets a guess be revised without rewriting what the person first wrote down.
+ * Neither is written when its half did not change.
  */
 @Composable
 fun EditItemSheet(
     item: ItemState,
     canMoveToFront: Boolean,
-    onSave: (String, String?) -> Unit,
+    onSave: (String, String?, String?, Int?) -> Unit,
     onDelete: () -> Unit,
     onMoveToFront: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     var title by remember(item.id) { mutableStateOf(item.title) }
     var note by remember(item.id) { mutableStateOf(item.note.orEmpty()) }
+    var firstStep by remember(item.id) { mutableStateOf(item.firstStep.orEmpty()) }
+    var estimate by remember(item.id) { mutableStateOf(item.estimateMinutes?.toString().orEmpty()) }
     val keyboard = LocalSoftwareKeyboardController.current
 
     ClaritySheet(onDismiss = onDismiss, title = stringResource(R.string.sheet_edit_item_title)) {
-        Column(modifier = Modifier.padding(horizontal = SheetPadding)) {
+        Column(
+            modifier = Modifier
+                .heightIn(max = 620.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = SheetPadding),
+        ) {
             ClarityTextField(
                 value = title,
                 onValueChange = { title = it },
@@ -154,6 +280,13 @@ fun EditItemSheet(
                 label = stringResource(R.string.field_note_optional),
                 singleLine = false,
             )
+            Spacer(Modifier.height(20.dp))
+            // Emptying either field is an ordinary edit and deletes the value. There
+            // is no separate clear control, because a field a person can empty is a
+            // field they already know how to clear.
+            FirstStepField(value = firstStep, onValueChange = { firstStep = it })
+            Spacer(Modifier.height(20.dp))
+            EstimateField(value = estimate, onValueChange = { estimate = it })
             Spacer(Modifier.height(24.dp))
 
             if (canMoveToFront) {
@@ -176,9 +309,10 @@ fun EditItemSheet(
                 enabled = title.isNotBlank(),
                 onClick = {
                     keyboard?.hide()
-                    onSave(title, note.ifBlank { null })
+                    onSave(title, note.ifBlank { null }, firstStep.ifBlank { null }, estimate.toMinutes())
                 },
             )
+            Spacer(Modifier.height(10.dp))
         }
     }
 }
@@ -270,12 +404,38 @@ fun AreaDetailSheet(
                         .padding(horizontal = SheetPadding)
                         .clarityClickable { onOpenItem(active) },
                 )
+                // design-v3.md 10.17. The first step in full, above the note and
+                // below the title: it is the way in, and it is read at the moment the
+                // title has already failed to start someone. The card gets one
+                // ellipsized line of it, and this is the surface that gets all of it.
+                active.firstStep?.let { firstStep ->
+                    Text(
+                        text = firstStep,
+                        style = type.body,
+                        color = colors.inkPrimary,
+                        modifier = Modifier.padding(horizontal = SheetPadding).padding(top = 6.dp),
+                    )
+                }
                 active.note?.let { note ->
                     Text(
                         text = note,
                         style = type.body,
                         color = colors.inkSecondary,
                         modifier = Modifier.padding(horizontal = SheetPadding, vertical = 6.dp),
+                    )
+                }
+                // design-v3.md 10.17. The estimate appears here and on no other
+                // surface in the app. Plain text, once: **never a countdown against
+                // the item, never a bar filling toward it, never a target, and never
+                // beside an actual.** No surface may draw the difference between an
+                // estimate and an actual, by any means, and a shape can accuse as
+                // plainly as a sentence can.
+                active.estimateMinutes?.let { minutes ->
+                    Text(
+                        text = pluralStringResource(R.plurals.item_estimate_minutes, minutes, minutes),
+                        style = type.caption,
+                        color = colors.inkTertiary,
+                        modifier = Modifier.padding(horizontal = SheetPadding).padding(top = 8.dp),
                     )
                 }
                 Spacer(Modifier.height(14.dp))

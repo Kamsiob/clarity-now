@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.dropShadow
@@ -20,6 +21,7 @@ import com.kamsiob.claritynow.ui.theme.ClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.ShadowLayer
 import com.kamsiob.claritynow.ui.theme.WashCorner
+import com.kamsiob.claritynow.ui.theme.calmAccent
 import com.kamsiob.claritynow.ui.theme.washCornerFor
 import kotlin.math.hypot
 
@@ -52,8 +54,12 @@ fun Modifier.clarityShadow(layers: List<ShadowLayer>, shape: Shape, enabled: Boo
  * A wash that always pooled to the same corner would read as a template. Hashing
  * the id varies it across a screen of cards and keeps it fixed for the life of an
  * area, so a card never appears to move.
+ *
+ * Takes the accent it is given and does not transform it. [areaWash] is the only
+ * caller and is where calm mode's transform is applied, so that the choke point is one
+ * function rather than two.
  */
-fun washBrush(accent: Color, alpha: Float, corner: WashCorner, width: Float, height: Float): Brush {
+internal fun washBrush(accent: Color, alpha: Float, corner: WashCorner, width: Float, height: Float): Brush {
     val center = when (corner) {
         WashCorner.TOP_START -> Offset(0f, 0f)
         WashCorner.TOP_END -> Offset(width, 0f)
@@ -67,11 +73,34 @@ fun washBrush(accent: Color, alpha: Float, corner: WashCorner, width: Float, hei
     )
 }
 
-fun Modifier.areaWash(accent: Color, alpha: Float, areaId: String): Modifier {
-    if (alpha <= 0f) return this
-    val corner = washCornerFor(areaId)
-    return drawBehind {
-        drawRect(washBrush(accent, alpha, corner, size.width, size.height))
+/**
+ * The one place an area accent becomes atmosphere, and therefore the one place calm
+ * mode's color transform is applied. design-v3.md 16.2.
+ *
+ * Every wash in the app arrives here: the area card, the color picker's live preview,
+ * and anything later that pools an accent behind content. The transform is applied
+ * inside rather than at the call sites, so a screen cannot forget it and a new screen
+ * inherits it without being told. The two excluded uses of the accent, the 7dp dot and
+ * the area label text, never come through this function at all, which is what keeps the
+ * exclusion structural rather than a rule somebody has to remember.
+ *
+ * The alpha is not touched here. 16.2 pins the wash opacity to the low end of its range
+ * in calm mode, and that pinning belongs to the token set, in `ClarityColors.calmed`,
+ * because the opacity is a design token while the accent is the user's own color.
+ *
+ * `composed` rather than a `@Composable` extension so the signature does not change: the
+ * two call sites in `ui/areas` are outside this phase's scope, and a wash that quietly
+ * started honoring calm mode without them being edited is the correct outcome.
+ */
+fun Modifier.areaWash(accent: Color, alpha: Float, areaId: String): Modifier = composed {
+    if (alpha <= 0f) {
+        this
+    } else {
+        val calm = calmAccent(accent)
+        val corner = washCornerFor(areaId)
+        drawBehind {
+            drawRect(washBrush(calm, alpha, corner, size.width, size.height))
+        }
     }
 }
 

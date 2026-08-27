@@ -69,6 +69,10 @@ fun UndoSnackbar(
     val remaining = remember { Animatable(1f) }
     var undone by remember(request?.id) { mutableStateOf(false) }
 
+    // The depleting line runs at its full five seconds whatever the motion setting is.
+    // design-v3.md 16.2 names it: it is the only readout of a window that is closing,
+    // which makes it information rather than decoration, and calm mode removes motion
+    // and never information.
     LaunchedEffect(request?.id) {
         val current = request ?: return@LaunchedEffect
         undone = false
@@ -80,10 +84,22 @@ fun UndoSnackbar(
         }
     }
 
+    // design-v3.md 8.3 replaces every animation with a 150ms crossfade, and a slide
+    // driven by a 150ms spec is still a slide. The translation is dropped rather than
+    // shortened, which is the same call the tab crossfade in ClarityShell makes. Calm
+    // mode reaches this through the one global flag, 8.5, and nothing here reads it.
     AnimatedVisibility(
         visible = request != null,
-        enter = slideInVertically(motion.springGentle()) { it } + fadeIn(motion.easeOut()),
-        exit = slideOutVertically(motion.easeOut()) { it } + fadeOut(motion.easeOut()),
+        enter = if (motion.reduced) {
+            fadeIn(motion.easeOut())
+        } else {
+            slideInVertically(motion.springGentle()) { it } + fadeIn(motion.easeOut())
+        },
+        exit = if (motion.reduced) {
+            fadeOut(motion.easeOut())
+        } else {
+            slideOutVertically(motion.easeOut()) { it } + fadeOut(motion.easeOut())
+        },
         modifier = modifier,
     ) {
         val current = request

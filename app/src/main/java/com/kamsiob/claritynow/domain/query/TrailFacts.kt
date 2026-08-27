@@ -14,7 +14,9 @@ import com.kamsiob.claritynow.data.event.ItemQueued
 import com.kamsiob.claritynow.data.event.ItemReopened
 import com.kamsiob.claritynow.data.event.ItemReordered
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 
 /**
  * One completion, read straight from the payload snapshots. MASTER_BUILD_PROMPT 8.1.
@@ -68,6 +70,97 @@ data class FocusCounts(
  * windows share no event and a day boundary belongs to exactly one of them.
  */
 data class TrailWindow(val fromMillis: Long, val toMillis: Long)
+
+/**
+ * A return to the app after an absence long enough to change what the app may say.
+ * MASTER_BUILD_PROMPT 14b.4, Addendum 01 4d, issue #27.
+ *
+ * This audience leaves and comes back, and a fortnight of nothing is what a
+ * fluctuating condition, a bad month or a hospital stay looks like from inside the
+ * data. 14b.4 spends its whole length on what the app may not do with that fact,
+ * and this type is the first place those prohibitions are enforced rather than
+ * described.
+ *
+ * **It deliberately does not carry the length of the absence, and it never will.**
+ * 14b.4 forbids stating it "not in days, not in weeks, not as a date, not as `since
+ * March`", and a field holding the number would leave that prohibition resting on
+ * somebody remembering it. The comparison against [MIN_GAP_DAYS] happens inside
+ * [TrailQueries.lastReEntryOnOrBefore] and the number does not survive the return.
+ * Nothing that renders can obtain it, because nothing hands it out. This is
+ * design-v3.md 15 applied to a type signature: the statistically common shape here
+ * is `fun gapDays(): Int?`, which is the shape that makes the forbidden screen a
+ * one line mistake, so it is not the shape used.
+ *
+ * [returnedOn] is the date key of the open that noticed the absence, never the date
+ * the absence began, which is the other value a surface must never reach. It is
+ * here because both suppression windows 14b.4 requires are measured forward from
+ * it: Pulse generates nothing for the first two days back, and the Report withholds
+ * every decline, neglect and gap family for the first full week. Both are later
+ * phases, and both need [daysSince] to decide. That is why this is a value rather
+ * than a boolean.
+ *
+ * Constructing one directly is legal, and a test of the phase 6 surface will do
+ * exactly that. What is not legal anywhere is inventing the absence: a [ReEntry]
+ * asserts an absence with two ends, and the only thing that knows both ends is the
+ * event log.
+ */
+data class ReEntry(val returnedOn: String) {
+
+    /**
+     * Calendar days from the return to [dateKey]. Zero on the day of the return
+     * itself, one on the day after it.
+     *
+     * **This decides whether the engine speaks. It is never rendered.** It counts
+     * days back rather than days away, so it is not the forbidden number, but 14b.4
+     * also says the screen counts nothing at all, and "you have been back for three
+     * days" is a count. Every caller of this is a suppression window, and a window
+     * is a comparison rather than a sentence.
+     *
+     * Counted between calendar dates, so a daylight saving shift inside the window
+     * neither shortens nor extends it. An unparseable key on either end answers
+     * zero, which reads as the day of the return and therefore leaves every
+     * suppression window at its widest: when this cannot tell, it protects.
+     *
+     * Negative when [dateKey] falls before the return, which a caller comparing
+     * against a window reads as outside it, correctly.
+     */
+    fun daysSince(dateKey: String): Int {
+        val from = parseDayKey(returnedOn) ?: return 0
+        val to = parseDayKey(dateKey) ?: return 0
+        return ChronoUnit.DAYS.between(from, to).toInt()
+    }
+
+    companion object {
+
+        /**
+         * The absence that changes what the app does, in calendar days.
+         * MASTER_BUILD_PROMPT 14b.4: "A gap of 14 or more days puts the app into the
+         * re-entry state".
+         *
+         * Fourteen or more, so exactly fourteen qualifies and thirteen does not.
+         * Stated once, here, because a threshold copied into a second place is a
+         * threshold that will one day be two different numbers, and the two screens
+         * reading it are built four phases apart.
+         */
+        const val MIN_GAP_DAYS = 14
+    }
+}
+
+/**
+ * A `yyyy-MM-dd` key as a calendar date, or null when it is not one.
+ *
+ * Parsed with the ISO parser rather than a pattern, for the reason [TrailQueries]
+ * gives about its own formatter: a pattern resolves against the ambient default
+ * locale, and this package reads no ambient anything.
+ *
+ * Null rather than an exception, because the keys that reach here come from event
+ * payloads, and a payload can arrive from an imported file or from a second
+ * implementation of this app built against `docs/EVENT_FORMAT.md`. One malformed
+ * key in a restored backup must cost that one marker, not the first screen a
+ * returning person sees.
+ */
+internal fun parseDayKey(dateKey: String): LocalDate? =
+    runCatching { LocalDate.parse(dateKey) }.getOrNull()
 
 /**
  * Events a person caused. Excludes the four the app writes without a user act.

@@ -66,9 +66,11 @@ import com.kamsiob.claritynow.ui.components.ClarityIcons
 import com.kamsiob.claritynow.ui.components.TabBarHeight
 import com.kamsiob.claritynow.ui.components.TabBarInset
 import com.kamsiob.claritynow.ui.theme.ClaritySpacing
+import com.kamsiob.claritynow.ui.theme.LocalCalmMode
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityShapes
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
+import com.kamsiob.claritynow.ui.theme.calmed
 import com.kamsiob.claritynow.ui.theme.clarityMotion
 import com.kamsiob.claritynow.ui.theme.parseAreaColor
 import java.time.Instant
@@ -434,7 +436,13 @@ private fun TrailEventRow(row: TrailRow, zone: ZoneId) {
     }
     val sentence = trailSentence(row)
     val description = trailRowDescription(sentence, time)
-    val tint = row.areaColorHex?.let { parseAreaColor(it) } ?: colors.inkPrimary
+    // design-v3.md 16.2. The circle is the area's accent at 12 percent, which is an
+    // atmospheric use and not one of the two the transform excludes by name, so calm
+    // mode desaturates it. The filter chip's 7dp dot above is the excluded one and
+    // keeps the true color, which is the point: the dot is how an area is recognized
+    // and the circle is how a row is tinted.
+    val calm = LocalCalmMode.current
+    val tint = row.areaColorHex?.let { parseAreaColor(it).calmed(calm) } ?: colors.inkPrimary
 
     val outer = Modifier
         .fillMaxWidth()
@@ -650,11 +658,15 @@ private fun TrailEmptyState() {
     var shown by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { shown = true }
 
-    val entrance = if (motion.reduced) {
-        tween<Float>(150, easing = EaseOutCubic)
-    } else {
-        tween<Float>(400, delayMillis = 150, easing = EaseOutCubic)
-    }
+    // design-v3.md 8.4. The fade shortens to 150ms when motion is reduced or calm mode
+    // is on, and the 150ms delay is kept in both cases. Shortening a fade is motion;
+    // dropping the delay would only reintroduce the flash the delay exists to prevent,
+    // and calm mode has no interest in making a screen flash.
+    val entrance = tween<Float>(
+        durationMillis = if (motion.reduced) 150 else 400,
+        delayMillis = 150,
+        easing = EaseOutCubic,
+    )
 
     AnimatedVisibility(visible = shown, enter = fadeIn(entrance)) {
         Column(

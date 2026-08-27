@@ -39,6 +39,7 @@ import com.kamsiob.claritynow.ui.components.TAB_TRAIL
 import com.kamsiob.claritynow.ui.components.rememberClarityTabs
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
+import com.kamsiob.claritynow.ui.theme.TabEntrance
 import com.kamsiob.claritynow.ui.theme.clarityMotion
 import com.kamsiob.claritynow.ui.trail.TrailRoute
 import com.kamsiob.claritynow.ui.trail.TrailViewModel
@@ -50,6 +51,12 @@ import com.kamsiob.claritynow.ui.trail.TrailViewModel
  * tabs crossfades with no slide, because a slide would imply a spatial
  * relationship between them and there is none. These are four views of one set of
  * data rather than four places.
+ *
+ * **The crossfade is a transition and not an entrance**, which is why the once per
+ * session rule in design-v3.md 8.4 leaves it alone. It fires on every tab switch, all
+ * day, and should: it is how the app says the content underneath has been replaced.
+ * What 8.4 removes is the staggered arrival of the rows inside the tab, and only after
+ * the first open of that tab in this session.
  */
 @Composable
 fun ClarityShell(modifier: Modifier = Modifier) {
@@ -88,6 +95,12 @@ fun ClarityShell(modifier: Modifier = Modifier) {
     // a person who paged a month back would return to the top of a list that still
     // holds the month. The holder gives each tab its own saveable slot, keyed by the
     // tab, so every screen comes back where it was left.
+    //
+    // design-v3.md 8.4 puts the once per session entrance flag in that same slot.
+    // TabEntrance below reads and writes it, so the flag is per tab, survives a
+    // rotation, is spent by the first open and is re-armed by a process death. Keying
+    // it to the tab rather than to a screen is deliberate: a sheet opening over Areas
+    // must not count as a first open.
     val tabStates = rememberSaveableStateHolder()
 
     Box(modifier = modifier.fillMaxSize().background(colors.canvas)) {
@@ -97,21 +110,23 @@ fun ClarityShell(modifier: Modifier = Modifier) {
             label = "tabContent",
         ) { tab ->
             tabStates.SaveableStateProvider(tab) {
-                when (tab) {
-                    TAB_AREAS -> {
-                        val areasViewModel: AreasViewModel =
-                            viewModel(factory = ClarityViewModelFactory)
-                        AreasRoute(viewModel = areasViewModel)
-                    }
+                TabEntrance {
+                    when (tab) {
+                        TAB_AREAS -> {
+                            val areasViewModel: AreasViewModel =
+                                viewModel(factory = ClarityViewModelFactory)
+                            AreasRoute(viewModel = areasViewModel)
+                        }
 
-                    TAB_TRAIL -> {
-                        val trailViewModel: TrailViewModel =
-                            viewModel(factory = ClarityViewModelFactory)
-                        TrailRoute(viewModel = trailViewModel)
-                    }
+                        TAB_TRAIL -> {
+                            val trailViewModel: TrailViewModel =
+                                viewModel(factory = ClarityViewModelFactory)
+                            TrailRoute(viewModel = trailViewModel)
+                        }
 
-                    TAB_MOMENTUM, TAB_REPORT -> UnderConstruction()
-                    else -> UnderConstruction()
+                        TAB_MOMENTUM, TAB_REPORT -> UnderConstruction()
+                        else -> UnderConstruction()
+                    }
                 }
             }
         }

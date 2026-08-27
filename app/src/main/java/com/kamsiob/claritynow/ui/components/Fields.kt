@@ -23,6 +23,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
@@ -32,6 +34,18 @@ import com.kamsiob.claritynow.ui.theme.clarityMotion
  * A text field with no box and no outline. design-v3.md keeps structure in
  * sideheads and whitespace, so a field is a label, the text, and a hairline that
  * warms to the action color while it has focus.
+ *
+ * [placeholder] draws inside the empty field at inkTertiary and disappears on the
+ * first character. design-v3.md 10.17 asks for exactly one of these, on the first
+ * step field, and is specific about what it may contain: **an example, never an
+ * instruction.** An instruction to break a task down is a second task, handed to the
+ * person least able to take one on, which is the failure Addendum 01 4b exists to
+ * avoid. Nothing here enforces that; the call sites do, and the string is the review.
+ *
+ * [keyboardType] exists for the one numeric field in the app, the optional estimate
+ * in design-v3.md 10.17. Capitalization stays on Sentences for every type, because it
+ * is ignored on a numeric keyboard and a second branch would be a second thing to
+ * keep in step.
  */
 @Composable
 fun ClarityTextField(
@@ -41,6 +55,8 @@ fun ClarityTextField(
     modifier: Modifier = Modifier,
     singleLine: Boolean = true,
     imeAction: ImeAction = ImeAction.Done,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    placeholder: String? = null,
     focusRequester: FocusRequester? = null,
     onImeAction: () -> Unit = {},
 ) {
@@ -66,12 +82,29 @@ fun ClarityTextField(
             interactionSource = interaction,
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Sentences,
+                keyboardType = keyboardType,
                 imeAction = imeAction,
             ),
             keyboardActions = androidx.compose.foundation.text.KeyboardActions(
                 onDone = { onImeAction() },
                 onNext = { onImeAction() },
             ),
+            decorationBox = { field ->
+                // The placeholder sits behind the text rather than in front of it, so a
+                // cursor placed in an empty field is never drawn under the example.
+                Box {
+                    if (placeholder != null && value.isEmpty()) {
+                        Text(
+                            text = placeholder,
+                            style = type.body,
+                            color = colors.inkTertiary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    field()
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 8.dp)

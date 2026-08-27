@@ -21,7 +21,19 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.math.ceil
 
-/** One area card. design-v3.md 10.3. Everything the card draws, and nothing else. */
+/**
+ * One area card. design-v3.md 10.3. Everything the card draws, and nothing else.
+ *
+ * [activeItemFirstStep] is row three, Addendum 01 4b. It is the active item's first
+ * step and nothing else: a queued item's first step never reaches this screen,
+ * because the card is about the one thing happening. Null when the item has none,
+ * and the card renders nothing in its place rather than a placeholder or a reserved
+ * row, per design-v3.md 10.3.
+ *
+ * The estimate is deliberately absent from this model. design-v3.md 10.17 keeps it
+ * off the card entirely, and leaving it out of the card's own data is how that stays
+ * true: a later session cannot draw a number the card was never handed.
+ */
 @Immutable
 data class AreaCardModel(
     val id: String,
@@ -29,6 +41,7 @@ data class AreaCardModel(
     val colorHex: String,
     val activeItemId: String?,
     val activeItemTitle: String?,
+    val activeItemFirstStep: String?,
     val queueLength: Int,
     val completedCount: Int,
     val daysSinceLastEvent: Int,
@@ -56,12 +69,24 @@ data class ConflictCardModel(
 @Immutable
 data class PromotionCue(val id: Long, val previousTitle: String)
 
+/**
+ * [unfiledCount] is the whole of what the Areas screen knows about the inbox.
+ *
+ * design-v3.md 10.16 puts one number in the header chip and states that no other
+ * surface in the document reports the inbox's size. A count rather than the list
+ * keeps that honest: the screen cannot render what it was not given, and the sheet
+ * reads the items when it opens, the same way the queue and the completed list do.
+ *
+ * Zero means there is no entry point at all rather than a chip reading `Inbox 0`. An
+ * empty inbox needs no door, and the next unfiled capture brings the chip back.
+ */
 @Immutable
 data class AreasUiState(
     val loading: Boolean = true,
     val areas: List<AreaCardModel> = emptyList(),
     val conflicts: List<ConflictCardModel> = emptyList(),
     val promotions: Map<String, PromotionCue> = emptyMap(),
+    val unfiledCount: Int = 0,
 ) {
     val isEmpty: Boolean get() = !loading && areas.isEmpty()
 }
@@ -96,6 +121,7 @@ class AreasViewModel(
                 areas = state.liveAreas.map { area -> area.toCardModel(state) },
                 conflicts = conflicts.mapNotNull { it.toCardModel() },
                 promotions = cues,
+                unfiledCount = state.unfiledItems.size,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AreasUiState())
 
@@ -133,12 +159,65 @@ class AreasViewModel(
 
     // Items -------------------------------------------------------------------
 
-    fun addItem(areaId: String, title: String, note: String?) = viewModelScope.launch {
-        repository.addItem(areaId, title, note)
+    /**
+     * Adds an item. A null [areaId] is a capture into the inbox, Addendum 01 4a, and
+     * is the ordinary case rather than the exceptional one: **capture must never
+     * require a decision**, so the FAB hands this a null and the destination is
+     * chosen later or never.
+     *
+     * [firstStep] and [estimateMinutes] are 4b and 4c, optional forever and never
+     * prompted for anywhere in this app.
+     */
+    fun addItem(
+        areaId: String?,
+        title: String,
+        note: String?,
+        firstStep: String? = null,
+        estimateMinutes: Int? = null,
+    ) = viewModelScope.launch {
+        repository.addItem(areaId, title, note, firstStep, estimateMinutes)
     }
 
-    fun editItem(itemId: String, title: String, note: String?) = viewModelScope.launch {
-        repository.editItem(itemId, title, note)
+    /**
+     * Saves an edit sheet, which can move two things that are recorded separately.
+     *
+     * The title, the note and the first step travel on `ITEM_EDITED`. The estimate
+     * travels on its own `ITEM_ESTIMATED`, per Addendum 01 2b, so that revising a
+     * guess never rewrites what the person first wrote down. Two events rather than
+     * one is the point, and each is a no-op when its half did not change, which the
+     * repository decides rather than this.
+     *
+     * A null [estimateMinutes] clears the estimate, and clearing writes the event
+     * with a null new value rather than writing nothing.
+     */
+    fun saveItem(
+        itemId: String,
+        title: String,
+        note: String?,
+        firstStep: String?,
+        estimateMinutes: Int?,
+    ) = viewModelScope.launch {
+        repository.editItem(itemId, title, note, firstStep)
+        repository.estimateItem(itemId, estimateMinutes)
+    }
+
+    /** Files an inbox item into an area. Addendum 01 4a, the only transition out. */
+    fun fileItem(itemId: String, areaId: String) = viewModelScope.launch {
+        repository.fileItem(itemId, areaId)
+    }
+
+    /**
+     * The zero areas case in design-v3.md 10.16: the inbox may hold items when no
+     * area exists, so `Move to an area` has to be able to offer to create one first.
+     *
+     * One function rather than two calls from the sheet, because filing into an area
+     * that failed to be created is the kind of gap that only shows up when somebody
+     * types a name the repository refuses. If [ClarityRepository.createArea] returns
+     * null the item stays in the inbox, visible, and can be filed again.
+     */
+    fun createAreaAndFile(itemId: String, name: String, colorHex: String) = viewModelScope.launch {
+        val areaId = repository.createArea(name, colorHex) ?: return@launch
+        repository.fileItem(itemId, areaId)
     }
 
     fun wouldBecomeActive(areaId: String): Boolean = repository.wouldBecomeActive(areaId)
@@ -193,6 +272,21 @@ class AreasViewModel(
 
     fun queueFor(areaId: String): List<ItemState> = repository.state.value.queueIn(areaId)
 
+    /**
+     * The inbox, newest first. design-v3.md 10.16: plain rows, **oldest last**.
+     *
+     * `ClarityState.unfiledItems` is ordered by order key, which puts the oldest
+     * first because every capture takes a key at the tail. The sheet reverses it, and
+     * the reversal lives here rather than in the state so that the one projection
+     * everything else reads keeps the same ordering rule as a queue.
+     *
+     * Newest first is the right way round for a pile nobody is ever asked to work
+     * through: the thing a person just wrote down is the thing they came back for,
+     * and an inbox that buries it under a fortnight of older captures is the pile
+     * design-v3.md 10.16 refuses to put at the top of the Areas screen.
+     */
+    fun inboxItems(): List<ItemState> = repository.state.value.unfiledItems.asReversed()
+
     fun completedFor(areaId: String): List<ItemState> = repository.state.value.completedIn(areaId)
 
     fun activeFor(areaId: String): ItemState? = repository.state.value.activeItemIn(areaId)
@@ -224,6 +318,7 @@ class AreasViewModel(
             colorHex = colorHex,
             activeItemId = active?.id,
             activeItemTitle = active?.title,
+            activeItemFirstStep = active?.firstStep,
             queueLength = state.queueIn(id).size,
             completedCount = state.completedIn(id).size,
             daysSinceLastEvent = clock.daysBetween(lastEventAt, clock.nowMillis()).coerceAtLeast(0),

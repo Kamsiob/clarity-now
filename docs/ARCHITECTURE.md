@@ -183,8 +183,18 @@ app actually draws comes from `LocalClarityColors`.
 
 Motion is spring first, which is both what `design-v3.md` section 8 specifies and
 the Material 3 Expressive model. `clarityMotion()` returns the reduced variant when
-the animator duration scale is zero, so reduce motion is one global check rather
-than twenty six individual ones.
+the animator duration scale is zero **or calm mode is on**, so reduce motion is one
+global check rather than twenty six individual ones and calm mode joins that check
+with an `or` rather than adding a level beside it. The animator scale is observed
+rather than read once, because calm mode's default is to follow it live.
+
+Calm mode's color half is `ui/theme/CalmMode.kt`, an OKLab chroma transform applied
+at one point, `Modifier.areaWash`, plus the two other atmospheric uses of an accent
+that call the transform deliberately: the Swap swipe face and the Trail's event
+circle. The 7dp area dot and the area label text are excluded by
+`design-v3.md` 16.2 and never pass through it. `ui/theme/ClarityEntrance.kt` holds
+8.4's rule that an entrance fires once per tab per app session, which calm mode
+removes entirely rather than shortening.
 
 ---
 
@@ -198,6 +208,13 @@ than twenty six individual ones.
 | `OrderKeyTest` | insertion, ordering, rebalance |
 | `EventFormatTest` | every payload round trips through JSON |
 | `StableHashTest` | FNV-1a matches known vectors |
+| `ClarityInvariantsTest` | an unfiled item is never active or completed, and an area delete does not orphan |
+| `OptionalFieldsReplayTest` | the first step and the estimate survive every arrival order |
+| `ReEntryGapTest` | one presence marker per calendar day, and the gap across both daylight saving boundaries |
+| `Migration2To3Test` | the golden log replays across the Room 2 to 3 migration |
+| `CalmModeTest` | the default resolution, the transform, and that every area color reaching the screen was routed deliberately |
+| `CalmModeContrastTest` | 4.5:1 on all 48 area colors, both worlds, ordinary and calm, computed rather than judged |
+| `DomainPurityTest` | `domain.engine`, `domain.guidance`, `domain.replay` and `domain.query` import no Android |
 
 `testdata/golden-log.json` and `testdata/golden-state.json` are the contract with the
 future Linux desktop app. Regenerate deliberately, never as a side effect:

@@ -1,11 +1,14 @@
 package com.kamsiob.claritynow.ui.areas
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.EaseOutCubic
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +30,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,7 +45,10 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -50,6 +57,7 @@ import com.kamsiob.claritynow.R
 import com.kamsiob.claritynow.ui.components.ClarityButton
 import com.kamsiob.claritynow.ui.components.ClarityButtonRole
 import com.kamsiob.claritynow.ui.components.ClarityCard
+import com.kamsiob.claritynow.ui.components.ClarityChip
 import com.kamsiob.claritynow.ui.components.ClarityFab
 import com.kamsiob.claritynow.ui.components.ClarityIcon
 import com.kamsiob.claritynow.ui.components.ClarityIcons
@@ -63,11 +71,24 @@ import com.kamsiob.claritynow.ui.components.rememberSwipeCoordinator
 import com.kamsiob.claritynow.ui.components.reorderableItem
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
+import com.kamsiob.claritynow.ui.theme.clarityEntrance
 import com.kamsiob.claritynow.ui.theme.clarityMotion
 import com.kamsiob.claritynow.ui.theme.parseAreaColor
 
 /** The height one area card settles at, used by the drag reorder arithmetic. */
 private val CARD_HEIGHT_ESTIMATE = 96.dp
+
+/**
+ * The title is the first thing to arrive, and the cards stagger in behind it.
+ * design-v3.md 8.2 item 4.
+ *
+ * The obvious answer, and the one most list screens use, is to stagger the rows and
+ * leave the header fixed. It is rejected under design-v3.md 15: a fixed title with rows
+ * pouring in underneath reads as content loading into a frame, and what this entrance
+ * is for is the app arriving. Starting at the title costs one stagger step, 50ms, and
+ * makes the screen one thing rather than two. Recorded in `DECISIONS.md`.
+ */
+private const val HEADER_ENTRANCE_INDEX = 0
 
 /**
  * The Daylight home. design-v3.md section 11.
@@ -88,6 +109,7 @@ fun AreasScreen(
     onMoveArea: (String, Int) -> Unit,
     onPromotionPlayed: (String) -> Unit,
     onDismissConflict: (String) -> Unit,
+    onOpenInbox: () -> Unit,
     onFabClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -129,8 +151,21 @@ fun AreasScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(11.dp),
         ) {
+            // design-v3.md 8.2 item 4 and 8.4. The screen arrives as one sequence, the
+            // title first and the cards behind it, on the first open of this tab per
+            // app session and never again. Everything about when it fires, and whether
+            // it fires at all, is inside Modifier.clarityEntrance.
+            //
+            // The conflict cards deliberately take no entrance index. A conflict card is
+            // an interruption that arrives when a merge produced one, carrying its own
+            // reveal, rather than part of the screen's resting content.
             item(key = "header") {
-                AreasHeader(onOpenArchive = onOpenArchive)
+                AreasHeader(
+                    unfiledCount = state.unfiledCount,
+                    onOpenArchive = onOpenArchive,
+                    onOpenInbox = onOpenInbox,
+                    modifier = Modifier.clarityEntrance(HEADER_ENTRANCE_INDEX),
+                )
             }
 
             items(state.conflicts, key = { "conflict:${it.id}" }) { conflict ->
@@ -157,6 +192,7 @@ fun AreasScreen(
                             fadeInSpec = motion.easeOut(),
                             fadeOutSpec = motion.easeOut(),
                         )
+                        .clarityEntrance(HEADER_ENTRANCE_INDEX + 1 + index)
                         .offset {
                             if (dragging) IntOffset(0, reorder.dragOffset.toInt()) else IntOffset.Zero
                         }
@@ -257,36 +293,92 @@ private fun AreaRow(
     }
 }
 
+/**
+ * design-v3.md 10.1. The serif title, the archive glyph, and the chip row beneath.
+ *
+ * The chip row holds the Focus and Pulse chips in phases 4 and 6. Today it holds one
+ * chip or none: the unfiled inbox, 10.16, present only while the inbox has something
+ * in it. It is written as a row rather than as a lone chip so the two permanent chips
+ * prepend to it later without this shape being redrawn, and the inbox chip stays last
+ * so it can never displace them.
+ */
 @Composable
-private fun AreasHeader(onOpenArchive: () -> Unit) {
+private fun AreasHeader(
+    unfiledCount: Int,
+    onOpenArchive: () -> Unit,
+    onOpenInbox: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val colors = LocalClarityColors.current
     val type = LocalClarityTypography.current
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Text(
-            text = stringResource(R.string.areas_title),
-            style = type.displayTitle,
-            color = colors.inkPrimary,
-        )
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(24.dp))
-                .clarityClickable(onClickLabel = stringResource(R.string.areas_open_archive)) {
-                    onOpenArchive()
-                },
-            contentAlignment = Alignment.Center,
+    Column(modifier = modifier.fillMaxWidth().padding(top = 12.dp, bottom = 6.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            ClarityIcon(
-                icon = ClarityIcons.archive,
-                contentDescription = stringResource(R.string.areas_open_archive),
-                tint = colors.inkSecondary,
-                modifier = Modifier.size(22.dp),
+            Text(
+                text = stringResource(R.string.areas_title),
+                style = type.displayTitle,
+                color = colors.inkPrimary,
             )
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .clarityClickable(onClickLabel = stringResource(R.string.areas_open_archive)) {
+                        onOpenArchive()
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                ClarityIcon(
+                    icon = ClarityIcons.archive,
+                    contentDescription = stringResource(R.string.areas_open_archive),
+                    tint = colors.inkSecondary,
+                    modifier = Modifier.size(22.dp),
+                )
+            }
         }
+
+        if (unfiledCount > 0) {
+            InboxChip(count = unfiledCount, onClick = onOpenInbox)
+        }
+    }
+}
+
+/**
+ * design-v3.md 10.16 and Addendum 01 4a. **The count is the label.**
+ *
+ * Never a badge and never a red dot. The addendum forbids it twice and design-v3.md
+ * 14 forbids the color treatment that would carry it, so the chip is an ordinary
+ * unselected `ClarityChip`: card colored, soft elevation, no dot, no accent. An app
+ * that answers a person writing something down with a scolding number teaches them
+ * to stop writing things down, and that is a worse outcome than an unsorted inbox.
+ *
+ * There is no entry point at all when the inbox is empty, which is why the caller
+ * decides whether this composes rather than this drawing a zero.
+ *
+ * The obvious answer was a pinned row at the top of the area list carrying a count.
+ * design-v3.md 10.16 rejects it in writing and section 15 is the rule behind it: a
+ * pinned pile of what has not been dealt with would sit above the one thing a person
+ * opened the app to see, every single time.
+ */
+@Composable
+private fun InboxChip(count: Int, onClick: () -> Unit) {
+    val description = pluralStringResource(R.plurals.cd_areas_chip_inbox, count, count)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(top = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ClarityChip(
+            label = stringResource(R.string.areas_chip_inbox, count),
+            onClick = onClick,
+            modifier = Modifier.semantics { contentDescription = description },
+        )
     }
 }
 
@@ -342,7 +434,19 @@ private fun AreasEmptyState(onCreate: () -> Unit) {
     var shown by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { shown = true }
 
-    AnimatedVisibility(visible = shown, enter = fadeIn(motion.easeOut())) {
+    // design-v3.md 8.2 item 25, written out because motion.easeOut is the 350ms
+    // entrance curve with no delay and this one is 400ms after a 150ms wait. The delay
+    // is what stops it flashing during a load that resolves quickly, so 8.4 keeps it
+    // when motion is reduced or calm mode is on and shortens only the fade. This is the
+    // one entrance the once per session rule does not govern: it is a guard rather than
+    // an announcement, and it fires whenever an empty state appears.
+    val entrance = tween<Float>(
+        durationMillis = if (motion.reduced) 150 else 400,
+        delayMillis = 150,
+        easing = EaseOutCubic,
+    )
+
+    AnimatedVisibility(visible = shown, enter = fadeIn(entrance)) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(top = 60.dp),
             horizontalAlignment = Alignment.CenterHorizontally,

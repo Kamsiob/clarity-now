@@ -51,6 +51,7 @@ class ClarityPreferences(private val context: Context) {
 
     private object Keys {
         val theme = stringPreferencesKey("theme")
+        val calmMode = booleanPreferencesKey("calmMode")
         val focusDurationMinutes = intPreferencesKey("focusDurationMinutes")
         val focusHighlightEnabled = booleanPreferencesKey("focusHighlightEnabled")
         val afterCompleting = stringPreferencesKey("afterCompleting")
@@ -68,6 +69,36 @@ class ClarityPreferences(private val context: Context) {
             ClarityThemeSetting.entries.firstOrNull { it.name == name }
         } ?: ClarityThemeSetting.SYSTEM
     }
+
+    /**
+     * Calm mode, design-v3.md 16 and MASTER_BUILD_PROMPT 14b.12. Addendum 01 item 8c.
+     *
+     * **Null, not false, while the user has never touched the switch**, and that is the
+     * whole design of this key. The specified default is not "off"; it is "whatever the
+     * system reduce-motion setting says, live, with no restart", per design-v3.md 16.1.
+     * A `Boolean` defaulting to false would silently mean off for every person who has
+     * the system setting on and never opens Settings, which is exactly the person the
+     * feature exists for. Absence is therefore a third state that the *storage* carries
+     * and the *interface* does not: `resolveCalmMode` collapses it to a two-state
+     * switch before anything renders, because design-v3.md 16.1 rejects a three-state
+     * control on the screen.
+     *
+     * There is deliberately no way to clear it back to following the system. Once the
+     * user has expressed a preference, the app keeps it: a control that can silently
+     * revert to tracking something else is a control that changes when you did not
+     * touch it. Erasing all data clears it with everything else.
+     *
+     * **This is correctly a device preference and not engine state.** No corpus line,
+     * no observation and no engine layer reads it, so two devices holding the same log
+     * still compute the same sentence while rendering it at different saturations,
+     * which is what it means for a setting to be about a screen rather than about a
+     * person. `CLAUDE.md` rule 6.
+     *
+     * Widgets, design-v3.md 16.3, do not read this key from the widget process.
+     * DataStore is not multi process safe, so calm mode travels to a widget in the
+     * widget snapshot like every other value a widget reads. Phase 12, issue #11.
+     */
+    val calmMode: Flow<Boolean?> = context.store.data.map { it[Keys.calmMode] }
 
     val focusDurationMinutes: Flow<Int> =
         context.store.data.map { it[Keys.focusDurationMinutes] ?: DEFAULT_FOCUS_MINUTES }
@@ -96,6 +127,9 @@ class ClarityPreferences(private val context: Context) {
     val lastExportAt: Flow<Long?> = context.store.data.map { it[Keys.lastExportAt] }
 
     suspend fun setTheme(value: ClarityThemeSetting) = put(Keys.theme, value.name)
+
+    /** The first call stops calm mode following the system setting, per design-v3.md 16.1. */
+    suspend fun setCalmMode(value: Boolean) = put(Keys.calmMode, value)
     suspend fun setFocusDurationMinutes(value: Int) = put(Keys.focusDurationMinutes, value)
     suspend fun setFocusHighlightEnabled(value: Boolean) = put(Keys.focusHighlightEnabled, value)
     suspend fun setAfterCompleting(value: AfterCompleting) = put(Keys.afterCompleting, value.name)

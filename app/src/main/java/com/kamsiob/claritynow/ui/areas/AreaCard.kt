@@ -30,6 +30,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -89,8 +90,16 @@ fun AreaCardContent(
         outgoing.snapTo(0f)
         incoming.snapTo(0f)
         if (motion.reduced) {
-            outgoing.snapTo(1f)
-            incoming.snapTo(1f)
+            // A crossfade, not a snap. design-v3.md 8.3 turns an animation into a
+            // crossfade under reduced motion and calm mode; it does not delete it.
+            // Snapping made the struck through title vanish on the same frame the new
+            // one appeared, so the card never said which item had just been completed,
+            // which is the one thing this cue exists to say. The translation offsets
+            // are dropped, because those are the movement; the fade is not.
+            coroutineScope {
+                launch { outgoing.animateTo(1f, tween(motion.promotionMillis)) }
+                launch { incoming.animateTo(1f, tween(motion.promotionMillis)) }
+            }
         } else {
             coroutineScope {
                 launch { wash.animateTo(PROMOTION_WASH_PEAK, tween(250)); wash.animateTo(baseWash, tween(250)) }
@@ -131,7 +140,7 @@ fun AreaCardContent(
                     color = colors.inkPrimary,
                     modifier = Modifier
                         .alpha(1f - outgoing.value)
-                        .padding(top = (8 * outgoing.value).dp),
+                        .padding(top = if (motion.reduced) 0.dp else (8 * outgoing.value).dp),
                 )
             }
             if (area.isIdle) {
@@ -150,17 +159,69 @@ fun AreaCardContent(
                     } else {
                         Modifier
                             .alpha(incoming.value)
-                            .padding(top = (16 * (1f - incoming.value)).dp)
+                            .padding(
+                                top = if (motion.reduced) {
+                                    0.dp
+                                } else {
+                                    (16 * (1f - incoming.value)).dp
+                                },
+                            )
                     },
                 )
             }
         }
 
+        FirstStepLine(area = area)
         StatusLine(area = area, accent = accent)
     }
 }
 
-/** Row three, shown only when it carries information. design-v3.md 10.3. */
+/**
+ * Row three, design-v3.md 10.3 and 10.17. The active item's first step, Addendum
+ * 01 4b.
+ *
+ * **Absent entirely when there is none.** No placeholder, no dash, no reserved row
+ * that changes the card's height, and above all no invitation to add one: the whole
+ * value of this field is that it is free, and a card that asks for it turns a help
+ * into a chore. design-v3.md 10.3 says it in one line, `a card is not a form`.
+ *
+ * `caption` rather than `body`, which is the rule worth stating rather than leaving
+ * to a style constant. At body weight it competes with the title. It is read second,
+ * at the moment the title has already failed to start someone, and the hierarchy on
+ * the card has to say so.
+ *
+ * One line, ellipsized, because design-v3.md 10.3 caps the card at four lines and
+ * makes this the row that truncates first when a status line is also present. The
+ * full text is in the area detail sheet, which is where reading happens.
+ *
+ * An idle area draws nothing here even if some queued item has a first step. The
+ * card is about the one thing that is happening, and there is not one.
+ */
+@Composable
+private fun FirstStepLine(area: AreaCardModel) {
+    val colors = LocalClarityColors.current
+    val type = LocalClarityTypography.current
+    val firstStep = area.activeItemFirstStep?.takeIf { !area.isIdle } ?: return
+
+    Text(
+        text = firstStep,
+        style = type.caption,
+        color = colors.inkSecondary,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        // Tighter than the 6dp above the status line, because this line belongs to
+        // the title above it and the status line belongs to the card as a whole.
+        modifier = Modifier.padding(top = 5.dp),
+    )
+}
+
+/**
+ * Row four, shown only when it carries information. design-v3.md 10.3.
+ *
+ * It was row three until the first step took that place. Both are single lines and
+ * both are conditional, so the card still never exceeds the four lines 10.3 caps it
+ * at, and neither one moves the other when it is absent.
+ */
 @Composable
 private fun StatusLine(area: AreaCardModel, accent: Color) {
     val colors = LocalClarityColors.current
@@ -208,11 +269,24 @@ private fun StatusLine(area: AreaCardModel, accent: Color) {
     }
 }
 
-/** Reads the whole card as one thing, in the order a person would say it. */
+/**
+ * Reads the whole card as one thing, in the order a person would say it.
+ *
+ * **The first step follows the title and never precedes it**, Addendum 01 4b. A
+ * screen reader user gets the same hierarchy the sighted card has: the thing itself,
+ * then the way in. Reversing them would announce a fragment of a task before naming
+ * the task, which is disorienting in exactly the way the card's type scale avoids.
+ */
 fun areaCardDescription(area: AreaCardModel, idleTitle: String): String = buildString {
     append(area.name)
     append(". ")
     append(area.activeItemTitle ?: idleTitle)
+    if (!area.isIdle) {
+        area.activeItemFirstStep?.let {
+            append(". ")
+            append(it)
+        }
+    }
     if (area.queueLength > 0) {
         append(". ")
         append(area.queueLength)

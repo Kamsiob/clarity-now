@@ -45,6 +45,8 @@ Visual and interaction source of truth. `MASTER_BUILD_PROMPT.md` defers to this 
 
 Two of those changes contradict something v3 had settled, and neither is resolved silently. The focus surface moves from five elements to six, 11. A focus session can now fire one haptic between start and end, section 9. Both are recorded where they land and both are logged in `DECISIONS.md`.
 
+**v3.2** records what phase 3b, the executive function retrofit, actually built, and it is the first revision since v3.1 in which anything Addendum 01 added is real. Calm mode, section 16, is built and audited: 16.6 states what it does to every animation in 8.2, 16.7 what it does to every token in section 3 with a number against each, and 16.8 what it does to every component shipped in phases 1, 2 and 3. The entrance rule in 8.4 is built and is now stated once rather than repeated beside items 4 and 14. Two things came out of the audit that were not calm mode's: the area label's contrast was being verified against the wrong ground and was failing at 3.83 to one on an in-session card, 16.7, and the platform bottom sheet cannot honor calm mode at all, 16.8. Both are recorded rather than quietly fixed or quietly left.
+
 **Sections 16 and 17 are appended rather than inserted**, because section numbers in this document are cited by the master prompt, by the engine document and by comments in the code, and renumbering would silently break every one of them.
 
 ---
@@ -153,7 +155,9 @@ All 48 available to everyone. No locked subset.
 
 Color appears only as: a 7dp dot, a 5 to 14 percent wash, a 60 percent tile in Momentum, and the area label text. **Never as a stripe, bar, edge, border or filled block.**
 
-Area label text uses the accent at full strength, 13sp semibold. Verify 4.5:1 against the card. If a color fails in light mode, darken the label variant only by blending 25 percent black. Never adjust the dot or wash to compensate.
+Area label text uses the accent at full strength, 13sp semibold. **Verify 4.5:1 against the card as drawn, which is the card carrying that area's own wash at the deepest opacity the design permits, 13 percent in light and 16 in dark. Not against the bare `card` token.** If a color fails in light mode, darken the label variant only by blending 25 percent black; in dark mode lighten it by blending 30 percent white. Never adjust the dot or wash to compensate.
+
+The distinction in that first sentence is not pedantry. Verifying against the bare token clears on all 48 colors and is what shipped, and the same labels measure as low as 3.83:1 on an in-session card. The measurement, and the twenty eight label variants that moved when it was corrected, are in 16.7.
 
 **Default assignment.** New areas walk the mood groups in order taking the first color of each, so the first four are distinct without the user choosing.
 
@@ -285,7 +289,7 @@ Where no symbol carries the right meaning, one is drawn: the same style, the sam
 
 ### 7.2 The mapping table
 
-**Pending, phase 3b.** Every icon the app ships, in one table: the name this app calls it, the Material Symbols name it comes from, and where it is used. Anything drawn by hand is marked custom and carries one line saying which symbol was considered and why it did not fit.
+**Pending, issue #23**, the standing platform first rule rather than phase 3b, whose table does not carry it. Every icon the app ships, in one table: the name this app calls it, the Material Symbols name it comes from, and where it is used. Anything drawn by hand is marked custom and carries one line saying which symbol was considered and why it did not fit.
 
 The list in section 7 above covers the icons this design system names. The table must cover the icons the app actually ships, which is the larger set, and it is written by reading `ClarityIcons.kt` rather than from memory.
 
@@ -310,7 +314,7 @@ The list in section 7 above covers the icons this design system names. The table
 1. **Queue promotion, the hero.** Completed title strikes through and fades while sliding down 8dp over 250ms; the next queued title slides up with springStandard; the wash brightens to 11 percent and returns over 500ms. Old and new titles never both at full opacity. If only one thing is polished, it is this.
 2. **Press.** Cards and buttons scale to 0.97, springStandard.
 3. **Long press lift.** Scale 1.02, elevation deepens, springGentle.
-4. **Staggered entrance.** 40 to 60ms per item, fading from 0 and translating up 16dp over 350ms easeOut. **First open per screen per app session only**, 8.4.
+4. **Staggered entrance.** 40 to 60ms per item, fading from 0 and translating up 16dp over 350ms easeOut. An entrance, so 8.4 governs when it fires.
 5. **Sheet entrance.** springGentle from the bottom, scrim fades over 200ms.
 6. **World transition.** Outgoing fades, incoming scales 0.97 to 1.0, dark fades in over 350ms easeSlow.
 7. **Focus ring depletion.** Continuous at 1Hz from a single ticker Flow. Only the numeral and arc redraw.
@@ -320,7 +324,7 @@ The list in section 7 above covers the icons this design system names. The table
 11. **Pulse ambient settle.** Crossfade over 450ms, the 14 day dot row fills left to right at 30ms stagger.
 12. **Report reveal.** Eyebrow, then headline scaling from 0.96 with springGentle, then **the week ribbon drawing left to right at 45ms per day**, then sections fading and rising 12dp at 90ms stagger. Under 1.4 seconds. The ribbon draw should be the most satisfying single animation after the promotion.
 13. **Momentum dot cascade.** Left to right at 35ms stagger. The today ring draws last.
-14. **Momentum number roll.** The three stats count up from 0 over 600ms easeOut, first entry per session only.
+14. **Momentum number roll.** The three stats count up from 0 over 600ms easeOut. An entrance, so 8.4 governs when it fires. This is the animation the rule in 8.4 was generalized from.
 15. **Tab pill slide.** springStandard, icon crossfades outlined to filled.
 16. **FAB press.** Scale 0.94, springSnappy.
 17. **Swatch selection.** Scale 1.06 springSnappy, ring fades in over 150ms, preview wash crossfades over 250ms.
@@ -342,17 +346,19 @@ When the animator duration scale is 0 or the accessibility setting is on, every 
 
 ### 8.4 Entrance animations fire once per session
 
-**Pending, phase 3b. This changes behavior that shipped in phase 2.**
+**The rule is stated here once and applies to every entrance in 8.2. It is deliberately not repeated next to the individual animations.**
 
-Items 4, 11, 12 and 13 are entrances. An entrance is a way of saying "this is new". A screen opened twenty times a day is not new, and an entrance that fires every time is not delight, it is a toll: it delays the content by its own duration, every time, for the reader least able to afford the wait.
+**Items 4, 11, 12, 13 and 14 are entrances.** An entrance is a way of saying "this is new". A screen opened twenty times a day is not new, and an entrance that fires every time is not delight, it is a toll: it delays the content by its own duration, every time, for the reader least able to afford the wait.
 
-An entrance fires on the first open of its screen per app session and not again. Returning to a tab renders the list already settled, at rest, with no fade and no offset. Item 14, the Momentum number roll, already carries exactly this rule and is the precedent rather than the exception.
+An entrance fires on the first open of its tab per app session and not again. Returning to a tab renders the list already settled, at rest, with no fade and no offset. Item 14, the Momentum number roll, carried this rule as a special case from v3 and is the precedent the general rule was written from rather than an exception to it.
 
-An app session begins at process start and ends when the process ends. The alternative considered was re-arming after some period in the background. It is rejected: it invents a threshold no one asked for, it makes one screen behave two different ways for a reason the user cannot see, and predictable interface behavior is worth more to this audience than a second chance to show an animation.
+**Keyed to the tab, not to the screen.** A sheet opening over Areas is not a first open, and neither is a detail view closing. The flag lives in the per-tab saveable state the shell already holds for scroll position, 10.15.
+
+An app session begins at process start and ends when the process ends. A configuration change, a rotation or a theme switch, is not a new session and does not re-arm anything. A process death is, and the entrance fires again on the next launch. The alternative considered was re-arming after some period in the background. It is rejected: it invents a threshold no one asked for, it makes one screen behave two different ways for a reason the user cannot see, and predictable interface behavior is worth more to this audience than a second chance to show an animation.
 
 **One exception, and it is content, not time.** The Report reveal, item 12, fires again whenever the report being shown changes, because a different report is different content and the ribbon draw is the one animation this design is willing to spend on. Re-reading the same report does not re-animate it.
 
-Item 25, the empty state entrance, is not in this list. Its 150ms delay exists to stop a flash during a load that resolves quickly, not to announce anything, and it fires whenever an empty state appears.
+**Two things are not entrances and this rule does not reach them.** Item 24, the tab content crossfade, is a transition: it fires on every tab switch, all day, because it is how the app says the content underneath has been replaced. And item 25, the empty state entrance, is a guard rather than an announcement: its 150ms delay exists to stop a flash during a load that resolves quickly, so it fires whenever an empty state appears, and in calm mode and under reduce motion the delay is kept while the fade shortens to 150ms. Shortening a fade is motion; removing a delay would only reintroduce the flash the delay exists to prevent.
 
 ### 8.5 Calm mode
 
@@ -397,7 +403,7 @@ Never on scroll, screen entry, notification arrival, or more than once per user 
 ### 10.1 Top of Areas
 Serif title at displayTitle, left aligned, archive and settings icons at inkSecondary on the right. Below, two pill chips: Focus and Pulse, card colored, **soft elevation only, no border**. The Pulse chip carries a 6dp warnAmber dot at its top right when a Pulse is ready and unanswered.
 
-**A third chip, reading `Inbox 4`, joins them when the unfiled inbox is not empty**, 10.16, and is absent when it is empty. It sits last so it can never displace the two permanent chips, and it carries no dot and no color. **Pending, phase 3b.**
+**A third chip, reading `Inbox 4`, joins them when the unfiled inbox is not empty**, 10.16, and is absent when it is empty. It sits last so it can never displace the two permanent chips, and it carries no dot and no color. Built in phase 3b.
 
 ### 10.2 Weekly banner
 Full width, parchment, 14dp radius, no border, no progress track. A bodyStrong sentence and a caption line, both from the Logic Engine.
@@ -409,7 +415,7 @@ Full width, parchment, 14dp radius, no border, no progress track. A bodyStrong s
 **Content.**
 - Row one: a 7dp color dot and the area name at label size in the area color
 - Row two: the active item title at itemTitle in inkPrimary. **This never shrinks.** It is the most important string on the screen
-- Row three: the item's **first step**, 10.17, when it has one, at caption in inkSecondary, one line, ellipsized. Absent entirely when there is none. Never a placeholder and never an invitation to add one, because a card is not a form. **Pending, phase 3b**
+- Row three: the item's **first step**, 10.17, when it has one, at caption in inkSecondary, one line, ellipsized. Absent entirely when there is none. Never a placeholder and never an invitation to add one, because a card is not a form. Built in phase 3b
 - Row four: the status line, shown **only when it carries information**. Idle areas show `Last active 21 days ago`. In-session areas show the live countdown. An ordinary active area shows nothing
 
 The card never exceeds four lines. When a first step and a status line are both present, the first step truncates first, because the status line is about now and the first step is about what to do next, and now wins on a card that has to pass the three second test.
@@ -570,7 +576,7 @@ Cold start reads two flags in order. `hasCompletedOnboarding` false routes to on
 
 ### 10.16 The unfiled inbox
 
-**Pending, phase 3b.** Addendum 01 4a. Capture must never require a decision. Adding an item does not require choosing an area, and an item with no area is an ordinary item in an unfinished state, not an error and not a problem.
+**Built in phase 3b.** Addendum 01 4a. Capture must never require a decision. Adding an item does not require choosing an area, and an item with no area is an ordinary item in an unfinished state, not an error and not a problem.
 
 **Where it lives.** The third chip in the Areas header, 10.1, reading `Inbox 4`. The count is the label. It is present only while the inbox holds something.
 
@@ -588,7 +594,7 @@ When the inbox is empty there is no entry point, and none is needed: there is no
 
 ### 10.17 First step and estimate
 
-**Pending, phase 3b.** Addendum 01 4b and 4c. Two optional fields on an item, in the add sheet and the edit sheet, blank by default, deletable, never required and never prompted for.
+**Built in phase 3b.** Addendum 01 4b and 4c. Two optional fields on an item, in the add sheet and the edit sheet, blank by default, deletable, never required and never prompted for.
 
 **First step.** One line: the first physical action. The label is `First step` and the placeholder is an example rather than an instruction, because an instruction to break a task down is a second task. It appears on the area card beneath the title, 10.3, in full in the detail sheet, on the First Step widget, 12.2, and nowhere else.
 
@@ -797,7 +803,7 @@ Glance updates are throttled by the system. The cadence is chosen deliberately a
 
 **Where the accessibility investment goes. Addendum 01 8f.**
 
-- **Size.** The system font scale to 200 percent is the floor, not the ceiling. An in-app text size control offers the same steps on top of it, for the person who needs larger text in the one app they read prose in rather than everywhere. The combined result is capped so that no surface exceeds the 200 percent condition already required above. **Pending, phase 3b**
+- **Size.** The system font scale to 200 percent is the floor, not the ceiling. An in-app text size control offers the same steps on top of it, for the person who needs larger text in the one app they read prose in rather than everywhere. The combined result is capped so that no surface exceeds the 200 percent condition already required above. **Pending, issue #51.** It is not phase 3b work: 8f is not in that phase's table, and a text size control needs the Settings screen, which arrives in phase 11
 - **Spacing.** The 4dp grid, the 28dp section spacing and the 11dp card rhythm in section 6 are minimums, not targets to compress when a screen gets busy. Generous spacing is an accessibility feature here and not only a taste: a dense screen is a screen this audience cannot scan
 - **Contrast**, as above, in every theme
 - **No dyslexia-friendly typeface.** The evidence for specialized dyslexia typefaces is thin, and the same effort spent on size, spacing and contrast has evidence behind it and helps more people. This is a deliberate refusal, recorded here so a later session does not mistake it for an oversight and add one. Addendum 01 8f
@@ -878,7 +884,9 @@ The verification checklist includes an anti-slop pass against the dated list abo
 
 ## 16. Calm mode
 
-**Pending, phase 3b, the executive function retrofit. None of this is built.** Addendum 01 8c assigned calm mode to phase 1, which closed in August 2026, and phase 2 shipped the motion system it has to reach back into. The move to a retrofit phase is recorded in `DECISIONS.md`.
+**Built in phase 3b, the executive function retrofit.** Addendum 01 8c assigned calm mode to phase 1, which closed in August 2026, and phases 2 and 3 shipped the motion system and the surfaces it had to reach back into. The move to a retrofit phase is recorded in `DECISIONS.md` as conflict C3.
+
+The switch, the transform, the entrance rule and the three audits in 16.6 to 16.8 are in the code. **The one thing that is not is the Settings row itself**, 16.1, because the Settings screen arrives in phase 11 and there is no screen to put a row on yet. Until then the setting has no stored value, which means it follows the system reduce-motion setting, which is its specified default. Everything below is otherwise true of the running app.
 
 Material 3 Expressive is this app's motion model, adopted in phase 2 and recorded in `docs/DESIGN_RESEARCH.md`. Expressive motion is the right direction for this product, and it is the wrong thing to impose on a person for whom movement and saturation are expensive. Both are true at once, and calm mode is how both stay true: **ship the expressive direction, and ship the exit.**
 
@@ -894,6 +902,10 @@ One row in Settings under Appearance, 10.11, labeled `Calm mode`, with a caption
 
 The obvious answer here is a three-state control, On, Off, Follow system, matching the appearance picker in 10.10. It is rejected. A third state is a third decision on a settings screen already full of them, for the audience whose central difficulty is deciding, and the two-state switch already produces the correct behavior for everyone who never opens it. Section 15.
 
+**Once set, it stays set, and there is no way back to following the system.** The alternative, keeping the switch tracking the system whenever the two happen to agree, was rejected: a control that silently changes state because something outside the app changed is a control this audience cannot rely on, and predictability is worth more here than saving somebody one tap. Storing the setting as absent-or-a-value rather than as a boolean is what makes both halves of this true: absence is a state the storage carries and the interface never shows. Section 15, and recorded in `DECISIONS.md`.
+
+**Why the row is not a bare boolean in code.** A `Boolean` defaulting to `false` would mean off for every person who has the system setting on and never opens Settings, which is precisely the person calm mode exists for. The stored value is nullable and the resolution is one function, so the default can be asserted in a test rather than hoped for.
+
 **Reduce motion always wins on motion.** Calm mode is a superset of 8.3, never an override of it. Turning calm mode **off** while the system asks for reduced motion restores color, not movement. The app never animates against an accessibility setting because a preference inside the app said it could.
 
 ### 16.2 What it changes
@@ -907,14 +919,14 @@ Everything else that takes an area accent or a surface accent takes it through t
 | element | ordinary | calm mode |
 |---|---|---|
 | every animation in 8.2 | as specified | the 8.3 path, one 150ms crossfade |
-| entrances, items 4, 11, 12, 13 | first open per session, 8.4 | do not fire at all. The list renders already settled |
+| entrances, items 4, 11, 12, 13 and 14 | first open per tab per session, 8.4 | do not fire at all. The list renders already settled |
 | focus glow breathing, item 8 | 0.85 to 1.0 over 8 seconds | static at 0.92 |
 | tutorial ring pulse, item 19 | 0.25 to 0.45 over 2 seconds | static at 0.35 |
 | the undo snackbar's depleting line, item 20 | depletes over 5 seconds | still depletes. It is the only readout of a window that is closing, and that is information, not decoration |
 | the focus arc, 11.3 | depletes at 1Hz | still depletes, for the same reason |
 | cardWash | 5 to 7 percent light, 7 to 9 dark | transformed, and pinned to the low end of its range |
 | cardWashActive | 12 to 14 percent light, 15 to 17 dark | transformed, and pinned to the low end: 12 light, 15 dark |
-| the 7dp dot, the area label | full accent | **unchanged** |
+| the 7dp dot, the area label | full accent | **unchanged**, and the label variant is computed from a ground that does not move with the switch, so it is the same color either way |
 | Momentum's 60 percent area tile | full accent at 60 percent | transformed. This is where the transform is most visible in the Daylight world |
 | Contemplative radial gradients, 3.3 | three-stop radial per surface | transformed, geometry held. A surface with no center of light is not calmer, it is a black rectangle |
 | the specks, 3.3 | 8 to 14 dots at 3 to 6 percent | 8 dots at 3 percent, still one fixed seed |
@@ -944,7 +956,149 @@ Calm mode is a device preference, not engine state, so it travels to the widgets
 
 The exit condition for the retrofit is that a reader can take any element in this document and say what it does in calm mode without guessing. Where the answer is not written next to the element, 16.2 is the default and the transform applies.
 
-**A test enforces the color half**, in the way 6.1's test walks the component set: any accent reaching the screen without passing through the transform fails the build. The motion half is already one flag, 8.5, so it needs no test beyond the one that reads it.
+**Two things enforce the color half rather than one, and the structural one is the better half.** The wash brush cannot be called from outside the file that applies the transform, so a wash that skipped it will not compile. Where a use of an accent cannot be closed off that way, a test enumerates every place in `ui/` where an area's stored color becomes a drawable color, each one labeled atmosphere or identity, and fails when a new one appears: the fix is never to update the count, it is to decide which of the two kinds the new one is and route it. The exclusion list in 16.2 is closed, and this is what keeps it closed.
+
+The motion half needs no test of its own beyond the one that reads the flag, 8.5, and a test pins the flag's expression so that the `or` cannot quietly become something else.
+
+### 16.6 The motion audit: every animation in 8.2
+
+**All twenty eight, by number, including the ones already crossfades and the ones calm mode leaves alone.** 8.2 carried twenty six when Addendum 01 arrived and the addendum added items 27 and 28. `unchanged` means the animation behaves in calm mode exactly as 8.3 already made it behave under reduce motion, which is the point of 8.5: calm mode adds no motion level of its own.
+
+The **crossfade** below is 8.3's one path: a 150ms fade with no travel, no scale and no overshoot.
+
+| # | animation | calm mode | phase |
+|---|---|---|---|
+| 1 | queue promotion | crossfade. No 8dp travel, no wash brightening. The completed title still appears struck through as it fades, because the card has to keep saying which item completed | 2 |
+| 2 | press | still responds. The 0.97 scale runs on the crossfade spec | 2 |
+| 3 | long press lift | still responds, crossfade spec | 2 |
+| 4 | staggered entrance | **does not fire.** The list renders already settled | 3b |
+| 5 | sheet entrance | the scrim fades on the crossfade spec. The sheet's own travel is the platform component's, 16.8 | 2 |
+| 6 | world transition | crossfade. No scale | 4 |
+| 7 | focus ring depletion | **still depletes at 1Hz.** Information, not decoration | 4 |
+| 8 | focus glow breathing | **static at 0.92. Disabled, not slowed** | 4 |
+| 9 | focus completion bloom | crossfade to the completed state. No collapse, no expanding circle. The check still appears | 4 |
+| 10 | Pulse pill fill | crossfade. The acknowledgment still arrives | 6 |
+| 11 | Pulse ambient settle | **does not fire.** The 14 day dot row renders complete | 6 |
+| 12 | Report reveal | **does not fire.** The ribbon renders drawn | 8 |
+| 13 | Momentum dot cascade | **does not fire.** The row renders complete with today's ring already on it | 7 |
+| 14 | Momentum number roll | **does not fire.** The three stats render at their values | 7 |
+| 15 | tab pill slide | crossfade. The pill still moves to the current tab, because that is the only thing that says where you are | 2 |
+| 16 | FAB press | still responds, crossfade spec | 2 |
+| 17 | swatch selection | crossfade. The ring and the preview wash still change; the 1.06 scale runs on the crossfade spec | 2 |
+| 18 | onboarding iris | crossfade in place of the circular reveal | 10 |
+| 19 | tutorial spotlight | the cutout still moves between targets, crossfade spec, because it is what is being pointed at. **The ring pulse holds at 0.35**, which is calm mode's addition and not 8.3's | 10 |
+| 20 | undo snackbar | the rise and fall become a fade with no travel. **The depleting line still depletes over its full five seconds** | 2 |
+| 21 | swipe actions | **unchanged.** The card tracks the finger 1:1, the background still fades in with the movement and still deepens past the threshold, and the commit is instant rather than a 180ms slide off. 8.3 already said this and calm mode does not go further | 2 |
+| 22 | placeholder shimmer | **holds at 4 percent and the repeating animation is never started.** A moving shimmer is motion; a still 4 percent block is a placeholder | 3 |
+| 23 | sheet dismiss | the scrim fades on the crossfade spec and a dragged dismiss still tracks the finger. The sheet's own travel is the platform component's, 16.8 | 2 |
+| 24 | tab content transition | 150ms rather than 180ms. **A transition, not an entrance**, so 8.4 leaves it alone and calm mode only shortens it | 2 |
+| 25 | empty state entrance | the fade shortens to 150ms and **the 150ms delay is kept**, 8.4 | 2 |
+| 26 | accept tap on the closing line | crossfade. The label still changes to the confirmation and still settles at reduced prominence | 9b |
+| 27 | transition mark reached | **the tick still brightens**, over 150ms rather than 400ms. It is the signal the person switched on, so it is information | 4 |
+| 28 | session extended | the arc still grows to its new length and the numeral still rolls, on the crossfade spec, so the change stays visible rather than jumping | 4 |
+
+**One row is specified here and not yet true in the code.** Item 1's calm path currently snaps both titles rather than crossfading them, which loses the struck-through title and with it the answer to "which one did I just finish". The specification above is the requirement; `ui/areas/AreaCard.kt` is where it lands. Nothing else in this table is aspirational.
+
+Fifteen of the twenty eight belong to surfaces that phases 4 and later build. They are audited now rather than when they arrive, because the point of 16.5 is that a reader can take any element in this document and say what it does in calm mode without guessing.
+
+### 16.7 The color token audit: every token in section 3
+
+**Stated as a number.** `chroma x 0.6` is the transform in 16.2 and means the color's OKLab `a` and `b` axes are both multiplied by 0.6, holding lightness and hue: a 40 percent reduction in colorfulness. `0` means the token is not touched at all.
+
+**3.1 and 3.2, Daylight light and dark.**
+
+| token | calm mode | number |
+|---|---|---|
+| canvas | unchanged | 0 |
+| card | unchanged | 0 |
+| raise | unchanged | 0 |
+| cardWash | transformed, and the opacity pinned to the low end of its range | chroma x 0.6; opacity 6 to 5 percent light, 8 to 7 percent dark |
+| cardWashActive | transformed, and pinned to the low end | chroma x 0.6; opacity 13 to 12 percent light, 16 to 15 percent dark |
+| inkPrimary | unchanged | 0 |
+| inkSecondary | unchanged | 0 |
+| inkTertiary | unchanged | 0 |
+| hairline | unchanged | 0 |
+| actionBlue | **excluded by name**, 16.2 | 0 |
+| positiveGreen | **excluded by name** | 0 |
+| warnAmber | **excluded by name** | 0 |
+| parchment | unchanged | 0 |
+| deleteMuted | **excluded by name** | 0 |
+
+**3.3, Contemplative.** None of these surfaces exists before phase 4, so every row is a specification rather than a measurement.
+
+| token | calm mode | number |
+|---|---|---|
+| deepBlack, surfaceRaised | unchanged | 0 |
+| textBright, textDim, textFaint | unchanged | 0 |
+| specks | fewer and fainter, one fixed seed as before | 8 to 14 dots at 3 to 6 percent becomes 8 dots at 3 percent |
+| Focus gradient, all three stops | transformed, geometry held | chroma x 0.6 |
+| Focus ring track | unchanged, it is white | 0 |
+| Focus progress stroke | transformed | `#8BA4FF` becomes `#97A8DE` |
+| Focus ring tip | transformed, **and the blur removed** | `#B9C8FF` becomes `#C0C9EA`, blur 0 |
+| Pulse accent | transformed | `#E8A15C` becomes `#D4A983` |
+| Pulse time-of-day tints | not transformed, **not applied**: held at the midday neutral warm black all day | dawn and evening blends 0 percent |
+| Report gold | transformed | `#D4B16A` becomes `#C8B48B` |
+| Report body text | unchanged | 0 |
+| Report gold glows | transformed, and **two centers of light become one**, behind the headline only | 6 to 8 percent becomes 4 percent, count 2 to 1 |
+| Onboarding beat glows | transformed | chroma x 0.6 |
+
+**3.4, the 48 area colors.**
+
+| use | calm mode | number |
+|---|---|---|
+| the 7dp dot | **excluded by name** | 0 |
+| the area label text | **excluded by name** | 0 |
+| the wash, 5 to 14 percent | transformed, through the one application point | chroma x 0.6 |
+| Momentum's 60 percent tile | transformed | chroma x 0.6 |
+| the Trail event circle, 12 percent | transformed | chroma x 0.6 |
+| the Swap swipe action's face | transformed | chroma x 0.6 |
+| the color picker's 48 swatches and its selection ring | **not transformed** | 0 |
+
+The swatches are the one place where an area accent is neither atmosphere nor identity: it is a **choice**, and a person picking a color has to see the color they are picking. A desaturated grid would have someone choose one accent and receive another the moment they turned the switch off. The live preview card beside the grid does take the transform, because it is a miniature of the real card and is showing what the card will look like. Recorded per section 15.
+
+**What the transform measures.** Across all 48 area colors it moves WCAG relative luminance by at most **0.0185** on a zero to one scale, which is what "holding lightness" buys and is why no ratio verified in section 13 can be broken by it. Every measurement below is computed in `CalmModeContrastTest` rather than judged by eye, per 16.4.
+
+| measurement | ordinary | calm mode | floor |
+|---|---|---|---|
+| area label on every ground it can sit on, worst of 48, both worlds | 4.55 | **4.52** | 4.5 |
+| item title, `inkPrimary`, on every wash, worst of 48 | 13.92 | 14.21 | 4.5 |
+| Trail event glyph inside the 12 percent circle, worst of 48 | 4.14 light, 5.03 dark | 4.14 light, 5.02 dark | 3.0, it is a graphic |
+| largest movement calm mode causes in any measured ratio | | 0.33, and it improves it | |
+
+**Desaturating a wash moves contrast in both directions, and that was checked rather than assumed.** In light mode the calm wash is both shallower and less colored, so every area label improves, the largest by 0.33 of a ratio. In dark mode fifteen of the 48 get very slightly worse, the largest by 0.04. Everything still clears 4.5.
+
+**One failure was found by measuring, and it was not calm mode's.** The area label variant was verified against the bare `card` token rather than against the card as drawn, which carries that area's own wash at up to 13 percent in light and 16 in dark. On an in-session card the worst of the 48 measured **3.83 to one**, and 3.95 at the peak of a promotion. Calm mode neither caused it nor fixed it: with the transform applied the same label reads 4.41, better and still failing. The remedy is the one 3.4 already names, adjusting the label variant and never the dot or the wash, applied against the correct ground. Twenty three of the 48 light labels and five of the dark ones moved as a result.
+
+**One finding is pinned rather than fixed.** `inkSecondary` measures 4.50 on a resting card and **4.29 on an in-session one** in light mode. Nothing draws it there today, and raising it would be a change to an ink token for every screen in the app rather than a calm mode change, so it is measured and held in a test instead: the day a caption lands on an in-session card, the build fails rather than the screen quietly missing the floor.
+
+### 16.8 The component audit: everything in `ui/components/`
+
+Every component built in phases 1, 2 and 3, named, with what calm mode does to it. `unchanged` is a real answer here and is the most common one, because most of these components are built from ink and from the four scoped tokens 16.2 excludes.
+
+| component | calm mode |
+|---|---|
+| `ClarityButton`, five roles | **unchanged.** Every role is an ink token or an excluded one. The 0.97 press scale runs on the crossfade spec |
+| `ClarityFab` | **unchanged.** actionBlue is excluded, and so is the fab's shadow, which is tinted with it |
+| `ClarityChip` | **unchanged.** The 7dp area dot on an area chip is excluded by name and keeps its true color; the selection color change runs on the crossfade spec |
+| `ClarityIcon` and the icon table | **unchanged.** An icon takes ink or an accent from its caller and decides nothing itself |
+| `ClaritySheet` | the 42 percent scrim is black and unchanged. **The sheet's own entrance and dismiss are the platform component's and cannot be reached from an app preference**, see below |
+| `ClarityTabBar` | **unchanged.** actionBlue is excluded, and the pill still travels, because it is the only thing that says which tab you are on |
+| `Sidehead` | **unchanged.** No motion, no accent |
+| `TabularNumber` | **unchanged.** No motion, no accent |
+| `MorphShape` and `morphingPressShape` | the press morph **does not run** and the resting shape is returned. Already true under 8.3 |
+| `ClarityTextField` | **unchanged.** The rule warms to actionBlue, which is excluded; the color change runs on the crossfade spec |
+| `clarityClickable` and `clarityCombinedClickable` | **unchanged.** Presses still respond, 16.4 |
+| `clarityFocusRing` | **unchanged.** actionBlue, and it appears on the crossfade spec. A keyboard focus ring is not something an accessibility setting should be able to remove |
+| `opticalGlyphNudge` | **unchanged.** A fixed offset, not an animation |
+| `ReorderState` and `reorderableItem` | **unchanged.** No animation and no color; the drag follows the finger the way a swipe does |
+| `clarityShadow` and `ClarityCard` | **unchanged.** Elevation is a separation device, 6.1, not atmosphere |
+| `washBrush` and `Modifier.areaWash` | **the transform's one application point.** Every wash in the app arrives here |
+| `SwipeableRow` | the Swap face's accent is transformed. The three action backgrounds are excluded tokens. The card still tracks the finger and the commit is instant, item 21 |
+| `UndoSnackbar` | the rise and fall become a fade with no travel. The depleting line still depletes, item 20 |
+
+Three pieces sit in `ui/theme/` rather than `ui/components/` and complete the picture: `CalmMode.kt` holds the transform and the switch; `ClarityMotion.kt` holds the one flag, which calm mode joins with an `or` rather than adding a level beside; and `ClarityEntrance.kt` holds 8.4's rule and is where entrances are removed rather than shortened.
+
+**One component cannot honor calm mode, and it is recorded rather than hidden.** The bottom sheet is the platform `ModalBottomSheet`, which 17.3 puts at step 1 of the platform-first order. Its entrance and dismiss are driven by the platform's own animation, which honors the system animator scale and therefore honors reduce motion, and which exposes no specification an app preference can reach. So with calm mode on and the system setting off, a sheet still travels. 17.2's fourth reason says a component that cannot honor calm mode is a component that cannot ship, and 17.4 says a polish pass never reimplements a working platform component. Both are true and they point opposite ways, which makes this a decision rather than a defect to fix quietly: it is logged in `DECISIONS.md`, the scrim and everything drawn inside the sheet do honor calm mode, and it is revisited if the platform grows a hook or if the sheet becomes the one thing a calm mode user complains about.
 
 ---
 

@@ -2,9 +2,10 @@
 
 Where the build actually is. Updated at the end of every phase.
 
-**Last updated:** August 27, 2026, after Addendum 01 was recorded and its schema
-window closed.
-**Version:** 0.3.0, versionCode 300. The addendum work is not yet a release.
+**Last updated:** August 27, 2026, end of phase 3b.
+**Version:** 0.4.0, versionCode 400. A minor bump because the event catalog went from
+24 types to 28 and one was renamed, which changes the contract in
+`docs/EVENT_FORMAT.md` that a second implementation is built from.
 **Installed and verified on:** Pixel 8 (`shiba`), over USB.
 
 ---
@@ -16,7 +17,7 @@ window closed.
 | 1. Foundations | done | closed |
 | 2. Core mechanics | done | closed |
 | 3. Trail | done | closed |
-| 3b. Executive function retrofit | not started | #22 |
+| 3b. Executive function retrofit | done | closed |
 | 4. Focus sessions | not started | #2 |
 | 5. Engine skeleton and simulator | not started | #3 |
 | 6. Pulse | not started | #4 |
@@ -31,11 +32,42 @@ window closed.
 
 ---
 
+## What the device check found in phase 3b
+
+Run on the Pixel 8 at 0.4.0, versionCode 400, with `adb logcat` checked after every
+step. **Zero fatal exceptions.**
+
+Verified by hand, not only in tests:
+
+- The Room 2 to 3 migration against the **real** database. The existing area and its
+  whole history survived, which is the check a migration test cannot make
+- Capture with no area chosen: the add sheet offers a title, a note, a first step and
+  an estimate, says `This goes to your inbox`, and commits with no area decision
+- The `Inbox 1` chip appears on Areas only when the inbox is not empty. Plain text,
+  no badge, no dot
+- Filing: the chooser states `Becomes the active item` before committing, and filing
+  into an idle area promotes in the same transaction
+- The inbox empty state reads `There is no hurry to file it`
+- Calm mode, reached through the OS reduce motion setting: the wash desaturates while
+  the 7dp identity dot, the area label and `actionBlue` keep full saturation, which is
+  16.2's exclusion list holding
+
+Four defects were found and fixed before the phase closed, all of them in the seam
+between two agents rather than in either one's work: a `Modifier.padding` overload
+that does not exist, a promotion cue that snapped instead of crossfading under calm
+mode (so the card never said which item had completed), a float precision assertion,
+and an enumeration test that had not seen a new call site. A fifth was a genuine test
+defect: three invariant tests built their attempt event before their fixture, so the
+attempt sorted first and was applied to an empty log, and one of them was passing for
+the wrong reason.
+
+---
+
 ## Addendum 01, executive function support
 
 **Arrived August 27, 2026.** A directive from the owner, out of research and user
 panel work on serving people with executive function challenges. It is recorded in
-full and almost none of it is built.
+full, and phase 3b built the first six of its items. The rest waits for its phase.
 
 **Where it is recorded, because a cold start needs to find it:**
 
@@ -51,9 +83,9 @@ full and almost none of it is built.
 
 ### What actually changed in the code
 
-Only the schema, because the addendum marks Step 2 urgent: a payload change is nearly
-free before user data exists and painful afterward. Everything else waits for its
-phase.
+First the schema alone, because the addendum marks Step 2 urgent: a payload change is
+nearly free before user data exists and painful afterward. Then phase 3b, which is
+written up below.
 
 The catalog went from 24 event types to 28, `FOCUS_ABANDONED` was renamed to
 `FOCUS_ENDED_EARLY`, `ITEM_ADDED` gained a nullable area and two optional fields, and
@@ -115,6 +147,23 @@ Verified by hand on the device, not only in tests.
 - The Trail: filter chips, day grouping with an inline count, ten minute timestamp
   clustering, the mint completed row, and pagination by fourteen local day windows
 
+**Built in phase 3b and not yet checked by hand on the device.** They are in the code
+and under test, and the closing step in `MASTER_BUILD_PROMPT.md` 16.8 is what moves
+them into the list above.
+
+- Add an item without choosing an area. It goes to the inbox, the Areas header carries
+  a plain `Inbox 3` chip while anything is in there, and filing it into an area is one
+  tap from that sheet, which says where the item will land before you commit
+- Give an item a first step and an estimate, on the add sheet or the edit sheet. Both
+  are optional, both are the last fields on the sheet, and nothing anywhere asks for
+  either
+- Calm mode, which today follows the OS reduce motion setting because there is no
+  Settings screen yet: less color in every wash, no list entrance, a shimmer that
+  holds still, and a bottom sheet that still travels
+- The list entrance fires once per tab per app session rather than on every tab
+  switch. Switching tabs twenty times should show it twice, once for Areas and once
+  for the Trail
+
 ## What is deliberately not there yet
 
 Each of these is a phase, not an oversight. See the linked issue for why.
@@ -131,6 +180,13 @@ Each of these is a phase, not an oversight. See the linked issue for why.
   The Trail no longer does.
 - The **weekly banner** on Areas, because its sentence comes from the engine, which
   does not exist until phase 5.
+- The **re-entry surface**, the phase 6 half of issue #27. Detection is built and
+  nothing renders it. The surface has to be able to say nothing, and saying nothing is
+  an engine decision, so it cannot be built before phase 5 exists.
+- The **`Calm mode` Settings row**, phase 11, issue #10. The setting behind it is built
+  and honored everywhere in the app. Until the row exists the key has no stored value,
+  which means calm mode follows the OS reduce motion setting, which is its specified
+  default.
 
 ## Known defects and open questions
 
@@ -144,8 +200,142 @@ Each of these is a phase, not an oversight. See the linked issue for why.
   sixteen haptic events. It is a normal permission with no prompt.
 - Material's `MotionScheme` is internal in material3 1.5.0-alpha26, so Clarity's
   springs cannot be injected into Material components yet. Issue #13.
+- **The queue promotion snaps when motion is reduced, and therefore in calm mode.**
+  `AreaCard` sets both titles to their end state at once, so the struck through
+  outgoing title is never seen and the card stops answering "which one did I just
+  finish". Calm mode removes motion, not information, and this removes information.
+  It shipped in phase 2 and calm mode inherited it rather than causing it.
+  `design-v3.md` 16.6 item 1 specifies the crossfade that keeps the answer and marks
+  that row as the one line in the table not yet true in the code.
+- **`inkSecondary` measures 4.29 to one on an in session card** in light mode, under
+  `design-v3.md` 13's 4.5 floor. Nothing draws it there today, and raising the token
+  would be a change to every screen in the app rather than a calm mode change, so it
+  is pinned in `CalmModeContrastTest` instead: the day a caption lands on an in session
+  card the build fails, rather than the screen quietly missing the floor.
+- **Nothing reads the stored `calmMode` key into the theme yet.**
+  `ClarityPreferences.calmMode` exists and `ClarityTheme` accepts the value, but
+  `MainActivity` does not pass it, because until phase 11 there is no control that can
+  set it. **The phase 11 Settings row has to wire it**, and `CalmModeTest` asserts the
+  resolution rule in the meantime.
+- **The platform bottom sheet does not honor calm mode.** Its entrance and dismiss are
+  Material's own, they honor the system animator scale and therefore reduce motion, and
+  they expose no hook an app preference can reach. Recorded as a decision in
+  `DECISIONS.md` and in `design-v3.md` 16.8 rather than left to be rediscovered.
 
 ---
+
+## Phase 3b delivered
+
+The executive function retrofit. Six items from Addendum 01 that had been assigned to
+phases 1 and 2, both of them closed and shipped, collected into one phase and run
+before phase 4, which depends on parts of it.
+
+- **The unfiled inbox**, issue #24. The FAB opens the add sheet with no area chosen and
+  the item is written with a null `areaId`. `ui/areas/InboxSheet.kt` holds the sheet,
+  its rows, the empty state and the area chooser that files an item, including the case
+  where there are no areas to file into yet. The count is a plain chip in the Areas
+  header, present only while the inbox holds something. No badge, no dot, no color that
+  reads as an alert
+- **The first step**, issue #25. One optional line on an item. One ellipsized line at
+  `caption` on the area card, in full in the detail sheet, absent entirely when there
+  is none, and read by TalkBack after the title rather than before it
+- **The estimate**, issue #26, the capture half. Optional minutes as a free number
+  field, digits only, four at most. It appears on exactly one surface, the area detail
+  sheet, as plain text. No surface counts down against it and none renders it beside an
+  actual
+- **Re-entry detection**, issue #27, and only detection. `ClarityApp` writes
+  `APP_OPENED` on the first foreground of each calendar day by counting started
+  activities across zero rather than by running in `Application.onCreate`.
+  `TrailQueries.reEntryOn` and `lastReEntryOnOrBefore` find a return after 14 or more
+  calendar days, folded from date keys with no wall clock anywhere in the arithmetic
+- **Calm mode**, issue #48. `ui/theme/CalmMode.kt`: an OKLab chroma transform at 0.6
+  holding lightness, applied at one point for every wash in the app, plus the two
+  pinned wash opacities on the token set. It joins the one global motion flag with an
+  `or` rather than adding a motion level beside it, so reduce motion always wins on
+  motion
+- **The entrance rule**, issue #50. `ui/theme/ClarityEntrance.kt`: an entrance fires on
+  the first open of its tab per app session and never again. The flag lives in the per
+  tab saveable state the shell has held since phase 3, and it stores which session
+  spent it rather than a boolean, so a rotation leaves it spent and a process death
+  re-arms it
+
+### The audit was most of the work
+
+Calm mode is a retrofit, not a feature, and the tempting version of it is a boolean and
+a few branches in new code. `design-v3.md` gained three tables instead.
+
+- **16.6**, every animation in 8.2 by number, all twenty eight, including the ones that
+  are already crossfades and the ones calm mode leaves alone
+- **16.7**, every color token in section 3, with a number against each rather than the
+  words "less saturated". `chroma x 0.6` or `0`
+- **16.8**, every component in `ui/components/` shipped in phases 1, 2 and 3, named,
+  with what calm mode does to it. `unchanged` is the most common answer, because most
+  of them are built from ink and from the four tokens 16.2 excludes by name
+
+The contrast half is computed rather than judged. `CalmModeContrastTest` walks all 48
+area colors on every ground they can sit on, in both worlds, ordinary and calm. The
+transform moves WCAG relative luminance by at most 0.0185, which is what holding
+lightness buys and is why no ratio verified in `design-v3.md` 13 can be broken by it.
+
+### One shipped defect the measurement found, and it was not calm mode's
+
+**The area label's contrast was being verified against the wrong ground.**
+`design-v3.md` 3.4 says to verify 4.5:1 against the card, and `areaLabelColor` measured
+against the bare `card` token, where the worst of the 48 clears at 4.58 to one and
+looks fine. The card a label actually sits on carries that area's own wash at up to 13
+percent in light and 16 in dark. Measured against the card as drawn, the same label on
+an in session area is `#E11D48` at **3.83 to one**, and 3.95 at the peak of a
+promotion.
+
+It is the same class of mistake phase 3 found in the Trail's mint completed row, where
+a wash was composited over the wrong ground and cost 0.1 of a ratio. Here it cost 0.75.
+It surfaced only because calm mode's transform has to be measured on the ground it
+lands on, and measuring it exposed that nothing else ever had been. Calm mode neither
+caused it nor fixes it: with the transform applied the same label reads 4.41, better
+and still failing.
+
+Corrected with the remedy 3.4 already names, adjusting the label variant and never the
+dot or the wash, applied against the correct ground. The worst case is now 4.55 in
+light and 4.56 in dark on every one of the 48, in both modes, on every wash opacity the
+design permits. Twenty three of the 48 light label variants moved and five of the dark
+ones.
+
+### Ten decisions where the obvious answer was rejected
+
+Recorded per `design-v3.md` 15, in `DECISIONS.md` under the two August 27 entries. Four
+in the capture path: the FAB captures into the inbox rather than into the first area,
+deleting an area does not orphan its items, the first step truncates on the card and
+wraps in the sheet, and the estimate is a free number field rather than a set of
+duration chips. Six in the retrofit: an app session is the process lifetime, calm mode
+does not go back to following the system once set, the entrance starts at the screen
+title rather than at the first card, the color picker's swatches keep their true color,
+the platform bottom sheet ships without honoring calm mode, and re-entry detection
+hands out the date of the return and never the length of the absence.
+
+The last of those is a shape rather than a rule. `ReEntry` carries `returnedOn` and
+nothing else, and no function in `domain.query` yields the number of days a person was
+gone, because `MASTER_BUILD_PROMPT.md` 14b.4's central prohibition should not rest on
+the phase 6 builder remembering it.
+
+### What is deliberately not in this phase
+
+- **The re-entry surface.** Phase 6, issue #27's second half. It has to be able to say
+  nothing, and saying nothing is an engine decision
+- **The `Calm mode` Settings row.** Phase 11, issue #10, because there is no Settings
+  screen. `strings.xml` carries the label and caption it will use, fixed here alongside
+  the setting they name
+- **The estimate as an observation.** Phase 8 for the fact and the delta veto, phase 9
+  for the language. `MASTER_BUILD_PROMPT.md` 14b.8
+
+### What the device check still has to find
+
+It has not run. Phase 2 found seven defects on the device that the build had passed and
+phase 3 found five more after the build was green, and this phase adds three surfaces
+worth pointing a phone at: the inbox sheet and the filing chooser, the two new fields
+at 200 percent font scale on a sheet that now scrolls, and calm mode on the Areas
+screen, the Trail and the shell. `adb logcat` after the install, per `CLAUDE.md`,
+because several defects in this project were silent app exits a screenshot would have
+passed.
 
 ## Phase 1 delivered
 

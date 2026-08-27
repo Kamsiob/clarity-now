@@ -42,6 +42,7 @@ import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityHaptics
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
+import com.kamsiob.claritynow.ui.theme.calmAccent
 import com.kamsiob.claritynow.ui.theme.clarityMotion
 import com.kamsiob.claritynow.ui.theme.opticallyCentered
 import kotlinx.coroutines.launch
@@ -117,6 +118,13 @@ fun SwipeableRow(
     val motion = clarityMotion()
     val density = LocalDensity.current
     val scope = rememberCoroutineScope()
+
+    // design-v3.md 16.2. The Swap action's face is tinted with the area's accent, and
+    // the accent is not one of the two uses 16.2 excludes by name, so it takes the
+    // transform like every other atmospheric use of a color. The three action
+    // backgrounds behind it do not: positiveGreen, actionBlue and deleteMuted are each
+    // scoped to one job in 3.1, and a desaturated action color is a less legible one.
+    val faceAccent = calmAccent(accent)
 
     val offset = remember { Animatable(0f) }
     var rowWidth by remember { mutableIntStateOf(0) }
@@ -212,7 +220,7 @@ fun SwipeableRow(
                             SwipeActionFace(
                                 icon = ClarityIcons.swap,
                                 label = actions.swapLabel,
-                                tint = accent,
+                                tint = faceAccent,
                                 reveal = reveal,
                                 onClick = { commit(swap) },
                             )

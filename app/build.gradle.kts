@@ -11,12 +11,13 @@ plugins {
 // Semantic version, chosen per MASTER_BUILD_PROMPT 16.7.
 // versionCode is derived as major * 10000 + minor * 100 + patch.
 //
-// 0.3.0: the Trail, and with it domain.query.TrailQueries, the facade every later
-// phase reads a number through. A minor bump rather than a patch because this adds a
-// destination and a public surface the engine will be built against, and not a major
-// one because nothing already shipped changed meaning.
+// 0.4.0: Addendum 01's schema window, and phase 3b, the executive function retrofit.
+// A minor bump rather than a patch because the event catalog went from 24 types to 28
+// and one was renamed, which is a change to the contract in docs/EVENT_FORMAT.md that
+// a second implementation is built from. Not a major one because nothing a person can
+// see behaves differently than it did, apart from being calmer when they ask for it.
 val versionMajor = 0
-val versionMinor = 3
+val versionMinor = 4
 val versionPatch = 0
 
 android {
