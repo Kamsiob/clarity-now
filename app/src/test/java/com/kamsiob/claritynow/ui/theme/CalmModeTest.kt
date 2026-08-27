@@ -261,6 +261,19 @@ class CalmModeTest {
             // ground is not one of them.
             "ui/focus/FocusChooserScreen.kt" to 1,
             "ui/focus/FocusSessionScreen.kt" to 1,
+            // Momentum, phase 7. Two uses and one of each kind, which is why they are
+            // worth writing out rather than counting.
+            //
+            // The area tile is **atmosphere** and goes through `calmAccent`. design-v3.md
+            // 3.4 names it in the same sentence as the wash: "washes, tiles and every
+            // atmospheric use of the accent desaturate", and the 60 percent tile is the
+            // third of the four permitted uses of an accent, not one of the two excluded
+            // ones.
+            //
+            // The 7dp dot beside a name in an insight module is **identity** and never
+            // transforms. It is the first of 3.4's four uses and the first of 16.2's two
+            // exclusions by name, and it is how a person tells which area a row is about.
+            "ui/momentum/MomentumScreen.kt" to 2,
         )
 
         val root = File("src/main/java/com/kamsiob/claritynow/ui")

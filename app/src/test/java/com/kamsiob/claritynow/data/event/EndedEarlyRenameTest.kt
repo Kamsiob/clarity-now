@@ -47,12 +47,16 @@ class EndedEarlyRenameTest {
     /**
      * Where the word is allowed to survive, and why each one is not a loophole.
      *
-     * **`domain/engine` is exempt, and this is the important one.** The engine's family
-     * keys, `focusAbandonment` and `abandonmentPattern`, are declared in
+     * **The engine and the surfaces that name its families are exempt, and this is the
+     * important one.** The family keys `focusAbandonment` and `abandonmentPattern` are
+     * declared in
      * `CLARITY_LOGIC_ENGINE.md` 6.3 and 6.5 and are the identifiers the corpus files
      * key their line tables on. Renaming them is a corpus edit, and a corpus edit is
      * presented to the owner for approval rather than made by a builder. They also sit
-     * behind no surface a person can reach.
+     * behind no surface a person can reach. `domain/report` and `domain/momentum`
+     * are exempt for the same reason and only that reason: they name those families
+     * in order to compose with them, which is reading the corpus's vocabulary rather
+     * than choosing it.
      *
      * That is a narrower claim than C6 made about the event type, and deliberately so.
      * C6's reasoning was that `docs/EVENT_FORMAT.md` is a contract a second
@@ -69,7 +73,7 @@ class EndedEarlyRenameTest {
      * rejects: a rule covering every file eventually cannot describe itself, and the
      * honest answer is a named exemption rather than a weaker rule.
      */
-    private val exemptPathParts = listOf("/domain/engine/")
+    private val exemptPathParts = listOf("/domain/engine/", "/domain/report/", "/domain/momentum/")
     private val exemptFiles = setOf("ValidatorVocabulary.kt")
 
     private fun isExempt(path: String): Boolean =

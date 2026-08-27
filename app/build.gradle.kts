@@ -37,8 +37,11 @@ plugins {
 // exists and is the largest single addition since the event log itself.
 // 0.7.0: phase 6, the Pulse. The first screen that renders a sentence the engine
 // wrote about a person's own life, rather than a label or a readout.
+// 0.8.0: phases 7 and 8, Momentum and the Report. All four tabs now render, and all
+// three Contemplative worlds exist: the indigo Focus night, the amber Pulse night and
+// the gold Report.
 val versionMajor = 0
-val versionMinor = 7
+val versionMinor = 8
 val versionPatch = 0
 
 android {

@@ -2,20 +2,28 @@
 
 Where the build actually is. Updated at the end of every phase.
 
-**Last updated:** August 27, 2026, end of phase 6.
-**Phases 4, 5 and 6 are all built and all awaiting the check that closes them.**
-Everything this file says about focus sessions, about the engine and about the Pulse is
-true of the source and is not yet true of anything installed.
-**Version:** 0.7.0, versionCode 700.
+**Last updated:** August 27, 2026, end of phase 8.
+**Phases 4, 5, 6, 7 and 8 are all built and all awaiting the check that closes them.**
+Everything this file says about focus sessions, about the engine, about the Pulse, about
+Momentum and about the Report is true of the source and is not yet true of anything
+installed.
+**Version:** 0.8.0, versionCode 800.
+`MASTER_BUILD_PROMPT.md` 16.7 makes the number a deliberate choice at a release and the
+release is the orchestrator's closing step. The recommendation is **0.8.0, versionCode
+800**, one minor bump for the pair: two screens arrive that could not be reached before,
+no contract changes, and the event catalog is untouched.
 **Installed and verified on:** Pixel 8 (`shiba`), over USB, last at the end of phase 3c.
 
-**The device check for phase 6 has not run, and it did not fail: it was not attempted.**
-The Pixel was in use by another session for the whole of this phase, and no `adb` command
-was issued from it. The orchestrator runs the closing build, install and device pass, so
-every claim in the phase 6 section below is a claim about source and unit tests. **Three
-integration gaps are listed there that the closing build will find on its own**, one of
-which stops the app compiling, and they are named in advance so nobody spends the build
-diagnosing them.
+**No device check has run since phase 3c, and none of them failed: none was attempted.**
+The Pixel was in use by another session, and no `adb` command was issued from phases 6, 7
+or 8. The orchestrator runs the closing build, install and device pass, so every claim in
+the phase 6, 7 and 8 sections below is a claim about source and unit tests. **Two of the three
+phase 6 integration gaps are closed**: `ClarityShell` hosts every tab, and phases 7 and 8
+hung Momentum and the Report on the two branches that read `UnderConstruction`. The corpus
+is packaged by a Gradle task into `assets/corpus/` and all three engine surfaces read the
+same packaged files, so a session must not add a second copy. **The third is still open:
+`MainActivity` does not route `PulseIntents.opensPulse`**, so tapping the Pulse reminder
+opens the app at whatever tab it was on.
 
 **A note on the format of the lines above**, kept because it keeps being needed. Two
 successive edits once left this block stitched from two states, with each paragraph's
@@ -36,9 +44,9 @@ worse than either of them**, and the way to edit these is to replace the whole b
 | 3c. Design foundations, the polish pass | done | closed |
 | 4. Focus sessions | built, awaiting the device check | #2 |
 | 5. Engine skeleton and simulator | built, awaiting the closing build and install | #3 |
-| 6. Pulse | built, awaiting the device check and three integration gaps | #4 |
-| 7. Momentum | not started | #5 |
-| 8. Snapshots and the Report | not started | #6 |
+| 6. Pulse | built, awaiting the device check and one integration gap | #4 |
+| 7. Momentum | built, awaiting the device check | #5 |
+| 8. Snapshots and the Report | built, awaiting the device check and one write | #6 |
 | 9. Corpus | not started | #7 |
 | 9b. Guidance, layer six | not started | #8 |
 | 10. First run | not started | #9 |
@@ -138,6 +146,39 @@ now copied into the assets by a build step rather than duplicated into the sourc
 because a second copy is two corpora that drift and the shipped one would not be the
 one anybody reviewed. It goes through AGP's Variant API, since the source set API
 refuses a provider and a plain `srcDir` would not carry the task dependency.
+
+---
+
+## What the device check found in phases 7 and 8
+
+Run on the Pixel 8 at 0.8.0, logcat clean. All four tabs now render and all three
+Contemplative worlds exist.
+
+**One defect, and it was the first screen that ever spoke to a person.** On a two day
+old install Momentum read `A narrow fortnight.`, and before that `A still fortnight.`
+Both describe twelve days that had not happened.
+
+The cause is that a fact window is always its full width, so `window.dayCount` cannot
+tell a fortnight of data from a fortnight of window, and every fortnight family
+qualified on day two. Every fixture in the suite had history behind it, so nothing
+caught it: it took a fresh install probe. The fix is one criterion,
+`fortnightOfHistory()`, applied to every fortnight horizon headline except `firstDays`
+and `cleanSlate`, which exist precisely for the young and the empty case. The headline
+now reads `Early, but it is starting.`
+
+That is Addendum 01 7d's requirement, that the first weeks are honest about what they
+do not have yet, enforced by a guard rather than by language.
+
+**The Report renders as 11.1 specifies**, including the parts easiest to get wrong: the
+week ribbon with no axes, no gridlines, no values on the marks and no card, with the
+caption beneath carrying the numbers so the ribbon is never the sole carrier of a
+claim; two observations rather than a padded four; and no Pattern section at all,
+correctly, because `weeksOfData` is under three. It opened with `Your first week. There
+is not much to compare against yet.`
+
+**Recorded rather than fixed:** three corpus catalogs are built per process, one per
+surface, where MASTER_BUILD_PROMPT 11.7 asks for one. No sentence is wrong because of
+it and all three parse the same assets. Issue #55 has the worked out fix.
 
 ---
 
@@ -282,10 +323,10 @@ Each of these is a phase, not an oversight. See the linked issue for why.
 - The **archived areas view**, issue #15. Archiving works and removes the area from
   the list, but there is currently no way back. Worth knowing before archiving
   anything you care about.
-- **Momentum and Report** render one honest line rather than a skeleton, issue #16.
-  The Trail no longer does.
-- The **weekly banner** on Areas, because its sentence comes from the engine. The
-  engine now exists and produces that sentence; the surface that shows it is phase 7.
+- **Momentum and the Report** are built, phases 7 and 8, and neither renders the honest
+  placeholder line any more. Issue #16 is answered by the two sections below.
+- The **weekly banner** on Areas is built, phase 7. It had been recorded here as absent
+  since phase 2 because its sentence comes from the engine.
 - The **re-entry surface**, the phase 6 half of issue #27. Detection is built and
   nothing renders it. The surface has to be able to say nothing, and saying nothing is
   an engine decision; the engine can now say nothing, and the screen is phase 6.
@@ -296,6 +337,15 @@ Each of these is a phase, not an oversight. See the linked issue for why.
   and honored everywhere in the app. Until the row exists the key has no stored value,
   which means calm mode follows the OS reduce motion setting, which is its specified
   default.
+- The **closing line on the Report**, with its accept pill and its decline. The block is
+  built and always empty, because a closing line is layer six and layer six is phase 9b.
+  Accept settles the pill and writes nothing; decline records nothing at all and never
+  will, because there is no `PLAN_DECLINED` event and nothing that could count one.
+- **Past reports**, which are built and empty, because nothing writes `REPORT_GENERATED`.
+  See the known defect below.
+- The **debug menu action and the export path** that rebuild the cache from event zero,
+  phase 11. `ClarityRepository.rebuildCacheFromLog` is built and answers what it found,
+  and has no caller.
 
 ## Known defects and open questions
 
@@ -325,12 +375,65 @@ Each of these is a phase, not an oversight. See the linked issue for why.
   owner's call.** The two candidates are a phase of its own, since it is one screen and
   it is finished when it works, or phase 10, which already owns the first thing a person
   sees.
-- **Three integration gaps from phase 6, one of which stops the build.** `ClarityShell`
-  does not pass the `onOpenPulse` callback that `AreasRoute` now requires, `MainActivity`
-  does not route `PulseIntents.opensPulse`, and the three corpus files are not packaged
-  into `assets/corpus/`, which would make every day come back `Unavailable` on the
-  device. All three are described in the phase 6 section below, with where each call
-  goes.
+- **One integration gap from phase 6 is still open.** `MainActivity` does not route
+  `PulseIntents.opensPulse`, so tapping the Pulse reminder opens the app at whatever tab it
+  was on. The call goes in `onCreate` and in `onNewIntent`, beside the
+  `FocusIntents.opensFocusSession` call that is already there. The other two are closed:
+  `ClarityShell` hosts every tab, and the corpus is packaged into `assets/corpus/` by a
+  Gradle task that all three engine surfaces read from.
+- **Nothing writes `REPORT_GENERATED`, and three consequences follow that are not design
+  decisions.** `MASTER_BUILD_PROMPT.md` 11.3 step 9 belongs to `ClarityRepository`, which is
+  the only writer in the app and has no method for it. So 12.3's cadence question is asked
+  correctly and always answers due, which means the report composes on every open rather
+  than once a week; `FiringHistory` never learns what the Report said, so the ninety day
+  variant exclusion and the fourteen day family cooldowns cannot vary it week to week; and
+  the History page is empty, because it reads the projection and the projection is fed by
+  the log. The report is deterministic either way, so a person sees the same page rather
+  than a changing one. **It is one method and it is the whole of what stands between phase 8
+  and shipped.**
+- **A past report has no headline to draw.** `ReportGenerated` carries `headlineKey` and
+  `headlineVariantKey` and not the headline's rendered text, while `renderedSections`
+  carries the text of every observation, so `design-v3.md` section 5 gives past report
+  headlines a display treatment for a string the payload cannot supply. Re-realizing the
+  variant would be a second path to a sentence, which `CLAUDE.md` rule 8 closes, and the
+  facts of that week are gone in any case. **The fix is one more string on the payload,
+  which is a change to the committed format in `docs/EVENT_FORMAT.md`**, so it is the
+  owner's call. `DECISIONS.md` carries it as open with the recommendation stated and not
+  taken.
+- **Three Addendum 01 items assigned to phase 8 did not land, and they are unassigned.**
+  The week long Report suppression after a return (14b.4), capacity aware decline detection
+  and its cyclical persona test (14b.9), and the estimate calibration facts, their floor and
+  the delta veto (14b.8). All three are fact extraction and rule criteria in `domain.engine`
+  rather than screen work, and none has a fact behind it in `domain/engine/facts/` today.
+  **Two of the three are refusals**, so nothing fails while they are missing: a person
+  returning after a fortnight can be told about the gap by the first report they open, and a
+  person whose activity is cyclical can be told they are declining when they are not. Three
+  lines in `MASTER_BUILD_PROMPT.md` 17 now say so at the point a session would read them as
+  met. **The recommendation is phase 9 and it is the owner's call**, recorded in
+  `DECISIONS.md`.
+- **The length band rule is applied as a preference and the phase 5 gate is not lifted.**
+  `CLARITY_LOGIC_ENGINE.md` 7.5 forbids two consecutive leads from the same band; the
+  composer prefers an alternative and takes the highest ranked line anyway where a section
+  has none, because dropping a true observation for cadence is the trade 11.4 forbids in
+  the other direction. `ReportInvariants` therefore does not assert it, so neither the ten
+  thousand week run nor the persona year measures it. The 715 collisions across 451 reports
+  from phase 5 remain the baseline and phase 9 is what moves them.
+- **There are now three engine catalogs in the process** where 11.7 asks for one, one per
+  coordinator. Phase 6 recorded the second, phase 8 added the third, and the cause is the
+  same each time: the one lazy binding that would serve all three belongs in `ClarityGraph`,
+  which has been outside every surface phase's file list. The cost is two extra parses of
+  three markdown files, on a background dispatcher, the first time each tab is opened. The
+  fix is one binding and a constructor parameter, at which point `MomentumGraph`,
+  `ReportGraph` and `AssetCorpus` all go away together.
+- **`ReportCoordinator` is in `ui.report` and belongs in `domain.report`**, beside
+  `PulseCoordinator` and `MomentumCoordinator`. Nothing in it depends on Android. It is a
+  package line and an import.
+- **The banner's caption binding table is in `domain/momentum/BannerCaptions.kt` and belongs
+  in `domain/engine/realize/SlotBindings.kt`**, which is where layer 4 authors every other
+  slot binding. The caption bench has slots and is not a family, so `bindingsFor` has nowhere
+  to look it up and phase 5 left it unbound. `BannerCaptionsTest` fails the build if a
+  caption line in the real corpus has no binding, so the table cannot silently rot while it
+  waits to move.
 - `VIBRATE` is declared, and has to be, because `design-v3.md` section 9 specifies
   sixteen haptic events. It is a normal permission with no prompt.
 - Material's `MotionScheme` is internal in material3 1.5.0-alpha26, so Clarity's
@@ -408,6 +511,336 @@ Each of these is a phase, not an oversight. See the linked issue for why.
   `queueDrain`, across eleven simulated years. Either the personas do not produce the
   shape, or the criteria are tighter than the corpus stage headers they were built from.
   Phase 9 has to know which before it grows those benches.
+
+---
+
+## Phase 8 delivered
+
+Snapshots and the Report, issue #6. `MASTER_BUILD_PROMPT.md` 6.4, 11.3 and 12.3,
+`design-v3.md` 11.1, `CLARITY_LOGIC_ENGINE.md` 9, and `CORPUS_2_REPORT.md`.
+
+**The integrity tests were written first, which is what issue #6 asked for and is the
+reason the phase is defensible.** 12.3 calls data integrity the prime directive and says
+why it does not degrade gracefully: one fabricated area name or one off by one number
+permanently destroys the credibility of everything else the app says, and the person has no
+way to verify anything afterwards. The screen came after the layer that can refuse it.
+
+- **The report scope validator**, `domain/engine/validate/ReportIntegrity.kt`. Nine checks
+  over a whole assembled report rather than over one sentence, ordered so that a report
+  breaking several is reported against the most fundamental thing wrong with it.
+  It exists because two failure classes are invisible to a per sentence validator: two true
+  sentences that contradict each other, and one fact rendering two different numbers, where
+  each number re-reads correctly against the fact it was given and the report is still
+  wrong. **The whole report is vetoed rather than the offending line**, because two numbers
+  disagreeing means the fact was computed twice and nothing on the page can say which
+  computation was the good one.
+- **9.2's consistency map is held on the finished report**, not thrown away with the
+  composer, because the screen prints numbers of its own in the caption beneath the ribbon
+  and there is no second path to a displayed number. The caption reads the map rather than
+  counting, so when a corpus line above has already stated the same fact the caption repeats
+  that number instead of minting a second one.
+- **The composer**, `domain/report/ReportComposer.kt`. 11.3 steps 3 to 6 with the numbers as
+  comments, plus the four rules that only exist at the scale of a page: reading order, the
+  area mention cap, the parallel clause cap and 12.3's intent gate. **Nothing is padded and
+  nothing is backfilled.** It asks for four observations and a report where two were dropped
+  is a report of two; `ClarityReport.dropped` records every one, because a report of two is
+  otherwise indistinguishable from a quiet week.
+- **The four benches that are not families**, `domain/report/ReportLanguage.kt`. The
+  generated line, the basis line and the two edge states, resolved out of
+  `CORPUS_2_REPORT.md` 5 and 6 through `VariantChoice`, `SlotRenderer` and
+  `ClarityValidator`, which are the same three functions the engine loop uses. Nothing here
+  composes, concatenates or writes a word.
+- **The window and the cadence**, `domain/report/ReportSchedule.kt`. Days are calendar days
+  built from `LocalDate` and never 86,400,000 milliseconds, so the week the clocks change is
+  167 hours long and the report still covers seven days. Every function takes its zone as a
+  parameter and there is no overload without one.
+- **Checkpoints**, `domain/replay/ClarityCheckpointCodec.kt`, `ClarityReplay.canResume` and
+  `data/repo/ClarityRepository.kt`. A week snapshot doubles as a replay checkpoint, cold
+  start replays only the tail, and `ingestForeignLog` throws every checkpoint away and folds
+  from event zero in both modes. **The resume rule is a count**, not a comparison of the two
+  ends of the log, and the reason is in the next section.
+- **The screen**, `ui/report/`. All nine items of `design-v3.md` 11.1, the gold editorial
+  ground with two fixed lights and no specks, the week ribbon with its caption, the pattern
+  break as the one grid break, the History page, regenerate, copy, and the reveal inside its
+  1.4 second ceiling.
+- **Eight new test classes and three shared fixtures.** `ReportIntegrityVetoTest` has a test per
+  check; `ReportCompositionTest` drives the assembly with candidates built by hand;
+  `ReportPropertyTest` runs ten thousand generated weeks; `ReportPersonaTest` runs eleven
+  personas through a simulated year and writes each report back into the log so the next
+  week's cooldowns and exclusions are real; `CheckpointResumeTest` is the phase 1 harness
+  line that had never had a checkpoint to resume from.
+
+### The one defect the checkpoint work found, and it was latent rather than new
+
+**`canResume` compared the two ends of the log and passed on a merged one.** The old rule
+asked whether the newest event sorted at or after the checkpoint's position and whether the
+position was still in the log. A checkpoint is the fold of a **prefix** of the total order,
+so an import that inserted three events *before* the position satisfied both halves, and
+`replayFrom` then dropped all three as already folded in when they never were.
+
+**Nothing looks wrong afterwards. The numbers are just smaller, forever.** There is no
+screen that shows it, no exception, and no later check that finds it. The fix is to count:
+the log holds exactly as many events at or before the position as the checkpoint state was
+folded from. `CheckpointResumeTest` has the case, named
+`resuming a merged log over a checkpoint would silently drop events`.
+
+It was latent because nothing had ever written a checkpoint. The read path existed from
+phase 1 and `newestCheckpoint` always answered null, so the wrong rule had never been asked
+a question it could get wrong. **Both merge paths clear every checkpoint anyway**, so
+forgetting the count would cost a slow cold start rather than a wrong one, and the rule is
+stated once, over two numbers, so the SQL caller and the list caller cannot drift.
+
+### What the composer refuses, and it refuses in both directions
+
+- **A third observation naming one area is dropped**, and the one dropped is the lower
+  ranked one, which is the direction the incompatibility matrix already resolves in
+- **A third editorial lead is dropped.** The backstop is unreachable through `compose`,
+  because the engine spends the budget while it realizes, and it is there anyway: editorial
+  voice on an ordinary fact is the clearest tell of generated writing
+- **A callback observation is dropped below three answered pulses.** `completionSplit`
+  already carried the floor; `selfReportVsData` did not, and its rule requires one stored
+  answer ever, which is the right condition for the quote to be real and the wrong one for
+  the claim to be representative
+- **A third consecutive parallel numeric lead is dropped**, where a parallel numeric lead
+  is one rendering two or more numbers. Counting any lead with a number in it would have
+  silently shortened almost every report with nothing failing
+- **Nothing is reached for to replace what was dropped.** The obvious implementation asks
+  the engine for eight and keeps the first four that survive, which is padding with extra
+  steps
+
+### Where the length band rule stands, and it is not closed
+
+`CLARITY_LOGIC_ENGINE.md` 7.5 forbids two consecutive leads from the same band. The composer
+applies it a second time, over the reading order, because grouping the observations under
+their sideheads can put two leads of one band together after the realizer had spread them.
+**It is applied as a preference and not as a veto**: where every remaining line in a section
+shares the band, the highest ranked one is taken anyway.
+
+That is deliberate and it is recorded in `DECISIONS.md` rather than assumed. 11.4 forbids
+padding a section to reach a minimum, and dropping a true observation to improve the cadence
+is the same trade in the other direction. **It also means the phase 5 gate is not lifted by
+this phase.** The 715 collisions across 451 reports measured in phase 5 are a bench depth
+reading and phase 9 is what moves them. `ReportInvariants` deliberately does not assert the
+band rule, so the ten thousand week run and the persona year say nothing about it either
+way.
+
+### Fifteen decisions where the obvious answer was rejected
+
+All are in `DECISIONS.md` with the losing option named. In short: the window is the seven
+completed days before today rather than today so far; the cadence is asked of the log about
+the calendar week rather than keyed on the window; the caption states events, completions
+and additions rather than completions, focus minutes and a percentage; there are three
+sideheads with a mapping made at composition rather than one section holding everything; a
+quiet day keeps a mark at a floor and the scale is linear rather than curved; the pattern
+break changes the optical size and leaves the point size alone; the reveal's stagger stops
+growing after five blocks so the 1.4 second ceiling holds; there are no specks on this
+surface and the two lights are fixed to the room; exactly one checkpoint row survives rather
+than one per week; every checkpoint is a full rebuild from event zero checked against the
+running state; resuming is decided by a count rather than by the log's two ends; a parallel
+numeric clause is a lead rendering two numbers rather than any lead with a number;
+observations are grouped by section with the band rule re-applied as a preference; the
+regenerate wait is a shimmer rather than the spinner 12.3 asks for, because `design-v3.md`
+8.2 item 22 owns the look; and a report the integrity layer refused is its own state rather
+than the empty state.
+
+### What is deliberately not in this phase
+
+- **`REPORT_GENERATED` is never written.** 11.3 step 9 belongs to `ClarityRepository`, which
+  is the only writer in the app and has no method for it. Three things follow and **none is
+  a design decision**: `isDue` asks the log the right question and therefore always answers
+  yes, so the report composes on every open; `FiringHistory` never learns what the Report
+  said, so the ninety day variant exclusion and the fourteen day family cooldowns cannot
+  vary it week to week; and the History page is empty, because it reads the projection and
+  the projection is fed by the log. The report is deterministic either way, so a person sees
+  the same page rather than a changing one.
+- **The closing line is always absent**, and the composable that draws it is built. A
+  closing line is layer six and layer six is phase 9b. `ReportPage.Composed` is where it
+  arrives, `accept` settles the pill and writes nothing because `PLAN_OFFERED` is phase 9b's,
+  and **declining records nothing at all**, deliberately: there is no `PLAN_DECLINED` event
+  and no surface anywhere that could count one.
+- **A past report has no headline on the page.** `ReportGenerated` carries `headlineKey` and
+  `headlineVariantKey` and not the rendered text, while `renderedSections` carries the text
+  of every observation. Re-realizing the variant would be a second path to a sentence.
+  Recorded in `DECISIONS.md` as an open question, because adding the field is a change to
+  the committed event format in `docs/EVENT_FORMAT.md`.
+- **The debug menu action and the export path** that 6.4 asks to call
+  `rebuildCacheFromLog`. The method is built and answers what it found; both callers are
+  phase 11.
+- **`ReportCoordinator` lives in `ui.report` and belongs in `domain.report`**, beside
+  `PulseCoordinator` and `MomentumCoordinator`. Nothing in it depends on Android. It is a
+  package line and an import, and `domain/report/` was outside this slice's file list.
+- **The third catalog in the process.** 11.7 wants one built and held; there are now three,
+  one per coordinator, for the reason phase 6 recorded about the second. The fix is one lazy
+  binding in `ClarityGraph` and a constructor parameter on each, at which point
+  `MomentumGraph`, `ReportGraph` and `AssetCorpus` all go away together.
+- **The three Addendum 01 items build order 19 gave this phase.** They are in the open
+  questions above and on issue #6.
+
+### What the device check still has to find
+
+**It has not run.** The Pixel was in use by another session and no `adb` command was issued.
+What the phone can prove that a unit test cannot:
+
+- **Whether the gold night reads as a room with no specks in it**, which is the one place
+  this surface departs from every other Contemplative screen in the app.
+- **Whether the pattern break reads as a break at `opsz` 28 and 17sp.** That is the number
+  `design-v3.md` 11.1 left reading two ways and it is worth an owner's glance.
+- **The ribbon draw**, which 8.2 calls the most satisfying single animation after the
+  promotion, and the whole reveal against its 1.4 second ceiling on a real frame budget.
+- **Whether the quiet day's mark reads as quiet rather than as absent** at the 3.0 to one
+  floor, at arm's length, at low brightness. The same question the Pulse rhythm row asked.
+- **TalkBack over the page**: eyebrow, headline, the spoken ribbon summary, then sections,
+  with the controls reached last despite being drawn over the top.
+- **Copy**, which is the app's only integration surface with anything else, pasted into
+  something else and read.
+- **Font scale 200 percent**, where the headline is `displayHero` and the pattern band has a
+  measure 20dp narrower than the prose above it.
+- **That the background gradient really does reach the very top edge** under the status bar,
+  which is 11.1's last line and is the kind of thing an emulator flatters.
+
+---
+
+## Phase 7 delivered
+
+Momentum and the Areas banner, issue #5. `MASTER_BUILD_PROMPT.md` 11.2, 11.3 and 12.2,
+`design-v3.md` 8.2, 10.2 and 11, `CLARITY_LOGIC_ENGINE.md` 6.5, and `CORPUS_3_MOMENTUM.md`.
+
+**Momentum observes and never interprets, and that rule governs the screen as well as the
+corpus.** Nothing on it says why. The dot row does not explain the gaps, the tiles do not
+rank the areas, the stats carry no comparison against last week, and the insight modules
+state a shape and stop. One sentence comes from the engine and every other thing on the
+screen is a number the log was asked for through a `TrailQueries` function, drawn as a dot,
+a tile, a figure or a mark, with its label out of `strings.xml`.
+
+- **The composer**, `domain/momentum/MomentumComposer.kt`. Pure Kotlin, no Android, no
+  database. It decides the fourteen days, the tiles, the three figures and the four insight
+  modules, and every one of them is a query result rather than a computation. Testable
+  against the real corpus with a fake clock.
+- **The plumbing**, `domain/momentum/MomentumCoordinator.kt`. The clock, the log and the
+  corpus text. **It writes nothing and there is nothing for it to write**: the event catalog
+  has no `MOMENTUM_GENERATED`, so unlike the Pulse there is no append, no immutability rule
+  and no per day key, which is what makes the banner throttle a rate limit on work rather
+  than a correctness rule.
+- **The banner**, `ui/momentum/AreasBanner.kt`, `BannerThrottle.kt` and
+  `domain/momentum/BannerCaptions.kt`. `design-v3.md` 10.2, and the one element on the Areas
+  screen whose sentence comes from the engine. It has been recorded here as deliberately
+  absent since phase 2 for exactly that reason, and this is its arrival. **The throttle is
+  in the ViewModel and not in the engine**, per 11.2, as a value type with no Android in it
+  so the boundary can be walked in a test.
+- **The screen**, `ui/momentum/MomentumScreen.kt` and `MomentumInsights.kt`. The headline in
+  `readSerif`, the fourteen dot row with today ringed, the three column tile mosaic, three
+  figures Monday to now as pure typography, and the four insight modules under sideheads,
+  each absent when it has no data.
+- **The two animations `design-v3.md` 8.2 gives this screen**, items 13 and 14, in
+  `MomentumMotion.kt`. The dot cascade at a 35ms stagger with the today ring drawing last,
+  and the number roll counting up from zero over 600ms. Both are entrances, so 8.4 governs
+  them: once per app session, and never again on a return to the tab.
+- **Four new test classes.** `MomentumComposerTest` walks every number and every floor,
+  `MomentumLanguageTest` reads the real corpus, `BannerCaptionsTest` holds the caption bench,
+  and `BannerThrottleTest` walks the hour.
+
+### The risk issue #5 named first, and why it cannot happen here
+
+**An accidental streak.** The guard is structural rather than a rule somebody has to
+remember. `FactSet` declares no streak fact, `MomentumWindows` hands the composer fourteen
+independent calendar days, and there is no field on the way out that could answer whether
+two active days were adjacent. `MomentumComposerTest` states it twice, as
+`the count is the size of a set and a missed day resets nothing` and as
+`opening the app is not activity`, which is the phase 3b decision that keeps `APP_OPENED`
+out of `isUserActivity` and stops a fortnight of opening and closing drawing a full row.
+
+**On the screen the same rule is kept the same way.** An inactive day is drawn smaller and
+lighter, it has no content description of its own, and the row is one node to a screen
+reader that names itself and tallies nothing. `design-v3.md` 14 says a gap is rendered as a
+lighter dot with nothing said about it anywhere, and a spoken count of the gaps would be
+saying something about them.
+
+**The second risk was the banner recomputing on every recomposition.** It has its own
+ViewModel resolved against the Activity's store, it does not collect the projection, and the
+hour is measured in app use rather than reset by a tab switch. Calling it more often is free:
+it is a lock, a subtraction and a return.
+
+### Every module has a floor under it, and none of them is a taste
+
+11.4 forbids padding a section to reach a minimum, and a module drawn from too little is not
+a smaller version of itself, it is a shape a person can read something into that is not
+there.
+
+- **Area balance needs two areas with something in them.** One area holding a hundred percent
+  of a fortnight is a balance in the arithmetic sense and says nothing anybody could act on,
+  and `AreaFacts.shareOfEvents` calls itself the most misused fact in the system for this
+  reason
+- **The pace sparkline needs three points, two of them carrying something.** Two is a
+  comparison and one is a dot, and a line drawn across a single spike is a trend nobody has
+- **The focus strip is absent until there is focus in it**
+- **Idle areas appear at seven days and not a day sooner**
+
+### The half of 14b.10 this phase could not carry
+
+**No empty chart, anywhere.** That half is built: every module is absent rather than drawn
+empty, and a figure whose feature has never been used is dimmed with a discovery line rather
+than hidden.
+
+**The other half is a corpus line and the bench does not carry one.** 14b.10 asks every
+reflective surface to state plainly what it needs and roughly when it becomes useful, in the
+shape of `Patterns show up after about three weeks.`, and says in as many words that those
+sentences are about the person's own data and are corpus lines rather than `strings.xml`
+copy. `CORPUS_3_MOMENTUM.md` has no such bench. **Phase 7 wrote none**, because phase 9 grows
+the corpus and every batch goes to the owner. The discovery lines that do exist are in
+`strings.xml` and are correct there: every one of them describes how a feature works and none
+says anything about the person.
+
+### Nine decisions where the obvious answer was rejected
+
+All are in `DECISIONS.md` with the losing option named. In short: the tiles are a three
+column grid rather than a scrolling row or four columns; the three figures are completions,
+minutes focused and items added rather than the lifecycle order; an unused feature is a
+lifetime question rather than a weekly one; the activity readout sits under the dots rather
+than over them; the figures are set in the serif with sans labels on a common left edge
+rather than as a centered dashboard row; the area name sits under the tile and the idle
+outline is the `hairline` token rather than the area's own color; the idle module's sidehead
+reads `Quiet areas` rather than 12.2's own `Idle Areas`, because 12.2's word for what the
+label has to be is gentle; the share rows are typography with no bar behind the numbers; and
+the banner has a ViewModel of its own rather than a field on `AreasViewModel`.
+
+### What is deliberately not in this phase
+
+- **The first weeks lines from 14b.10**, above. Phase 9.
+- **The banner's caption binding table lives in `domain/momentum/BannerCaptions.kt` and
+  belongs in `domain/engine/realize/SlotBindings.kt`**, which is where layer 4 authors every
+  other slot binding. The caption bench has slots and is not a family, so `bindingsFor` has
+  nowhere to look it up and phase 5 left it unbound. The table is in the same shape with the
+  corpus line quoted beside every entry, and `BannerCaptionsTest` fails the build if a
+  caption line in the real corpus has no binding. **When the table moves, this file goes with
+  it and nothing else changes.**
+- **The second catalog in the process**, for the reason phase 6 recorded about the first. One
+  lazy binding in `ClarityGraph` replaces it.
+- **Any change to `AreasViewModel`.** The banner reaches its own ViewModel from inside
+  `AreasHeader` rather than taking a value through `AreasUiState`, which is a deviation from
+  the shape every other element on that screen follows and is recorded in a comment at the
+  call site rather than left quiet.
+
+### What the device check still has to find
+
+**It has not run.** The Pixel was in use by another session and no `adb` command was issued.
+What the phone can prove that a unit test cannot:
+
+- **Whether this really is the calmest screen in the Daylight world**, which is the only
+  acceptance criterion in issue #5 that no test can express.
+- **Whether the serif figures read at a glance.** They are the deliberate choice over a sans
+  dashboard row and they are the one that could be wrong on a real screen.
+- **The dot cascade and the number roll**, and specifically that the today ring draws last,
+  which is the half of 8.2 item 13 that is easy to lose.
+- **That the entrances fire once per app session**, verified by switching tabs twenty times
+  and seeing them twice, once for Momentum and once for whichever other tab is entered.
+- **Whether a 60 percent tile reads as the person's own color** against the name beneath it,
+  at both themes and in calm mode, where the tile desaturates and the identity dot does not.
+- **The Areas banner appearing at all**, and then not reappearing for an hour, and the header
+  keeping its height on a week no family describes.
+- **TalkBack over the dot row and the tiles**, where the row is one node and each tile names
+  its area and its state rather than its color.
+- **Font scale 200 percent** on the three figure block, which is three columns of type with
+  no container to give way.
 
 ---
 

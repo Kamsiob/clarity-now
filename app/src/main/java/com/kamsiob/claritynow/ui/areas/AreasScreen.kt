@@ -71,6 +71,7 @@ import com.kamsiob.claritynow.ui.components.clarityPressScale
 import com.kamsiob.claritynow.ui.components.rememberReorderState
 import com.kamsiob.claritynow.ui.components.rememberSwipeCoordinator
 import com.kamsiob.claritynow.ui.components.reorderableItem
+import com.kamsiob.claritynow.ui.momentum.AreasBanner
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
@@ -367,6 +368,24 @@ private fun AreasHeader(
             onOpenPulse = onOpenPulse,
             onOpenInbox = onOpenInbox,
         )
+
+        // design-v3.md 10.2, and the one element on this screen whose sentence comes from
+        // the engine. `docs/BUILD_STATE.md` has recorded it as deliberately absent since
+        // phase 2 for exactly that reason, and this is its arrival.
+        //
+        // **It reaches its own ViewModel rather than taking a value through this screen's
+        // parameters**, which is a deviation from the shape every other element here
+        // follows and is recorded rather than quiet. The banner's state is one sentence, a
+        // caption and a once per hour throttle, and none of it belongs to the queue that
+        // `AreasUiState` describes; putting it there would also have meant editing
+        // `AreasViewModel`, which is outside the file list the Momentum phase was given.
+        // The instance is resolved against the Activity's store, which is the same store
+        // `AreasViewModel` comes from, so the throttle survives a tab switch, which is what
+        // "once per hour of app use" requires.
+        //
+        // It draws nothing at all when the engine has said nothing, so the header keeps its
+        // existing height on a week no family describes.
+        AreasBanner(modifier = Modifier.padding(top = 14.dp))
     }
 }
 

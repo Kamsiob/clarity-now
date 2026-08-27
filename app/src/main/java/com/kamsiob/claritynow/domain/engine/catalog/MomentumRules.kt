@@ -79,6 +79,22 @@ internal object MomentumRules {
     }
 
     private fun momentum(): List<ClarityRule> = listOf(
+        // **A family whose lines claim a fortnight may not fire before a fortnight
+        // exists.** Applied to every FORTNIGHT_HORIZON headline except `firstDays` and
+        // `cleanSlate`, which are the two that exist precisely for a young install and
+        // an empty one.
+        //
+        // The window is always fourteen days wide, so `window.dayCount` cannot tell a
+        // fortnight of data from a fortnight of window and every one of these families
+        // qualified on day two. On the device a two day old install read
+        // "A narrow fortnight." from `singleAreaWeek` and, before the first fix,
+        // "A still fortnight." from `quietStretch`: sentences about eleven days that
+        // had not happened, on the first screen that ever spoke to the person.
+        //
+        // Addendum 01 7d asks every reflective surface to be honest about what it does
+        // not have yet, and CLARITY_LOGIC_ENGINE 1 is blunt about the cost of one wrong
+        // number. This is that rule, expressed once.
+
         surface("momentum.steadyStretch", Purpose.MOMENTUM_HEADLINE, "steadyStretch", FORTNIGHT_HORIZON, criteria = listOf(
             window("momentum.steady.nineDays", "active on nine or more of the last fourteen days") {
                 it.window.activeDays >= 9
@@ -86,6 +102,10 @@ internal object MomentumRules {
             window("momentum.steady.fullWindow", "there are fourteen days to have been active across") {
                 it.window.dayCount >= FORTNIGHT_HORIZON
             },
+            // The window is always fourteen days long. The install is not, and a
+            // fortnight family that cannot tell those apart describes days that did
+            // not happen. See momentum.quiet.installed for the whole argument.
+            fortnightOfHistory(),
         )),
         surface("momentum.quietStretch", Purpose.MOMENTUM_HEADLINE, "quietStretch", FORTNIGHT_HORIZON, criteria = listOf(
             window("momentum.quiet.fourDays", "active on four or fewer of the last fourteen days") {
@@ -94,6 +114,22 @@ internal object MomentumRules {
             window("momentum.quiet.notEmpty", "active on at least one, so no day count renders as zero") {
                 it.window.activeDays >= 1
             },
+            // **A fortnight family may not speak before a fortnight exists.**
+            //
+            // Without this, a three day old install reads "A still fortnight",
+            // which describes eleven days that had not happened. The window is
+            // always fourteen days wide, so `window.dayCount` cannot catch it; only
+            // the install age can. Found by the phase 7 builder on a fresh install
+            // probe rather than by a test, because every fixture in the suite had
+            // history behind it.
+            //
+            // This is the same requirement Addendum 01 7d states for every
+            // reflective surface, and CLARITY_LOGIC_ENGINE 1's line about one
+            // off number destroying the credibility of everything else applies
+            // exactly: a person on day three would have been told something plainly
+            // untrue about their own fortnight, on the first screen that ever spoke
+            // to them.
+            fortnightOfHistory(),
             window("momentum.quiet.fullWindow", "there are fourteen days to have been quiet across") {
                 it.window.dayCount >= FORTNIGHT_HORIZON
             },
@@ -103,6 +139,7 @@ internal object MomentumRules {
                 subject != null && subject.id in facts.rollup.dormantReturnedAreaIds
             },
             areaHasEvents(),
+            fortnightOfHistory(),
         )),
         surface("momentum.balancedWeek", Purpose.MOMENTUM_HEADLINE, "balancedWeek", FORTNIGHT_HORIZON, criteria = listOf(
             window("momentum.balanced.areas", "three or more areas were active") { it.rollup.areasWithEvents >= 3 },
@@ -110,6 +147,7 @@ internal object MomentumRules {
                 it.rollup.dominantShare < 0.50
             },
             shareFloor(5),
+            fortnightOfHistory(),
         )),
         surface("momentum.singleAreaWeek", Purpose.MOMENTUM_HEADLINE, "singleAreaWeek", FORTNIGHT_HORIZON, Subjects.AREA, criteria = listOf(
             area("$SHARE_READING_PREFIX.momentum.single", "this area holds seventy percent of the window or more") {
@@ -117,6 +155,7 @@ internal object MomentumRules {
             },
             areaShareFloor(4),
             shareFloor(4),
+            fortnightOfHistory(),
         )),
         surface("momentum.strongPace", Purpose.MOMENTUM_HEADLINE, "strongPace", AVERAGE_HORIZON, criteria = listOf(
             window("momentum.pace.aboveAverage", "completions are clearly above the recent weekly average") {

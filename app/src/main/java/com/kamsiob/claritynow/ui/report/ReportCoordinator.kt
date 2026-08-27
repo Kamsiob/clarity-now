@@ -1,0 +1,290 @@
+package com.kamsiob.claritynow.ui.report
+
+import androidx.compose.runtime.Immutable
+import com.kamsiob.claritynow.data.repo.ClarityRepository
+import com.kamsiob.claritynow.domain.ClarityClock
+import com.kamsiob.claritynow.domain.engine.FactExtractor
+import com.kamsiob.claritynow.domain.engine.FiringHistory
+import com.kamsiob.claritynow.domain.engine.catalog.ClarityCatalog
+import com.kamsiob.claritynow.domain.engine.realize.Measures
+import com.kamsiob.claritynow.domain.parseDateKey
+import com.kamsiob.claritynow.domain.pulse.CorpusSource
+import com.kamsiob.claritynow.domain.query.TrailQueries
+import com.kamsiob.claritynow.domain.replay.ReportState
+import com.kamsiob.claritynow.domain.report.ReportOutcome
+import com.kamsiob.claritynow.domain.report.ReportComposer
+import com.kamsiob.claritynow.domain.report.ReportLanguage
+import com.kamsiob.claritynow.domain.report.ReportSchedule
+import com.kamsiob.claritynow.domain.report.ReportWeek
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import java.time.LocalDate
+import java.time.ZoneId
+
+/**
+ * One day of the week ribbon. `design-v3.md` 11.1 item 4.
+ *
+ * [count] is `TrailQueries.eventsPerDay` for this local calendar day and there is no other
+ * path to it. The mark's height and opacity are that count against [WeekRibbon]'s busiest,
+ * which is the whole of what the ribbon draws.
+ *
+ * **There is no field here that relates one day to the next**, which is deliberate and is
+ * the same guard `PulseMark` carries: no run length, no "days since", no consecutive count.
+ * `design-v3.md` 14 forbids streaks and `FactSet` has no streak fact by construction, so
+ * the surface that would reintroduce one by eye is handed seven independent days and
+ * nothing that joins them.
+ */
+@Immutable
+data class RibbonDay(val date: LocalDate, val count: Int)
+
+/**
+ * What one generation produced, with everything the screen draws around it.
+ *
+ * [outcome] is null only when the corpus could not be read, which costs every sentence and
+ * leaves [ribbon] intact: the marks are counted from the log and need no language at all,
+ * so a packaging fault must not take the whole tab down with it. [languageFailure] says
+ * why, so a month of silent Reports cannot be mistaken for a month with nothing to say.
+ */
+@Immutable
+data class ReportGeneration(
+    val week: ReportWeek,
+    val ribbon: List<RibbonDay>,
+    val outcome: ReportOutcome?,
+    val languageFailure: String?,
+)
+
+/**
+ * One past report, as the History page renders it. `MASTER_BUILD_PROMPT.md` 12.3.
+ *
+ * Every string here was written by the engine and stored on `REPORT_GENERATED`. Nothing on
+ * that page composes a sentence and there is no field for one that could be composed.
+ *
+ * **[headline] is null for every report this build can store, and that is a gap rather
+ * than a design.** `ReportGenerated` carries `headlineKey` and `headlineVariantKey` and
+ * does not carry the headline's rendered text, while `renderedSections` carries the text of
+ * every observation. `design-v3.md` section 5 gives past report headlines the display role,
+ * so the page has a treatment for a string the payload cannot supply. See the note in
+ * `ReportHistoryPage`.
+ */
+@Immutable
+data class PastReport(
+    val weekStartKey: String,
+    val weekStart: LocalDate?,
+    val headline: String?,
+    val sections: List<String>,
+    val ribbon: List<RibbonDay>,
+    /**
+     * The three numbers this report's own caption stated, by measure id.
+     *
+     * Read back out of `REPORT_GENERATED`'s fact snapshot under the same `FactRef` the
+     * caption was rendered from, rather than counted again now. A past report states what
+     * it stated: re-querying would let a row show a number the report itself never
+     * carried, which is the failure `CLARITY_LOGIC_ENGINE.md` 9.2's map exists to prevent,
+     * moved a week later where nobody would ever catch it.
+     */
+    val totals: Map<String, Int>,
+)
+
+/**
+ * The Report lifecycle, wired. `MASTER_BUILD_PROMPT.md` 11.3 and 12.3.
+ *
+ * Everything impure about the surface is here: the clock, the log and the corpus text.
+ * `ReportComposer` holds the composition rules and can be tested with no Android and no
+ * database; this holds the plumbing and cannot. It is the same split `PulseCoordinator` and
+ * `PulseGenerator` already make, and the same one `MomentumCoordinator` makes.
+ *
+ * ## It is in `ui.report` and it belongs in `domain.report`
+ *
+ * Recorded rather than hidden, because the two files it would sit beside are already
+ * written. `PulseCoordinator` is in `domain.pulse` and `MomentumCoordinator` is in
+ * `domain.momentum`, and this is the third of exactly the same thing. It is here because
+ * `domain/report/` was outside the file list this slice was given, and moving it is a
+ * package line and an import. Nothing about it depends on Android, which is what makes the
+ * move free.
+ *
+ * ## Step 9 is not here, and nothing else fills in for it
+ *
+ * 11.3's sequence ends `9. Write REPORT_GENERATED, and PLAN_OFFERED if a plan was
+ * produced`, and that step belongs to `ClarityRepository`, which is the only writer in the
+ * app and which has no method for it yet. So this composes and does not persist, and three
+ * things follow that a later session must not mistake for design decisions:
+ *
+ * - **The cadence cannot be satisfied.** 12.3 generates on the first open in a new week
+ *   and [isDue] asks the log exactly that question, correctly, against
+ *   `ReportWeek.currentWeekStartMillis`. With nothing writing the event it always answers
+ *   true, so the report is composed on every open. It is deterministic, so a person sees
+ *   the same page every time, but it is not the specified cadence
+ * - **`FiringHistory` never learns what the Report said.** The ninety day variant exclusion
+ *   and the fourteen day family cooldowns are rebuilt from `REPORT_GENERATED` events, so
+ *   until one is written the Report cannot vary itself week to week
+ * - **Past reports are empty.** [pastReports] reads the projection, which is fed by the
+ *   log, which is the right way round and has nothing in it
+ *
+ * ## The catalog is built here, and it is the third one in the process
+ *
+ * `MASTER_BUILD_PROMPT.md` 11.7 wants one for the process and this makes a third, for the
+ * reason `MomentumCoordinator` states at length about the second: the one lazy binding that
+ * would serve all three belongs in `ClarityGraph`, which no surface phase has owned. The
+ * cost is one extra parse of three files, on a background dispatcher, the first time this
+ * tab is opened.
+ */
+class ReportCoordinator(
+    private val repository: ClarityRepository,
+    private val clock: ClarityClock,
+    private val corpus: CorpusSource,
+) {
+
+    private val catalogLock = Mutex()
+    private var cached: ClarityCatalog? = null
+    private var failure: String? = null
+
+    /**
+     * One report for the trailing seven days ending today. 11.3 steps 1 to 6.
+     *
+     * **Recalculated on every call**, per 12.3, which is also what makes regenerate a call
+     * to this and nothing else. The firing history is rebuilt from the whole log every
+     * time, per 11.7: caching it is how two devices holding one log start disagreeing.
+     */
+    suspend fun generate(): ReportGeneration {
+        repository.load()
+        val zone = clock.zone()
+        val now = clock.nowMillis()
+
+        // 1. The window, and the week the cadence counts against. Two different questions,
+        // and `ReportSchedule` exists to keep them apart.
+        val week = ReportSchedule.weekAt(now, zone)
+        val queries = TrailQueries(repository.allEvents(), zone)
+        val ribbon = ribbonOf(queries, week)
+
+        val catalog = catalogOrNull()
+            ?: return ReportGeneration(week, ribbon, outcome = null, languageFailure = failure)
+
+        // 2 to 6. Extraction folds the whole log and composition realizes and validates
+        // every line, so both run off the main thread. Neither touches Android.
+        val outcome = withContext(Dispatchers.Default) {
+            val facts = FactExtractor(queries).extract(week.window)
+            val history = FiringHistory.from(queries, now)
+            ReportComposer(catalog, zone).compose(facts, history, week.weekStartKey)
+        }
+        return ReportGeneration(week, ribbon, outcome, languageFailure = null)
+    }
+
+    /**
+     * Whether 12.3's cadence says a report is due: no `REPORT_GENERATED` since local
+     * midnight on the Sunday that began this week.
+     *
+     * Asked of the log rather than of a stored flag, so it cannot disagree with itself and
+     * so a merged log answers it correctly. Every event carries its wall clock, which is
+     * why this needs no field on the payload.
+     *
+     * **It always answers true today**, because nothing writes the event. See the class
+     * note. It is written now so that the cadence is already correct on the day the writer
+     * lands rather than being derived a second time by whoever adds it.
+     */
+    suspend fun isDue(): Boolean {
+        repository.load()
+        val zone = clock.zone()
+        val week = ReportSchedule.weekAt(clock.nowMillis(), zone)
+        val queries = TrailQueries(repository.allEvents(), zone)
+        return queries.reportsGeneratedBetween(week.currentWeekStartMillis, Long.MAX_VALUE).isEmpty()
+    }
+
+    /**
+     * Every report ever written, newest first. 12.3: past weeks remain forever.
+     *
+     * Read from the projection, which is folded from the log, so a report survives a cache
+     * rebuild and an import for the same reason every other row does.
+     */
+    suspend fun pastReports(): List<PastReport> {
+        repository.load()
+        val zone = clock.zone()
+        val stored = repository.state.value.reports.values.sortedByDescending { it.generatedAt }
+        if (stored.isEmpty()) return emptyList()
+        val queries = TrailQueries(repository.allEvents(), zone)
+        return stored.map { report -> pastReportOf(report, queries, zone) }
+    }
+
+    // ------------------------------------------------------------------ the ribbon
+
+    /**
+     * The seven marks, counted from the log.
+     *
+     * `eventsPerDay` buckets by local calendar day in the facade's own zone rather than by
+     * dividing milliseconds, so the week the clocks change still has seven days in it. A
+     * day with no activity is present with a count of nought rather than missing: the
+     * ribbon draws it at its floor, and a mark that vanished would make a quiet Tuesday
+     * look like a broken row.
+     */
+    private fun ribbonOf(queries: TrailQueries, week: ReportWeek): List<RibbonDay> {
+        val counts = queries.eventsPerDay(week.window.fromMillis, week.window.toMillis)
+        val first = parseDateKey(week.weekStartKey)
+        return (0 until ReportSchedule.WINDOW_DAYS).map { offset ->
+            val date = first.plusDays(offset.toLong())
+            RibbonDay(date = date, count = counts[date.toString()] ?: 0)
+        }
+    }
+
+    private fun pastReportOf(report: ReportState, queries: TrailQueries, zone: ZoneId): PastReport {
+        val start = runCatching { parseDateKey(report.weekStartKey) }.getOrNull()
+        val window = start?.let { first ->
+            val from = first.atStartOfDay(zone).toInstant().toEpochMilli()
+            val to = first.plusDays(ReportSchedule.WINDOW_DAYS.toLong())
+                .atStartOfDay(zone).toInstant().toEpochMilli()
+            val counts = queries.eventsPerDay(from, to)
+            (0 until ReportSchedule.WINDOW_DAYS).map { offset ->
+                val date = first.plusDays(offset.toLong())
+                RibbonDay(date = date, count = counts[date.toString()] ?: 0)
+            }
+        }
+        return PastReport(
+            weekStartKey = report.weekStartKey,
+            weekStart = start,
+            // Not on the payload. See the note on `PastReport`.
+            headline = null,
+            sections = report.sections.map { it.text },
+            ribbon = window.orEmpty(),
+            totals = totalsOf(report),
+        )
+    }
+
+    /**
+     * The caption's three numbers as this report recorded them.
+     *
+     * `Measures` resolves each id to the `FactRef` it was read under, and the snapshot on
+     * the event is keyed by that reference's string form. A measure the snapshot does not
+     * carry is simply absent, exactly as a total of nought is absent on a fresh report.
+     */
+    private fun totalsOf(report: ReportState): Map<String, Int> =
+        ReportLanguage.CAPTION_MEASURES.mapNotNull { id ->
+            val ref = Measures.byId(id)?.refFor(null) ?: return@mapNotNull null
+            val value = report.factSnapshot[ref.toString()]?.toIntOrNull() ?: return@mapNotNull null
+            id to value
+        }.toMap()
+
+    // ------------------------------------------------------------------ the catalog
+
+    /**
+     * The catalog, built once for the process, or null with [failure] set to why.
+     *
+     * Held as a field rather than thrown, for the reason both other coordinators give: the
+     * caller wants to render everything that does not need language.
+     */
+    private suspend fun catalogOrNull(): ClarityCatalog? = catalogLock.withLock {
+        cached?.let { return@withLock it }
+        try {
+            val text = corpus.read()
+            ClarityCatalog.build(text.pulse, text.report, text.momentum).also {
+                cached = it
+                failure = null
+            }
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (cause: Exception) {
+            failure = "${cause::class.java.simpleName}: ${cause.message ?: "no detail"}"
+            null
+        }
+    }
+}

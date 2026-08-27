@@ -53,7 +53,9 @@ import com.kamsiob.claritynow.ui.components.TAB_REPORT
 import com.kamsiob.claritynow.ui.components.TAB_TRAIL
 import com.kamsiob.claritynow.ui.components.rememberClarityTabs
 import com.kamsiob.claritynow.ui.focus.FocusRoute
+import com.kamsiob.claritynow.ui.momentum.MomentumRoute
 import com.kamsiob.claritynow.ui.pulse.PulseRoute
+import com.kamsiob.claritynow.ui.report.ReportRoute
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.TabEntrance
@@ -206,7 +208,21 @@ fun ClarityShell(focusRequest: Long, modifier: Modifier = Modifier) {
                             TrailRoute(viewModel = trailViewModel)
                         }
 
-                        TAB_MOMENTUM, TAB_REPORT -> UnderConstruction()
+                        // Phase 7. The tab's own ViewModel is resolved inside the route,
+                        // against the Activity's store, so this branch is the whole of the
+                        // wiring. TabEntrance above is what makes the dot cascade and the
+                        // number roll fire once per session, per design-v3.md 8.4.
+                        TAB_MOMENTUM -> MomentumRoute()
+
+                        // Phase 8. Like Momentum, the tab's own ViewModel is resolved
+                        // inside the route against the Activity's store, so this branch is
+                        // the whole of the wiring. **The Report reveal is deliberately not
+                        // driven by TabEntrance above.** design-v3.md 8.4 makes it the one
+                        // entrance that re-arms on a content change as well as on a session
+                        // change, which needs a key TabEntrance has none of and says so in
+                        // its own documentation, so ReportViewModel holds it instead.
+                        TAB_REPORT -> ReportRoute()
+
                         else -> UnderConstruction()
                     }
                 }

@@ -71,6 +71,587 @@ The old entry stays where it is, wrong, dated, and useful.
 
 ---
 
+## August 27, 2026: the open choices in the Report and the checkpoint
+
+Phase 8, issue #6. `MASTER_BUILD_PROMPT.md` 6.4, 11.3 and 12.3, `design-v3.md` 8.2, 8.3,
+8.4, 11.1 and 16.7, `CLARITY_LOGIC_ENGINE.md` 8 and 9, and `CORPUS_2_REPORT.md` 5, 6 and
+7. Fifteen things those documents leave to the builder, settled here under `design-v3.md`
+15, plus two that are not a builder's to settle and are recorded as open.
+
+**This screen is read 52 times a year and it only has to be caught being wrong once.**
+12.3 calls data integrity the prime directive and says why it does not degrade gracefully:
+one fabricated area name or one off by one number permanently destroys the credibility of
+everything else the app says, and the person reading it has no way to verify anything
+afterwards. Several entries below therefore choose the more expensive option, and the
+reason is always the same one. Slow is a fine outcome. Wrong is not.
+
+### The window is the seven completed days before today
+
+**Decided.** `[startOfDay(today - 7), startOfDay(today))`. Today is not in the report it
+appears on. Implemented in `domain/report/ReportSchedule.kt`.
+
+**Why.** 12.3 says "trailing 7 days ending today" and both readings are defensible. The
+other one includes today so far, and it costs something a reader can see: 11.1 draws the
+week as seven marks whose height is that day's activity against the busiest, and a day
+three hours old drawn beside six whole ones is a claim about a day that is not over. It is
+also the shape the Pulse already uses before 17:00, where the reflection period is
+yesterday, whole, and it is the window the simulator has generated a year of reports
+against since phase 5, so choosing the other reading would have quietly invalidated that
+baseline.
+
+**Considered and rejected: today so far, marked as partial on the ribbon**, which is a
+seventh treatment on a page allowed four and a legend on a graphic that 11.1 forbids
+values on.
+
+**Revisit if** a person reads the report on a Sunday evening and finds the day they just
+spent absent from it. The answer then is the cadence, not the window.
+
+### The cadence is asked of the log, and it asks about the calendar rather than the window
+
+**Decided.** A report is due when no `REPORT_GENERATED` event has been written since local
+midnight on the Sunday that begins this week. No stored flag, no field on the payload.
+Implemented in `domain/report/ReportSchedule.kt` and `ui/report/ReportCoordinator.kt`.
+
+**Why.** "Generated on first open in a new week" is a question about the calendar and "the
+trailing seven days" is a question about the window, and on any day but Sunday they name
+different spans. Keying the cadence on the window's first day is the obvious shortcut and
+it gives a person who opened the app on Wednesday and again on Friday two reports in one
+week, because the trailing seven days had moved. Asking the log means the answer cannot
+disagree with itself, survives a merge, and needs no extra state, which `CLAUDE.md` rule 6
+would have made a hazard.
+
+**Considered and rejected: a `lastReportWeek` key in DataStore**, which is engine state
+living outside the log and would let two devices holding one log disagree about whether a
+week had been reported.
+
+**Revisit if** the report ever needs to be generated on a day the app is not opened. That
+is a scheduled job and a different question.
+
+### The caption beneath the ribbon states events, completions and additions
+
+**Decided.** Those three, in that order, each read through a `FactRef` out of the report's
+own consistency map rather than counted again. A total of nought is absent rather than
+stated. Implemented in `domain/report/ReportLanguage.kt` and `ui/report/ReportScreen.kt`.
+
+**Why.** 11.1 asks for one caption line reading the three headline numbers, so that the
+ribbon is never the sole carrier of a claim, and does not say which three. The first is
+what the ribbon draws and the second and third are the flow most of the report's own
+families are about, so the caption states what the picture shows and what the prose keeps
+returning to.
+
+**Considered and rejected: completions, focus minutes and a percentage**, which is what a
+weekly summary looks like everywhere else and which 15.1 warns about by name. Two of those
+three are about effort rather than about the week, and a percentage in a caption invites
+the reader to compare it against a target this app deliberately does not have.
+
+**Revisit if** the ribbon's caption and the prose above it start reading as the same
+sentence twice. The map already prevents them disagreeing; it does not prevent them
+repeating.
+
+### Three sideheads, and the mapping is made once at composition
+
+**Decided.** `What you said` holds the two families that quote a stored Pulse answer,
+`Focus` holds the focus families, and `Your week, honestly` holds everything else. The
+section is decided by the composer, not by the screen. Implemented in
+`domain/report/ClarityReport.kt`.
+
+**Why.** 11.1 names the three labels and does not say which observation is read under
+which. Two name themselves. The obvious answer was one section holding everything, which
+is what the corpus's own section 2 looks like on the page, and it loses because the report
+is a page of prose read 52 times a year: three sideheads are the only structure it has for
+a reader to skim, and the two that are not the general one are exactly the two a person
+would look for. The mapping is at composition rather than on the screen because it decides
+the reading order, and the reading order is what the length band rule and the parallel
+clause cap are applied against.
+
+**Considered and rejected: letting the screen group them**, which would let a screen
+re-sort a list the composer had already spread to keep two mentions of one area apart.
+
+**Revisit if** a fourth kind of observation arrives that is neither a callback nor about
+focus and is clearly not "your week". Then it is a fourth sidehead, not a reshuffle.
+
+### A quiet day keeps its mark, at a floor, and the scale is linear
+
+**Decided.** Ribbon mark heights run from a floor to 44dp and opacities from half strength
+to full, both linearly, at a fixed gap rather than distributed across the measure.
+Implemented in `ui/report/WeekRibbon.kt`.
+
+**Why.** 11.1 gives the mark's width and radius and says height and opacity scale against
+the busiest day. It does not say what a day with nothing in it looks like, and the obvious
+answer is nought, which draws an empty Tuesday as no mark at all. A row with a hole in it
+reads as broken rather than as calm, and it makes the absence of activity the loudest thing
+on the page, which is the one thing this app never does with a quiet day. Half strength
+gold measures 3.0 to one against `deepBlack`, which is 16.7's floor for a graphic and the
+same floor the Pulse rhythm row arrived at. The gap is fixed because 11.1 asks the ribbon
+to repeat at 60 percent scale, and a row stretched to whatever width it is given cannot be
+scaled, only re-flowed.
+
+**Considered and rejected: a square root scale**, which would make a quiet day look busier
+than it was. That is a flattering lie rather than an unobvious answer, and 15 asks for the
+second thing and not the first.
+
+**Revisit if** a week with one busy day and six quiet ones reads as six equal days on the
+device. The floor is the number to move, and it cannot go below the 3.0 ratio.
+
+### The pattern break changes the optical size and leaves the point size alone
+
+**Decided.** Newsreader at `opsz` 28, at `bodySerif`'s own 17sp, weight and line height
+copied off the theme at the call site. Implemented in `ui/report/ReportBlocks.kt`.
+
+**Why.** 11.1 says "set in Newsreader at opsz 28 rather than 17" and `bodySerif` in 5.3 is
+"Newsreader 17, opsz 17", where the two numbers happen to be equal. So the instruction
+reads either as change the axis or as change both, and it names only the axis. Changing
+the axis alone invents no number, and `CLAUDE.md` is explicit that every dimension is
+stated in dp in `design-v3.md` and that nothing may take a number from anywhere else. A
+display cut set on a narrower measure over a gold ground between two full bleed rules is
+legible as a difference without the paragraph shouting.
+
+**Considered and rejected: 28sp at opsz 28**, which is larger than the sideheads and would
+make the pattern the second loudest thing on a page whose loudest thing is the headline.
+
+**Revisit if** the owner's glance on the device says the band does not read as a break.
+This is the one number in 11.1 that reads two ways and it is worth looking at.
+
+### The reveal's start times, and the stagger stops growing after five blocks
+
+**Decided.** Eyebrow at 0, headline at 140, ribbon at 380, sections at 780, with the
+section stagger capped at five steps. The last block on the longest page settles at
+1,380ms. Implemented in `ui/report/ReportReveal.kt`.
+
+**Why.** 8.2 item 12 gives the ribbon's 45ms per day, the sections' 90ms stagger and the
+1.4 second ceiling, and leaves the start times open. The obvious answer is to stagger
+everything, and it breaks the one number that entry states as a limit: a report carrying a
+first week note, three sideheads, a pattern, a closing line and a footer is eight blocks,
+which at 90ms puts the last one 720ms behind the first and the whole reveal past 1.7
+seconds. Capping the stagger keeps a long report from being slower to read than a short
+one, and nobody can see a cap as a fault.
+
+**Considered and rejected: shortening the per block stagger as the page grows**, which
+makes the same animation run at a different speed on different weeks, for a reason the
+person cannot see.
+
+**Revisit if** the ceiling in 8.2 changes. The table in the file is written so the arithmetic
+can be redone rather than re-derived.
+
+### No specks of light here, and the two lights do not follow the content
+
+**Decided.** `deepBlack` with two fixed radial glows, one behind the headline and a fainter
+one behind the closing line, both anchored to where those elements sit when the page is at
+rest. No star field. Implemented in `ui/report/ReportBackdrop.kt`.
+
+**Why.** Two rules meet here and the more specific one wins. 3.3 gives the Contemplative
+world eight to fourteen specks and both other Contemplative surfaces take them; 11.1 says
+four treatments and no more than four and calls the week ribbon the only non-text element
+in the entire report. A field of specks is a fifth treatment and a second non-text element.
+This is the unobvious answer, since every other Contemplative surface in this app has
+stars, and the surface is lit rather than decorated. The lights are fixed for the reason
+3.3 already gave the Focus surface in the same words: a light that moved when the content
+changed would make the room itself feel like it had moved, and on a short report a light
+chasing a scrolling headline would follow it off the top of the screen.
+
+**Considered and rejected: specks at a lower count**, which is the same fifth treatment
+with a smaller number on it.
+
+**Revisit if** the device check says the page reads as flat beside the Pulse and the Focus
+surfaces. The first move is the glow's reach, not a star field.
+
+### Exactly one checkpoint row survives, and every checkpoint is a full rebuild
+
+**Decided.** The snapshot table holds one row. It is written from a fold of the whole log,
+compared against the state the app is running on, and a disagreement writes nothing and
+clears what is stored. Implemented in `data/repo/ClarityRepository.kt`.
+
+**Why.** A row per week accumulating forever is the obvious answer and it is wrong twice
+over: nothing reads any checkpoint but the newest, each row is a serialized copy of
+everything the person owns, and anything that ever did read an older one to say what a past
+week held would be engine state living outside the log, which `CLAUDE.md` rule 6 forbids.
+Past reports are what remain forever, in `clarity_report`, and they are a different table
+for a different reason. Taking the checkpoint from the live projection would be one line
+shorter and would carry any error the projection had picked up, and carry it forever,
+because the next checkpoint resumes from this one and there is no later check that finds
+it. The event log is the truth, so the checkpoint is taken from the event log.
+
+**Considered and rejected: keeping a checkpoint per week for a history feature**, which is
+the reason somebody would propose it and is exactly the use `CLAUDE.md` rule 6 rules out.
+
+**Revisit if** a cold start with a year of events becomes slow enough to notice with only
+one checkpoint. The answer then is how often one is taken, not how many are kept.
+
+### Resuming is decided by a count, not by looking at the two ends of the log
+
+**Decided.** `ClarityReplay.canResume` answers true only when the log holds exactly as many
+events at or before the checkpoint's position as the checkpoint state was folded from, and
+the event it was taken at is still there. One rule, two callers: a list for the harness and
+three bounded SQL queries for the cold start.
+
+**Why.** A checkpoint is the fold of a prefix of the total order, so resuming is correct
+only while the log still begins with that exact prefix. The obvious check compares the ends:
+the newest event sorts at or after the position and the position is in the log. That passes
+on a merged log that inserted three events before the checkpoint, and `replayFrom` then
+drops all three as already folded in when they never were. Nothing looks wrong afterwards.
+The numbers are just smaller, forever. The count catches it because a prefix that grew by
+three no longer matches what the checkpoint was folded from.
+
+**Considered and rejected: relying on the merge path to clear checkpoints**, which it does,
+and which was left in place. The point of stating the rule as a count is that forgetting
+costs a slow cold start rather than a wrong one.
+
+**Revisit if** the count query ever becomes expensive. It is one aggregate today and the
+alternative is a stored event count, which is state outside the log.
+
+### A parallel numeric clause is a lead rendering two or more numbers
+
+**Decided.** The 7.4b cap counts a lead as parallel when it renders two or more numbers, not
+when it contains one. Implemented in `domain/report/ReportComposer.kt`.
+
+**Why.** `CLARITY_LOGIC_ENGINE.md` 7.5 and `CORPUS_2_REPORT.md` 7.4b forbid three parallel
+numeric clauses in a row and neither says what one is. The obvious reading is any lead
+carrying a number, and it is wrong in a way that would have been hard to find afterwards:
+nearly every observation in this corpus carries one number, so capping runs of them at two
+would silently drop the third and fourth observation of almost every report, and the reports
+would get quietly shorter with nothing failing. The shape the corpus actually writes is one
+number set against another inside one sentence, "You added 9 things and finished 6", and
+three of those in a row is the three part list at the only scale a composer can see it.
+
+**Considered and rejected: re-realizing the third at a different length**, which is the other
+resolution 7.5 offers and which needs the bench. The composer holds finished sentences, so it
+drops.
+
+**Revisit if** phase 9 grows the corpus enough that reports start reading as a run of single
+number sentences. The cap is then the wrong instrument and the register balance is the right
+one.
+
+### Observations are grouped by section, and the band rule is re-applied as a preference
+
+**Decided.** The composer arranges the observations into 11.1's section order and, inside a
+section, prefers the highest ranked line whose length band is not the one just used. Where
+every remaining line in a section shares the band, the highest ranked one is taken anyway.
+Implemented in `domain/report/ReportComposer.kt`.
+
+**Why.** Rank order is what the engine returns and it is one plausible reading of the design.
+It has a defect that only shows on the page: three observations can arrive as general, focus,
+general, and the screen then draws `Your week, honestly` twice with `Focus` between them. A
+repeated sidehead reads as a bug, and the sideheads are the only structure a page of prose
+has. Grouping can then put two leads of one band together, so the rule is applied again over
+the order the page is actually read in. It is a preference rather than a veto because
+`MASTER_BUILD_PROMPT.md` 11.4 forbids padding a section to reach a minimum, and dropping a
+true observation to improve the cadence is the same trade in the other direction. Rhythm is
+worth a line, not a paragraph.
+
+**Considered and rejected: dropping the observation whose band collides**, which is the
+literal reading of `CLARITY_LOGIC_ENGINE.md` 7.5 and which trades something true for
+something pleasant.
+
+**Revisit if** phase 9 grows the benches and the collisions do not fall. The corpus is the
+instrument that fixes this, and the measured number is one of the six phase 5 gates phase 9
+is judged against.
+
+### The regenerate wait is a shimmer, and 12.3's word for it is not the one that wins
+
+**Decided.** A placeholder shimmer in the shape of the headline, on the headline block only,
+with the percentage inverted for a dark ground. Nothing else on the page moves. Implemented
+in `ui/report/ReportBlocks.kt`.
+
+**Why.** 12.3 calls it a spinner. `design-v3.md` 8.2 item 22 is one sentence long and says
+placeholder shimmer, 4 percent ink moving slowly, never a spinner. `CLAUDE.md`'s authority
+order gives anything visual to `design-v3.md`, so the two documents settle it between
+themselves and this needed no owner. The percentage is the one number chosen here: 4 percent
+ink is a pale grey on the Daylight canvas and is invisible on `deepBlack`, so the same
+relationship is inverted into a low band with a brighter one traveling through it.
+
+**Considered and rejected: nothing at all**, since 12.3 also says regenerating is near
+instant. A control that produces no acknowledgment reads as a control that did not work.
+
+**Revisit if** the regeneration turns out to be fast enough on the device that the shimmer
+never completes one pass. A wait indicator that flashes is worse than none.
+
+### The report scope veto is its own state, and it is never shown as the empty state
+
+**Decided.** Four states: a composed report, the styled empty state from `CORPUS_2_REPORT.md`
+6.1, a withheld state when the integrity layer refused, and an unavailable state when the
+corpus could not be read. The last two are fixed `strings.xml` copy about the app, carry no
+number, and say nothing about the person. Implemented in `ui/report/ReportViewModel.kt` and
+`ui/report/ReportScreen.kt`.
+
+**Why.** `Nothing to report yet` is a corpus line and a true sentence about a week in which
+nothing happened. It is a false sentence about a week the app could not prove its arithmetic
+for, and showing it there would be the app telling somebody their week was empty because the
+app had a fault. 12.3's prime directive is the reason the veto exists and it is not served by
+lying about why it fired.
+
+**Considered and rejected: showing the last good report instead**, which puts a stale week
+under this week's eyebrow, and is the same failure with a date on it.
+
+**Revisit if** the withheld state ever fires in ordinary use. It should not: the composer
+applies every rule while it assembles and the property test asserts that no report it builds
+is refused by its own integrity layer.
+
+### Open, and not a builder's to settle: three Addendum 01 items this phase was given
+
+**The recommendation, stated and not taken.** Build order 19 assigns phase 8 the week long
+Report suppression after a return (14b.4), capacity aware decline detection and its cyclical
+persona test (14b.9), and the estimate calibration facts, their floor and the delta veto
+(14b.8). **None of the three landed.** All three are fact extraction and rule criteria in
+`domain.engine`, none of them is a screen change, and none has a fact behind it in
+`domain/engine/facts/` today.
+
+They are recorded here rather than moved, because two of the three are refusals rather than
+additions: a person returning after a fortnight can be told about the gap by the first report
+they open, and a person whose activity is cyclical can be told they are declining when they
+are not. **A refusal that nobody is holding ships as its opposite**, and neither has a
+failing test today because there is nothing yet to fail.
+
+The recommendation is that they go to phase 9 rather than to a phase of their own, because
+14b.10's tone pass is already there and all four are the same audience protection, and
+because 14b.8's delta veto and the corpus lines it governs cannot sensibly be built a phase
+apart. **The owner's call.**
+
+### Open, and not a builder's to settle: what a past report's headline is
+
+**The recommendation, stated and not taken.** `design-v3.md` section 5 gives past report
+headlines the display role. `ReportGenerated` carries `headlineKey` and `headlineVariantKey`
+and does not carry the headline's rendered text, while `renderedSections` carries the text of
+every observation. So the History page has a treatment for a string the payload cannot
+supply, and a row leads with its week and its ribbon instead.
+
+Re-realizing the variant from the corpus would be a second path to a sentence, which
+`CLAUDE.md` rule 8 closes, and the facts of that week are gone in any case. The
+recommendation is one more string on the payload, beside the sections that already carry
+their rendered text, added by the same phase that adds the write. **It is a schema change
+to a committed event format, `docs/EVENT_FORMAT.md`, which is why it is the owner's call
+rather than a builder's.**
+
+---
+
+## August 27, 2026: the open choices in Momentum and the Areas banner
+
+Phase 7, issue #5. `MASTER_BUILD_PROMPT.md` 11.2, 11.3 and 12.2, `design-v3.md` 3.4, 8.2,
+8.3, 8.4, 10.2, 11, 13 and 16.2, `CLARITY_LOGIC_ENGINE.md` 6.5, and `CORPUS_3_MOMENTUM.md`.
+Nine things those documents leave to the builder, settled here under `design-v3.md` 15.
+
+**This is the calmest screen in the Daylight world and it is the one where rule 8 is
+easiest to cross.** One sentence on it comes from the engine and everything under that is a
+number the log was asked for, drawn as a dot, a tile, a figure or a mark, with its label out
+of `strings.xml`. A caption reading "a strong week" under a figure would be an observation
+written in a composable, and there is not one anywhere on the screen. Several entries below
+are about keeping a number a number.
+
+### The tiles are a three column grid
+
+**Decided.** Three columns at the 20dp screen padding, wrapping. Implemented in
+`ui/momentum/MomentumScreen.kt`.
+
+**Why.** `design-v3.md` 11 asks for area tiles and gives them a corner radius and nothing
+else. The two obvious answers both cost something specific. A horizontally scrolling row
+hides areas off the edge of the one screen whose job is to show all of them at once. A four
+column grid makes the tile small enough that 3.4's "one place where an area color gets real
+presence" stops being true. Three columns give a tile wide enough to read as a block of the
+person's own color, and five areas, which section 11 calls a comfortable screenful, fill two
+rows with the second one short, which is what a mosaic looks like rather than what a table
+looks like.
+
+**Considered and rejected: sorting the tiles by how busy each area was**, which would turn
+an identity mosaic into a leaderboard. They follow the order the person arranged, which is
+the order the Areas screen uses, because two screens showing the same things in two orders
+is two apps.
+
+**Revisit if** somebody with twelve areas finds the block dominating the screen. The answer
+then is the tile's height, not the column count.
+
+### The three This Week figures are completions, minutes focused and items added
+
+**Decided.** Those three, in that order. Implemented in `domain/momentum/MomentumComposer.kt`
+and `domain/momentum/MomentumView.kt`.
+
+**Why.** 12.2 asks for three typographic stats and does not name them. The obvious three are
+completed, added and areas active, and two of those lose. The tiles directly above already
+say which areas moved, so a figure repeating it is the same fact twice on one screenful. And
+the lifecycle order, added then completed, opens the screen on a number that goes up every
+time somebody has an idea, which is the wrong first thing for this audience to read about
+their week. What is left is output, attention and intake, which are the three axes the
+engine's own families read and none of which is drawn anywhere else on the page.
+
+**Considered and rejected: a fourth figure**, which 12.2 rules out by saying three, and
+which would have been areas active in every proposal.
+
+**Revisit if** focus sessions turn out to be rare enough in real use that the middle figure
+is usually zero. It carries a discovery line while the feature has never been used, which
+is a different case from a quiet week.
+
+### An unused feature is a lifetime question, never a weekly one
+
+**Decided.** A figure renders dimmed with a discovery line only when the feature behind it
+has never been used in the whole log. A zero this week is a zero. Implemented in
+`domain/momentum/MomentumComposer.kt`.
+
+**Why.** 12.2 asks for an unused feature to render dimmed with a soft discovery line rather
+than be hidden. The obvious implementation asks the week, and it is worse than saying
+nothing: telling somebody who finished nine things last week what completing is reads as the
+app not knowing them. Intake carries no flag at all, because capture is the first thing
+anybody does and there is no feature behind it to discover. The discovery lines live in
+`strings.xml` because every one of them describes how the app works and none says anything
+about the person, which is the line `CLAUDE.md` rule 8 actually draws.
+
+**Considered and rejected: hiding the figure**, which 12.2 forbids by name, and which would
+make the block two figures wide on some weeks and three on others.
+
+**Revisit if** a discovery line ever needs to say something about the person's own data. At
+that moment it stops being a `strings.xml` string and becomes a corpus line.
+
+### The activity readout sits under the dots
+
+**Decided.** The fourteen dots first, then `Active X of last 14 days` beneath them.
+Implemented in `ui/momentum/MomentumScreen.kt`.
+
+**Why.** `design-v3.md` 15, and this is the deliberate answer rather than the obvious one. A
+label above a graphic makes the graphic an illustration of the label. Under it, the row reads
+first as a texture and the sentence confirms what the eye already got, which is exactly the
+arrangement 11.1 gives the Report's week ribbon: marks, then one caption line stating the
+numbers. It is also what section 13 asks for, since the caption rather than the row is what
+carries the claim aloud, and the row is one node to a screen reader that names itself and
+tallies nothing.
+
+**Considered and rejected: a spoken count of the gaps** in the row's content description.
+Section 14 says a gap is rendered as a lighter dot with nothing said about it anywhere, and
+a screen reader is somewhere.
+
+**Revisit if** the readout gets lost under the row at a large font scale. The gap is the
+number to move.
+
+### The figures are Newsreader, the labels are the sans, and the columns are left aligned
+
+**Decided.** Three figures in the serif over sans labels, on a common left edge, no card,
+no rule, no container. Implemented in `ui/momentum/MomentumScreen.kt`.
+
+**Why.** The obvious treatment for three numbers side by side is a heavy sans figure over a
+small caps label, centered, which is a dashboard, and 15.1 lists stat banners as a tell.
+Newsreader ties the three figures to the headline above them and makes the block read as
+part of a page rather than as a widget dropped onto one. Centered columns are what a metric
+row looks like; a common left edge is what a page looks like. It also happens to be the only
+correct answer to a mechanical problem: 5.2 records that Hanken Grotesk ships no `tnum` and
+Newsreader does, and these three figures are the one place in the app where a number counts
+up through every value between zero and itself.
+
+**Considered and rejected: `inkTertiary` for the dimmed state**, which 10.3 already had this
+argument about on the area card's idle title. It measures 2.40:1 in light and section 13's
+floor is 4.5. The dim is bought by stepping down to `inkSecondary` and by the discovery
+line, which is the second signal 13 requires whenever a state is carried by color.
+
+**Revisit if** the serif figures turn out to be hard to read at a glance on the device. That
+is the one thing a screenshot cannot settle.
+
+### The area name sits under the tile, and the idle outline is the hairline token
+
+**Decided.** The name is caption ink on the canvas beneath its tile. The active tile is the
+area color at 60 percent with no border; the idle tile is not colored at all and carries a
+`hairline` edge. Implemented in `ui/momentum/MomentumScreen.kt`.
+
+**Why.** Two rules in 3.4 decide both halves. It requires an area label to be verified at
+4.5:1 against the surface it is drawn on and names the two surfaces that were measured, both
+of them the card carrying that area's wash; a label on a 60 percent tile is a third surface,
+one per area color per theme, and none of them has been measured. And it permits the accent
+in four forms and ends "never as a stripe, bar, edge, border or filled block", so the faint
+outline section 11 asks for on an idle tile cannot be drawn in the area's own color. The two
+states then differ in fill, in edge, and in nothing else, which is one separation device each
+per 6.1.
+
+**Considered and rejected: measuring every area color against a 60 percent tile** and putting
+the name inside it. That is 48 colors times two themes of contrast work to win one label
+position, and it would have to be redone the day the palette changes.
+
+**Revisit if** the name and the tile stop reading as one object at a large font scale.
+
+### The idle module's sidehead reads `Quiet areas`
+
+**Decided.** The sidehead is `Quiet areas`. The module is otherwise exactly what 12.2
+specifies: seven or more days inactive, gentle, no red. Implemented in
+`ui/momentum/MomentumInsights.kt`.
+
+**Why.** 12.2 calls the module Idle Areas and asks for it to be gentle, and that word is the
+argument. `Idle` is what the state is called in the code and on the area card, where it
+describes one card; set as a heading over a person's own list it reads as a verdict on them
+rather than a description of a fortnight. `Quiet` is the word the corpus itself already uses
+for the same shape, in `mo.quiet` and `bn.quiet`, so the screen and the sentences above it
+name it the same way. The line beside each name is the same `Last active N days ago` the area
+card carries in 10.3, out of the same plurals resource, so one fact is worded one way
+wherever it appears.
+
+**Considered and rejected: keeping `Idle areas`**, which is the specification's own word and
+is what a session with no context would write. It is a label change and not a behavior change,
+which is why it is recorded here rather than argued as a conflict.
+
+**Revisit if** the owner prefers the specification's word. Nothing else moves if it changes.
+
+### The share rows are typography, with no bar behind the numbers
+
+**Decided.** Area balance is a dot, a name and a percentage per row. The pace sparkline is a
+line with one mark on the newest week. The focus strip is seven shaded cells with a floor
+under an empty day. No axes, no gridlines, no fills, no bars, and nothing drawn in an area
+color except the 7dp identity dot. Implemented in `ui/momentum/MomentumInsights.kt`.
+
+**Why.** The obvious rendering of a share is a horizontal bar per row, and it is forbidden
+three times over: 3.4 ends "never as a stripe, bar, edge, border or filled block", section 14
+repeats it as the rule about colored bars, and 15.3 names the same fix as a refusal. The
+percentage is the whole of the information and a row of numbers is legible without a chart
+behind it. The empty focus cell keeps a floor for the reason section 11 gives the Pulse's
+silent mark: below a floor a mark stops being quiet and starts being absent, and a week of
+absent cells reads as a broken strip rather than a calm one.
+
+**Considered and rejected: red anywhere on the idle module**, which 12.2 forbids and which
+there is nothing to reach for anyway: the Daylight palette in 3.1 has no red token and
+`deleteMuted` is scoped to one job.
+
+**Revisit if** the percentages alone stop conveying the balance. The answer is the ordering,
+which is busiest first, not a bar.
+
+### The banner gets a ViewModel of its own
+
+**Decided.** `AreasBannerViewModel`, resolved against the Activity's store, holding the once
+per hour throttle as a value type with no Android in it. It does not recompute on the
+projection. Implemented in `ui/momentum/MomentumViewModel.kt` and
+`ui/momentum/BannerThrottle.kt`.
+
+**Why.** 11.2 and `CLARITY_LOGIC_ENGINE.md` 6.5 both say the throttle goes in the ViewModel
+and not in the engine, and say nothing about which ViewModel. The obvious answer is a field
+on `AreasViewModel`, and it loses on two counts. That class is the queue: the areas, the
+swipes, the promotions and the running session, none of which has anything to do with a
+sentence from the engine. And the banner must not recompute on the projection, because a week
+does not change shape when one item is completed, and redrawing it on every write is the
+recomputation per frame failure issue #5 names as this phase's second risk, dressed as
+correctness. The Activity's store is what makes one instance serve every visit to the tab, so
+the hour is measured in app use rather than reset by a tab switch.
+
+**Considered and rejected: a second throttle inside `MomentumComposer`**, which would make
+the rate the product of two numbers nobody stated. The composer is documented as not
+throttled and as never becoming throttled.
+
+**Revisit if** the banner ever needs to react to a write, which would mean it had stopped
+being a sentence about a week.
+
+### The two entrances are written out rather than routed through the shared modifier
+
+**Decided.** The dot cascade and the number roll are their own functions, sharing only the
+decision of whether an entrance plays at all. The number roll has no reduced form and renders
+its value. Implemented in `ui/momentum/MomentumMotion.kt`.
+
+**Why.** `Modifier.clarityEntrance` is 8.2 item 4: a 350ms fade with a 16dp rise at a 50ms
+stagger. Item 13 is a 35ms stagger with no rise and item 14 is not a fade at all, so sharing
+the modifier means widening it with two parameters that exactly one screen ever passes. What
+is shared is the thing that matters, which is one reading of the session entrance flag and one
+of calm mode, so 8.4's once per session rule and 16.2's removal of entrances are answered in
+one place for both. The number roll has no reduced form because a count up is not a fade, and
+150ms of counting would be a flicker of wrong numbers rather than a gentler animation, which
+is the same reading 8.3 takes of the focus ring.
+
+**Considered and rejected: re-counting when a figure changes while the screen is open**,
+which would be an entrance firing on a data change. 8.4 allows that for exactly one animation
+in this app and it is the Report reveal.
+
+**Revisit if** a third screen needs a stagger that is not 50ms. Two call sites is a
+coincidence and three is a parameter.
+
+---
+
 ## August 27, 2026: the twelve open choices in the Pulse
 
 Phase 6, issue #4. `MASTER_BUILD_PROMPT.md` 11.3, 11.6, 12.1, 13.4 and 14b.4,

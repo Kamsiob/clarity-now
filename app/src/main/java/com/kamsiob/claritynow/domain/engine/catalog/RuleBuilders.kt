@@ -59,6 +59,23 @@ internal fun holdingAreaHasEvents(minimum: Int = 1): Criterion = criterion(
  * arithmetic and a false claim. A catalog test asserts that every rule reading a share
  * carries one of these, and the id prefix is what that test looks for.
  */
+/**
+ * The app has existed for at least [days] days.
+ *
+ * A family whose lines claim a span may not fire before that span exists. The window a
+ * fact is measured over is always its full width, so `window.dayCount` cannot tell a
+ * fortnight of data from a fortnight of window, and without this every fortnight family
+ * qualifies on day two and describes days that had not happened.
+ *
+ * Addendum 01 7d asks every reflective surface to be honest about what it does not have
+ * yet, and CLARITY_LOGIC_ENGINE 1 says one wrong number destroys the credibility of
+ * everything else the app says. This is the cheapest place to hold both.
+ */
+internal fun fortnightOfHistory(days: Int = 14): Criterion = window(
+    "history.installedFor.$days",
+    "the app has existed for the $days days being described",
+) { it.history.daysSinceInstall >= days }
+
 internal fun shareFloor(minimum: Int): Criterion = window(
     "$SHARE_FLOOR_PREFIX.window.$minimum",
     "the window holds at least $minimum events, so a share is describing something real",

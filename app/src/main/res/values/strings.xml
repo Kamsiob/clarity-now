@@ -413,4 +413,205 @@
     <string name="cd_pulse_rhythm">Pulse rhythm, the last %1$d days</string>
     <string name="cd_pulse_history_back">Back to the Pulse</string>
 
+    <!--
+        Momentum, MASTER_BUILD_PROMPT 12.2 and design-v3.md section 11.
+
+        **Not one line here is an observation.** The single sentence on the Momentum
+        screen is the headline, which came from CORPUS_3_MOMENTUM.md through the engine
+        layers in order, and the two lines on the Areas banner came from the same file.
+        Everything below is a fixed label or a direct readout of a number a TrailQueries
+        function answered, which is exactly the split CLAUDE.md rule 8 draws.
+
+        **There is no streak string here and there must never be one.** No run length, no
+        consecutive days, no "best ever". design-v3.md 14 gives two reasons and the second
+        is that streak loss is a documented abandonment trigger for the audience this app
+        is for. The dot row states how many of fourteen days had something in them and
+        says nothing about their order.
+
+        The two discovery lines describe how a feature works and say nothing whatever
+        about the person, which is what lets them live here. They appear only when the
+        feature has never been used at all, in the whole log.
+    -->
+    <string name="momentum_active_days">Active %1$d of last %2$d days</string>
+    <string name="momentum_sidehead_this_week">This week</string>
+    <string name="momentum_stat_completed">Completed</string>
+    <string name="momentum_stat_focused">Minutes focused</string>
+    <string name="momentum_stat_added">Added</string>
+    <string name="momentum_discover_completed">Swiping an area card to the right completes what is on it.</string>
+    <string name="momentum_discover_focus">A focus session puts one item on a timer, with nothing else on the screen.</string>
+
+    <!--
+        Insight module sideheads, design-v3.md 10.12. Sentence case, never all caps.
+
+        `Quiet areas` renders the module 12.2 calls Idle Areas. 12.2 asks that module in
+        particular to be gentle, and `idle` set as a heading over somebody's own list of
+        areas reads as a verdict on them rather than a description of the fortnight.
+        `Quiet` is the word the corpus itself uses for the same shape, in the mo.quiet and
+        bn.quiet families, so the heading and the sentences above it name it the same way.
+    -->
+    <string name="momentum_sidehead_area_balance">Area balance</string>
+    <string name="momentum_sidehead_completion_pace">Completion pace</string>
+    <string name="momentum_sidehead_focus_patterns">Focus patterns</string>
+    <string name="momentum_sidehead_quiet_areas">Quiet areas</string>
+
+    <!--
+        Readouts under the two drawn graphics. design-v3.md 13: the graphic is never the
+        sole carrier of a claim and the caption beneath states the number.
+
+        `%1$d percent` rather than a percent sign, matching CLARITY_LOGIC_ENGINE.md 7.2,
+        so the app renders a percentage one way rather than two.
+    -->
+    <string name="momentum_percent">%1$d percent</string>
+    <string name="momentum_pace_busiest">Busiest week, %1$d completed</string>
+    <plurals name="momentum_focus_minutes">
+        <item quantity="one">%d minute in the last seven days</item>
+        <item quantity="other">%d minutes in the last seven days</item>
+    </plurals>
+
+    <!--
+        Momentum content descriptions.
+
+        The dot row is one node and names the element rather than tallying it, exactly as
+        the Pulse rhythm row does. The count is spoken by the caption beneath it, which is
+        a real line of text, so a screen reader gets the same claim a sighted reader gets
+        and nothing more: design-v3.md 14 says a gap has nothing said about it anywhere,
+        and a spoken count of the gaps would be saying something.
+    -->
+    <string name="cd_momentum_activity">Activity, the last %1$d days</string>
+    <string name="cd_momentum_pace">Completions by week, the last %1$d weeks</string>
+    <string name="cd_momentum_focus_strip">Focus by day, the last %1$d days</string>
+    <string name="cd_momentum_tile_active">%1$s, has an active item</string>
+    <string name="cd_momentum_tile_idle">%1$s, nothing active</string>
+
+    <!--
+        The Clarity Report, design-v3.md 11.1 and MASTER_BUILD_PROMPT.md 12.3.
+
+        **Not one sentence here is about a person's own data.** Every observation on that
+        screen came out of CORPUS_2_REPORT.md through the engine layers in order, per
+        CLAUDE.md rule 8, and what lives here is what that rule leaves: the eyebrow, the
+        sideheads, the control labels, the two answers to the closing line, the caption
+        readouts under the ribbon, and the app describing itself when it has nothing to
+        show. A screen that assembled an observation out of these would be the second path
+        rule 8 exists to close.
+
+        The eyebrow's separator is written as a numeric character reference because the
+        language hygiene gate fails on any character above U+007F anywhere in the repo,
+        and the middle dot design-v3.md 11.1 specifies is one. It is the character in the
+        rendered string and an ASCII escape in the file, which is what the gate wants.
+    -->
+    <string name="report_eyebrow">Clarity Report &#183; Week of %1$s</string>
+    <string name="report_clipboard_label">Clarity Report</string>
+
+    <!--
+        Section sideheads, design-v3.md 10.12 and 11.1 item 6. Sentence case, never all
+        caps: all caps section labels are on the tell list in 15.1 and section 14 repeats
+        the ban. Which observation is read under which is decided in ReportSection, once,
+        where it can be read against the corpus.
+    -->
+    <string name="report_sidehead_your_week">Your week, honestly</string>
+    <string name="report_sidehead_what_you_said">What you said</string>
+    <string name="report_sidehead_focus">Focus</string>
+    <string name="report_sidehead_pattern">Pattern</string>
+
+    <!--
+        The closing line's eyebrow and its two answers, design-v3.md 11.1 item 8.
+
+        Both are offered, both are costless and neither is ever mentioned again. There is
+        no PLAN_DECLINED event to write and no surface anywhere that could count either.
+
+        `Noted` is the confirmation 8.2 item 26 asks the accept label to cross to. It is
+        the plainest acknowledgment available: it never celebrates, it makes no promise
+        back, and it says nothing about the person. The obvious answers were a check mark,
+        which section 14 rules out as a celebration and 11.1 rules out as a fifth
+        treatment, and a first person restatement, which would put the plan's own voice on
+        a button.
+    -->
+    <string name="report_closing_eyebrow">One thing</string>
+    <string name="report_accept">I\'ll do that</string>
+    <string name="report_accepted">Noted</string>
+    <string name="report_decline">Not this week</string>
+
+    <!--
+        The caption beneath the week ribbon, design-v3.md 11.1 item 4 and section 13: the
+        ribbon is never the sole carrier of any claim, and this is what the caption is for.
+
+        Three direct readouts of queried numbers, each a whole string with one number in
+        it. The screen joins them with a comma and writes no words of its own. Which three
+        numbers, and why not the obvious three, is recorded on ReportTotal.
+
+        Only the first needs a plural form. `1 completed` and `1 added` are already
+        correct, and inventing singular and plural entries that read identically would be
+        two rows for a translator to keep in step for no reason.
+    -->
+    <plurals name="report_total_events">
+        <item quantity="one">%d event</item>
+        <item quantity="other">%d events</item>
+    </plurals>
+    <string name="report_total_completed">%1$d completed</string>
+    <string name="report_total_added">%1$d added</string>
+
+    <!--
+        Day initials beneath the ribbon, design-v3.md 11.1 item 4, at 8sp.
+
+        Indexed by java.time.DayOfWeek, which numbers Monday 1 through Sunday 7, so the
+        order is Monday first whatever day the window happens to begin on. The window is
+        the trailing seven days rather than a calendar week, so every one of the seven
+        marks is looked up by its own date's weekday.
+    -->
+    <string-array name="report_day_initials">
+        <item>M</item>
+        <item>T</item>
+        <item>W</item>
+        <item>T</item>
+        <item>F</item>
+        <item>S</item>
+        <item>S</item>
+    </string-array>
+
+    <!--
+        The two states that are not a report and are not the empty state either.
+
+        MASTER_BUILD_PROMPT.md 12.3's prime directive is data integrity, and the empty
+        state is a corpus line about a week in which nothing happened. Neither of these is
+        that. `Nothing to report yet` would be a false sentence about a week the app could
+        not prove its arithmetic for, and a falser one about a corpus it could not read.
+
+        design-v3.md 13.1: an error says what went wrong in one sentence and nothing on
+        any surface tells a person what they should have done. Neither of these states
+        anything about the person's data, and neither carries a number.
+    -->
+    <string name="report_withheld">There is no report this week.</string>
+    <string name="report_withheld_detail">Every number in a report is checked against the log before it is shown, and this one did not check out.</string>
+    <string name="report_unavailable">The report could not be written.</string>
+    <string name="report_unavailable_detail">This is a fault in the app rather than anything about your week, and nothing in your data was changed.</string>
+
+    <!--
+        Past reports, MASTER_BUILD_PROMPT.md 12.3: past weeks remain forever.
+
+        The empty state is an invitation rather than a scold, design-v3.md 10.13, and it
+        names what will fill the page rather than counting what has not.
+    -->
+    <string name="report_history_title">Past reports</string>
+    <string name="report_history_week">Week of %1$s</string>
+    <string name="report_history_empty_title">Nothing here yet</string>
+    <string name="report_history_empty_body">Every report this app writes is kept here, back to the week you installed it.</string>
+
+    <!--
+        Report content descriptions.
+
+        The ribbon's names the element and the busiest day, which is what the tallest mark
+        already says to a reader who can see it, and stops there. design-v3.md 13's own
+        example goes on to characterize the week, and a characterization of somebody's own
+        data is an observation: CLAUDE.md rule 8 puts every one of those in a corpus,
+        through the engine, and a content description is not an exception to that. The
+        caption beneath the ribbon is a real line of text, so a screen reader gets the same
+        three numbers a sighted reader gets and nothing more.
+    -->
+    <string name="cd_report_history">Past reports</string>
+    <string name="cd_report_regenerate">Write this report again</string>
+    <string name="cd_report_copy">Copy this report as text</string>
+    <string name="cd_report_history_back">Back to the report</string>
+    <string name="cd_report_ribbon">The week, %1$d days of activity</string>
+    <string name="cd_report_ribbon_busiest">The week, %1$d days of activity. Busiest on %2$s.</string>
+
 </resources>

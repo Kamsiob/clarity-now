@@ -38,9 +38,12 @@ import com.kamsiob.claritynow.data.prefs.ClarityPreferences
 import com.kamsiob.claritynow.domain.ClarityClock
 import com.kamsiob.claritynow.domain.dateKey
 import com.kamsiob.claritynow.domain.daysBetween
+import com.kamsiob.claritynow.domain.parseDateKey
+import com.kamsiob.claritynow.domain.weekStartKey
 import com.kamsiob.claritynow.domain.engine.catalog.ResponseOption
 import com.kamsiob.claritynow.domain.replay.AreaState
 import com.kamsiob.claritynow.domain.replay.ClarityCheckpoint
+import com.kamsiob.claritynow.domain.replay.ClarityCheckpointCodec
 import com.kamsiob.claritynow.domain.replay.ClarityConflict
 import com.kamsiob.claritynow.domain.replay.ClarityReducer
 import com.kamsiob.claritynow.domain.replay.ClarityReplay
@@ -65,7 +68,6 @@ import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.serialization.json.Json
 import java.util.UUID
 
 /**
@@ -102,24 +104,71 @@ class ClarityRepository(
     /**
      * Cold start. Loads the newest checkpoint and replays only what came after it,
      * falling back to a full rebuild whenever the checkpoint cannot account for the
-     * log it is sitting on.
+     * log it is sitting on. MASTER_BUILD_PROMPT 6.4.
+     *
+     * **The tail is read from SQL, not filtered out of the whole log.** An earlier
+     * shape of this method read every row, decoded every payload and then skipped
+     * the fold, which saves the cheaper half of a cold start and leaves the
+     * expensive half in place. [resumeOrRebuildLocked] asks the log three bounded
+     * questions instead, and touches nothing before the checkpoint unless it has
+     * decided it cannot trust it.
+     *
+     * The last thing it does is close last week if last week is still open, which
+     * is a full rebuild from event zero and happens at most once a week. That is
+     * where a checkpoint comes from, and [writeCheckpointLocked] says why it is the
+     * only place one can come from.
      */
-    suspend fun load() = mutex.withLock {
-        if (loaded) return@withLock
-        originId = prefs.originId()
-        jitter = OrderKey.jitterFor(originId)
+    suspend fun load() {
+        mutex.withLock {
+            if (loaded) return@withLock
+            originId = prefs.originId()
+            jitter = OrderKey.jitterFor(originId)
 
-        val checkpoint = newestCheckpoint()
-        val all = events.allInOrder().mapNotNull { it.toEvent() }
-        val next = if (checkpoint != null && ClarityReplay.canResume(checkpoint, all)) {
-            ClarityReplay.replayFrom(checkpoint, all)
-        } else {
-            ClarityReplay.replay(all)
+            val next = resumeOrRebuildLocked()
+            _state.value = next
+            writeCache(ClarityState.EMPTY, next)
+            closeWeekIfNeededLocked()
+            loaded = true
         }
-        _state.value = next
-        writeCache(ClarityState.EMPTY, next)
-        loaded = true
     }
+
+    /**
+     * The state to start this session with, and the whole of the checkpoint read
+     * path.
+     *
+     * Three bounded queries decide, and none of them reads the head of the log:
+     * `count()` is one aggregate, `after()` is a range scan from the checkpoint
+     * forward on the `lamport` index, and `exists()` is a primary key seek. What
+     * they answer is `ClarityReplay.canResume`, which is stated once, over there,
+     * beside the fold it protects.
+     *
+     * The count is the half that catches a merged log, and it is stated in rows
+     * rather than in decoded events on purpose. A row this build cannot decode, from
+     * an event type a newer version introduced, makes the two numbers disagree and
+     * sends the load down the rebuild path, which is the conservative direction: the
+     * alternative is a state folded from fewer events than the checkpoint was.
+     *
+     * The three queries are not one statement and do not need to be. Everything runs
+     * under [mutex], and this class is the only writer in the app, so no row can
+     * appear between the count and the range scan.
+     */
+    private suspend fun resumeOrRebuildLocked(): ClarityState {
+        val checkpoint = newestCheckpoint() ?: return fullReplayLocked()
+        val position = checkpoint.position ?: return fullReplayLocked()
+
+        val tail = events.after(position.lamport, position.originId, position.eventId)
+        val resumable = ClarityReplay.canResume(
+            checkpoint = checkpoint,
+            eventsAtOrBeforePosition = events.count() - tail.size,
+            positionIsInLog = events.exists(position.eventId),
+        )
+        if (!resumable) return fullReplayLocked()
+        return ClarityReplay.replayFrom(checkpoint, tail.mapNotNull { it.toEvent() })
+    }
+
+    /** A fold of the entire log. Always correct, and the fallback for everything. */
+    private suspend fun fullReplayLocked(): ClarityState =
+        ClarityReplay.replay(events.allInOrder().mapNotNull { it.toEvent() })
 
     // Areas -------------------------------------------------------------------
 
@@ -1119,20 +1168,92 @@ class ClarityRepository(
 
     /**
      * Drops every derived row and rebuilds it from the log. The proof that the
-     * cache is a cache. Exposed in the debug menu and used by the export path as a
-     * correctness check.
+     * cache is a cache. MASTER_BUILD_PROMPT 5.4 and 6.4: exposed in the debug menu,
+     * and run by the export path as a correctness check before a person is handed a
+     * file they may one day restore from.
+     *
+     * **It answers what it found rather than only doing the work**, because a
+     * correctness check that reports nothing is not a check. [RebuildCheck.matched]
+     * is the interesting half: false means the state every screen has been reading
+     * disagrees with the log it was supposedly folded from, which is the one defect
+     * in this app that cannot be seen by looking.
+     *
+     * Every checkpoint goes with the cache, and one is taken again at the end if a
+     * week has closed, from this same rebuild. So the expensive part is paid once
+     * and the next cold start is still fast.
      */
-    suspend fun rebuildCacheFromLog(): ClarityState = mutex.withLock {
+    suspend fun rebuildCacheFromLog(): RebuildCheck = mutex.withLock {
         val all = events.allInOrder().mapNotNull { it.toEvent() }
-        val rebuilt = ClarityReplay.replay(all)
+        val rebuilt = ClarityReplay.checkpoint(all)
+        val matched = if (loaded) rebuilt.state.canonical() == _state.value.canonical() else null
+
         db.withTransaction {
             cache.clearCache()
             cache.clearSnapshots()
-            writeCache(ClarityState.EMPTY, rebuilt)
+            writeCache(ClarityState.EMPTY, rebuilt.state)
         }
-        _state.value = rebuilt
-        rebuilt
+        _state.value = rebuilt.state
+        closeWeekIfNeededLocked(rebuilt)
+
+        RebuildCheck(
+            state = rebuilt.state,
+            eventCount = rebuilt.state.eventsApplied,
+            matched = matched,
+        )
     }
+
+    /**
+     * Takes a foreign log into this one and rebuilds from event zero.
+     * MASTER_BUILD_PROMPT 6.3, 6.4 and 14b.7.
+     *
+     * **This is the only door foreign events come through, and the reason it exists
+     * before the screen that opens it does.** Import is phase 11: file format,
+     * password, checksum, pre validation and the replace or merge choice all belong
+     * there. What belongs here is the part that is invisible when it is missing.
+     * Both modes throw every checkpoint away and fold the whole log again, because a
+     * merge can introduce events that sort *before* a checkpoint's position, and a
+     * checkpoint resumed over one of those quietly drops it. Nothing looks wrong
+     * afterwards. The numbers are just smaller, forever.
+     *
+     * [IngestMode.REPLACE] empties the log first and is one transaction.
+     * [IngestMode.MERGE] is the deterministic union 6.3 specifies: union by event
+     * id, which `ClarityEventDao.appendAll` gets from `OnConflictStrategy.IGNORE`,
+     * ordered by `(lamport, originId, id)`, which the fold gets from `inTotalOrder`.
+     *
+     * A checkpoint is taken again at the end when a week has closed, from the
+     * merged log rather than from the one that was here before. That is the same
+     * rebuild 6.4 asks for, so the fast cold start comes back on the next launch
+     * instead of after the next week closes.
+     *
+     * The lamport counter is advanced to the merged maximum before this returns.
+     * [commitLocked] would reach the same floor on its own, since it reserves
+     * against `lastLamport` from the projection, but a counter that is only correct
+     * because the next writer happens to repair it is a counter that is wrong in
+     * between.
+     */
+    suspend fun ingestForeignLog(incoming: List<ClarityEvent>, mode: IngestMode): RebuildCheck =
+        mutex.withLock {
+            check(loaded) { "ingest before load" }
+            val rebuilt = db.withTransaction {
+                if (mode == IngestMode.REPLACE) events.eraseEverything()
+                events.appendAll(incoming.map { it.toRow() })
+                cache.clearCache()
+                cache.clearSnapshots()
+                val merged = ClarityReplay.checkpoint(
+                    events.allInOrder().mapNotNull { it.toEvent() },
+                )
+                writeCache(ClarityState.EMPTY, merged.state)
+                merged
+            }
+            _state.value = rebuilt.state
+            prefs.reserveLamport(count = 0, atLeast = rebuilt.state.lastLamport)
+            closeWeekIfNeededLocked(rebuilt)
+            RebuildCheck(
+                state = rebuilt.state,
+                eventCount = rebuilt.state.eventsApplied,
+                matched = null,
+            )
+        }
 
     /** MASTER_BUILD_PROMPT 14.2. The log goes, the cache goes, the checkpoints go. */
     suspend fun eraseEverything() = mutex.withLock {
@@ -1288,32 +1409,128 @@ class ClarityRepository(
         if (conflicts.isNotEmpty()) cache.upsertConflicts(conflicts.map { it.toRow() })
     }
 
+    // Checkpoints -------------------------------------------------------------
+    //
+    // MASTER_BUILD_PROMPT 6.4. A closed week doubles as a replay checkpoint, and the
+    // two things it is are worth keeping apart while reading this section. The
+    // *content* of a checkpoint is a fold of a prefix of the total order and knows
+    // nothing about calendars. The *decision to take one* is a calendar question,
+    // and a calendar is a wall clock object.
+    //
+    // That distinction is the reason a wall clock appears in this section at all,
+    // when `ClarityEventDao` says plainly that nothing a checkpoint does may consult
+    // one. The rule that comment states is about ordering, and it holds here without
+    // an exception: no position, no prefix and no folded event below is chosen by a
+    // wall clock. What a wall clock decides is only whether a checkpoint is due now,
+    // and the worst a skewed one can do is take a checkpoint a week early or a week
+    // late, which costs a slower cold start and nothing else.
+
     private suspend fun newestCheckpoint(): ClarityCheckpoint? {
         val row = cache.newestSnapshot() ?: return null
-        return runCatching {
-            ClarityCheckpoint(
-                position = snapshotJson.decodeFromString(row.positionJson),
-                state = snapshotJson.decodeFromString(row.stateJson),
-            )
-        }.getOrNull()
+        return ClarityCheckpointCodec.decode(row.positionJson, row.stateJson)
     }
 
-    /** Written when a week closes. Phase 8 calls this; the read path exists now. */
-    suspend fun writeCheckpoint(weekStartKey: String) = mutex.withLock {
-        val current = _state.value
-        val all = events.allInOrder().mapNotNull { it.toEvent() }
-        val checkpoint = ClarityReplay.checkpoint(all)
-        val position = checkpoint.position ?: return@withLock
-        cache.upsertSnapshot(
-            WeekSnapshotRow(
-                weekStartKey = weekStartKey,
-                takenAt = clock.nowMillis(),
-                lamport = position.lamport,
-                positionJson = snapshotJson.encodeToString(position),
-                stateJson = snapshotJson.encodeToString(current.canonical()),
-            ),
-        )
+    /**
+     * Takes the checkpoint for the week that has just closed, if one is due.
+     * Answers the week it wrote, or null when there was nothing to do.
+     *
+     * Called at the end of [load], which is the first thing every entry point into
+     * this app does, so the first launch of a new week pays for it and no launch
+     * after that does. Safe to call at any other time; it is a lookup and two
+     * bounded queries when the answer is no.
+     */
+    suspend fun closeWeekIfNeeded(): String? = mutex.withLock {
+        check(loaded) { "close week before load" }
+        closeWeekIfNeededLocked()
     }
+
+    /**
+     * The decision, for a caller that already holds [mutex].
+     *
+     * Two conditions, and both are guards against writing a checkpoint that buys
+     * nothing. The stored checkpoint already being last week's means the week has
+     * been closed. No event older than this week means there is no closed week to
+     * checkpoint yet, which is every first week and is the honest answer for one.
+     *
+     * [rebuilt] lets a caller that has just folded the whole log hand that fold
+     * over rather than pay for a second one.
+     */
+    private suspend fun closeWeekIfNeededLocked(rebuilt: ClarityCheckpoint? = null): String? {
+        val weekStartMillis = currentWeekStartMillis()
+        val closedWeekKey = clock.weekStartKey(weekStartMillis - 1)
+        if (cache.newestSnapshot()?.weekStartKey == closedWeekKey) return null
+        if (events.newestWallClockBefore(weekStartMillis) == null) return null
+        return writeCheckpointLocked(closedWeekKey, rebuilt)
+    }
+
+    /**
+     * Takes a checkpoint labeled [weekStartKey]. True when one was written.
+     *
+     * Public because a week can close while the app is running and because the
+     * debug menu should be able to force one. Ordinary operation goes through
+     * [closeWeekIfNeeded].
+     */
+    suspend fun writeCheckpoint(weekStartKey: String): Boolean = mutex.withLock {
+        check(loaded) { "checkpoint before load" }
+        writeCheckpointLocked(weekStartKey, rebuilt = null) != null
+    }
+
+    /**
+     * Writes the checkpoint, and refuses to write a wrong one.
+     *
+     * **Every checkpoint this app stores is a full rebuild from event zero, checked
+     * against the state the app is running on.** That is the expensive choice and it
+     * is deliberate. A checkpoint taken from the live projection instead would be
+     * one line shorter and would carry any error the projection had picked up, and
+     * carry it forever: the next checkpoint resumes from this one, so a state that
+     * is wrong on the day it is written is wrong in every checkpoint after it and in
+     * every cold start that resumes from any of them. There is no later check that
+     * finds this. The event log is the truth, so the checkpoint is taken from the
+     * event log.
+     *
+     * A disagreement writes nothing and clears what is stored, which leaves every
+     * future cold start doing a full rebuild. Slow is a fine outcome. It also self
+     * heals: the next cold start folds the log, and the log is the truth.
+     *
+     * Exactly one checkpoint row survives, and the clear before the write is what
+     * makes that true. **The obvious answer is a row per week accumulating forever,
+     * and it is the wrong one**, `design-v3.md` 15. Nothing reads any checkpoint but
+     * the newest, each row is a serialized copy of everything the person owns, and
+     * anything that ever did read an older one to say what a past week held would be
+     * engine state living outside the log, which `CLAUDE.md` rule 6 forbids. Past
+     * reports are what remain forever, in `clarity_report`, and they are a different
+     * table for a different reason. The key stays the week so the row still says
+     * when it was taken and why.
+     */
+    private suspend fun writeCheckpointLocked(
+        weekStartKey: String,
+        rebuilt: ClarityCheckpoint?,
+    ): String? {
+        val checkpoint = rebuilt
+            ?: ClarityReplay.checkpoint(events.allInOrder().mapNotNull { it.toEvent() })
+        val position = checkpoint.position ?: return null
+        if (checkpoint.state.canonical() != _state.value.canonical()) {
+            cache.clearSnapshots()
+            return null
+        }
+        db.withTransaction {
+            cache.clearSnapshots()
+            cache.upsertSnapshot(
+                WeekSnapshotRow(
+                    weekStartKey = weekStartKey,
+                    takenAt = clock.nowMillis(),
+                    lamport = position.lamport,
+                    positionJson = ClarityCheckpointCodec.encodePosition(position),
+                    stateJson = ClarityCheckpointCodec.encodeState(checkpoint.state),
+                ),
+            )
+        }
+        return weekStartKey
+    }
+
+    /** The instant this local week began. Sunday start, per MASTER_BUILD_PROMPT 12.3. */
+    private fun currentWeekStartMillis(): Long =
+        parseDateKey(clock.weekStartKey()).atStartOfDay(clock.zone()).toInstant().toEpochMilli()
 
     private fun activeDurationDays(item: ItemState): Int {
         val since = item.activeSince ?: item.createdAt
@@ -1345,12 +1562,37 @@ class ClarityRepository(
          * every `IN (:ids)` list is chunked at this before it reaches the DAO.
          */
         private const val MAX_BOUND_IDS = 900
-
-        private val snapshotJson = Json {
-            encodeDefaults = true
-            ignoreUnknownKeys = true
-        }
     }
+}
+
+/**
+ * What a full rebuild from event zero found. MASTER_BUILD_PROMPT 6.4.
+ *
+ * [matched] is the correctness check itself: true when the rebuilt state equals the
+ * state the app was running on, false when they disagree, and null when there was no
+ * loaded state to compare against. A false here is not a slow path or a stale cache.
+ * It means the app has been reading a projection the log does not produce, and every
+ * number it has shown since is unexplained.
+ */
+data class RebuildCheck(
+    val state: ClarityState,
+    /** Events folded, which is every row this build could decode. */
+    val eventCount: Int,
+    val matched: Boolean?,
+)
+
+/**
+ * How a foreign log joins this one. MASTER_BUILD_PROMPT 14b.7 offers both to a
+ * person importing a file, and 6.3 defines what the second one means.
+ *
+ * Both rebuild from event zero. The difference is only what is in the log first.
+ */
+enum class IngestMode {
+    /** The imported log becomes the log. One transaction, nothing of the old kept. */
+    REPLACE,
+
+    /** Union by event id, ordered by `(lamport, originId, id)`. Nothing is lost. */
+    MERGE,
 }
 
 /** What the UI has to do after a completion, decided by the After completing setting. */
