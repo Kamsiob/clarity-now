@@ -2,6 +2,9 @@ package com.kamsiob.claritynow.ui.nav
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.EaseOutCubic
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -16,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +40,8 @@ import com.kamsiob.claritynow.ui.components.rememberClarityTabs
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.clarityMotion
+import com.kamsiob.claritynow.ui.trail.TrailRoute
+import com.kamsiob.claritynow.ui.trail.TrailViewModel
 
 /**
  * The app shell. design-v3.md 10.15.
@@ -51,6 +57,19 @@ fun ClarityShell(modifier: Modifier = Modifier) {
     val motion = clarityMotion()
     var selected by rememberSaveable { mutableStateOf(TAB_AREAS) }
 
+    // design-v3.md 8.2 entry 24 puts the tab crossfade at 180ms, one of the two places
+    // in the document that names a duration rather than a spring. The nearest token,
+    // motion.easeOut, is the 350ms entrance curve: nearly twice as long, and an
+    // entrance is the wrong idea here, because these four tabs are one set of data
+    // seen four ways rather than four places to arrive at. No 180ms token exists to
+    // reach for, so the duration is written out, and the reduce motion branch has to
+    // be written out with it: design-v3.md 8.3 replaces every animation with a 150ms
+    // crossfade, and a literal duration is the one thing that global check cannot see.
+    val tabFade: FiniteAnimationSpec<Float> = tween(
+        durationMillis = if (motion.reduced) 150 else 180,
+        easing = EaseOutCubic,
+    )
+
     val tabs = rememberClarityTabs(
         areasLabel = stringResource(R.string.tab_areas),
         momentumLabel = stringResource(R.string.tab_momentum),
@@ -63,21 +82,37 @@ fun ClarityShell(modifier: Modifier = Modifier) {
     // is confusing.
     BackHandler(enabled = selected != TAB_AREAS) { selected = TAB_AREAS }
 
+    // A tab's content leaves composition when another tab is selected, which throws
+    // away everything it had remembered, scroll position first among them. The Trail
+    // keeps its loaded pages in a ViewModel that outlives the switch, so without this
+    // a person who paged a month back would return to the top of a list that still
+    // holds the month. The holder gives each tab its own saveable slot, keyed by the
+    // tab, so every screen comes back where it was left.
+    val tabStates = rememberSaveableStateHolder()
+
     Box(modifier = modifier.fillMaxSize().background(colors.canvas)) {
         AnimatedContent(
             targetState = selected,
-            transitionSpec = { fadeIn(motion.easeOut()) togetherWith fadeOut(motion.easeOut()) },
+            transitionSpec = { fadeIn(tabFade) togetherWith fadeOut(tabFade) },
             label = "tabContent",
         ) { tab ->
-            when (tab) {
-                TAB_AREAS -> {
-                    val areasViewModel: AreasViewModel =
-                        viewModel(factory = ClarityViewModelFactory)
-                    AreasRoute(viewModel = areasViewModel)
-                }
+            tabStates.SaveableStateProvider(tab) {
+                when (tab) {
+                    TAB_AREAS -> {
+                        val areasViewModel: AreasViewModel =
+                            viewModel(factory = ClarityViewModelFactory)
+                        AreasRoute(viewModel = areasViewModel)
+                    }
 
-                TAB_MOMENTUM, TAB_REPORT, TAB_TRAIL -> UnderConstruction()
-                else -> UnderConstruction()
+                    TAB_TRAIL -> {
+                        val trailViewModel: TrailViewModel =
+                            viewModel(factory = ClarityViewModelFactory)
+                        TrailRoute(viewModel = trailViewModel)
+                    }
+
+                    TAB_MOMENTUM, TAB_REPORT -> UnderConstruction()
+                    else -> UnderConstruction()
+                }
             }
         }
 

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.kamsiob.claritynow.ui.areas.AreasViewModel
+import com.kamsiob.claritynow.ui.trail.TrailViewModel
 
 /**
  * The hand written equivalent of an injected ViewModel factory.
@@ -20,6 +21,11 @@ object ClarityViewModelFactory : ViewModelProvider.Factory {
             AreasViewModel::class.java -> AreasViewModel(
                 repository = ClarityGraph.repository,
                 preferences = ClarityGraph.preferences,
+                clock = ClarityGraph.clock,
+            ) as T
+
+            TrailViewModel::class.java -> TrailViewModel(
+                repository = ClarityGraph.repository,
                 clock = ClarityGraph.clock,
             ) as T
 

@@ -104,8 +104,16 @@ dropped. The storage layer also ignores an insert whose `id` already exists.
 
 ## 4. The event catalog
 
-Twenty four types. Every payload carries full before and after values plus display
-snapshots, so a replay reconstructs state without reading any other table, and a Trail
+Twenty four types. Every payload carries full before and after values, so a replay
+reconstructs state without reading any other table.
+
+Display snapshots are a separate question and they are not universal. Eight of the
+twenty four carry enough of one to name both the subject and the area of a Trail row
+with no lookup at all: the five area events that carry a name, and `ITEM_ADDED`,
+`ITEM_PROMOTED` and `ITEM_COMPLETED`, which carry a title and an area name together.
+The other sixteen carry a partial snapshot or none. Those resolve their display
+values by folding the log to the instant of the event, which is what
+`domain.query.TrailQueries` does. Neither path reads a live entity table, so a Trail
 entry from a year ago still renders the name an area had at the time.
 
 ### Areas

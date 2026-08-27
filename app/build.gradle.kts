@@ -10,8 +10,13 @@ plugins {
 
 // Semantic version, chosen per MASTER_BUILD_PROMPT 16.7.
 // versionCode is derived as major * 10000 + minor * 100 + patch.
+//
+// 0.3.0: the Trail, and with it domain.query.TrailQueries, the facade every later
+// phase reads a number through. A minor bump rather than a patch because this adds a
+// destination and a public surface the engine will be built against, and not a major
+// one because nothing already shipped changed meaning.
 val versionMajor = 0
-val versionMinor = 2
+val versionMinor = 3
 val versionPatch = 0
 
 android {

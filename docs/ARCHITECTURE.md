@@ -80,10 +80,12 @@ lets a newer desktop build and an older phone build share a file without data lo
 `ClarityRepository` holds a `MutableStateFlow<ClarityState>` produced by folding the
 log. That is what the UI reads.
 
-The Room cache tables mirror it so a cold start does not replay a year of events and
-so the Trail can be paged without holding everything. **Every one of those tables
-can be dropped and rebuilt with no data loss**, and
-`ClarityRepository.rebuildCacheFromLog()` does exactly that as a proof.
+The Room cache tables mirror it so a cold start does not replay a year of events.
+They hold current state and no history, so they cannot serve the Trail: the Trail
+pages the event log itself, one wall clock window at a time, through
+`ClarityRepository.trailPage()`. **Every one of those tables can be dropped and
+rebuilt with no data loss**, and `ClarityRepository.rebuildCacheFromLog()` does
+exactly that as a proof.
 
 ### 3. The write path is one function
 

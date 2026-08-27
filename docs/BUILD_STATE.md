@@ -2,8 +2,8 @@
 
 Where the build actually is. Updated at the end of every phase.
 
-**Last updated:** August 26, 2026, end of phase 2.
-**Version:** 0.2.0, versionCode 200.
+**Last updated:** August 26, 2026, end of phase 3.
+**Version:** 0.3.0, versionCode 300.
 **Installed and verified on:** Pixel 8 (`shiba`), over USB.
 
 ---
@@ -14,7 +14,7 @@ Where the build actually is. Updated at the end of every phase.
 |---|---|---|
 | 1. Foundations | done | closed |
 | 2. Core mechanics | done | closed |
-| 3. Trail | not started | #1 |
+| 3. Trail | done | closed |
 | 4. Focus sessions | not started | #2 |
 | 5. Engine skeleton and simulator | not started | #3 |
 | 6. Pulse | not started | #4 |
@@ -46,6 +46,8 @@ Verified by hand on the device, not only in tests.
 - Edit a queued item, including move to front
 - Reorder areas by long press and drag, one event written on release
 - The floating tab bar, with the current destination expanded to icon plus label
+- The Trail: filter chips, day grouping with an inline count, ten minute timestamp
+  clustering, the mint completed row, and pagination by fourteen local day windows
 
 ## What is deliberately not there yet
 
@@ -59,8 +61,8 @@ Each of these is a phase, not an oversight. See the linked issue for why.
 - The **archived areas view**, issue #15. Archiving works and removes the area from
   the list, but there is currently no way back. Worth knowing before archiving
   anything you care about.
-- **Momentum, Report and Trail** render one honest line rather than a skeleton,
-  issue #16.
+- **Momentum and Report** render one honest line rather than a skeleton, issue #16.
+  The Trail no longer does.
 - The **weekly banner** on Areas, because its sentence comes from the engine, which
   does not exist until phase 5.
 
@@ -102,6 +104,67 @@ the font carries HVAR so that is not guaranteed at other weights. Every updating
 numeric display goes through the fixed width treatment in
 `ui/components/ClarityText.kt` rather than trusting the font. Newsreader does carry
 `tnum`.
+
+## Phase 3 delivered
+
+The Trail, and the query facade every later phase reads a number through.
+
+- `domain.query.TrailQueries`, a pure fold over the event log. Thirty six functions,
+  every one taking its time bounds as parameters and reading no clock. Bounds are
+  half open, `[start, end)`, stated once and held everywhere
+- `DomainPurityTest`, the first purity test in the repository. `docs/ARCHITECTURE.md`
+  had claimed one existed since phase 1 and it did not
+- Five DAO queries, each bounded by reading, and six repository methods. Nothing on
+  the Trail path selects the whole table
+- The Trail screen, and `ClarityChip`'s first call site, which turned up three
+  deviations from `design-v3.md` in a component nothing had used yet
+- 126 unit tests, up from 91
+
+### What the specification could not answer
+
+Three contradictions survived the authority order and are open as issues rather than
+guesses: #19, #20 and #21. None of them blocks phase 3, because `TrailQueries`
+computes no week of its own and takes every bound as a parameter. **#19 is the urgent
+one:** it is a change to the event format contract, and it is cheapest to settle
+before a real log exists.
+
+### Four decisions where the obvious answer was rejected
+
+Recorded per `design-v3.md` 15.
+
+1. **The event circle's color.** The obvious answer is a semantic palette, green for
+   completions and red for deletes. `design-v3.md` 3.1 scopes three of those tokens
+   to one use each, and 3.4 forbids color as a filled block. The circle takes the
+   area's color as of that event, at 12 percent
+2. **Pagination anchors on real events**, not on calendar arithmetic from today. A
+   person returning after a year would otherwise face twenty six empty page loads
+3. **Day headers do not stick.** A sticky header needs an opaque backing, which is a
+   second separation device on an element already carrying a hairline
+4. **No Trail row is tappable.** `design-v3.md` 10.15's destination table has no
+   Trail entry, and nine of the twenty four event types name nothing that could open
+
+### Five defects the review found after the build was green
+
+The build passed and the screen looked right before any of these were known.
+
+1. **The completed row's mint was composited over `canvas`**, which darkens the
+   ground to `#E0EDEA` where the timestamp measures 4.40:1, under `design-v3.md` 13's
+   4.5:1 floor. `design-v3.md` 11 calls it a mint wash **card**, and over `card` the
+   ground is `#EDFAF2` at 4.57:1. A measurement caught this, not an eye
+2. **A focus row could never name its item.** A focus event is keyed by its session,
+   so the page's entity ids never contain the item id, and a session on an item added
+   more than a fortnight earlier would have rendered as `Finished 25 minutes of focus
+   on` with nothing after the preposition. Latent until phase 4, invisible to every
+   test, because every fixture hands the facade a complete log. The rule is now
+   `itemIdsNeededBy`, pure and tested
+3. **The row sentence was capped at two lines with an ellipsis**, which clips at 200
+   percent font scale on a row that cannot be tapped to read the rest
+4. **The day header's label had no width cap**, so a long date at 200 percent font
+   scale took the hairline to zero width and the header lost its one separation device
+5. **Tab switches discarded scroll position.** The Trail keeps its loaded pages in a
+   ViewModel that outlives the switch, so a person who paged a month back returned to
+   the top of a list that still held the month. The shell now holds saveable state
+   per tab, which fixes Areas too
 
 ## Phase 2 delivered
 

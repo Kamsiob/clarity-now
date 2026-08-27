@@ -1,5 +1,6 @@
 package com.kamsiob.claritynow.ui.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -24,9 +26,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.kamsiob.claritynow.ui.theme.ClarityElevation
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.clarityMotion
@@ -158,7 +163,27 @@ fun ClarityFab(
 
 /**
  * A pill chip. design-v3.md 10.1 and 10.8. Card colored with soft elevation and no
- * border, because a chip carrying both would be the two device violation.
+ * border when unselected, a solid ink pill with an inverted label when selected.
+ *
+ * Those two states carry different separation devices on purpose, and only ever one
+ * at a time: the unselected chip is separated by its soft elevation, and the selected
+ * chip by a background lightness shift taken to its maximum. A shadow surviving under
+ * the ink fill would be the two device violation in design-v3.md 6.1, so it is gated
+ * off at the same instant the fill arrives.
+ *
+ * The pill is 38dp and sits inside a 48dp target rather than being grown to fill one.
+ * design-v3.md 10.8 fixes the chip's padding at 15dp by 9dp and design-v3.md 13 fixes
+ * the minimum touch target at 48dp. The only way to honor both is to separate the
+ * thing that is drawn from the thing that is touched; growing the pill would have
+ * quietly overwritten a dimension the design already stated.
+ *
+ * [dotColor] draws the 7dp area dot that design-v3.md 10.8 puts on an area chip and
+ * leaves off the All chip. It is a typed color rather than an open composable slot
+ * because design-v3.md 3.4 permits area color in exactly four places, of which a 7dp
+ * dot is one, and a free slot at the leading edge is an invitation to the other
+ * three. The dot keeps its own color while the chip is selected: filling the pill
+ * with the area color would be 3.4's banned filled block, and dropping the dot would
+ * erase the area's identity at the moment it becomes relevant.
  */
 @Composable
 fun ClarityChip(
@@ -166,7 +191,7 @@ fun ClarityChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     selected: Boolean = false,
-    leading: (@Composable () -> Unit)? = null,
+    dotColor: Color? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val colors = LocalClarityColors.current
@@ -180,14 +205,27 @@ fun ClarityChip(
         label = "chipPress",
     )
 
+    // Selection is a change of color, not of position, so it runs on the critically
+    // damped effects spring rather than the snappy one the press uses. springSnappy
+    // overshoots by design, and an ink fill or a label color that overshoots on the
+    // way in reads as a bounce on every tap, which design-v3.md 15.1 lists as a tell.
+    // ClarityMotion says the same thing about the token itself: an alpha that
+    // overshoots is a bug rather than a flourish. The press scale keeps springSnappy,
+    // which design-v3.md 8.1 assigns to chips by name.
+    val background by animateColorAsState(
+        targetValue = if (selected) colors.inkPrimary else colors.card,
+        animationSpec = motion.effects(),
+        label = "chipBackground",
+    )
+    val labelColor by animateColorAsState(
+        targetValue = if (selected) colors.card else colors.inkSecondary,
+        animationSpec = motion.effects(),
+        label = "chipLabel",
+    )
+
     Box(
         modifier = modifier
-            .scale(scale)
-            .defaultMinSize(minHeight = 38.dp)
-            .clarityShadow(ClarityElevation.card, CircleShape, enabled = !colors.isDark && !selected)
-            .clip(CircleShape)
-            .background(if (selected) colors.inkPrimary else colors.card)
-            .clarityFocusRing(interaction, CircleShape)
+            .sizeIn(minHeight = ClaritySpacing.minTouchTarget)
             .clarityClickable(
                 interactionSource = interaction,
                 haptic = ClarityHapticEvent.TAP,
@@ -195,18 +233,40 @@ fun ClarityChip(
                 onClickLabel = label,
                 onClick = onClick,
             )
-            .padding(horizontal = 15.dp, vertical = 9.dp),
+            // Without this a selected chip and an unselected one are the same node to
+            // TalkBack, which leaves the inverted ink as a color only signal.
+            // design-v3.md 13: color is never the only signal. The caller puts the row
+            // in a selectableGroup so the set is announced as a set.
+            .semantics { this.selected = selected },
         contentAlignment = Alignment.Center,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-            if (leading != null) {
-                leading()
+        Row(
+            modifier = Modifier
+                .scale(scale)
+                .defaultMinSize(minHeight = 38.dp)
+                .clarityShadow(ClarityElevation.card, CircleShape, enabled = !colors.isDark && !selected)
+                .clip(CircleShape)
+                .background(background)
+                .clarityFocusRing(interaction, CircleShape)
+                .padding(horizontal = 15.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            if (dotColor != null) {
+                // No content description. The chip's own label already names the area,
+                // and a second node here would make TalkBack read it twice.
+                Box(
+                    modifier = Modifier
+                        .size(ClaritySpacing.areaDot)
+                        .clip(CircleShape)
+                        .background(dotColor),
+                )
                 Box(Modifier.size(width = 7.dp, height = 1.dp))
             }
             Text(
                 text = label,
                 style = type.label.opticallyCentered(),
-                color = if (selected) colors.card else colors.inkSecondary,
+                color = labelColor,
             )
             if (trailing != null) {
                 Box(Modifier.size(width = 6.dp, height = 1.dp))

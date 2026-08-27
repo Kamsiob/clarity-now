@@ -113,4 +113,54 @@
     <string name="conflict_dismiss">Got it</string>
     <string name="conflict_two_active">While you were away, two things became active in %1$s. %2$s is active. %3$s is back at the top of the queue.</string>
 
+    <!-- Trail, MASTER_BUILD_PROMPT 9 and design-v3.md 11 -->
+    <string name="trail_filter_all">All</string>
+    <string name="trail_day_today">Today</string>
+    <string name="trail_day_yesterday">Yesterday</string>
+    <plurals name="trail_day_event_count">
+        <item quantity="one">%d entry</item>
+        <item quantity="other">%d entries</item>
+    </plurals>
+    <string name="trail_end_of_history">That is everything.</string>
+    <string name="trail_empty_title">Nothing here yet</string>
+    <string name="trail_empty_body">Everything you do in your areas is recorded here, back to the day you installed this app.</string>
+
+    <!-- Trail entries. Records of what happened, not observations. -->
+    <string name="trail_area_created">Created %1$s</string>
+    <string name="trail_area_renamed">Renamed %1$s to %2$s</string>
+    <string name="trail_area_recolored">Changed the color of %1$s</string>
+    <string name="trail_area_reordered">Moved %1$s in the list</string>
+    <string name="trail_area_archived">Archived %1$s</string>
+    <string name="trail_area_unarchived">Unarchived %1$s</string>
+    <string name="trail_area_deleted">Deleted %1$s</string>
+    <string name="trail_item_added">Added %1$s</string>
+    <string name="trail_item_edited">Edited %1$s</string>
+    <string name="trail_item_queued">Queued %1$s</string>
+    <string name="trail_item_promoted">Made %1$s active</string>
+    <string name="trail_item_swapped">Swapped %1$s to the front</string>
+    <string name="trail_item_completed">Completed %1$s</string>
+    <string name="trail_item_reopened">Reopened %1$s</string>
+    <string name="trail_item_reordered">Moved %1$s in the queue</string>
+    <string name="trail_item_deleted">Deleted %1$s</string>
+    <string name="trail_focus_started">Started a focus session on %1$s</string>
+    <plurals name="trail_focus_completed">
+        <item quantity="one">Finished %1$d minute of focus on %2$s</item>
+        <item quantity="other">Finished %1$d minutes of focus on %2$s</item>
+    </plurals>
+    <plurals name="trail_focus_stopped">
+        <item quantity="one">Stopped after %1$d minute on %2$s</item>
+        <item quantity="other">Stopped after %1$d minutes on %2$s</item>
+    </plurals>
+    <string name="trail_pulse_generated">A Pulse was shown</string>
+    <string name="trail_pulse_answered">Answered a Pulse with %1$s</string>
+    <string name="trail_report_generated">A Report was written for the week of %1$s</string>
+    <string name="trail_plan_offered">One thing was suggested</string>
+    <string name="trail_plan_accepted">Accepted one thing</string>
+    <string name="trail_setting_changed">Changed a setting</string>
+
+    <!-- Trail content descriptions -->
+    <string name="cd_trail_filter_all">Show everything</string>
+    <string name="cd_trail_filter_area">Show only %1$s</string>
+    <string name="cd_trail_entry_at">%1$s, at %2$s</string>
+
 </resources>

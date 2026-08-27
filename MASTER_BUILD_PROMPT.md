@@ -154,7 +154,9 @@ Indices on `lamport`, `type`, `entityId`, `wallClock`.
 
 ### 5.2 The event catalog
 
-Payloads carry **full before and after values plus display snapshots**, so replay reconstructs state without reading any other table. This is the trap in event sourcing: a log that reads nicely is not the same as a log that replays correctly.
+Payloads carry **full before and after values**, so replay reconstructs state without reading any other table. This is the trap in event sourcing: a log that reads nicely is not the same as a log that replays correctly.
+
+**Display snapshots are carried where they are cheap, not everywhere.** Eight of the twenty four types carry enough of one to name both the subject and the area of a Trail row with no lookup: the five area events that carry a name, and `ITEM_ADDED`, `ITEM_PROMOTED` and `ITEM_COMPLETED`. The other sixteen resolve their display values by folding the log to the instant of the event, which is what `domain.query.TrailQueries` does. Neither path reads a live entity table, so a rename never rewrites an older Trail entry.
 
 | type | payload |
 |---|---|

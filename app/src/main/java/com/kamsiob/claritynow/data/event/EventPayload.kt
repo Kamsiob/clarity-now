@@ -6,13 +6,20 @@ import kotlinx.serialization.Serializable
 /**
  * The event payloads, MASTER_BUILD_PROMPT 5.2.
  *
- * Every payload carries full before and after values plus display snapshots, so a
- * replay reconstructs state without reading any other table and a Trail entry can
- * render an area that was renamed, archived or deleted years later.
+ * Every payload carries full before and after values, so a replay reconstructs state
+ * without reading any other table. This is the trap in event sourcing that is easy
+ * to miss: a log that reads nicely is not the same as a log that replays correctly.
+ * `ITEM_PROMOTED` carrying `demotedItemId` is the clearest example, and a descriptive
+ * log would omit it.
  *
- * This is the trap in event sourcing that is easy to miss: a log that reads nicely
- * is not the same as a log that replays correctly. `ITEM_PROMOTED` carrying
- * `demotedItemId` is the clearest example, and a descriptive log would omit it.
+ * Display snapshots are a separate question, and they are not universal. Eight of
+ * these twenty four carry enough of one to name both the subject and the area of a
+ * Trail row with no lookup at all: the five area events that carry a name, and
+ * [ItemAdded], [ItemPromoted] and [ItemCompleted], which carry a title and an area
+ * name together. The other sixteen carry a partial snapshot or none, and an entry
+ * from a year ago resolves what it is missing by folding the log to the instant of
+ * the event, which is what `domain.query.TrailQueries` does. Neither path reads a
+ * live entity table, so renaming an area never rewrites an older Trail entry.
  */
 sealed interface EventPayload {
     /** The entity this event is primarily about. Indexed on the row. */

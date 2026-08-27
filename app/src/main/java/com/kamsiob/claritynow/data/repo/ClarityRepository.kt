@@ -54,7 +54,9 @@ import java.util.UUID
  *
  * The authoritative projection is the in memory [ClarityState] produced by folding
  * the log. The Room cache tables mirror it so a cold start does not have to replay
- * a year of events, and so the Trail can be paged without holding everything.
+ * a year of events. They hold current state and carry no history, so they cannot
+ * serve the Trail at all: the Trail pages the event log itself, a wall clock window
+ * at a time, through [trailPage].
  */
 class ClarityRepository(
     private val db: ClarityDatabase,
@@ -426,8 +428,71 @@ class ClarityRepository(
         _state.value = ClarityState.EMPTY
     }
 
-    /** Every event, oldest first. The export path and the Trail both start here. */
+    /**
+     * Every event, oldest first. The export path starts here, and nothing else does.
+     *
+     * This is a `SELECT *` over the whole table, which is correct for an export and
+     * wrong for anything a person waits on. The Trail in particular does not start
+     * here: it pages the log by wall clock window, through [trailPage].
+     */
     suspend fun allEvents(): List<ClarityEvent> = events.allInOrder().mapNotNull { it.toEvent() }
+
+    // The Trail path ----------------------------------------------------------
+    //
+    // MASTER_BUILD_PROMPT section 4: ViewModels never touch DAOs, only
+    // repositories. These six methods are therefore the whole of the Trail's
+    // access to the log, and every one of them is bounded: a half open wall clock
+    // window, a single anchor row, or an explicit list of ids taken from a page
+    // that has already been loaded.
+
+    /**
+     * One page of the Trail, newest first. MASTER_BUILD_PROMPT 9.
+     *
+     * Half open, like every other bound in this app: `[fromMillis, toMillis)`.
+     */
+    suspend fun trailPage(fromMillis: Long, toMillis: Long): List<ClarityEvent> =
+        events.betweenWallClock(fromMillis, toMillis).mapNotNull { it.toEvent() }
+
+    /**
+     * The anchor for the first page: the wall clock of the newest event there is.
+     *
+     * Null means the log is empty, which is the Trail's empty state and needs no
+     * further query.
+     */
+    suspend fun newestEventAt(): Long? = events.newestWallClock()
+
+    /**
+     * The anchor for the next page. Null means there is nothing older than
+     * [beforeMillis] and pagination is finished.
+     *
+     * Asking the log where the next event actually is, rather than stepping back a
+     * fortnight at a time, is what keeps a long quiet stretch of history cheap.
+     */
+    suspend fun newestEventBefore(beforeMillis: Long): Long? =
+        events.newestWallClockBefore(beforeMillis)
+
+    // The three id keyed lookups below chunk their arguments at [MAX_BOUND_IDS]
+    // before they reach the DAO. A fourteen day page can legitimately name more
+    // distinct items than SQLite will bind in one statement, and the failure is a
+    // runtime exception on a busy log rather than anything a small test would see.
+
+    /** Naming and coloring history for exactly the areas one page mentions. */
+    suspend fun areaHistoryFor(areaIds: List<String>): List<ClarityEvent> =
+        areaIds.chunked(MAX_BOUND_IDS)
+            .flatMap { events.areaHistory(it) }
+            .mapNotNull { it.toEvent() }
+
+    /** Title history and area binding for exactly the items one page mentions. */
+    suspend fun itemHistoryFor(itemIds: List<String>): List<ClarityEvent> =
+        itemIds.chunked(MAX_BOUND_IDS)
+            .flatMap { events.itemHistory(it) }
+            .mapNotNull { it.toEvent() }
+
+    /** The `FOCUS_STARTED` rows for exactly the sessions one page mentions. */
+    suspend fun focusOriginsFor(sessionIds: List<String>): List<ClarityEvent> =
+        sessionIds.chunked(MAX_BOUND_IDS)
+            .flatMap { events.focusOrigins(it) }
+            .mapNotNull { it.toEvent() }
 
     // The write path ----------------------------------------------------------
 
@@ -525,6 +590,12 @@ class ClarityRepository(
     companion object {
         const val MAX_AREA_NAME = 40
         const val MAX_ITEM_TITLE = 200
+
+        /**
+         * SQLite binds at most 999 variables in one statement on older builds, so
+         * every `IN (:ids)` list is chunked at this before it reaches the DAO.
+         */
+        private const val MAX_BOUND_IDS = 900
 
         private val snapshotJson = Json {
             encodeDefaults = true
