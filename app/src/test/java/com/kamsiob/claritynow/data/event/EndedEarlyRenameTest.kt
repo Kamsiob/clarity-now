@@ -44,6 +44,38 @@ class EndedEarlyRenameTest {
     /** Case insensitive, and deliberately the stem rather than the whole word. */
     private val forbidden = Regex("""abandon""", RegexOption.IGNORE_CASE)
 
+    /**
+     * Where the word is allowed to survive, and why each one is not a loophole.
+     *
+     * **`domain/engine` is exempt, and this is the important one.** The engine's family
+     * keys, `focusAbandonment` and `abandonmentPattern`, are declared in
+     * `CLARITY_LOGIC_ENGINE.md` 6.3 and 6.5 and are the identifiers the corpus files
+     * key their line tables on. Renaming them is a corpus edit, and a corpus edit is
+     * presented to the owner for approval rather than made by a builder. They also sit
+     * behind no surface a person can reach.
+     *
+     * That is a narrower claim than C6 made about the event type, and deliberately so.
+     * C6's reasoning was that `docs/EVENT_FORMAT.md` is a contract a second
+     * implementation is built from, so a name in it instructs the next implementer.
+     * The event vocabulary, the strings a person reads and the UI are that contract's
+     * surface. An internal family key shared with a corpus file is a different thing,
+     * and pretending otherwise would have this test demand a change it has no standing
+     * to make.
+     *
+     * **`ValidatorVocabulary` is exempt because it exists to forbid the word.** Check
+     * 10 refuses past participles whose deleted agent could only be the person, and a
+     * ban list that cannot spell what it bans is not a ban list. Same shape as the note
+     * in `DECISIONS.md` about the language gate being unable to quote the spellings it
+     * rejects: a rule covering every file eventually cannot describe itself, and the
+     * honest answer is a named exemption rather than a weaker rule.
+     */
+    private val exemptPathParts = listOf("/domain/engine/")
+    private val exemptFiles = setOf("ValidatorVocabulary.kt")
+
+    private fun isExempt(path: String): Boolean =
+        exemptPathParts.any { path.replace('\\', '/').contains(it) } ||
+            File(path).name in exemptFiles
+
     private data class SourceLine(val path: String, val number: Int, val text: String)
 
     private fun filesUnder(path: String, extension: String): List<File> {
@@ -81,11 +113,14 @@ class EndedEarlyRenameTest {
 
     @Test
     fun `no code in the app names the concept by its old name`() {
-        val offenders = filesUnder(mainSource, "kt").flatMap { file ->
-            file.readLines().mapIndexedNotNull { index, text ->
-                if (isComment(text)) null else SourceLine(file.path, index + 1, text)
+        val offenders = filesUnder(mainSource, "kt")
+            .filterNot { isExempt(it.path) }
+            .flatMap { file ->
+                file.readLines().mapIndexedNotNull { index, text ->
+                    if (isComment(text)) null else SourceLine(file.path, index + 1, text)
+                }
             }
-        }.filter { forbidden.containsMatchIn(it.text) }
+            .filter { forbidden.containsMatchIn(it.text) }
 
         assertTrue(
             "the word survives in code, not in a comment explaining the rename. A " +

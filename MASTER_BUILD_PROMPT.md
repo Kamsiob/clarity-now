@@ -443,6 +443,8 @@ All engine reads go through `TrailQueries`, a pure facade with functions such as
 
 **This section exists because the engine and the corpora are the easiest part of this project to misuse, and misuse is not detectable by looking at the screen.**
 
+**Layers 1 to 5 are built, as of phase 5.** What follows describes an engine that exists and that you call, not one you are about to design. Layer 6 is phase 9b and is the last thing built. `CLARITY_LOGIC_ENGINE.md` remains the authority on every layer; 11.7 below is the short version of where the code is.
+
 ### 11.1 The one rule everything follows from
 
 **No sentence reaches a screen except by passing through the engine layers in order, and every sentence displayed comes from a corpus file.**
@@ -451,13 +453,15 @@ There is no second path. Not for empty states, not for errors, not for edge case
 
 ### 11.2 What each corpus is for, and when it is read
 
-| corpus | read by | when | produces |
+**All three files are read once, by `ClarityCatalog.build`, which parses them into families, stages, variants and response pairs.** Nothing else opens a corpus file, and nothing copies a corpus line into Kotlin. What differs per surface is the `Purpose` the engine is asked for, and which part of which file that purpose draws on.
+
+| corpus | reached through | when | produces |
 |---|---|---|---|
-| `CORPUS_1_PULSE.md` | `PulseEngine` | once on the first app foreground of each local calendar day | one observation, one question, one response set, or nothing |
-| `CORPUS_2_REPORT.md` 1, 2, 3 | `ReportEngine` | first open of the Report tab in a new week, and on manual regenerate | one headline, 2 to 4 observations, at most one pattern |
-| `CORPUS_2_REPORT.md` 4 | `GuidanceComposer`, layer 6 | after the report body exists, once | one plan, one non-plan closing, or nothing |
-| `CORPUS_2_REPORT.md` 5, 6 | `ReportEngine` | same | footer and edge states |
-| `CORPUS_3_MOMENTUM.md` | `MomentumEngine` | on Momentum entry; banner at most once per hour of app use | one headline, or one banner sentence plus one caption |
+| `CORPUS_1_PULSE.md` | `Purpose.PULSE` | once on the first app foreground of each local calendar day | one observation, one question, one response set, or nothing |
+| `CORPUS_2_REPORT.md` 1, 2, 3 | `REPORT_HEADLINE`, `REPORT_OBSERVATION`, `REPORT_PATTERN` | first open of the Report tab in a new week, and on manual regenerate | one headline, 2 to 4 observations, at most one pattern |
+| `CORPUS_2_REPORT.md` 4 | `GuidanceComposer`, layer 6, phase 9b | after the report body exists, once | one plan, one non-plan closing, or nothing |
+| `CORPUS_2_REPORT.md` 5, 6 | the catalog's auxiliary benches | same | footer and edge states |
+| `CORPUS_3_MOMENTUM.md` | `MOMENTUM_HEADLINE` and `AREAS_BANNER` | on Momentum entry; banner at most once per hour of app use | one headline, or one banner sentence plus one caption |
 
 **Nothing else reads a corpus. Ever.** Widgets read the widget snapshot, which contains sentences the engine already produced. Notifications use fixed strings from `strings.xml`. The tutorial and onboarding use fixed strings.
 
@@ -469,9 +473,9 @@ There is no second path. Not for empty states, not for errors, not for edge case
 1. Compute dateKey from ClarityClock with an explicit zone
 2. If a ClarityPulseEntry exists for dateKey, stop. Display it. It is immutable
 3. reflectionPeriod: before 17:00 use yesterday, at or after 17:00 use today so far
-4. FactExtractor over that window -> FactSet
-5. FiringHistory rebuilt from PULSE_GENERATED and PULSE_ANSWERED events. Never DataStore
-6. ClarityEngine.observe(facts, history, Purpose.PULSE)
+4. FactExtractor(queries).extract(window) -> FactSet
+5. FiringHistory.from the log: PULSE_GENERATED, REPORT_GENERATED, PLAN_OFFERED. Never DataStore
+6. ClarityEngine(catalog, ClarityValidator(zone), zone).observe(facts, history, Purpose.PULSE)
 7. If Silent, write nothing. The day is IDLE. The chip shows no dot
 8. If Spoke, write PULSE_GENERATED with family, stage, register, variantKey,
    rendered strings and the fact snapshot
@@ -494,6 +498,8 @@ There is no second path. Not for empty states, not for errors, not for edge case
 
 **Momentum, on screen entry:** extract, select one `MOMENTUM_HEADLINE`, realize, validate. The banner is the same with `AREAS_BANNER` and a one hour throttle held in the ViewModel, not the engine.
 
+**Both are one call.** `observe` runs selection, realization and validation itself, walks down the ranked list when layer 5 vetoes something, and answers `Spoke` or `Silent`. The Report's observation pass is `observeObservations`, which is the same loop with the family exclusion, the incompatibility matrix, the editorial budget and the length band alternation applied across the set.
+
 ### 11.4 What you must never do
 
 These are the failures that will not be visible in a screenshot.
@@ -514,7 +520,9 @@ These are the failures that will not be visible in a screenshot.
 
 ### 11.5 Before a single corpus line
 
-The simulator in `devtools` exists and runs. Synthetic personas, a full simulated year, every Pulse and Report dumped to plain text annotated with the rule that fired, the stage, the register, the variant key and the facts used. Without it you are authoring blind.
+**The simulator in `devtools` exists and runs, as of phase 5.** Eleven synthetic personas, a full simulated year each, every Pulse, Momentum, banner and Report invocation dumped to plain text annotated with the rule that fired, the stage, the register, the variant key and the facts used. Without it you are authoring blind.
+
+Run it through `SimulatorTest`, which builds the catalog from the three committed corpus files, runs every persona and prints the ten checks in `CLARITY_LOGIC_ENGINE.md` 12 with the number each one measured. Four of those checks are enforced and fail the build. Six measure a property that a corpus this size cannot have, and each carries a date and the issue that lifts it. **Judge a batch of authored lines against that dump, never on the page.**
 
 ### 11.6 The Pulse response format, settled
 
@@ -523,6 +531,28 @@ The simulator in `devtools` exists and runs. Synthetic personas, a full simulate
 A third path already exists: **not answering**. Dismissing the sheet is a fully supported state with its own representation, the hollow amber ring in the ambient rhythm row. Never chased, never counted against the user, never mentioned.
 
 `Neither` would produce a response with no signal, which is worse than no response, because it enters the aggregation and dilutes it.
+
+### 11.7 What exists, and how to reach it
+
+Phase 5 built layers 1 to 5 and the simulator. This is where they are.
+
+| you want | you call | in |
+|---|---|---|
+| the facts for a window | `FactExtractor(queries).extract(window)` | `domain.engine` |
+| the catalog | `ClarityCatalog.build(pulseText, reportText, momentumText)` | `domain.engine.catalog` |
+| what has been said before | `FiringHistory.from(queries, asOfMillis)`, rebuilt every time | `domain.engine` |
+| one sentence for a surface | `ClarityEngine.observe(facts, history, purpose)` | `domain.engine` |
+| the Report's 2 to 4 observations | `ClarityEngine.observeObservations(...)` | `domain.engine` |
+| a year of output to read | `ClaritySimulator(catalog).runAll()`, then `SimulationDump` | `devtools`, debug only |
+
+**Build the catalog once and hold it.** It parses three markdown files, computes every length band from the realized word count and runs its integrity checks; it is not a per invocation cost. **Build `FiringHistory` every invocation.** It is derived from the log, it merges because the log merges, and caching it is how two devices drift apart silently.
+
+**Four things phase 5 deliberately did not build**, so that nobody looks for them:
+
+- **Layer 6.** `GuidanceComposer`, plans, cues in use, the nominal offer frame. Phase 9b, and `CLARITY_LOGIC_ENGINE.md` 10 calls it the last thing built. `CueFacts` is extracted and confidence gated already, and nothing reads it
+- **The Pulse, Momentum and Report screens**, and the generation lifecycle in 11.3. Phases 6, 7 and 8. Phase 5 built the engine those screens call, and no caller
+- **The corpus at its target size.** Phase 9. The benches are the size they were authored at, which is why six of the ten simulator checks are deferred rather than passing
+- **Rules for every family the corpus has language for.** Nine families and three single stages have authored lines and no rule, because the fact their trigger names is not declared in `CLARITY_LOGIC_ENGINE.md` 3.1. Each one is listed in code with the fact it needs and the corpus line that needs it, and a catalog test fails if a family goes quiet without being listed. **Do not approximate one of them.** A near enough criterion fires a family on a shape it does not describe, and the sentence that comes out is arithmetic nobody can fault and a claim that is not true
 
 ---
 
@@ -1207,7 +1237,11 @@ It carries **tokens and type only**, and every item in it is a `design-v3.md` ch
 
 **The two checks that close it are on the phone and nowhere else.** A force stop mid session followed by a relaunch, and the back gesture during a session. Both are in the manual list in section 17, both are the specification's own words, and neither can be met by reading the code.
 
-**Phase 5. Engine skeleton and simulator.** Fact extraction, rule catalog structure, selection, realization, validation. **The simulator in `devtools` before any corpus work.** Roughly 40 rules and 150 sentences to prove the shape end to end.
+**Phase 5. Engine skeleton and simulator. Built, and awaiting the closing build and install that finishes it.** Issue #3. Fact extraction, the rule catalog, selection, realization, validation, and **the simulator in `devtools` before any corpus work**. Layers 1 to 5 exist and are described as they are, not as planned, in section 11 above.
+
+It ended up larger than the 40 rules the phase asked for and smaller than the corpus it will eventually drive: **92 rules across 78 families**, every sentence parsed out of the three committed corpus files rather than authored in Kotlin, and 17 new functions on `TrailQueries` because a fact the facade could not answer was added to the facade rather than computed in the engine. Eleven personas run a full simulated year each.
+
+**Six of the ten checks in `CLARITY_LOGIC_ENGINE.md` 12 fail, and that is this phase working rather than failing.** Issue #3 says so in advance: the corpus is not grown until phase 9 and layer 6 does not exist until 9b, so every check whose failure is a bench too small carries a date and the issue that lifts it, runs on every simulation, and prints the number it measured. Those numbers are the baseline phase 9 is judged against and they are in `docs/BUILD_STATE.md` and `DECISIONS.md`.
 
 **Phase 6. Pulse.** Generation lifecycle per 11.3, the sheet, ambient mode, history, reminders. **Plus Addendum 01:** the re-entry surface and the two day Pulse silence after a return (14b.4), and an empty state that says what it needs and roughly when it becomes useful (14b.10).
 

@@ -2,18 +2,20 @@
 
 Where the build actually is. Updated at the end of every phase.
 
-**Last updated:** August 27, 2026, end of phase 4.
-is awaiting the device check that closes it**, so everything this file says about focus
-sessions is true of the source and is not yet true of anything installed.
-**Version:** 0.5.0, versionCode 500.
-when its device check passes.
-**Installed and verified on:** Pixel 8 (`shiba`), over USB.
+**Last updated:** August 27, 2026, end of phase 5.
+**Phase 4 and phase 5 are both built and both awaiting the check that closes them**, so
+everything this file says about focus sessions and about the engine is true of the source
+and is not yet true of anything installed.
+**Version:** 0.6.0, versionCode 600.
+**Installed and verified on:** Pixel 8 (`shiba`), over USB, last at the end of phase 3c.
 
-**A note on the three lines above**, because the last edit to them left the file
-misleading for a day: the closing commit for phase 3c replaced the first line of each
-paragraph and left the continuation lines behind, so the header said phase 3c was
-awaiting a check it had already passed. Repaired here. A status line that is stitched
-from two states is worse than either of them.
+**A note on the five lines above**, because two successive edits have left them
+misleading. The closing commit for phase 3c replaced the first line of each paragraph and
+left the continuation lines behind, so the header claimed phase 3c was awaiting a check it
+had already passed. The repair recorded here at the end of phase 4 fixed the prose and not
+the lines, so the orphans survived another phase and the file read as three sentences
+missing their first halves. Actually repaired now. **A status line stitched from two states
+is worse than either of them**, and the way to edit these is to replace the whole block.
 
 ---
 
@@ -27,7 +29,7 @@ from two states is worse than either of them.
 | 3b. Executive function retrofit | done | closed |
 | 3c. Design foundations, the polish pass | done | closed |
 | 4. Focus sessions | built, awaiting the device check | #2 |
-| 5. Engine skeleton and simulator | not started | #3 |
+| 5. Engine skeleton and simulator | built, awaiting the closing build and install | #3 |
 | 6. Pulse | not started | #4 |
 | 7. Momentum | not started | #5 |
 | 8. Snapshots and the Report | not started | #6 |
@@ -242,11 +244,14 @@ Each of these is a phase, not an oversight. See the linked issue for why.
   anything you care about.
 - **Momentum and Report** render one honest line rather than a skeleton, issue #16.
   The Trail no longer does.
-- The **weekly banner** on Areas, because its sentence comes from the engine, which
-  does not exist until phase 5.
+- The **weekly banner** on Areas, because its sentence comes from the engine. The
+  engine now exists and produces that sentence; the surface that shows it is phase 7.
 - The **re-entry surface**, the phase 6 half of issue #27. Detection is built and
   nothing renders it. The surface has to be able to say nothing, and saying nothing is
-  an engine decision, so it cannot be built before phase 5 exists.
+  an engine decision; the engine can now say nothing, and the screen is phase 6.
+- **Everything the engine says**, which is all of it. Phase 5 built layers 1 to 5 and no
+  caller, so no sentence the engine produces has reached a device. Phase 6 is the first
+  screen that asks it anything.
 - The **`Calm mode` Settings row**, phase 11, issue #10. The setting behind it is built
   and honored everywhere in the app. Until the row exists the key has no stored value,
   which means calm mode follows the OS reduce motion setting, which is its specified
@@ -317,8 +322,181 @@ Each of these is a phase, not an oversight. See the linked issue for why.
   Material's own, they honor the system animator scale and therefore reduce motion, and
   they expose no hook an app preference can reach. Recorded as a decision in
   `DECISIONS.md` and in `design-v3.md` 16.8 rather than left to be rediscovered.
+- **Three corpus totals disagree with the files beneath them**, found by counting at
+  catalog load rather than by reading. `CLARITY_LOGIC_ENGINE.md` 11.1 states 162 Momentum
+  and banner lines and 1,519 authored lines in total; the files carry 146 and 1,503.
+  `CORPUS_3_MOMENTUM.md` claims 112 Momentum headlines in two places and carries 96, and
+  inside `CORPUS_2_REPORT.md` section 1's prose says 176 headlines against its own table's
+  158 and section 3's says 128 patterns against 111. **Left as written**, because whether a
+  file grows to its total or a total is corrected to its file is a phase 9 question and a
+  builder quietly editing a specification to match what the code counted is the move the
+  authority order exists to prevent. The count is recorded at the point of the claim in
+  11.1 and the recommendation is in `DECISIONS.md`.
+- **Six of the ten simulator checks in `CLARITY_LOGIC_ENGINE.md` 12 fail**, by design and
+  with a date and an issue on each. They are not defects of phase 5 and they are listed
+  here so nobody has to rediscover which ones are expected. The numbers they measured are
+  in the phase 5 section below. **`accumulation` never reaching stage 2 across a year of
+  eleven personas is the one worth a second look**, because the other six failures are bench
+  depth and that one is a rule that may never fire.
+- **Three Pulse families have rules that never fired**, `throughput`, `burst` and
+  `queueDrain`, across eleven simulated years. Either the personas do not produce the
+  shape, or the criteria are tighter than the corpus stage headers they were built from.
+  Phase 9 has to know which before it grows those benches.
 
 ---
+
+## Phase 5 delivered
+
+The engine, issue #3. Layers 1 to 5 of the six in `CLARITY_LOGIC_ENGINE.md` 2, plus the
+simulator, which section 12 requires **before a single corpus sentence is written**. It is
+the largest phase in the project so far and the only one with no screen in it: nothing here
+is visible, and every defect it could contain is a false sentence about somebody's life
+some months from now with nothing on screen pointing back at the cause.
+
+**Nothing here is a rebuild.** `FactRef`, `StableHash`, the event log at 28 types and
+`TrailQueries` all existed and were built for this. What phase 5 added is everything above
+the facade.
+
+- **Layer 1, the facts.** `domain/engine/`, with the fact classes in a `facts/` directory
+  and in the `domain.engine` package, because they are the vocabulary every layer imports.
+  `FactExtractor` runs once per invocation and returns a fully populated, immutable
+  `FactSet`. **Nothing in it is lazy**, because a fact computed at validation time was
+  computed against a different log than the fact beside it. Archived and tombstoned areas
+  are absent from the map entirely, which turns prohibition 3 of 1.1 into a shape rather
+  than a rule somebody has to remember. `CueFacts` is extracted and gated on all three
+  thresholds in 3.7, and nothing reads it until phase 9b.
+- **17 new functions on `TrailQueries`**, taking the facade to 59. Every one of them exists
+  because a fact the engine needed could not be answered from what was there, and
+  `MASTER_BUILD_PROMPT.md` 9 leaves exactly one option: add it to the facade, never compute
+  it in the engine. The per area focus attribution, the per day and per hour buckets, the
+  live item set behind validator check 2, and the three readers that make `FiringHistory`
+  derivable from the log are all in that group.
+- **Layer 2, the catalog.** `domain/engine/catalog/`. `ClarityCatalog.build` parses all
+  three corpus files into families, stages, variants and response pairs. **Nothing is
+  authored in Kotlin except the rules**, so a corpus edit cannot silently disagree with a
+  copy of the corpus embedded in code. Stage thresholds are parsed out of the corpus stage
+  headers per 7.3, a compound header becomes two rules pointing at one stage, a qualitative
+  header gets no range at all, and `lengthBand` is computed from the realized word count at
+  load time and never read from a tag.
+- **Layer 3, selection.** `domain/engine/select/`. The seven steps in section 5 in that
+  order, the three term ranking with the final key sort present, the incompatibility matrix
+  from section 9, and 5.1's deliberate silence. Four of the five silence reasons are
+  produced here and every one is a described state rather than an error.
+- **Layer 4, realization.** `domain/engine/realize/`. The ladder, the register order, the
+  bench, the line. **It receives only the `FactSet` and a corpus**, and there is no
+  parameter through which a live entity table could be passed, which is validator check 5
+  enforced by shape. Slots render centrally: percent as a word, counts of two to nine as
+  words in Pulse and Momentum and digits in the Report, both plural forms carried with no
+  default, and zero never reaching a template.
+- **Layer 5, validation.** `domain/engine/validate/`. All ten checks in section 8, in that
+  order, as a list a test walks rather than as control flow. A veto sends the engine to the
+  next ranked selection, and an exhausted list is silence.
+- **The engine loop.** `ClarityEngine.observe(facts, history, purpose)` answers `Spoke` or
+  `Silent`. It holds its validator as a seam **with no default**, so the bypass
+  `MASTER_BUILD_PROMPT.md` 11.4 forbids cannot be written by accident.
+- **The simulator**, `app/src/debug/java/com/kamsiob/claritynow/devtools/`. Eleven personas
+  including the one who accepts every plan and completes none, a full simulated year each,
+  the engine day by day for the Pulse and week by week for the Report with Momentum and the
+  banner on every simulated open, and a plain text dump annotated with the rule, the stage,
+  the register, the variant key and the facts used. It writes its own output back into its
+  log, because `FiringHistory` derives from exactly those events.
+- **`verifyDevtoolsAreDebugOnly`**, a Gradle task that reads the source directories Gradle
+  resolved rather than trusting the layout on disk, and fails if the package is missing from
+  the debug source set, present in a release one, or named by any file a release build
+  compiles. It runs inside `verifyClarity` and blocks `assembleRelease`.
+- **246 unit tests** across 27 new classes, and every one of them holds something that is
+  invisible on a screen. The twenty veto tests are the ones the specification asks for by
+  name: a validator whose failure branch never executes is a validator nobody has verified.
+
+### What the simulator measured, and why six checks fail on purpose
+
+Issue #3 says in advance that the statistical checks in section 12 cannot pass in this
+phase, because the corpus is not grown until phase 9 and layer 6 does not exist until 9b.
+**They are built, they run, they measure and they report, and only their verdict is
+deferred.** Each carries a date and the issue that lifts it. A skipped check produces no
+number, and the whole reason the simulator comes before the corpus is so the growing can be
+aimed.
+
+Eleven personas, a year each: 92 rules across 78 families, 3,148 simulated opens, 451
+reports, 118 layer 5 vetoes across the whole run.
+
+| gate | target | measured |
+|---|---|---|
+| no variant repeats inside ninety days | none | 7,384 repeats, the tightest after 1 day |
+| Pulse silence | 8 to 25 percent of opened days | 43 to 98 percent per persona, 76 overall |
+| layer 6 silence | at least 15 percent of reports | not measurable, layer 6 is phase 9b |
+| no family over a fifth of a year's Pulses | 20 percent | 27 to 60 percent per persona |
+| every stage of every hot family fires | all | 29 hot families, one gap: `accumulation` never reached stage 2 |
+| no two consecutive leads share a band | none | 715 collisions across 451 reports |
+| no three parallel numeric clauses | none | 27 runs of three or more |
+
+**The four enforced checks pass.** No banned word, dash, emoji or non-ASCII character in
+any sentence of any persona's year; no sentence naming an area with no events in its
+window; no visible slot marker; and nothing in the plan-accepting persona's 1,388
+invocations referencing a plan, a commitment, an intention or a failure to act.
+
+### The reading phase 9 should not miss
+
+**Silence is three to twelve times the target band, and a bigger corpus will not fix it.**
+Of the eleven Pulse families in 6.1, six ever fired. Two have no rule at all. Three more,
+`throughput`, `burst` and `queueDrain`, have rules that no persona's year ever satisfied.
+Of 2,383 silent days, 1,238 were days where something qualified and every candidate was
+filtered by a cooldown or by yesterday's family, and 1,134 were days where nothing
+qualified at all.
+
+Growing benches moves the repetition figure and the length band collisions. It does not
+move the second number. **Silence needs more rules, and behind three of them, more facts in
+`CLARITY_LOGIC_ENGINE.md` 3.1.**
+
+### Fourteen decisions where the obvious answer was rejected
+
+All are written up in `DECISIONS.md` with the losing option named. In short: a family whose
+escalation fact 3.1 does not declare gets no rule rather than an approximate criterion; the
+escalation ladder drops the pair rather than raising the stage; editorial notability is
+specificity at three rather than an authored flag; the two families 7.4 qualifies by a
+stage they do not have become two rules each; a tie for the busiest day resolves to the
+earliest and the family carries a floor; response pairs live on the stage rather than being
+flattened onto the family; the corpus violations that exist today are a recorded list
+rather than a disabled check; which families count as hot is measured rather than authored;
+the validator masks the person's own words before three of its ten checks; a deferred check
+runs and reports and only its verdict is deferred; debug only is verified against the
+resolved source sets; the engine takes a zone at construction and keeps the signature 2.2
+specifies; and the validator is a seam with no default.
+
+**The fourteenth is recorded as open rather than settled**, because it is not a builder's
+to settle: three corpus totals have drifted. `CLARITY_LOGIC_ENGINE.md` 11.1 states 162
+Momentum lines and 1,519 in total; the files carry 146 and 1,503. `CORPUS_3_MOMENTUM.md`
+claims 112 Momentum headlines and carries 96, and two prose figures inside
+`CORPUS_2_REPORT.md` disagree with that file's own totals tables. The numbers are left as
+written and the count is recorded at the point of the claim. The recommendation is stated in
+`DECISIONS.md` and not taken.
+
+### What is deliberately not in this phase
+
+- **Layer 6, guidance.** Phase 9b, issue #8, and `CLARITY_LOGIC_ENGINE.md` 10 calls it the
+  last thing built and the first thing removed if it reads as supervision. `CueFacts` is
+  extracted and unread.
+- **Every screen that calls the engine**, and the generation lifecycle in
+  `MASTER_BUILD_PROMPT.md` 11.3. Phases 6, 7 and 8. Phase 5 built the engine and no caller,
+  so nothing the engine produces has reached a device.
+- **The corpus at its target size.** Phase 9, issue #7.
+- **Rules for nine families and three single stages** whose escalation fact 3.1 does not
+  declare. Listed in code with the missing fact and the corpus line that needs it, and a
+  catalog test fails if a family goes quiet without being on that list.
+
+### What the closing check still has to find
+
+It has not run. **This is the phase where a screenshot is least likely to catch anything**,
+because there is nothing to photograph: no engine output reaches a surface until phase 6.
+What the closing build and install can still prove is that the app that was already working
+still works with 8,000 lines of new pure Kotlin in it and a new Gradle verification in the
+chain, and that the release variant builds at all, which is what
+`verifyDevtoolsAreDebugOnly` is attached to.
+
+Worth pointing the phone at anyway, and `adb logcat` after every step per `CLAUDE.md`:
+Areas, the Trail, a focus session, and calm mode, all unchanged. The one thing that would be
+new information is a release build, `assembleRelease`, which no phase has needed until now
+and which is where a devtools reference would surface.
 
 ## Phase 4 delivered
 

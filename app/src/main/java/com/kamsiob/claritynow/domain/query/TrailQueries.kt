@@ -836,6 +836,212 @@ class TrailQueries(
     fun rows(events: List<ClarityEvent>): List<TrailRow> =
         trailRows(events, zone, this::contextFor)
 
+
+    // Layer one additions -----------------------------------------------------
+    //
+    // Everything below exists because CLARITY_LOGIC_ENGINE.md 3.1 to 3.7 declares a
+    // fact that no function above could answer. MASTER_BUILD_PROMPT 9 is absolute
+    // that "every Report and Pulse claim traces to one of these" and that "there is
+    // no other path to a displayed number", so the alternative to adding them was
+    // the engine counting events itself, which is the second path that section
+    // forbids.
+
+    /**
+     * The zone every date in this class is resolved against.
+     *
+     * Handed out so that `FactExtractor`, which has to bucket instants into local
+     * days, weekdays and bands of the day, uses the same zone this class used to
+     * count them. The alternative is passing a zone into the extractor beside the
+     * facade, and two zones that are meant to be equal and are not produce a set of
+     * facts that disagree with each other by one day, silently, at a boundary.
+     */
+    fun zone(): ZoneId = zone
+
+    /**
+     * The wall clock of the oldest event in the log, or null when the log is empty.
+     *
+     * The install instant, in the only sense the app can know one: there is no
+     * INSTALL event and there must not be, because a restored backup would carry the
+     * old one and a fresh log on a second device would carry a new one. The oldest
+     * event answers the question every caller actually asks, which is how far back
+     * the record goes.
+     *
+     * A wall clock minimum rather than the first event in the total order. The two
+     * differ on a merged log, and "how long has this person been using the app" is a
+     * calendar question.
+     */
+    fun firstEventAt(): Long? = log.minOfOrNull { it.wallClock }
+
+    /**
+     * Items that exist and are not tombstoned strictly before the instant.
+     *
+     * The item side of [liveAreaIdsAt], and the reason is validator check 2 in
+     * CLARITY_LOGIC_ENGINE.md 8: an id that reaches a sentence must resolve and must
+     * not be a tombstone. A completed item is live; a deleted one is not. Deleting
+     * something and then reading about it in a report a week later is the
+     * resurrection failure in 13, and this is what layer one filters against.
+     */
+    fun liveItemIdsAt(atMillis: Long): Set<String> =
+        stateBefore(atMillis).items.values
+            .filter { it.deletedAt == null }
+            .map { it.id }
+            .toSet()
+
+    /**
+     * The earliest wall clock of an event in that area inside the window, or null.
+     *
+     * The mirror of [lastEventForArea], and it exists for one fact: an area is a
+     * revival rather than an ordinary week only if the gap between its previous
+     * event and its first event *in this window* is long enough. Measuring the gap
+     * to the window start instead would call an area dormant for a reason that is an
+     * artifact of where the window boundary fell.
+     */
+    fun firstEventForArea(areaId: String, startMillis: Long, endMillis: Long): Long? =
+        eventsIn(startMillis, endMillis)
+            .filter { areaIdOf(it) == areaId }
+            .minOfOrNull { it.wallClock }
+
+    /** Items tombstoned in the window. Areas deleted are a different quantity and not counted. */
+    fun deletionsBetween(startMillis: Long, endMillis: Long): Int =
+        eventsIn(startMillis, endMillis).count { it.type == ClarityEventType.ITEM_DELETED }
+
+    /**
+     * Areas archived in the window, counted as events rather than as areas.
+     *
+     * An area archived, unarchived and archived again inside one window counts twice,
+     * which is correct for the only thing that reads this: the first ever archive
+     * flag, which asks whether the act happened here for the first time.
+     */
+    fun areaArchivesBetween(startMillis: Long, endMillis: Long): Int =
+        eventsIn(startMillis, endMillis).count { it.type == ClarityEventType.AREA_ARCHIVED }
+
+    /**
+     * Focus seconds in the window keyed by the area the session ran in.
+     *
+     * Attributed to the FOCUS_STARTED instant and to that session's own area,
+     * exactly as [focusSecondsTotal] is, so the per area parts sum to the whole.
+     * A session whose FOCUS_STARTED is missing from a merged log is in neither.
+     */
+    fun focusSecondsPerArea(startMillis: Long, endMillis: Long): Map<String, Long> {
+        val seconds = HashMap<String, Long>()
+        for (event in log) {
+            val terminal = terminalFocusOf(event) ?: continue
+            if (focusTerminalEvent(terminal.first)?.id != event.id) continue
+            val start = focusStartEvent(terminal.first) ?: continue
+            if (start.wallClock < startMillis || start.wallClock >= endMillis) continue
+            val areaId = (start.payload as? FocusStarted)?.areaId ?: continue
+            seconds[areaId] = (seconds[areaId] ?: 0L) + terminal.second.toLong()
+        }
+        return seconds.toSortedMap()
+    }
+
+    /** Sessions that started in the window, keyed by area. Outcome is not considered. */
+    fun focusSessionsPerArea(startMillis: Long, endMillis: Long): Map<String, Int> {
+        val counts = HashMap<String, Int>()
+        for (event in eventsIn(startMillis, endMillis)) {
+            val payload = event.payload
+            if (payload !is FocusStarted) continue
+            if (focusStartEvent(payload.sessionId)?.id != event.id) continue
+            counts[payload.areaId] = (counts[payload.areaId] ?: 0) + 1
+        }
+        return counts.toSortedMap()
+    }
+
+    /**
+     * Focus seconds bucketed by the local day the session started on.
+     *
+     * One pass over the log rather than one windowed call per week, which is what a
+     * personal best over a year of history would otherwise cost.
+     */
+    fun focusSecondsPerDay(startMillis: Long, endMillis: Long): Map<String, Long> {
+        val seconds = HashMap<String, Long>()
+        for (event in log) {
+            val terminal = terminalFocusOf(event) ?: continue
+            if (focusTerminalEvent(terminal.first)?.id != event.id) continue
+            val start = focusStartEvent(terminal.first) ?: continue
+            if (start.wallClock < startMillis || start.wallClock >= endMillis) continue
+            val key = dateKeyOf(start.wallClock)
+            seconds[key] = (seconds[key] ?: 0L) + terminal.second.toLong()
+        }
+        return seconds.toSortedMap()
+    }
+
+    /** Sessions that started in the window, bucketed by the local day they started on. */
+    fun focusStartsPerDay(startMillis: Long, endMillis: Long): Map<String, Int> {
+        val counts = HashMap<String, Int>()
+        for (event in eventsIn(startMillis, endMillis)) {
+            val payload = event.payload
+            if (payload !is FocusStarted) continue
+            if (focusStartEvent(payload.sessionId)?.id != event.id) continue
+            val key = dateKeyOf(event.wallClock)
+            counts[key] = (counts[key] ?: 0) + 1
+        }
+        return counts.toSortedMap()
+    }
+
+    /**
+     * User activity events in the window bucketed by local hour, 0 to 23.
+     *
+     * The hour rather than a named band, deliberately. A band of the day is an engine
+     * concept, declared as `PartOfDay` in CLARITY_LOGIC_ENGINE.md 2.1 with boundaries
+     * the design system already fixed, and a facade that knew where the boundaries
+     * fell would be a second place they are written down. This returns the raw shape
+     * of the day and the engine names it.
+     *
+     * Resolved through the zone, never by dividing milliseconds, so an hour is the
+     * hour the person saw on their own clock.
+     */
+    fun eventsPerHourOfDay(startMillis: Long, endMillis: Long): Map<Int, Int> =
+        hoursOf(eventsIn(startMillis, endMillis).filter { it.type.isUserActivity })
+
+    /** Items added into an area in the window, bucketed by local hour. See [eventsPerHourOfDay]. */
+    fun additionsPerHourOfDay(startMillis: Long, endMillis: Long): Map<Int, Int> =
+        hoursOf(
+            eventsIn(startMillis, endMillis).filter {
+                val payload = it.payload
+                payload is ItemAdded && payload.areaId != null
+            },
+        )
+
+    /** Sessions that started in the window, bucketed by local hour. See [eventsPerHourOfDay]. */
+    fun focusStartsPerHourOfDay(startMillis: Long, endMillis: Long): Map<Int, Int> =
+        hoursOf(
+            eventsIn(startMillis, endMillis).filter {
+                val payload = it.payload
+                payload is FocusStarted && focusStartEvent(payload.sessionId)?.id == it.id
+            },
+        )
+
+    // The engine's own record of what it has already said ---------------------
+    //
+    // CLARITY_LOGIC_ENGINE.md 7.6: "FiringHistory is derived entirely from
+    // PULSE_GENERATED, REPORT_GENERATED and PLAN_OFFERED events. Never from
+    // DataStore." A device that has just merged a log must compute the same next
+    // variant as the device that produced it, and DataStore does not merge. These
+    // three functions are the only path to that history, and there is no writer
+    // anywhere that could produce a fourth.
+    //
+    // They hand back the payloads rather than a re-wrapped record. The payloads are
+    // already the shape the engine needs, because issue #19 shaped them for exactly
+    // this: subjectId and subjectKind on the Pulse pair, and familyKey, variantKey,
+    // escalationStage, register and subject on every report section.
+
+    /** PULSE_GENERATED payloads in the window, in the log's total order. */
+    fun pulsesGeneratedBetween(startMillis: Long, endMillis: Long): List<PulseGenerated> =
+        eventsIn(startMillis, endMillis).mapNotNull { it.payload as? PulseGenerated }
+
+    /** PULSE_ANSWERED payloads in the window, in the log's total order. */
+    fun pulseAnswersBetween(startMillis: Long, endMillis: Long): List<PulseAnswered> =
+        eventsIn(startMillis, endMillis).mapNotNull { it.payload as? PulseAnswered }
+
+    /** REPORT_GENERATED payloads in the window, in the log's total order. */
+    fun reportsGeneratedBetween(startMillis: Long, endMillis: Long): List<ReportGenerated> =
+        eventsIn(startMillis, endMillis).mapNotNull { it.payload as? ReportGenerated }
+
+    /** PLAN_OFFERED payloads in the window, in the log's total order. */
+    fun plansOfferedBetween(startMillis: Long, endMillis: Long): List<PlanOffered> =
+        eventsIn(startMillis, endMillis).mapNotNull { it.payload as? PlanOffered }
+
     // Internals ---------------------------------------------------------------
 
     /** The half open window filter. Every windowed function starts here. */
@@ -933,6 +1139,19 @@ class TrailQueries(
 
     private fun localDateOf(atMillis: Long): LocalDate =
         Instant.ofEpochMilli(atMillis).atZone(zone).toLocalDate()
+
+    /**
+     * The local hour of each event, counted. Resolved through the zone rather than
+     * by arithmetic on the epoch, so the hour is the one the person's own clock read.
+     */
+    private fun hoursOf(events: List<ClarityEvent>): Map<Int, Int> {
+        val counts = HashMap<Int, Int>()
+        for (event in events) {
+            val hour = Instant.ofEpochMilli(event.wallClock).atZone(zone).hour
+            counts[hour] = (counts[hour] ?: 0) + 1
+        }
+        return counts.toSortedMap()
+    }
 
     /**
      * The `yyyy-MM-dd` key every daily thing is stored under, matching

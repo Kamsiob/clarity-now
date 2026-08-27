@@ -29,7 +29,11 @@ com.kamsiob.claritynow
 
   domain                     ClarityClock, the single source of time
   domain.replay              reducer, invariants, conflict resolution, checkpoints
-  domain.engine              facts, rules, catalog, selection, realization, validation
+  domain.engine              layer one's facts, the engine loop, StableHash
+  domain.engine.catalog      layer two: the corpus parser and the rule catalog
+  domain.engine.select       layer three
+  domain.engine.realize      layer four
+  domain.engine.validate     layer five
   domain.guidance            layer six, the plan composer
   domain.query               TrailQueries, the only path from data to a number
 
@@ -40,7 +44,7 @@ com.kamsiob.claritynow
   ui.nav                     the shell and the tab bar
 
   widget notifications
-  devtools                   simulator and corpus dump harness, debug only
+  devtools                   the simulator: personas, the dump, the checks. Debug only
   di                         ClarityGraph, the hand written container
 ```
 
@@ -54,6 +58,8 @@ These are enforced, not aspirational.
 - **`domain.engine`, `domain.guidance` and `domain.replay` are pure Kotlin with no
   Android imports.** Tests assert this.
 - **Every displayed number comes from a query.** There is no second path.
+- **The realizer receives only the `FactSet`.** No live entity table reaches layer 4, and
+  there is no parameter through which one could. See the engine section below.
 - All Compose state is immutable, stable, and collected as `StateFlow`.
 - Lazy lists always use stable keys.
 - One `ClarityClock`, injected everywhere time is read.
@@ -140,30 +146,127 @@ never a technical dialog, never data loss.
 
 ---
 
-## The engine, in one diagram
+## The engine
+
+Five of the six layers exist. Each is a pure function, each is independently testable,
+and each is separated from the next by what it is allowed to see rather than only by
+what it does.
 
 ```
 Event log
     |
-[1] FactExtractor      (EventLog, Window, Clock) -> FactSet
-[2] RuleCatalog        static data, no strings
-[3] Selector           (FactSet, FiringHistory, RuleCatalog) -> Selection?
-[4] Realizer           (Selection, FactSet, PhrasingCatalog) -> Candidate
-[5] Validator          (Candidate, FactSet) -> Validated | Vetoed
-[6] GuidanceComposer   (Validated[], FactSet, PlanHistory) -> GuidanceResult
+[1] FactExtractor      (TrailQueries, TrailWindow)        -> FactSet          built
+[2] ClarityCatalog     the three corpus files, parsed     -> rules, phrasing  built
+[3] Selector           (FactSet, FiringHistory, catalog)  -> ranked, or why not
+[4] Realizer           (Selection, FactSet, catalog)      -> Candidate        built
+[5] ClarityValidator   (Candidate, FactSet)               -> pass, or a veto  built
+[6] GuidanceComposer   (Validated[], FactSet, PlanHistory) -> a plan, or not  phase 9b
     |
 Rendered output, or nothing
 ```
 
-Layer six runs **only** for the Report, only after layers 1 to 5 have produced the
-body, and produces at most one output. Pulse, Momentum and the banner never reach it.
+`ClarityEngine.observe(facts, history, purpose)` runs 3, 4 and 5 in a loop and answers
+`Spoke` or `Silent`. Layer six runs **only** for the Report, only after layers 1 to 5
+have produced the body, and produces at most one output. Pulse, Momentum and the banner
+never reach it.
 
-Two properties matter more than the rest:
+### What each layer may see, and what it may never see
 
-- **The engine may say nothing.** Silence is supported, expected and designed.
-- **`FiringHistory` is rebuilt from the log on every invocation**, never persisted
-  and never read from DataStore, because DataStore does not merge and two devices
-  holding the same log must compute the same next sentence.
+| layer | sees | never sees |
+|---|---|---|
+| 1 `FactExtractor` | `TrailQueries` and one window | the catalog, any sentence, any rule |
+| 2 `ClarityCatalog` | the three corpus files as text | any fact, any person's data |
+| 3 `Selector` | facts, firing history, rules | any sentence. Rules carry no strings |
+| 4 `Realizer` | **the `FactSet` and the corpus, and nothing else** | any live entity table |
+| 5 `ClarityValidator` | the candidate and the same `FactSet` | the log, the clock, the catalog's rules |
+| 6 guidance | only the observations that were **validated** | anything vetoed, anything not shown |
+
+**The rule that matters most is layer 4's.** The realizer receives the `FactSet` and a
+corpus and there is no parameter through which a live entity table could be passed. Every
+name it can reach is a snapshot field that layer one resolved by folding the log to the
+window being described, so a sentence realized today about a week in March still says
+what that area was called in March. `CLARITY_LOGIC_ENGINE.md` 8 check 5 is enforced by
+that shape rather than by a check: the stale name failure has nowhere to come from.
+
+The same trick is used three more times, and each one turns a rule somebody has to
+remember into a shape nobody can violate.
+
+- **Archived and tombstoned areas are absent from `FactSet.areas` entirely.** A subject
+  selector reads that map, so there is no subject to qualify, so prohibition 3 of 1.1
+  holds without any rule checking anything
+- **`Validated` can only be constructed by layer 5.** Layer six takes a list of them, so
+  it cannot advise on a sentence that was vetoed or never appeared
+- **`ClarityEngine` holds its validator as a seam with no default.** There is no
+  constructor that omits layer 5, so the bypass `MASTER_BUILD_PROMPT.md` 11.4 forbids
+  cannot be written by accident
+
+### Where the engine's types live
+
+```
+domain.engine              FactSet and every fact class, FiringHistory, FactDates,
+                           FactExtractor, StableHash, FactRef, Validated,
+                           ClarityEngine, EngineResult, SilenceReason, RenderedOutput
+domain.engine.catalog      Purpose, Register, LengthBand, the corpus parser, the rule
+                           catalog, the phrasing catalog, integrity checks
+domain.engine.select       Selector, Selection, the incompatibility matrix
+domain.engine.realize      Realizer, Slot, SlotBindings, Measures, VariantChoice,
+                           RegisterChoice, Candidate
+domain.engine.validate     ClarityValidator, the ten checks, the banned vocabulary
+```
+
+The fact classes sit in `domain.engine` and in a `facts/` directory, which is the layout
+`CLARITY_LOGIC_ENGINE.md` 2.1 asks for: the facts are the engine's shared vocabulary and
+every layer imports them, so they are not in a subpackage of their own. `Purpose`,
+`Register` and `LengthBand` are in `catalog` rather than in `domain.engine` where 2.1
+places them, which is a phase 5 build artifact recorded in `DECISIONS.md` rather than a
+decision.
+
+### Two properties that outrank the rest
+
+- **The engine may say nothing.** Silence is supported, expected and designed, and it
+  carries one of five reasons so that a quiet week and a rule that can never fire are
+  told apart in the simulator dump and in a debug log. The reason is never shown to a
+  person
+- **`FiringHistory` is rebuilt from the log on every invocation.** It derives entirely
+  from `PULSE_GENERATED`, `REPORT_GENERATED` and `PLAN_OFFERED`, is never persisted and
+  never read from DataStore, because DataStore does not merge and two devices holding the
+  same log must compute the same next sentence
+
+### The catalog is parsed, not authored in Kotlin
+
+`ClarityCatalog.build` reads `CORPUS_1_PULSE.md`, `CORPUS_2_REPORT.md` and
+`CORPUS_3_MOMENTUM.md` as text and produces every family, stage, variant and response
+pair. Nothing is copied into code, so a corpus edit cannot silently disagree with a copy
+of the corpus embedded somewhere else. Two consequences follow and both are load bearing:
+
+- **Escalation thresholds live in the corpus stage headers** and are parsed into ranges.
+  A compound header becomes two rules pointing at the same stage, never a disjunctive
+  range, and a qualitative header gets no range at all rather than a guessed one
+- **`lengthBand` is computed at load** from the realized word count, never read from a
+  tag, because a hand applied tag drifts the moment a line is edited
+
+Rules are the other half and they are authored in Kotlin, in `PulseRules`, `ReportRules`
+and `MomentumRules`. **Rules contain no strings.** A rule names a family, a stage, a
+subject selector and a list of criteria, and the criteria are predicates over facts.
+
+### The simulator
+
+`devtools`, debug builds only, and the Gradle task `verifyDevtoolsAreDebugOnly` reads the
+source directories Gradle resolved rather than trusting the layout: it fails if the
+package is missing from the debug source set, present in a release one, or named by any
+file a release build compiles. Being in `src/debug` is the mechanism; the task is the
+verification.
+
+It runs eleven synthetic personas through a full simulated year, the engine day by day
+for the Pulse, week by week for the Report and Momentum on every simulated open, and
+dumps plain text annotated with the rule, the stage, the register, the variant key and
+the facts used. It writes the engine's own output back into its log, because
+`FiringHistory` is derived from exactly those events and a simulator that dropped what it
+said would show every family at stage one forever.
+
+Ten automated checks run over the dump. Four are enforced now; six measure properties a
+corpus of this size cannot have and are deferred, with a date and an issue, to phase 9
+and 9b. `docs/BUILD_STATE.md` carries the numbers they measured.
 
 ---
 
@@ -214,7 +317,16 @@ removes entirely rather than shortening.
 | `Migration2To3Test` | the golden log replays across the Room 2 to 3 migration |
 | `CalmModeTest` | the default resolution, the transform, and that every area color reaching the screen was routed deliberately |
 | `CalmModeContrastTest` | 4.5:1 on all 48 area colors, both worlds, ordinary and calm, computed rather than judged |
-| `DomainPurityTest` | `domain.engine`, `domain.guidance`, `domain.replay` and `domain.query` import no Android |
+| `DomainPurityTest` | `domain.engine`, `domain.guidance`, `domain.replay` and `domain.query` import no Android, no clock, no random and no `String.hashCode` |
+| `CorpusParseTest`, `StageRangeTest`, `LengthBandTest` | the three corpus files parse, stage ranges are contiguous per family, and every computed length band matches the words in the line |
+| `RuleCatalogTest`, `CatalogIntegrityTest`, `FamilyPolicyTest` | every rule points at a family that exists, every family has a rule or a recorded reason for having none, no duplicate keys, and every share based rule carries an event floor |
+| `FactExtractorTest`, `FactSetIntegrityTest` | the facts are what the queries say, and an archived or tombstoned area is absent from the fact set rather than filtered later |
+| `FiringHistoryTest` | two histories rebuilt independently from the same merged log select the same thing for the same day |
+| `SelectorTest` | the seven steps run in the order section 5 states, and the ranking's final key sort is present |
+| `RealizerTest`, `SlotRenderingTest`, `VariantChoiceTest`, `RegisterChoiceTest` | the ladder never goes backwards, numbers render by register, and the same day picks the same line on two devices |
+| `ValidatorChecksTest`, `ValidatorVetoTest` | all ten checks, and a deliberately violating candidate for each of the first four so the veto branch is executed rather than assumed |
+| `EngineDeterminismTest` | ten thousand generated cases through two independently built engines, with the history's maps rebuilt in reverse |
+| `SimulatorTest` | a full simulated year for eleven personas dumps without a crash, annotated, with the ten checks reporting their numbers |
 
 `testdata/golden-log.json` and `testdata/golden-state.json` are the contract with the
 future Linux desktop app. Regenerate deliberately, never as a side effect:

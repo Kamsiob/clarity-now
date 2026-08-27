@@ -71,6 +71,374 @@ The old entry stays where it is, wrong, dated, and useful.
 
 ---
 
+## August 27, 2026: the fourteen open choices in the engine skeleton and the simulator
+
+Phase 5, issue #3. `CLARITY_LOGIC_ENGINE.md` 2 to 8, 11.1, 12 and 14,
+`MASTER_BUILD_PROMPT.md` 9 and 11, and CLAUDE.md's authority order. Thirteen things those
+documents leave to the builder, settled here under `design-v3.md` 15, and one reading that
+is a finding rather than a choice and is recorded as open.
+
+**Every one of these is invisible.** Nothing in this entry changes a pixel. A wrong
+decision here becomes a false sentence about somebody's life some months later, with
+nothing on the screen pointing back at the cause, which is why the entry is long and why
+the losing option is named in every case.
+
+### A family with a missing fact gets no rule at all
+
+**Decided.** Nine families and three single stages have authored corpus language and no
+rule, because the fact their trigger names is not declared in `CLARITY_LOGIC_ENGINE.md`
+3.1. Each is recorded in code as a gap carrying the missing fact and the corpus line that
+needs it, and a catalog test asserts that every family in the corpus either has a rule or
+is on that list. Stated at the point of ambiguity in 6.1 and in `MASTER_BUILD_PROMPT.md`
+11.7.
+
+**Why.** Every one of them had an approximation available that is nearly the right shape.
+Window active days in place of a run of consecutive quiet days. The window's swap count in
+place of an area's. Days since an area's last event in place of the dormancy it returned
+from. A per week area count that nothing keeps. Each would fire the family on a shape it
+does not describe, and the sentence that came out would be arithmetic nobody could fault
+and a claim about a person's week that was not true. That is the prime directive in
+section 1, and this is the phase where obeying it costs something, which is the only kind
+of obedience that counts.
+
+**Considered and rejected: the near enough criterion**, which is what a builder under
+schedule pressure writes and what nobody would ever catch, because the output is fluent
+and the number is real. **Also rejected: deleting the corpus language**, which throws away
+authored, reviewed lines to make a test pass and loses the record of what the family was
+for. **Also rejected: a comment.** A comment is not read by a test, and the failure it
+guards against is a later session wiring the family up with the approximation.
+
+**Revisit if** phase 9 or a later phase adds the fact. The fix is a fact in 3.1 and a
+query behind it, never a criterion built out of the facts that are already there.
+
+### The escalation ladder drops the pair rather than raising the stage
+
+**Decided.** When `FiringHistory` says a `(family, subject)` pair last spoke at a higher
+stage than the one the magnitude now supports, the pair is dropped and the family says
+nothing until the magnitude catches up. It is never raised to the stage last shown.
+Recorded in 7.3.
+
+**Why.** 7.3 requires that a pair never show a lower stage while the condition stayed
+continuously true, and the obvious implementation of that is to render the stage last
+shown. It is wrong because a stage is authored around a magnitude: stage 2 of
+`persistence` is written for six to thirteen days, so showing it for an item whose age
+just reset to three says `going into its second week` about a three day old item. The rule
+exists to prevent whiplash, and the obvious implementation produces a false sentence
+instead. **A missing sentence costs a day of silence. A false one costs the credibility of
+every sentence after it.**
+
+**Considered and rejected: rendering the higher stage anyway**, above. **Also rejected:
+tracking the condition's continuity explicitly**, with an event or a field recording when
+a ladder lapsed. That is engine state, it would have to live somewhere, and the only place
+it could live and still merge is the log, which means a new event type carrying a fact
+nothing else needs. The bound used instead is the family's own cooldown plus the window it
+describes: inside that the family was either speaking or forbidden from speaking, and
+beyond it the engine has no evidence and the ladder starts again.
+
+**Revisit if** the simulator dump shows a family going quiet for long stretches after a
+single high stage firing. The reading to look at is the family's own share of a persona's
+year, not the count of dropped pairs.
+
+### Editorial notability is specificity at three or more
+
+**Decided.** The editorial register is offered only to a rule with three or more criteria,
+and only for the Report, and only while the two lead budget in 7.4 is unspent.
+
+**Why.** 7.4 caps the report at two editorial leads and `CORPUS_2_REPORT.md` says the
+register is reserved for leads that have earned it with a genuinely notable fact. That is
+a condition on the lead, and nothing in 3.1 or section 4 carries a notability flag, so
+either something invents one or the realizer uses a measure the engine already computes.
+Specificity is that measure: a rule requiring four things at once describes a narrower
+situation than one requiring two, which is the entire mechanism of section 5 and the same
+thing an editor means by a fact worth writing up. Three is the threshold because two is
+the ordinary shape of a rule in this catalog, a condition and the floor that keeps it
+honest, so three is where a rule stops describing a number and starts describing a
+situation.
+
+**Considered and rejected: an authored `notable` flag on the rule.** It is the obvious
+answer, and it would be a second judgment about the same thing, drifting away from
+specificity the first time somebody added a criterion. `CLARITY_LOGIC_ENGINE.md` says
+specificity is never authored, for exactly that reason, and a notability flag is
+specificity authored under another name. **Also rejected: letting the corpus tag decide.**
+The register tag says which voice a line is in, not whether the fact behind it earned that
+voice, and the fact is not knowable when the line is written.
+
+**Revisit if** phase 9 finds editorial leads landing on facts that do not carry them. The
+first move is the threshold, not a new flag.
+
+### Two families 7.4 qualifies by a stage they do not have become two rules each
+
+**Decided.** `persistentItem` and `switchingBehavior` are single stage families in
+`CORPUS_2_REPORT.md`, and 7.4 marks them unflattering at stages the corpus does not have.
+Each gets two rules pointing at the same stage, split at the magnitude the corpus already
+states for the matching Pulse ladder: fourteen days for `persistentItem`, two swaps for
+`switchingBehavior`. Only the higher rule is unflattering.
+
+**Why.** 7.4 wrote the qualification deliberately, which rules out marking the whole
+family; and three neutral agent lines are authored for the switching family, which rules
+out marking none of it, because they would be unreachable. The qualification is really
+about magnitude rather than about a stage number, and a rule is the object that carries a
+magnitude in this design. The split points are not invented: both are already written down
+in `CORPUS_1_PULSE.md` as the start of the corresponding Pulse stage.
+
+**Considered and rejected: adding stages to the two corpus families** so the stage numbers
+in 7.4 resolve. That is a corpus edit, phase 9 owns the corpus, and it would mean
+authoring lines to satisfy a cross reference rather than because a person needed them.
+
+**Revisit if** phase 9 gives either family real stages. The two rules then collapse back
+into stage rules and this entry becomes history.
+
+### A tie for the busiest day resolves to the earliest, and the family carries a floor
+
+**Decided.** `WindowFacts.busiestDayKey` resolves a tie to the earliest day. Separately,
+the family that names the day requires the day's count to be a real share of the window's
+events. Recorded in 3.1.
+
+**Why.** 3.1 makes `dominantAreaId` null on a tie and says nothing about this field, so the
+tie had to go somewhere, and the earliest day is the day the peak was first reached. That
+alone is not enough, and the second half is the part that matters: `Tuesday carried the
+week` is false on a three way tie whichever day wins, so the honest guard is not the tie
+break but the floor, which is the same guard every share based rule in the catalog
+carries.
+
+**Considered and rejected: null on a tie**, matching `dominantAreaId`. It reads as
+consistent and it throws away a usable fact: a two way tie in a week of forty events is
+still a real peak, and the floor is what makes it safe to name. **Also rejected: the
+latest day**, which has no argument for it beyond recency.
+
+**Revisit if** a corpus line ever wants to name the busiest day without a share claim
+attached. It would need a different fact, not a different tie break.
+
+### Response pairs live on the stage, and are not flattened onto the family
+
+**Decided.** `PhrasingFamily` carries no flat response list. Each stage carries its
+authored pairs, and the realizer chooses one pair and never splits it across stages.
+Recorded in 7.1.
+
+**Why.** 7.1 declares responses as a flat `List<ResponseOption>` on the family.
+`CORPUS_1_PULSE.md` authors them as pairs, six or seven per stage, and the equal validity
+test in 11.3 is a test on a pair: read both aloud with no context, and if one sounds like
+the answer a good person gives, rewrite both. Flattening loses the pairing, which is the
+only thing that makes that test mean anything, and a runtime that could combine the first
+half of one pair with the second half of another would produce a question nobody reviewed.
+CLAUDE.md's authority order gives the corpus the last word on the shape of a sentence, and
+a response pair is a sentence shape.
+
+**Considered and rejected: flattening and re-pairing by index**, which works until a stage
+has an odd number of options and then silently pairs the wrong two.
+
+**Revisit if** 7.1 is amended. This is a case where the corpus won over the engine
+document, which is what the authority order says should happen, and the engine document
+should probably be corrected rather than this reversed.
+
+### The corpus violations that exist today are a recorded list, not a disabled check
+
+**Decided.** 7.7 forbids a fragment appearing in two families and a rhetorical construction
+appearing in more than two. The corpus breaks both, in six places and two shapes. The
+checks are on, and the exact violations are enumerated in code with the keys and the
+reason each is tolerated. A **new** violation fails the build.
+
+**Why.** There were three options and only one leaves the build honest. Deleting the checks
+loses them permanently, because nobody writes a check for a rule they have already decided
+to break. Ignoring them until phase 9 means a check that is off, which is a check that
+finds nothing on the day somebody adds a seventh violation. Writing down exactly what is
+wrong keeps the check running, hands phase 9 a list rather than a rediscovery, and makes
+every entry a debt with a name on it.
+
+**Considered and rejected: fixing the corpus now.** Phase 9 owns the corpus, authors in
+batches of forty with anchor lines, and presents them for approval. Editing six lines
+outside that process is exactly the drift the process exists to prevent.
+
+**Revisit if** the list stops shrinking. Each phase 9 batch that touches one of those
+families should leave it shorter, and a list that is the same size at the end of phase 9
+means nobody read it.
+
+### Which families count as hot is measured, not authored
+
+**Decided.** The simulator's stage coverage check calls a family hot when it fired forty or
+more times across the run, which is 11.1's own definition of the tier, and reads its stages
+from the rules that actually fired.
+
+**Why.** 11.1 defines the tiers by expected firing frequency, so the simulator already
+holds the only honest answer to which families are hot. A hand written list would be a
+second place where a judgment about frequency lives, it would drift the first time a rule
+changed, and it would let a family be called hot without ever having fired, which is the
+one state the check exists to catch.
+
+**Considered and rejected: the fifteen family list 11.1 estimates.** It is an estimate in a
+document, and the simulator is the instrument that replaces estimates in this project. The
+run produced twenty nine families at forty or more firings, which is not fifteen, and the
+gap is itself a reading phase 9 should look at.
+
+**Revisit if** the persona set changes enough that firing counts stop meaning anything
+about a real year. The threshold is 11.1's, not the simulator's.
+
+### The validator masks the person's own words before it reads a sentence
+
+**Decided.** Checks 7, 8 and 10 read the rendered sentence with area names, item titles and
+quoted response labels masked out. Check 9, the length check, reads the sentence as it will
+appear. Recorded in section 8.
+
+**Why.** An area is named by the person who made it. Somebody may spell a word the way they
+were taught, put an exclamation mark in an item title, or write one in a language the
+banned vocabulary list cannot spell. Vetoing on their string silences the engine over
+somebody's own vocabulary, and the app already shows that exact string on every other
+screen, so the veto would not even hide it. **The words the app chose are the words the app
+is answerable for.** Length is the exception because a long name really does make a long
+headline, and the reader sees the whole line.
+
+**Considered and rejected: reading the whole rendered string.** It is the obvious
+implementation and it fails on the first person who names an area in a language with
+accents, which the non-ASCII rule would then read as a validator failure rather than as a
+name. **Also rejected: sanitizing names on input**, which is the app editing what somebody
+wrote about their own life.
+
+**Revisit if** a masked check is ever found to have let something through that a reader
+would fault the app for. The answer then is a narrower mask, not the whole string.
+
+### A deferred simulator check runs, measures and reports, and only its verdict is deferred
+
+**Decided.** Six of the ten checks in section 12 cannot pass in phase 5. Each carries a
+deferral naming the date and the issue that lifts it, runs on every simulation, prints the
+number it measured and prints its failures as loudly as an enforced check. What deferral
+changes is only whether the build goes red.
+
+**Why.** The obvious way to handle a check that cannot pass yet is to skip it, and a skipped
+check produces no number. The whole reason the simulator is built before the corpus is so
+that the growing can be aimed, and a gate that reports only on failure tells an author
+nothing about how close the corpus is to the target it is being grown toward. A deferral
+with a date and an issue is also the difference between a decision and a thing nobody comes
+back to.
+
+**Considered and rejected: an assumption or a commented out assertion**, which is a skip
+with an apology attached. **Also rejected: relaxing the thresholds to what phase 5 can
+meet**, which would leave the build green and the target lost, and is the failure mode that
+turns a specification into whatever was convenient.
+
+**Revisit if** phase 9 lifts a deferral. The deferral is deleted, not the check.
+
+### Debug only is verified against the resolved source sets, not assumed from the layout
+
+**Decided.** A Gradle task reads the source directories Gradle resolved for each variant and
+fails unless the devtools package is present under a debug directory, absent from every
+release one, and named by no file a release build compiles. It runs inside `verifyClarity`
+and blocks `assembleRelease`.
+
+**Why.** Putting a file in `src/debug` is the mechanism, not the verification, and the
+failure mode is silent: the day somebody moves one simulator class into `src/main` so a
+screen can reach it, nothing breaks and the release build quietly grows eleven synthetic
+personas, a year of generated logs and a copy of the check suite. The first of the three
+conditions is the one usually missing. A check that only looked for the package where it
+must not be would pass on a repository where the simulator had been deleted.
+
+**Considered and rejected: trusting the source set layout**, which is what everybody does
+and what nobody notices failing. **Also rejected: a ProGuard rule**, which would strip the
+code from the release binary and leave the source set wrong, so the next person would
+inherit the mistake with the evidence removed.
+
+**Revisit if** the simulator is ever wanted in a release build for a debug menu. That is a
+product decision, and it would start with what a person is shown rather than with this task.
+
+### The engine takes a zone at construction and keeps the signature 2.2 specifies
+
+**Decided.** `ClarityEngine` and `ClarityValidator` take a `ZoneId` as a constructor
+parameter. `observe(facts, history, purpose)` is unchanged.
+
+**Why.** Three things in the engine need to know which local day it is speaking on: 7.6
+hashes the date key, 5.1 buckets it, and every exclusion window measures against it. The
+fact set carries the window as two instants and no zone. The ambient default is banned, and
+`DomainPurityTest` fails the build on it, because `ZoneId.systemDefault()` is the documented
+cause of two Pulses in one day or none at all. So the zone the extractor counted with is
+handed in once and the date key is derived from the window itself.
+
+**Considered and rejected: a fourth parameter on `observe`.** 2.2 states that signature and
+every caller would then carry a value that never varies between calls. **Also rejected:
+putting the zone on the fact set**, which would make it a fact, and it is not a fact about
+the person's week; it is a property of the device asking.
+
+**Revisit if** a person can ever change the zone the app counts in. Today the extractor's
+zone is the app's, and both sides of this read the same one.
+
+### The validator is a seam the engine cannot skip
+
+**Decided.** `ClarityEngine` holds a `CandidateValidator` with **no default value**. There is
+no constructor that omits layer 5. A permissive implementation exists for testing layers 3
+and 4 alone and its name says what it does.
+
+**Why.** `MASTER_BUILD_PROMPT.md` 11.4 says never bypass the validator, not for a simple
+sentence, not for an empty state, not to fix a bug. A rule that can only be obeyed is
+better than a rule that has to be remembered, and a seam with no default is the only kind
+that cannot be forgotten. The failure it prevents is silent in the worst way: everything
+would still render, and nothing would be checked.
+
+**Considered and rejected: a default validator on the constructor**, which is what
+convenience asks for and what a future session would reach for at four in the afternoon.
+
+**Revisit if** the wiring in phase 6 makes construction awkward. The answer then is a
+factory that supplies the real validator, not a default.
+
+### Open, and a finding rather than a builder's choice: three corpus totals have drifted
+
+**Not decided, and deliberately not fixed.** `CLARITY_LOGIC_ENGINE.md` 11.1 states 162
+Momentum and banner lines and 1,519 authored lines in total. Counted at catalog load, the
+Momentum volume carries 146 and the combined figure is 1,503. `CORPUS_3_MOMENTUM.md` itself
+claims 112 Momentum headlines in two places and carries 96. Inside `CORPUS_2_REPORT.md`,
+section 1's prose says 176 headlines against its own totals table's 158, and section 3's
+says 128 patterns against 111; there the tables are right and the prose is stale. Pulse
+agrees at 620 and the Report volume's table agrees at 737.
+
+**Why it is left alone.** Whether a file grows to match its total or a total is corrected to
+match its file is a question about the corpus, and phase 9 is where the corpus is grown. A
+builder quietly editing a number in a specification to match what the code counted is the
+exact move CLAUDE.md's authority order exists to prevent. The catalog counts the keyed lines
+at load and holds the readings, so the drift is visible rather than remembered, and the
+count is recorded at the point of the claim in 11.1.
+
+**The recommendation, stated and not taken:** correct the two stale prose figures in
+`CORPUS_2_REPORT.md`, which are wrong against that file's own tables and cost nothing to
+fix, and leave the Momentum shortfall to phase 9, which will close it by authoring rather
+than by editing a number.
+
+**Revisit if** phase 9 closes the gap, or if the owner decides the totals should be
+generated rather than written.
+
+### The readings the deferred gates produced, which is what phase 9 is judged against
+
+Eleven personas, a full simulated year each, against the corpus and the rules as phase 5
+left them: 92 rules across 78 families, 3,148 simulated opens, 451 reports, and 1,388
+invocations for the persona who accepts every plan.
+
+| gate, `CLARITY_LOGIC_ENGINE.md` 12 | target | phase 5 measured |
+|---|---|---|
+| no variant repeats inside ninety days | none | 7,384 repeats, the tightest after 1 day |
+| Pulse silence | 8 to 25 percent of opened days | 43 to 98 percent per persona, 76 percent overall |
+| layer 6 silence | at least 15 percent of reports | not measurable, layer 6 is phase 9b |
+| no family over a fifth of a year's Pulses | 20 percent | 27 to 60 percent per persona |
+| every stage of every hot family fires | all | 29 hot families, one gap: `accumulation` never reached stage 2 |
+| no two consecutive report leads share a band | none | 715 collisions across 451 reports |
+| no three consecutive parallel numeric clauses | none | 27 runs of three or more |
+
+The four enforced checks pass: no banned word, dash, emoji or non-ASCII character in any of
+the year's sentences; no sentence naming an area with no events in its window; no visible
+slot marker; and nothing in the plan-accepting persona's year referencing a plan, a
+commitment, an intention or a failure to act.
+
+**Two of those numbers say something the phase did not expect, and phase 9 should read them
+before authoring anything.** The silence figure is three to twelve times the target band,
+and the cause is not only bench depth: of the eleven Pulse families in 6.1, **six ever
+fired**. Two have no rule at all, and `throughput`, `burst` and `queueDrain` have rules that
+no persona's year ever satisfied. Of the 2,383 silent days, 1,238 were days where something
+qualified and every candidate was filtered by a cooldown or by yesterday's family, and
+1,134 were days where nothing qualified at all. **A bigger corpus moves the first number and
+not the second.** Growing benches will fix the repetition figure and the length band
+collisions; it will not fix silence, and the honest reading is that silence needs more rules
+and, behind three of them, more facts in 3.1.
+
+**Revisit if** any of these is measured again after phase 9. The table above is a baseline
+with a date on it, not a target, and the targets are the ones section 12 states.
+
+---
+
 ## August 27, 2026: the eleven open choices in the focus surface
 
 Phase 4, issues #2, #28, #29, #30, #32 and #49. Addendum 01 4e, 4f, 4g, Step 5 and 8d,

@@ -62,6 +62,8 @@ Rendered output, or nothing
 
 **Layer 6 runs only for the Report**, only after layers 1 to 5 have produced the report body, and produces at most one output. Pulse, Momentum and the banner never reach it.
 
+**Build state, phase 5.** Layers 1 to 5 are built and layer 6 is not; it is phase 9b and section 10 calls it the last thing built. Layer 1 is `FactExtractor` in `domain.engine`, layer 2 is `ClarityCatalog` in `domain.engine.catalog`, and layers 3, 4 and 5 are in `domain.engine.select`, `domain.engine.realize` and `domain.engine.validate`. `ClarityEngine.observe` runs 3, 4 and 5 in one loop: a veto sends it to the next ranked selection, and an exhausted list is silence. Every note below marked **Phase 5** records a place where a builder found this document open to more than one reading and had to choose; the choice is recorded here so the next reader sees it where the ambiguity is.
+
 ### 2.1 Type definitions
 
 Declared once so nothing has to be inferred. All are in `domain.engine` unless noted.
@@ -116,6 +118,8 @@ data class RenderedOutput(val text: String, val question: String?,
 ```
 
 `WindowFacts`, `AreaFacts`, `RollupFacts`, `ItemFacts`, `HistoryFacts` and `PulseFacts` are declared in 3.1. `CueFacts` is declared in 3.7.
+
+**Phase 5, and it is a build artifact rather than a decision.** This section places all of the above in `domain.engine`. The fact classes, `FiringHistory`, `FactRef`, `Validated` and the engine's own result types are there. `Purpose`, `Register`, `LengthBand`, `SubjectKind`, `RuleKey` and `SlotKey` ended up one level down in `domain.engine.catalog`, because phase 5 was built as parallel slices and the catalog slice was the first that needed them. Nothing depends on which of the two packages they live in, and the file that declares them says so and says how to move them. Recorded rather than corrected, because moving a declaration is a change to every import in the package and this document is the thing that says where they belong.
 
 ### 2.2 Purity contract
 
@@ -254,6 +258,12 @@ data class PulseFacts(
 
 **No streak facts exist.** Deliberately. No `currentStreak`, no `longestStreak`, no `daysInARow`. Their absence makes it structurally impossible for streak language to appear by accident. Do not add them.
 
+**Phase 5, three readings this section leaves open, resolved and recorded.**
+
+- **`busiestDayKey` on a tie.** 3.1 makes `dominantAreaId` null on a tie and says nothing about this field, so the tie had to go somewhere. It resolves to the **earliest** day, which is the day the peak was first reached. That is not enough on its own: a sentence of the shape `Tuesday carried the week` is false on a three way tie whichever day wins, so the family that names the day carries a floor requiring `busiestDayCount` to be a real share of `totalEvents`, exactly as every share based rule carries an event floor
+- **`focusAbandoned` counts `FOCUS_ENDED_EARLY`.** The event was renamed in the Addendum 01 schema window because the log cannot know a session was abandoned. The field keeps the name 3.1 gives it. **A session with no terminal event is in neither count**, so `focusStarted` may exceed `focusCompleted` plus `focusAbandoned` and no rule may infer the difference
+- **Every band is present in `eventsByPartOfDay`, including zeros.** A share is a division, and a missing denominator term produces a set of percentages that do not reach a hundred with nothing on the screen to explain why
+
 `responseLabel` is stored verbatim in the `PULSE_ANSWERED` event so a callback quotes what the user actually saw, not a label reworded in a later app version.
 
 ### 3.7 CueFacts
@@ -273,6 +283,8 @@ data class CueFacts(
 **Confidence thresholds, all mandatory.** A cue may be used only if drawn from at least 6 weeks of data, holding in at least 60 percent of those weeks, over an underlying count of at least 8 events. If nothing clears these, `hasStableRhythm` is false and layer 6 may not produce a plan.
 
 **An invented cue is worse than no plan**, because it makes a claim about the user's life the user knows to be false.
+
+**Phase 5.** `CueFacts` is extracted and gated on all three thresholds already, and **nothing reads it**. Layer 6 is phase 9b. It is built now because it is a fact extraction problem rather than a guidance problem, and because a report pattern family wants a weekday distribution that only this class holds; that family has no rule for exactly that reason, since 3.7 restricts these facts to layer 6.
 
 ---
 
@@ -306,6 +318,8 @@ data class Criterion(
 **Subject.** The rule is evaluated once per candidate subject, so it can qualify for Work and not Health in the same window. Escalation is tracked per `(family, subjectId)`, so nine days on one item and three on another are independent ladders.
 
 **Horizon.** The maximum age of the oldest fact referenced. A callback to last week is attentive; one to fourteen months ago in the wrong context is uncanny. Current-window rules use the window length; `HistoryFacts` rules declare their own, typically 90 or 180 days.
+
+**Phase 5, what "the oldest fact referenced" turned out to mean.** Three ages are generic and cover almost everything: the window itself, the subject, and a quoted answer. An area subject's age is **how long it has been still**, deliberately not how old the area is, because an area's age is not a fact any line renders and counting it would put every area older than ninety days out of reach of every rule with a ninety day horizon, which is most of the areas in a year old install. Those three miss one case, and it is the case the horizon exists for: a family whose sentence names **a week** rather than a subject. `mostActiveSince` renders the month of a week that beat this one, and that week can be two years old while every other fact in the set is seven days old. Those families are enumerated in the selector with the week key each one would name.
 
 **Callback requirement.**
 
@@ -341,6 +355,8 @@ If the highest available specificity is 1, meaning nothing more interesting than
 
 This is the only place the engine chooses not to speak when it could. A Pulse appearing every single day becomes wallpaper; one that occasionally does not appear reads as discretion. Deterministic, so both devices agree, and it never suppresses a specificity 2 or higher observation.
 
+**Phase 5.** The bucketing is done through a sign safe helper rather than a bare `% 3`. `stableHash` is signed and the sign of a Kotlin remainder follows the dividend, so `% 3 == 0` is correct here and would invite the next person to write `% 3 == 1` somewhere and get a third of the days on one platform and a sixth on another.
+
 ---
 
 ## 6. The families
@@ -366,6 +382,10 @@ Full language in `CORPUS_1_PULSE.md`.
 **Tone rules, non-negotiable.** Both response options must feel equally valid read out of context. No option is the good answer. Switching and abandonment language normalizes, never flags. Milestone families get responses that are both positive.
 
 **Response polarity.** The first response of each pair is positive. For `quietDay`, `Recharging` and `Busy elsewhere` are positive and the third is flagged. This boolean is the only interpretation the app ever makes of an answer.
+
+**Phase 5: the escalation fact named in the table above does not exist for every family.** Nine families and three single stages across all six purposes have authored language and no rule, because the fact their trigger names is not declared in 3.1. Two of them are in this table: `switching` is given the area as its subject and the swap count as its escalation fact, and 3.1 declares swaps only for the whole window; `rebalance` is given dormancy length, and the rollup says an area returned but not from how long. `quietDay` stages 2 and 3 and `concentration` stage 3's second branch want a run of consecutive days, which nothing counts.
+
+**Each of those was left without a rule rather than approximated**, and the list lives in code with the missing fact and the corpus line that needs it, so a catalog test fails if a family goes quiet without somebody deciding it should. The approximations available were all nearly right: window active days for a run of consecutive days, the window's swap count for an area's, days since last event for the dormancy an area returned from. Each would fire the family on a shape it does not describe, and the sentence that came out would be arithmetic nobody could fault and a claim about a person's week that was not true. That is the prime directive in section 1, and it is the reason the fact comes first and the rule second. **The fix is a fact in 3.1, not a criterion.**
 
 ### 6.2 The Pulse response format, resolved
 
@@ -442,6 +462,8 @@ data class Variant(
 
 `Template` is an authored string with typed slot markers. **Never assembled at runtime from fragments belonging to another family.**
 
+**Phase 5: responses are pairs on a stage, not a flat list on a family.** 7.1 declares `PhrasingFamily.responses` as a flat `List<ResponseOption>`. `CORPUS_1_PULSE.md` authors responses as pairs, per stage, six or seven per stage, each pair written to be read against the other half and to pass the equal validity test in 11.3 **as a pair**. Flattening them loses the pairing, which is the only thing that makes that test mean anything, so the pairs live on the stage and the family has no flat list. CLAUDE.md's authority order gives the corpus the last word on the shape of a sentence, and a response pair is one.
+
 ### 7.2 Slots and number rendering
 
 ```kotlin
@@ -484,11 +506,17 @@ Parse them into `ClosedRange<Int>` at catalog load. **A stage header carrying a 
 
 The escalation fact for each family is named in the table in 6.1. The stage ranges for one family must be contiguous and non-overlapping, and a catalog test asserts this.
 
+**Phase 5: a stage header that names no number gets no range.** Some headers are qualitative, `clear imbalance toward intake` and the like. The parser gives those a qualitative condition rather than a guessed range, and the rule that points at such a stage carries its own criteria. 7.3 gives the corpus the last word on every threshold, and a threshold no author wrote is not the corpus's word. The other refusal is the one this section already states, made mechanical: the compound header splits on `, or ` and never on a bare ` or `, because `four or more consecutive days` is one branch and splitting it on ` or ` produces two nonsense ones.
+
 Example ladder for `persistence`, over `activeItemAgeDays`: stage 1 days 3 to 5, a note; stage 2 days 6 to 13, pointed; stage 3 days 14 to 29, comparative; stage 4 days 30 and above, historical. That matches the four stage headers in `CORPUS_1_PULSE.md` exactly, and where this document and the corpus ever disagree on a number, **the corpus wins**, because it is the file an author edits.
 
 Stage 4 references `HistoryFacts.longestEverActiveDays` and its rule carries a criterion asserting the item genuinely holds that record. Without it the sentence would be a lie the moment a longer-running item existed.
 
 **Monotonicity.** For a given `(family, subjectId)`, never show a lower stage than previously shown while the condition remained continuously true. `FiringHistory` carries `lastStageBySubject`, derived from prior `PULSE_GENERATED` events. This prevents saying `nine days now` on Tuesday and `has been active for three days` on Wednesday because a promotion reset an age calculation.
+
+**Phase 5, and this rule has an obvious implementation that is wrong.** The obvious one is to raise the stage to the one last shown. Stage 2 of `persistence` is authored around six to thirteen days, so rendering it for an item whose age has just been reset to three would say `going into its second week` about a three day old item. A false sentence is worse than a missing one, so the pair is **dropped** instead and the family says nothing until the magnitude catches up.
+
+**Continuity has to be bounded or the ladder never resets.** This section says the ladder resets when the condition genuinely lapses, and nothing in 3.1 records when that happened. The bound used is the family's own cooldown plus the window it describes: inside that the family was either speaking or forbidden from speaking, so the condition plausibly held, and beyond it the engine has no evidence either way and the ladder starts again.
 
 **Reset.** When the condition genuinely lapses, the ladder resets and a new active item starts at stage 1.
 
@@ -524,6 +552,10 @@ Five registers, selected in this order:
 `intakeVsOutput` at stage 2 (intake exceeding output), `neglectedArea` at both stages, `queuePressure`, `persistentItem` at stages 3 and 4, `switchingBehavior` at stage 2, `focusAbandonment`, `decliningActivity`, `quietWeek`, `hardStretch`, `singleFocus` at stage 2, and the pattern families `growingQueues`, `decliningActivity`, `areaGoneQuiet`, `narrowingFocus`, `focusHabitFading`, `abandonmentPattern`.
 
 Everything else is `false`. A family that is neutral or positive never uses the neutral-agent register, because making the fact the subject of a good week reads as withholding credit.
+
+**Phase 5: two entries above name a stage their corpus family does not have.** `persistentItem` is marked at stages 3 and 4 and `switchingBehavior` at stage 2, and both are single stage families in `CORPUS_2_REPORT.md`. Marking the whole family would over apply a qualification this section wrote deliberately; marking none of it would leave the three neutral agent lines authored for the switching family unreachable. So the qualification survives as a property of the **rule** rather than of the stage: the catalog declares two rules per family, split at the magnitude the corpus already states for the matching Pulse ladder, and only the higher one is unflattering. `persistentItem` splits at fourteen days, the start of `persistence` stage 3; `switchingBehavior` splits at two swaps, the start of `switching` stage 2.
+
+**Phase 5: nothing declares which lead is notable enough for the editorial register.** Step 3 caps a report at two editorial leads, and `CORPUS_2_REPORT.md` says the register is reserved for leads that have earned it with a genuinely notable fact, which is a condition on the lead and not on the report. Nothing in 3.1 or section 4 carries a notability flag, so the realizer uses the one measure of notability the engine already computes: **specificity**, at three or more. A rule that required four things to be true at once describes a narrower situation than one that required two, which is the whole mechanism of section 5, and it is the same thing an editor means by a fact worth writing up. Two is the ordinary shape of a rule in this catalog, a condition and the floor that keeps it honest, so three is where a rule starts describing a situation rather than a number.
 
 **On `NEUTRAL_AGENT`.** The observation corpus otherwise uses transitive second person with the user as grammatical agent throughout. *You added 9 things and finished 6.* Where the numbers are unflattering, sustained agentive framing reads as attribution of responsibility even when no evaluative word appears. The neutral-agent register makes the fact the subject instead: *Nine things arrived. Six left.*
 
@@ -594,6 +626,14 @@ The checks, in order, all mandatory:
 10. **Register integrity.** A `NEUTRAL_AGENT` variant contains no passive construction with a deleted agent. Checked by pattern against banned forms including `were added`, `was completed`, `have been`
 
 Checks 1 through 4 are the integrity core. **The veto path for each must be reachable in a unit test** that deliberately constructs a violating candidate and asserts the veto. A validator whose failure branch is never executed is a validator nobody has verified.
+
+**Phase 5, three things this list leaves open.**
+
+- **Check 4 vetoes a negative as well as a zero.** Section 8 does not say so in as many words, and it is the same failure with a sign on it: a minus rendered into a sentence is a number nobody authored. A family that wants to speak about a gap or a decline is passed the **magnitude**, which is what `intakeVsOutput` and every corpus line reading `{k} more things` was written against
+- **Checks 7, 8 and 10 read the sentence with the person's own strings masked out.** An area is named by the person who made it. Somebody may reasonably spell a name the way they were taught, put an exclamation mark in an item title, or write one in a language this file cannot spell. Vetoing the sentence would silence the engine over somebody's own vocabulary, and the app already shows that exact string on every other screen. **The words the app chose are the words the app is answerable for.** Check 9 is the exception and measures the sentence as it will appear, because a long name really does make a long headline
+- **Check 5 has nothing a correct realizer can fail**, and does not pretend otherwise. It is enforced by the shape of layer 4, which receives only the `FactSet`. What it can still do is compare in both directions a name can go wrong, and it does that rather than passing vacuously
+
+**The order is data.** The checks are a list in the order this section numbers them and a test asserts it holds each one exactly once, so a candidate that breaks several is reported against the lowest numbered one and the detail names the most fundamental thing wrong with it.
 
 ---
 
@@ -748,6 +788,8 @@ By expected firing frequency, never evenly. Even sizing produces repeats exactly
 
 Current, counted rather than estimated: **620 Pulse lines producing 10,557 surfaces, 737 Report and guidance lines producing roughly 6,100, and 162 Momentum and banner lines producing 512.** Combined, 1,519 authored lines and roughly 17,200 surfaces. Storage is not a consideration; quality is the only constraint, and phase 9 grows the hot families toward the targets above.
 
+**Phase 5 counted the files and three of those totals have drifted. Left as written, because a total is not a builder's to change.** The catalog counts the keyed lines in each file at load and holds the readings, so the drift is visible rather than remembered. Pulse agrees at 620 and the Report volume's own totals table agrees at 737. `CORPUS_3_MOMENTUM.md` claims 112 Momentum headlines in two places and carries 96, so its stated 162 is 146 and the combined figure of 1,519 is 1,503. Inside the Report volume, section 1's prose says 176 headlines against its own table's 158, and section 3's says 128 patterns against 111; the tables are right and the prose is stale. **This is a finding rather than an edit**: whether a file grows to match its total or a total is corrected to match its file is a phase 9 question, and phase 9 is where the corpus is grown.
+
 ### 11.2 Authoring protocol
 
 1. **Research first.** Before writing any batch, research current AI slop tells in language. Before, not as cleanup
@@ -780,6 +822,10 @@ The build test must therefore match `behind` only in these constructions, not th
 
 Build this in phase 5, before a single corpus sentence is written. In `devtools`, debug builds only.
 
+**Built, phase 5.** Eleven personas, a full simulated year each, and a Gradle task that reads the source directories Gradle resolved and fails if the package is missing from the debug source set, present in a release one, or named by any file a release build compiles. Being in `src/debug` is the mechanism; the task is the verification, because the failure mode is silent: nothing breaks the day somebody moves a simulator class into `src/main` so a screen can reach it.
+
+**The simulator writes the engine's own output back into its log**, which is the one thing it does that the app does not. It is not a liberty. `FiringHistory` derives entirely from `PULSE_GENERATED`, `REPORT_GENERATED` and `PLAN_OFFERED`, so the ninety day exclusion, the cooldowns and the ladders only exist in a run that records what it said. A simulator that dropped its own output would show every family at stage one forever and repeat lines it used the day before.
+
 **Inputs.** Synthetic histories: heavy single area, balanced across four, sporadic, abandoning, high focus, low focus, brand new, long dormant with a revival, queue hoarder, fast completer, **and a persona who accepts every plan and completes none.**
 
 **Process.** A full simulated year, engine run day by day for Pulse and week by week for the Report, plus Momentum on each simulated open.
@@ -808,6 +854,12 @@ Build this in phase 5, before a single corpus sentence is written. In `devtools`
 - No two consecutive Report leads share a length band
 - No report contains three consecutive parallel numeric clauses
 - **The non-compliance test:** the plan-accepting, plan-ignoring persona produces a year in which no sentence references a plan, a commitment, an intention, or a failure to act. If a reader of that dump could tell plans were accepted, the follow-through implementation has failed and must be **removed rather than tuned**
+
+**Phase 5: all ten are built, four are enforced and six are deferred with a date and an issue.** Issue #3 says in advance that the statistical ones cannot pass here, because the corpus is not grown until phase 9 and layer 6 does not exist until 9b. A deferred check is not a skipped one: it runs on every simulation, prints the number it measured, and prints its failures as loudly as an enforced check. What deferral changes is only whether the build goes red.
+
+The four enforced now are the ones whose failure would mean something already built is wrong rather than something not yet written: the vocabulary check, the phantom area check, the visible slot syntax check and the non-compliance test. The first three are already vetoed by layer 5, so a dump containing one is evidence that a sentence reached a surface without passing through the validator. The fourth passes trivially today because layer 6 does not exist, and is enforced anyway so that the day layer 6 arrives, this is already watching.
+
+The readings the deferred six produced are the baseline phase 9 is judged against and are recorded in `DECISIONS.md` and `docs/BUILD_STATE.md`. Two of them are worth reading before authoring anything: **Pulse silence measured 43 to 98 percent per persona against a target band of 8 to 25**, and only six of the eleven Pulse families ever fired across the whole run. Both say the same thing, which is that the shortfall is rules and facts and not only bench depth.
 
 ---
 
@@ -860,3 +912,7 @@ Build this in phase 5, before a single corpus sentence is written. In `devtools`
 - **Cue substantiation.** No plan renders with a cue below threshold across 10,000 generated fact sets
 - **Non-compliance.** Per section 12
 - **Boundary.** `dateKey` correct across DST spring forward and fall back; the 17:00 reflection switch happens exactly once per day
+
+**Phase 5 built all of these except the ones that need a layer or a corpus that does not exist.** Purity, catalog integrity, criterion discrimination, determinism over ten thousand cases, cross-device agreement, veto reachability for every check, escalation monotonicity, composition, register and non-compliance are unit tests today. Silence floors and repetition are simulator checks, they run, they fail, and each carries the issue that lifts it. **Cue substantiation waits for layer 6**, because nothing renders a cue yet. The 17:00 half of the boundary test waits for phase 6, which owns the generation lifecycle; the `dateKey` half is held by the daylight saving tests phase 3b built.
+
+**Determinism is run through two independently constructed engines**, with the second one handed a history whose maps are rebuilt in reverse insertion order. The engine has no clock and no random number, so neither is the risk; the risk is a map iteration order leaking into a decision, which is invisible at small scale because a hash map of three keys usually iterates the same way twice and stops doing so somewhere above that. Ten thousand fact sets and a reversed history is the cheapest available imitation of two devices reaching the same facts by different routes.

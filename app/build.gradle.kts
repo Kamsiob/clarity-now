@@ -1,5 +1,11 @@
 import com.android.build.api.artifact.SingleArtifact
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.io.File
 
 plugins {
     alias(libs.plugins.android.application)
@@ -23,8 +29,11 @@ plugins {
 // 0.5.0: phase 4, focus sessions and the first Contemplative surface. A minor bump
 // because the app can now do something it could not do before, and because the
 // Contemplative world arrives with it.
+// 0.6.0: phase 5, the engine's five layers and the simulator. A minor bump even
+// though nothing on screen changed, because the thing phases 6 through 8 render now
+// exists and is the largest single addition since the event log itself.
 val versionMajor = 0
-val versionMinor = 5
+val versionMinor = 6
 val versionPatch = 0
 
 android {
@@ -137,6 +146,128 @@ abstract class VerifyNoInternetPermission : DefaultTask() {
         )
     }
 }
+
+/**
+ * CLARITY_LOGIC_ENGINE.md 12: the simulator lives in `devtools`, debug builds only.
+ *
+ * **Putting a file in `src/debug` is the mechanism, not the verification.** Android Gradle
+ * compiles that directory into the debug variant and no other, which is exactly why the
+ * failure mode is silent: the day somebody moves one simulator class into `src/main` so a
+ * screen can reach it, or widens a source set, nothing breaks and the release build quietly
+ * grows eleven synthetic personas, a year of generated event logs and a copy of the check
+ * suite. So this reads what Gradle actually resolved for each source set and fails if the
+ * arrangement is not the one that was promised.
+ *
+ * Three things, and the first is the one that is usually missing. A verification that only
+ * looked for the package where it must not be would pass on a repository where the
+ * simulator had been deleted.
+ *
+ * 1. The devtools package **is** under a debug source directory, and is not empty
+ * 2. It is **not** under any source directory the release variant compiles
+ * 3. Nothing the release variant compiles **names** the package, which would not link
+ */
+abstract class VerifyDevtoolsAreDebugOnly : DefaultTask() {
+
+    /** Source directories Gradle resolved for the debug source set. */
+    @get:Input
+    abstract val debugSourceDirs: ListProperty<String>
+
+    /** Source directories Gradle resolved for the source sets a release build compiles. */
+    @get:Input
+    abstract val releaseSourceDirs: ListProperty<String>
+
+    @get:Input
+    abstract val devtoolsPackage: Property<String>
+
+    /** Every Kotlin file a release build compiles, so the package name can be looked for. */
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val releaseSources: ConfigurableFileCollection
+
+    @get:OutputFile
+    abstract val report: RegularFileProperty
+
+    @TaskAction
+    fun verify() {
+        val packageName = devtoolsPackage.get()
+        val packagePath = packageName.replace('.', '/')
+        val failures = mutableListOf<String>()
+
+        val present = debugSourceDirs.get()
+            .map { File(it, packagePath) }
+            .filter { directory -> directory.listFiles()?.any { it.extension == "kt" } == true }
+        if (present.isEmpty()) {
+            failures += "no Kotlin file found in $packagePath under any debug source directory, " +
+                "so either the simulator is gone or it has moved somewhere the release build " +
+                "can see. CLARITY_LOGIC_ENGINE.md 12 requires it in devtools, debug builds only"
+        }
+
+        releaseSourceDirs.get()
+            .map { File(it, packagePath) }
+            .filter { it.isDirectory }
+            .forEach { failures += "$packagePath exists under a release source directory: $it" }
+
+        for (file in releaseSources.files.sortedBy { it.path }) {
+            if (!file.isFile) continue
+            if (file.readText().contains(packageName)) {
+                failures += "${file.path} names $packageName, which is not in the release variant"
+            }
+        }
+
+        val output = report.get().asFile
+        output.parentFile.mkdirs()
+        if (failures.isNotEmpty()) {
+            output.writeText(failures.joinToString("\n"))
+            throw GradleException(
+                "the simulator is not debug only:\n" + failures.joinToString("\n") { "  $it" },
+            )
+        }
+        output.writeText(
+            "$packageName is present in ${present.size} debug source directory(s) " +
+                "and absent from every release one\n",
+        )
+    }
+}
+
+/**
+ * The source directories each side of the line.
+ *
+ * These are the conventional Android layout paths rather than a read of the Gradle
+ * model. Reading the model would be better, because a `sourceSets` block that added
+ * the debug directory to `main` would then be caught here rather than by inspection,
+ * but the source set API does not expose its directories as a property in this AGP
+ * version and forcing it produced a build file that did not compile.
+ *
+ * The gap is covered instead by the task below, which fails if the devtools package
+ * appears anywhere in the release sources it is given. If someone reroutes the source
+ * sets, this list is what needs updating, and that is stated here rather than assumed.
+ */
+private val DEVTOOLS_DEBUG_DIRS = listOf("src/debug/java")
+private val DEVTOOLS_RELEASE_DIRS = listOf("src/main/java", "src/release/java")
+
+val devtoolsDebugDirs = DEVTOOLS_DEBUG_DIRS.map { layout.projectDirectory.dir(it).asFile.path }
+val devtoolsReleaseDirs =
+    DEVTOOLS_RELEASE_DIRS.map { layout.projectDirectory.dir(it).asFile.path }
+
+val verifyDevtoolsAreDebugOnly = tasks.register<VerifyDevtoolsAreDebugOnly>("verifyDevtoolsAreDebugOnly") {
+    group = "verification"
+    description = "Fails if the devtools simulator is reachable from a release build."
+    debugSourceDirs.set(devtoolsDebugDirs)
+    releaseSourceDirs.set(devtoolsReleaseDirs)
+    devtoolsPackage.set("com.kamsiob.claritynow.devtools")
+    releaseSources.from(
+        DEVTOOLS_RELEASE_DIRS.map { dir ->
+            fileTree(layout.projectDirectory.dir(dir)) { include("**/*.kt") }
+        },
+    )
+    report.set(layout.buildDirectory.file("reports/devtools-debug-only.txt"))
+}
+
+// Runs inside verifyClarity, which depends on testDebugUnitTest, and blocks a release
+// build outright. Matched lazily for the same reason the manifest check is: both task
+// names are registered after this script is evaluated.
+tasks.matching { it.name == "testDebugUnitTest" || it.name == "assembleRelease" }
+    .configureEach { dependsOn(verifyDevtoolsAreDebugOnly) }
 
 val verifyNoInternetPermission = tasks.register("verifyNoInternetPermission") {
     group = "verification"
