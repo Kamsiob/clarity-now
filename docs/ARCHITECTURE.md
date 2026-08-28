@@ -42,13 +42,33 @@ com.kamsiob.claritynow
   ui.components              shared composables
   ui.areas ui.focus ui.pulse ui.momentum ui.report ui.trail
   ui.settings ui.about ui.onboarding ui.tutorial
-  ui.nav                     the shell and the tab bar
+  ui.reentry                 one screen, shown at most once per absence
+  ui.nav                     the shell, the tab bar, and what covers them
 
   widget notifications work  the surfaces outside the app, and the jobs behind them
   shortcuts tile             the launcher surfaces: three static shortcuts, one tile
   devtools                   the simulator: personas, the dump, the checks. Debug only
   di                         ClarityGraph, the hand written container
 ```
+
+**Two modules, not one.** `:baselineprofile` is a `com.android.test` module that drives
+the real app on a real device to generate `app/src/main/baseline-prof.txt`. It ships no
+code into the APK and nothing in it runs in `verifyClarity`. A macrobenchmark has to cold
+start the app under test as a separate process, which it cannot do from inside that app's
+own instrumentation, so the separate module is the only shape that measures a real cold
+start rather than a warm one.
+
+**Files worth knowing about by name**, because their names do not say what they are:
+
+| file | what it holds |
+|---|---|
+| `ui/nav/PushedScreens.kt` | a depth count in a composition local. A pushed screen declares itself and the shell stops composing the tab bar |
+| `ui/nav/ExternalRequest.kt` | one pure table from an intent action to a destination. Every widget, shortcut and notification route is in it |
+| `ui/nav/PointerBlocking.kt` | one modifier, so a surface drawn over another one does not let taps through to it |
+| `ui/components/ScrollEdge.kt` | the fade at the top and bottom of every scroller, which erases rather than paints |
+| `ui/theme/ClarityTextSize.kt` | the app's own text size, applied to `LocalDensity` in exactly one place |
+| `data/repo/AreaRestore.kt` | where a restored area's order key comes from, which is usually nowhere |
+| `data/repo/ReEntryChoice.kt` | a pure function returning `List<ItemQueued>`, so clearing cannot compile into a delete |
 
 ## Layering rules
 
