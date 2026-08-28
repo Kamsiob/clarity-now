@@ -1,6 +1,7 @@
 package com.kamsiob.claritynow.ui.areas
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -21,6 +22,7 @@ import com.kamsiob.claritynow.R
 import com.kamsiob.claritynow.ui.components.TabBarHeight
 import com.kamsiob.claritynow.ui.components.UndoRequest
 import com.kamsiob.claritynow.ui.components.UndoSnackbar
+import com.kamsiob.claritynow.ui.nav.swallowsPointerInput
 import com.kamsiob.claritynow.ui.theme.AreaPalette
 import kotlinx.coroutines.flow.first
 
@@ -119,6 +121,22 @@ fun AreasRoute(
     var sheet by remember { mutableStateOf<AreaSheet?>(null) }
     var undo by remember { mutableStateOf<UndoRequest?>(null) }
 
+    // The archive, design-v3.md 10.20 and 10.15, issue #15.
+    //
+    // **A screen and not an [AreaSheet]**, which is why it is a value of its own here:
+    // 10.15's destination table gives `Archived areas` back as its only way out, which
+    // is what marks a pushed screen in that table, and the sheets around it are left by
+    // a drag or a scrim tap as well. It is hosted from this file rather than from the
+    // shell because `PushedScreen` declares itself to `ui/nav/PushedScreens.kt` and the
+    // shell reads that and stops drawing the tab bar, so a pushed screen does not have
+    // to be hoisted to be able to cover one. Settings is the same arrangement one file
+    // down, in `AreasScreen`, where the glyph that opens it is.
+    //
+    // `rememberSaveable`, for the reason `settingsOpen` is: a tab switch takes this
+    // composition with it, and a screen that closed itself while somebody was reading
+    // the Report is a screen that cannot be trusted.
+    var archiveOpen by rememberSaveable { mutableStateOf(false) }
+
     // The [AreasRequest.serial] this tab has already acted on.
     //
     // **Saveable, and that is load bearing rather than tidy.** A tab's content leaves
@@ -172,7 +190,7 @@ fun AreasRoute(
         AreasScreen(
             state = state,
             onOpenArea = { sheet = AreaSheet.Detail(it) },
-            onOpenArchive = { /* Archived areas arrive with the archive view. */ },
+            onOpenArchive = { archiveOpen = true },
             onCompleteArea = { area ->
                 area.activeItemId?.let { viewModel.completeItem(area.id, it) }
             },
@@ -209,6 +227,17 @@ fun AreasRoute(
                 .navigationBarsPadding()
                 .padding(bottom = TabBarHeight + 26.dp),
         )
+
+        if (archiveOpen) {
+            // The Areas screen stays composed underneath, so coming back lands on the
+            // list where it was left rather than at the top of it, and something has to
+            // stop a thumb reaching it through an opaque screen. A full size sibling
+            // drawn behind the archive and in front of everything else swallows every
+            // pointer the archive itself did not want. Behind rather than in front, or
+            // it would starve the archive's own controls: see `PointerBlocking.kt`.
+            Spacer(Modifier.fillMaxSize().swallowsPointerInput())
+            ArchiveRoute(viewModel = viewModel, onBack = { archiveOpen = false })
+        }
     }
 
     when (val current = sheet) {

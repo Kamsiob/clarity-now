@@ -139,14 +139,17 @@ fun AreasScreen(
     // The Settings destination, design-v3.md 10.15, held here rather than in
     // `ClarityShell`.
     //
-    // **This is a seam and not the arrangement the design asks for.** 10.15 makes
-    // Settings a pushed screen over the tab it was entered from, which should cover the
-    // floating tab bar; the shell draws that bar as a sibling above the tab content, so
-    // hosting it there is the only way to cover it, and `ui/nav/ClarityShell.kt` was
-    // outside this phase's file list. Hosting it here keeps the glyph, the screen and
-    // everything under it working today and leaves the bar floating over the canvas.
-    // The remedy is one branch in the shell beside the Focus surface, and
-    // `SettingsSurface` and `PushedScreen` both carry it.
+    // **Held here rather than in the shell, and that stopped being a seam in phase
+    // 12c.** 10.15 makes Settings a pushed screen over the tab it was entered from,
+    // which has to cover the floating tab bar, and the shell draws that bar as a sibling
+    // above the tab content. Phase 11 read that as meaning the screen had to be hoisted
+    // into the shell to cover it and could not be, so the bar went on floating over
+    // Settings. Issue #58 answered it the other way round: a pushed screen says it is
+    // one, through `CoversTheTabBar`, and the shell reads that and does not draw the bar
+    // at all. So the host no longer decides anything about the bar, and this is simply
+    // where the glyph that opens it lives. `ui/nav/PushedScreens.kt` carries the whole
+    // of that decision. The archive, 10.20, is the same arrangement one file up, in
+    // `AreasRoute`, because its glyph already had a callback there.
     //
     // `rememberSaveable` rather than `remember`, because a tab switch takes this
     // screen's composition with it and coming back to a Settings screen that closed

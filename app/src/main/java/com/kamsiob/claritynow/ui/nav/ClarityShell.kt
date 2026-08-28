@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -32,7 +31,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.ViewModelStore
@@ -59,7 +57,6 @@ import com.kamsiob.claritynow.ui.pulse.PulseRoute
 import com.kamsiob.claritynow.ui.report.ReportRoute
 import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
-import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.TabEntrance
 import com.kamsiob.claritynow.ui.theme.clarityMotion
 import com.kamsiob.claritynow.ui.trail.TrailRoute
@@ -332,7 +329,18 @@ fun ClarityShell(
                             // its own documentation, so ReportViewModel holds it instead.
                             TAB_REPORT -> ReportRoute()
 
-                            else -> UnderConstruction()
+                            // **Unreachable, and it exists because `selected` is a
+                            // `String` rather than a sealed type**, so the compiler
+                            // cannot see that the four branches above are all of them.
+                            // Through 0.9.0 this branch drew an honest `This screen
+                            // arrives in a later build` line, which was true while
+                            // Momentum and the Report were unbuilt and stopped being
+                            // true when phases 7 and 8 landed on those two branches.
+                            // A placeholder nothing can reach is worse than no
+                            // placeholder: it is a screen nobody can test, a string
+                            // nobody can read and a claim about the app that is no
+                            // longer the case. Issue #16.
+                            else -> error("no tab named $tab")
                         }
                     }
                 }
@@ -479,29 +487,4 @@ private fun Context.findActivity(): Activity? {
  */
 private class FocusSurfaceStore : ViewModelStoreOwner {
     override val viewModelStore: ViewModelStore = ViewModelStore()
-}
-
-/**
- * A destination whose phase has not landed yet. Deliberately plain and honest
- * rather than a fake skeleton, because a convincing placeholder is a lie about
- * what has been built.
- */
-@Composable
-private fun UnderConstruction() {
-    val colors = LocalClarityColors.current
-    val type = LocalClarityTypography.current
-    Box(
-        modifier = Modifier.fillMaxSize().padding(40.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = stringResource(R.string.under_construction),
-            style = type.body,
-            // The only text on the screen, so there is no rank for a quieter ink to
-            // occupy. design-v3.md 3.1: `inkTertiary` carries no text anywhere in this
-            // app, and it measures 2.337 to one on the canvas.
-            color = colors.inkSecondary,
-            textAlign = TextAlign.Center,
-        )
-    }
 }

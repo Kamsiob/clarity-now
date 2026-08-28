@@ -82,7 +82,7 @@ worse than either of them**, and the way to edit these is to replace the whole b
 | 11. Settings, About, data | built, awaiting the device check | #10 |
 | 12. Widgets and notifications | built, all six routes landed, awaiting the device check and the preview captures | #11 |
 | 12b. Design surfaces, the polish pass | built, awaiting the device check | #54 |
-| 12c. The re-entry screen | not started. 14b.4 left it without a phase; this run assigned it one | #56 |
+| 12c. The re-entry screen | built, awaiting the device check | #56 |
 | 13. Ship | in progress. Store listing, the About disclaimer and the baseline profile generator are in | #12 |
 
 ---

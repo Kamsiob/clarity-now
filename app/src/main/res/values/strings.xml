@@ -15,7 +15,6 @@
     <string name="tab_momentum">Momentum</string>
     <string name="tab_report">Report</string>
     <string name="tab_trail">Trail</string>
-    <string name="under_construction">This screen arrives in a later build.</string>
 
     <!-- Areas -->
     <string name="areas_title">Areas</string>
@@ -69,7 +68,7 @@
     <string name="action_delete">Delete</string>
     <string name="action_edit">Edit</string>
     <string name="action_archive">Archive</string>
-    <string name="action_unarchive">Unarchive</string>
+    <string name="action_restore">Restore</string>
     <string name="action_move_to_front">Move to front</string>
     <string name="action_reopen">Reopen</string>
     <string name="action_save">Save</string>
@@ -140,9 +139,38 @@
         <item quantity="other">Estimated at %d minutes</item>
     </plurals>
 
-    <!-- Archive and delete -->
+    <!--
+        The archive, design-v3.md 10.20 and 10.13. Every line here is a label or a
+        direct readout of a count query. Nothing on this screen reads anything into
+        what is in it, how long it has been there, or how much of it there is.
+
+        The empty state is an invitation rather than an action, which is the one place
+        this screen departs from 10.13's usual shape. There is no next action to name:
+        an app that invited somebody to go and archive an area would be inviting them
+        to put a part of their life away. What it says instead is that the door swings
+        both ways, which is what a person opening an empty archive needs to know and is
+        the sentence that would have saved the person who found issue #15.
+
+        `Archive` is the place and `Archived areas` above is the control that opens it,
+        and the two differ on purpose: a button says where it goes and a title says
+        where you are. A button reading `Archive` alone is a verb with no object.
+    -->
+    <string name="archive_title">Archive</string>
     <string name="archive_empty_title">Nothing archived</string>
-    <string name="archive_empty_body">Archiving an area hides it without losing its history.</string>
+    <string name="archive_empty_body">An area you archive waits here with everything in its queue, and you can bring it back at any time.</string>
+    <string name="archive_area_no_items">No items</string>
+    <plurals name="archive_area_items">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
+    </plurals>
+    <string name="cd_archive_restore">Restore %1$s</string>
+    <string name="cd_archive_delete">Delete %1$s</string>
+
+    <!--
+        Deleting an area, from the Areas list or from the archive. One confirmation
+        serves both, `MASTER_BUILD_PROMPT.md` section 5's typed confirmation, because
+        one sentence about what a delete does belongs in one place.
+    -->
     <string name="delete_area_body">This removes the area and everything in it from every screen. Its history stays in your Trail. This cannot be undone.</string>
     <string name="delete_area_confirm_hint">Type DELETE to confirm</string>
     <string name="delete_area_confirm_word">DELETE</string>

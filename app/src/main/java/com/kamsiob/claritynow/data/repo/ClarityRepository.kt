@@ -234,10 +234,37 @@ class ClarityRepository(
         commit(AreaArchived(areaId = areaId, nameSnapshot = area.name))
     }
 
+    /**
+     * Brings an area back out of the archive, with everything that was in it.
+     * `MASTER_BUILD_PROMPT.md` section 5's archive rule, design-v3.md 10.20, issue #15.
+     *
+     * **It lands where it was**, because an archived area keeps its key and every
+     * writer here chooses against the restorable set rather than the visible one, so
+     * nothing has taken it. [restoredOrderKey] carries why that is the answer rather
+     * than the end of the list, and the one case where a log this app did not write
+     * makes it a question.
+     *
+     * The reorder goes first and both payloads go into one [commit], so the two are one
+     * transaction and one fold. In the ordinary case there is no reorder at all and this
+     * writes the single event the Trail already renders.
+     */
     suspend fun unarchiveArea(areaId: String) {
         val area = _state.value.areas[areaId] ?: return
         if (!area.archived || area.deletedAt != null) return
-        commit(AreaUnarchived(areaId = areaId, nameSnapshot = area.name))
+        val moved = restoredOrderKey(_state.value, areaId, jitter)
+        val unarchived = AreaUnarchived(areaId = areaId, nameSnapshot = area.name)
+        if (moved == null) {
+            commit(unarchived)
+        } else {
+            commit(
+                AreaReordered(
+                    areaId = areaId,
+                    previousOrderKey = area.orderKey,
+                    newOrderKey = moved,
+                ),
+                unarchived,
+            )
+        }
     }
 
     /** A tombstone, never a row removal. Trail entries keep their subject forever. */
@@ -361,32 +388,14 @@ class ClarityRepository(
      * A key strictly between [lower] and [upper], tightened by anything already
      * [occupied] inside that gap.
      *
-     * **The rule this exists to enforce: a key must be chosen against every entity
-     * that can occupy the ordering space, not against the ones currently in view.**
-     * Both of this app's ordering spaces have members that a filtered list leaves
-     * out, and both produced real collisions.
-     *
-     * For an area's items, the active item holds a key in the same space as the queue
-     * but is not a member of the queue, so bounds taken from queue neighbors can
-     * enclose it, and at the ends of the queue one bound is null and encloses
-     * everything. It cannot even be assumed the active item sits below the whole
-     * queue: promotion from the head leaves it there, but a swap promotes whichever
-     * item the person chose.
-     *
-     * For areas, an archived area keeps its key. Archiving is reversible, so that key
-     * is not free, and unarchiving puts the area back among the live ones holding it.
-     *
-     * In both cases the collision is silent when it is made and surfaces much later,
-     * as an exception out of `OrderKey.between`, the first time a drag asks for a key
-     * between two entities that share one. The replay harness found it in August 2026;
-     * the defect shipped in 0.2.0. `OrderKeyCollisionTest` holds the proof.
+     * The whole of the rule, and the collision that made it necessary, is on
+     * [keyTightenedBetween] in `AreaRestore.kt`. It moved there when the archive view
+     * landed, because restoring an area needs the same rule and needs it from a
+     * desktop JVM, and two copies of this particular pass is how the 0.2.0 defect
+     * existed in the first place. This binds it to this device's [jitter].
      */
-    private fun tightenedBetween(lower: String?, upper: String?, occupied: List<String>): String {
-        val inside = occupied.filter {
-            (lower == null || it > lower) && (upper == null || it < upper)
-        }
-        return OrderKey.between((listOfNotNull(lower) + inside).maxOrNull(), upper, jitter)
-    }
+    private fun tightenedBetween(lower: String?, upper: String?, occupied: List<String>): String =
+        keyTightenedBetween(lower = lower, upper = upper, occupied = occupied, jitter = jitter)
 
     /** [tightenedBetween] over an area's live items, which the active item belongs to. */
     private fun keyBetween(

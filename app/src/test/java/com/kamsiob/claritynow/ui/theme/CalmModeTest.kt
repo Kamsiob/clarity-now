@@ -252,6 +252,13 @@ class CalmModeTest {
             // this census can have.
             // The 9dp identity dot in the detail sheet header. Excluded.
             "ui/areas/AreaSheets.kt" to 1,
+            // The archive row's 7dp dot, design-v3.md 10.20. **Identity, so excluded**,
+            // and it is the clearest case the split has: it is the first of 16.2's two
+            // exclusions by name, and on this screen it is the only thing on the row
+            // that says which area a person is about to restore or delete forever. The
+            // card takes no wash at all, because an archived area is idle and 3.4 gives
+            // an idle card none, so there is no atmospheric use here to route.
+            "ui/areas/ArchiveScreen.kt" to 1,
             // The area dot on each row of the filing chooser. Identity, so excluded:
             // it is how a person recognizes which area they are about to file into,
             // and 16.2 names the dot as one of the two uses that never transform.

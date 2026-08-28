@@ -129,10 +129,12 @@ internal val ROLES: Map<String, Role> = buildMap {
         put(
             "$world.deleteMuted",
             inkAndGround(
-                "design-v3.md 3.1, the delete swipe action only. Its face is the ground and " +
-                    "the icon and label on that face are the ink, which is why it is one " +
-                    "value per world since phase 13: at #8A5A5A in both it measured 2.942 " +
-                    "on the dark card and 3.656 on its own face in light",
+                "design-v3.md 3.1, the delete action wherever it is offered: the swipe " +
+                    "face and its label, the detail sheet's Delete row and the archive " +
+                    "row's. The swipe face is the ground and the icon and label on that " +
+                    "face are the ink, which is why it is one value per world since " +
+                    "phase 13: at #8A5A5A in both it measured 2.942 on the dark card and " +
+                    "3.656 on its own face in light",
             ),
         )
     }

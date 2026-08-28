@@ -70,6 +70,31 @@ data class ConflictCardModel(
 )
 
 /**
+ * One row on the archive screen. design-v3.md 10.20 and 10.3.
+ *
+ * **An archived area is a name, a color and a queue, and this carries exactly those
+ * three things.** The card model above it holds ten fields because a live card reports
+ * what is happening; nothing is happening in an archived area, so most of them would be
+ * a number about a part of the person's life they have put down. [itemCount] is the one
+ * that survives, and it is a count query rather than a reading of one: what is inside,
+ * so that restoring is a known quantity and deleting is not a guess.
+ *
+ * **What is deliberately absent is the last active line.** `AreaCardModel` carries
+ * `daysSinceLastEvent` and 10.3 draws it as `Last active 12 days ago`, which on this
+ * screen would be the app telling somebody how long ago they gave up on something. That
+ * is an observation about their own data, and MASTER_BUILD_PROMPT section 11 allows
+ * exactly one path for those, through the corpus and the engine. It is not a string this
+ * screen may reach for, and the way to keep that true is for the model not to hold it.
+ */
+@Immutable
+data class ArchivedAreaModel(
+    val id: String,
+    val name: String,
+    val colorHex: String,
+    val itemCount: Int,
+)
+
+/**
  * A promotion that just happened, handed to the card so it can play the hero
  * animation. Cleared once played, so a recomposition does not replay it.
  */
@@ -213,6 +238,43 @@ class AreasViewModel(
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AreasUiState())
 
+    /**
+     * What the archive screen shows, design-v3.md 10.20, and null until it has been
+     * read.
+     *
+     * **A flow of its own rather than a field on [AreasUiState]**, because the Areas
+     * screen has no business holding the list of areas a person has put away: it cannot
+     * draw them, and a field it is handed is a field a later session can draw. The
+     * archive is a pushed screen over this tab and reads this when it is open.
+     * `WhileSubscribed` means it costs nothing at all while that screen is closed, which
+     * is nearly always.
+     *
+     * **Null rather than an empty list, and that is the whole reason for the nullable
+     * type.** A `WhileSubscribed` flow holds its seed value until something subscribes,
+     * so the first composition of the archive reads whatever was seeded and only the
+     * next one sees the real answer. Seeded with an empty list, every first open of the
+     * archive would draw `Nothing archived` for a frame before the list arrived, which
+     * is a sentence that is false and is the exact sentence that would send somebody
+     * away thinking their area was gone. Null is not a list, so the screen has nothing
+     * to draw and draws nothing. It is the same distinction [AreasUiState.loading] makes
+     * for the Areas list and the same reason: an empty state is a claim.
+     */
+    val archivedAreas: StateFlow<List<ArchivedAreaModel>?> = repository.state
+        .map { state ->
+            state.archivedAreas.map { area ->
+                ArchivedAreaModel(
+                    id = area.id,
+                    name = area.name,
+                    colorHex = area.colorHex,
+                    // Active plus queued, which is what comes back if it is restored.
+                    // Completed items are history rather than contents, and counting
+                    // them here would make a long finished area look full.
+                    itemCount = state.liveItemsIn(area.id).size,
+                )
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
     init {
         viewModelScope.launch {
             repository.load()
@@ -239,6 +301,14 @@ class AreasViewModel(
     }
 
     fun archiveArea(areaId: String) = viewModelScope.launch { repository.archiveArea(areaId) }
+
+    /**
+     * The way back. Issue #15 and design-v3.md 10.20.
+     *
+     * Where the area lands in the order is the repository's to decide and not this
+     * screen's, which is why nothing about a key crosses this line.
+     */
+    fun unarchiveArea(areaId: String) = viewModelScope.launch { repository.unarchiveArea(areaId) }
 
     fun deleteArea(areaId: String) = viewModelScope.launch { repository.deleteArea(areaId) }
 
