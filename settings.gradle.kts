@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "clarity-now"
 include(":app")
+include(":baselineprofile")

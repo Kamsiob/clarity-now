@@ -1326,7 +1326,7 @@ Phrasing of this shape: `Built for people who find long lists paralyzing. Design
 - Focus session survives process kill. **This is one of the two checks that close phase 4** and it cannot be met by reasoning: `adb shell am force-stop` mid session, then relaunch, then read the remaining time off the ring
 - **Swipe right completes; full swipe left swaps; delete requires a tap and offers undo; all three reachable without swiping**
 - Widgets update after a completion
-- Tutorial spotlights align on the smallest and largest screens. **Not yet checkable.** Phase 10 built the whole mechanism and four of the five targets do not wear `tutorialTarget`, so the tutorial does not start at all, per 13.2. This line becomes a real check on the day those four modifiers land
+- Tutorial spotlights align on the smallest and largest screens. **Now checkable.** Phase 10 built the mechanism and left four of the five targets without a `tutorialTarget`, so the tutorial could not start at all. All five now wear one: the FAB, the first area card, the focus chip and the Pulse chip in `ui/areas/AreasScreen.kt`, and the fifth where phase 10 put it. The remaining half is a gesture on a device at both extremes of screen size
 - Font scale 200 percent; dark mode across all Daylight screens; Contemplative screens identical in both system themes
 - TalkBack pass, reduce motion pass, haptics correct and never repeated
 - **Predictive back shows the correct destination from every screen**, verified by gesture on the device

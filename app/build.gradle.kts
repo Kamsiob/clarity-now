@@ -15,6 +15,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.androidx.baselineprofile)
 }
 
 // Semantic version, chosen per MASTER_BUILD_PROMPT 16.7.
@@ -369,6 +370,11 @@ androidComponents {
 }
 
 dependencies {
+    // MASTER_BUILD_PROMPT 19, phase 13. The generator module produces
+    // src/main/baseline-prof.txt, which is committed so a release can be built on a
+    // machine with no phone attached. See baselineprofile/build.gradle.kts.
+    baselineProfile(project(":baselineprofile"))
+
     implementation(platform(libs.compose.bom))
     androidTestImplementation(platform(libs.compose.bom))
 

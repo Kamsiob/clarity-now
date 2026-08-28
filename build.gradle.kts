@@ -14,6 +14,13 @@ import org.gradle.api.tasks.TaskAction
 // build classpath than the one AGP bundles.
 plugins {
     alias(libs.plugins.android.application) apply false
+    // The generator module in :baselineprofile is a com.android.test module. It is
+    // declared here so AGP lands on the build classpath once with a known version.
+    // Requesting it with a version from the subproject alone fails, because AGP is
+    // already on the classpath by then and Gradle cannot check the two against
+    // each other.
+    alias(libs.plugins.android.test) apply false
+    alias(libs.plugins.androidx.baselineprofile) apply false
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.ksp) apply false
