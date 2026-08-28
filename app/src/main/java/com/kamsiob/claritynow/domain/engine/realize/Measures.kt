@@ -160,6 +160,12 @@ internal object Measures {
         return series.getOrNull(index)
     }
 
+    /** The same read over the dated series, so an offset means one week in both. */
+    private fun seriesKey(series: List<String>, offset: String?): String? {
+        val back = offset?.toIntOrNull() ?: return null
+        return series.getOrNull(series.size - 1 - back)
+    }
+
     // ------------------------------------------------------------------ the table
 
     val ALL: List<Measure> = listOf(
@@ -184,6 +190,10 @@ internal object Measures {
             "focus sessions that were started", "session", "sessions") read@{ facts, _, _ -> count(facts.window.focusStarted) },
         Measure("focusEndedEarly", "window", MeasureKind.COUNT, MeasureScope.WINDOW,
             "focus sessions ended before the timer", "session", "sessions") read@{ facts, _, _ -> count(facts.window.focusEndedEarly) },
+        Measure("focusDays", "window", MeasureKind.COUNT, MeasureScope.WINDOW,
+            "days in the window with a focus session started on them", "day", "days") read@{ facts, _, _ ->
+            count(facts.window.focusDays)
+        },
         Measure("focusMinutes", "window", MeasureKind.COUNT, MeasureScope.WINDOW,
             "minutes of focused time", "minute", "minutes") read@{ facts, _, _ -> count(facts.window.focusMinutesTotal) },
         Measure("swaps", "window", MeasureKind.COUNT, MeasureScope.WINDOW,
@@ -304,6 +314,29 @@ internal object Measures {
             if (recent.size < RHYTHM_WEEKS) return@read null
             count(recent.max() - recent.min())
         },
+        // `What is waiting has doubled since {sinceRef}`, and the only honest reading of it.
+        //
+        // The most recent earlier week whose queue was at or under half of this week's, so
+        // the sentence is exactly true and says it of the nearest week it is true of. Null
+        // when no week in the series is that low, which drops this one line off a bench of
+        // sixty and leaves the rest to speak, per SlotBindings' slot completeness rule.
+        // `areaDrainedFromAtStart` is the same shape and its comment carries the argument:
+        // a criterion cannot do this, because it would silence the family.
+        //
+        // Read against the series' own newest entry rather than against `queueTotal`, so
+        // the number the claim is made about and the numbers it is compared to are one
+        // measurement read repeatedly rather than two measurements set against each other.
+        Measure("queueDoubledSinceRef", "history", MeasureKind.DATE, MeasureScope.WINDOW,
+            "the month of the newest earlier week whose queue was at most half of this week's") read@{ facts, _, _ ->
+            val queues = facts.history.weekQueueSizeSeries
+            val keys = facts.history.weekStartKeySeries
+            val now = queues.lastOrNull() ?: return@read null
+            if (now < DOUBLING_FLOOR || keys.size != queues.size) return@read null
+            for (index in queues.size - 2 downTo 0) {
+                if (queues[index] * 2 <= now) return@read monthOf(keys[index])
+            }
+            return@read null
+        },
         Measure("averageWeekCompletions", "history", MeasureKind.COUNT, MeasureScope.WINDOW,
             "the mean completions of the weeks before this one", "thing", "things") read@{ facts, _, _ ->
             val earlier = facts.history.weekCompletionsSeries.dropLast(1).takeLast(AVERAGE_WEEKS)
@@ -316,6 +349,13 @@ internal object Measures {
             "the month of the newest week that beat this one") read@{ facts, _, _ ->
             monthOf(facts.history.mostRecentBetterWeekKey)
         },
+        // The same week read as a length. `mostActiveSince` says both `No week since
+        // {sinceRef} finished more` and `It has been {n} weeks`, and the two are one fact
+        // in two grammars.
+        Measure("weeksSinceBetterWeek", "history", MeasureKind.COUNT, MeasureScope.WINDOW,
+            "weeks from the newest week that beat this one to this one", "week", "weeks") read@{ facts, _, _ ->
+            count(facts.history.weeksSinceBetterWeek)
+        },
         Measure("weekCompletionsAgo", "history", MeasureKind.COUNT, MeasureScope.OFFSET,
             "completions in a numbered week back from this one", "thing", "things") read@{ facts, offset, _ ->
             count(seriesValue(facts.history.weekCompletionsSeries, offset))
@@ -327,6 +367,20 @@ internal object Measures {
         Measure("weekQueueSizeAgo", "history", MeasureKind.COUNT, MeasureScope.OFFSET,
             "everything waiting at the end of a numbered week back", "thing", "things") read@{ facts, offset, _ ->
             count(seriesValue(facts.history.weekQueueSizeSeries, offset))
+        },
+        // The month a numbered week back began in, read from the dated series rather than
+        // recomputed. Every pattern family that says `since {sinceRef}` means the oldest
+        // week of the run its own rule reads, which is offset two for a three week claim
+        // and offset three for a four week one, and the offset is in the binding rather
+        // than here because the run length belongs to the family.
+        //
+        // A month name and not a month and a day, which is what every other `sinceRef` in
+        // the table renders and what 7.2 asks for. The reach is never before the person
+        // installed the app: a rule claiming three weeks requires three weeks of data, so
+        // offset two is at most twenty days back against an install at least twenty one.
+        Measure("weekRefAgo", "history", MeasureKind.DATE, MeasureScope.OFFSET,
+            "the month a numbered week back from this one began in") read@{ facts, offset, _ ->
+            monthOf(seriesKey(facts.history.weekStartKeySeries, offset))
         },
         Measure("dominantAreaAgo", "history", MeasureKind.TEXT, MeasureScope.OFFSET,
             "the name of the area that led a numbered week back") read@{ facts, offset, _ ->
@@ -515,6 +569,14 @@ internal object Measures {
             "the gap this area returned from, inside the window") read@{ facts, id, _ ->
             days(area(facts, id)?.dormantDaysBeforeReturn)
         },
+        // The other end of the same gap, as a month. `{areaName} had been quiet since
+        // {sinceRef}` names when the quiet started, and `areaLastEventRef` cannot serve:
+        // it reads the last event of any kind, and the return is one of them, so it would
+        // answer with the month of the return itself.
+        Measure("areaDormancyStartRef", "area", MeasureKind.DATE, MeasureScope.AREA,
+            "the month this area was last active in before the gap it returned from") read@{ facts, id, _ ->
+            monthOf(area(facts, id)?.dormancyStartKey)
+        },
 
         // One item, always the active item of some area, because that is the only item
         // any family speaks about.
@@ -535,6 +597,13 @@ internal object Measures {
             val age = activeItem(facts, id)?.first?.activeItemAgeDays ?: return@read null
             count(age / DAYS_PER_WEEK)
         },
+        // Everything finished while this one thing did not, which is what the persistence
+        // ladder means by `other things` and `elsewhere`: the subject is still active and
+        // so is not among them.
+        Measure("completionsSinceItemActive", "item", MeasureKind.COUNT, MeasureScope.ITEM,
+            "things completed anywhere since this item became active", "thing", "things") read@{ facts, id, _ ->
+            count(activeItem(facts, id)?.first?.completionsSinceActiveItemStarted)
+        },
         Measure("itemQueueBehind", "item", MeasureKind.COUNT, MeasureScope.ITEM,
             "what is waiting behind this item", "thing", "things") read@{ facts, id, _ ->
             count(activeItem(facts, id)?.first?.queueLength)
@@ -549,6 +618,17 @@ internal object Measures {
 
     /** `weekendShift` speaks about a month, per `CORPUS_2_REPORT.md` 3.13. */
     private const val WEEKEND_WEEKS = 4
+
+    /**
+     * The smallest the queue may be **now** for a doubling to be worth saying.
+     *
+     * Four, which is the smallest queue that can have doubled from a queue of two. One
+     * thing becoming two is a doubling by arithmetic and `What is waiting has doubled` about
+     * it is not a sentence anybody would recognize as being about their own week. The floor
+     * is here rather than in a criterion because it is a property of this one reading and
+     * not of `growingQueues`, whose other lines are true at any size.
+     */
+    private const val DOUBLING_FLOOR = 4
 
     private val measuresById: Map<String, Measure> = ALL.associateBy { it.id }
 

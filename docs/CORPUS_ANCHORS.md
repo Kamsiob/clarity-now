@@ -34,15 +34,27 @@ and the length bands its surface can reach, and, where the family has an escalat
 to span the ladder. **Nothing here is new writing.** The right hand column says what about
 the voice that line carries, which is the only reason to prefer one anchor to another.
 
-**An anchor has to be a line the engine can actually say.** Eighty two lines in the corpus
-carry a marker with no fact behind it, or were never fillable from any real moment eleven
-simulated years produced, and a further forty eight are held out of their benches by
-`SlotBindings.EXCLUDED`. None of the hundred and thirty is an anchor. Anchoring on a line that never
-reaches a screen would teach the voice of something nobody reads. **That rule left nineteen
-of these thirty six families short of ten anchors when phase 9 opened, six when volume 2 was
-half grown, and none now.** All thirty six carry ten, which is 360 rows, because a bench
-grown to sixty lines can supply ten sayable ones even when a handful of its markers are
-unbound. Where a heading still names a sayable count below the line count, that gap is a
+**An anchor has to be a line the engine can actually say.** Two lines in the corpus were
+never fillable from any real moment eleven simulated years produced, and a further hundred
+and eighteen are held out of their benches by `SlotBindings.EXCLUDED`. None of the hundred
+and twenty is an anchor. Anchoring on a line that never reaches a screen would teach the
+voice of something nobody reads.
+
+**Two anchors moved when the binding pass retired their lines**, and both are worth a
+sentence here because they are the shape a future anchor is most likely to be wrong in.
+`ob.pers.e02`, *It is the longest anything has been active in {areaName}*, and `ob.tod.e04`,
+*Your longest focus sessions were the early ones*, were both superlatives about a quantity
+their family's rule never establishes: `longestEverActiveDays` is across the whole app
+rather than one area, and no fact anywhere carries the length of a focus session. They read
+beautifully, they rendered, they were being said, and neither corpus gate could see them
+because a false claim in words carries no marker. An anchor teaches the voice of the line it
+quotes, so an anchor that quotes a claim the app cannot support teaches exactly that. **That rule left nineteen
+of these families short of ten anchors when phase 9 opened, six when volume 2 was
+half grown, and one now.** Thirty six of the thirty seven carry ten, which is 368 rows,
+because a bench grown to sixty lines can supply ten sayable ones even when a handful of its
+markers are unbound. **The thirty seventh is `weekQuiet`**, which joined the hot tier when
+the register pass gave it a voice it could speak in, and which carries its whole bench of
+eight because eight is all it has. Where a heading still names a sayable count below the line count, that gap is a
 finding about the bench rather than a gap in this file.
 
 `CorpusAnchorsTest` checks every row on every run: the key exists, the sentence matches the
@@ -297,7 +309,7 @@ benches. Do not read the headline anchors as permission to write short observati
 | `ob.pers.l05` | P | MEDIUM | `{ageDays} on {itemTitle}, with {n} things queued behind it.` | The spatial sense of `behind`, which is correct here and which the vocabulary gate protects. |
 | `ob.pers.l06` | O | MEDIUM | `Most things you finish take {medianDays}. This one is at {ageDays}.` | Two beats and a comparison the reader draws. |
 | `ob.pers.l07` | E | MEDIUM | `There is one item here that has been true for longer than anything else.` | `has been true` treats the item as a statement rather than a task. |
-| `ob.pers.e02` | O | MEDIUM | `It is the longest anything has been active in {areaName}.` | A record with no exclamation and no encouragement. |
+| `ob.pers.e14` | O | MEDIUM | `It has been at the front since before this week began.` | The week is the frame and the item predates it, which is the whole observation without a number. |
 | `ob.pers.e03` | E | MEDIUM | `Long is not wrong. Long and unexamined is a different thing.` | Two beats, and the first exists only to disarm the second. |
 | `ob.pers.e04` | O | SHORT | `{n} things are waiting behind it.` | Six words, one number, the spatial `behind` again. |
 | `ob.pers.l11` | N | LONG | `The front of {areaName} has been {itemTitle} for {ageDays} and nothing in the queue has come past it.` | The longest line here, and the person is not in it at all. The queue is what did not move. |
@@ -313,7 +325,7 @@ benches. Do not read the headline anchors as permission to write short observati
 | `ob.tod.e01` | O | MEDIUM | `That has been consistent for three weeks.` | Duration as the only evidence offered. |
 | `ob.tod.e02` | O | MEDIUM | `Last week it was the other way around.` | The extension that keeps one week from reading as a rule. |
 | `ob.tod.e03` | E | MEDIUM | `Knowing when you finish things is more useful than knowing how many.` | The nearest the app comes to advice, and it is about knowing rather than doing. |
-| `ob.tod.e04` | O | MEDIUM | `Your longest focus sessions were the early ones.` | A superlative used on the person's own sessions and nothing else. |
+| `ob.tod.e13` | O | MEDIUM | `The concentration is in when, not in what.` | Names the axis the family reads and refuses the other one in the same breath. |
 | `ob.tod.l31` | O | LONG | `When something happened this week, it was in one part of the day at least as often as in the other three put together.` | The claim spelled out exactly, because every shorter form of it rounds it off. |
 | `ob.tod.l55` | E | SHORT | `Days have shapes.` | Three words of generalization, and the only line here with no week in it. |
 
@@ -610,7 +622,7 @@ The highest firing bench in the app, and phase 9 took it from eight lines to sev
 | `bn.mixed.15` | R | SHORT | `Tilted, so far.` | Three words and a comma. The reflective voice on this surface is the plain one with the sentence taken away. |
 | `bn.mixed.13` | R | MEDIUM | `A week with a center of gravity in it.` | The family's one image, and it describes a distribution rather than grading it. |
 
-### weekStarting, Areas banner, 804 firings a year, 62 lines, 10 listed
+### weekStarting, Areas banner, 731 firings a year, 62 lines, 10 listed
 
 The bench with the least to say: one or two days into a week with under three completions is almost no fact at all. The last two rows are from the phase 9 growth, for the same reason as `weekMixed`.
 
@@ -641,6 +653,28 @@ The bench with the least to say: one or two days into a week with under three co
 | `bn.build.08` | P | SHORT | `A working week.` | Three words, and `working` describes the week rather than praising the worker. |
 | `bn.build.09` | R | SHORT | `A week under way.` | Four words. The bench had no reflective line before phase 9, and this surface's reflective voice is the plain one with the sentence taken away. |
 | `bn.build.29` | R | MEDIUM | `Some days gone, some things done, the week still open.` | Three balanced clauses, the last of which is what keeps a midweek reading from sounding final. |
+
+### weekQuiet, Areas banner, 240 firings a year, 8 lines, 8 listed
+
+**The whole bench, because the whole bench is eight lines.** This family fired zero times in
+every measurement before the register pass: all eight of its lines are `[N]`, nothing could
+ask for the neutral agent register on this surface, and the realizer answered
+`NotProducible` every time the rule qualified. 7.4 now marks it unflattering and it takes
+240 banner windows a year, which puts it in the hot tier owing sixty lines and holding
+eight. **It is the largest bench debt in the corpus.** Every line below is `[N]` and `SHORT`,
+which is what a batch written into this bench has to sound like: no second person, no verb
+the reader could have performed, and a word in every line that keeps the week open.
+
+| key | tag | band | line | what the voice carries |
+|---|---|---|---|---|
+| `bn.quiet.01` | N | SHORT | `A quiet week so far.` | `so far` does all the work, turning a state into a point in a week that is still running. |
+| `bn.quiet.02` | N | SHORT | `Not much has moved this week.` | Things move or do not move. The person is not in the sentence at any point. |
+| `bn.quiet.03` | N | SHORT | `Still, so far.` | Three words. `still` as an adjective describing the week, never as an adverb about a person. |
+| `bn.quiet.04` | N | SHORT | `The week has been quiet here.` | `here` narrows the claim to this screen rather than letting it reach a life. |
+| `bn.quiet.05` | N | SHORT | `Little movement this week.` | Four words and no verb anybody could have performed or failed to perform. |
+| `bn.quiet.06` | N | SHORT | `Nothing completed yet this week.` | The closest this bench comes to saying zero, and `yet` is the whole reason it can. |
+| `bn.quiet.07` | N | SHORT | `A slow week here.` | `slow` rather than bad, empty or wasted, and it is the week that is slow. |
+| `bn.quiet.08` | N | SHORT | `Quiet, for now.` | Three words, and `for now` is the argument for this family being sayable at all. |
 
 ### weekStrong, Areas banner, 65 firings a year, 62 lines, 10 listed
 

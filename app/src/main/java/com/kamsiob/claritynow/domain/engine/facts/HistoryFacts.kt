@@ -88,6 +88,26 @@ data class HistoryFacts(
     val lifetimeCompletions: Int,
     /** The bucket before the newest one, or null when there is no earlier bucket. */
     val lastWeekCompletions: Int?,
+    /**
+     * The first local day of each weekly bucket, oldest first, aligned entry for entry
+     * with every other weekly series here and with `AreaFacts.weekEventsSeries`.
+     *
+     * **The series were always dated and nothing carried the dates.** Every bucket is
+     * seven days anchored at the window end, and [personalBestWeekKey] and
+     * [mostRecentBetterWeekKey] are already one of these keys, so the arithmetic that
+     * turns an offset into a date existed in the extractor and nowhere else. A corpus
+     * line saying `since {sinceRef}` about the oldest week of a three week run needed
+     * that date, and the alternative was to recompute `endDate - 7k - 6` inside a
+     * measure. A second copy of a bucketing rule is a second copy that can disagree
+     * with the first, silently, in a month name printed beside a claim about a trend.
+     *
+     * **It is not a per day series and cannot become one.** Seven days collapse into
+     * one entry exactly as they do in every other series, which is the property
+     * `StreakExceptionAudit.NO_PER_DAY_SERIES` is about: a date every seven days
+     * resolves no day inside a bucket, so nothing here brings a run of days within
+     * reach of a rule.
+     */
+    val weekStartKeySeries: List<String>,
     /** Oldest first, up to 12 buckets, newest last. */
     val weekCompletionsSeries: List<Int>,
     /** Total queue length at the end of each bucket. Oldest first, up to 12. */
@@ -208,6 +228,19 @@ data class HistoryFacts(
      * say `since`, and the personal best family applies instead.
      */
     val mostRecentBetterWeekKey: String?,
+    /**
+     * Buckets from [mostRecentBetterWeekKey] to the newest bucket, or null when there
+     * is none.
+     *
+     * The exact companion [weeksSincePersonalBest] is to [personalBestWeekKey], and it
+     * exists for the same reason: the `mostActiveSince` bench says both *No week since
+     * {sinceRef} finished more* and *It has been {n} weeks*, and the second is the
+     * first read as a length rather than as a date. Without it `{n}` had no fact to
+     * come from, and it was bound to the family's event count instead, which rendered
+     * *It has been 47 weeks* about a week five weeks ago.
+     */
+    val weeksSinceBetterWeek: Int?,
+
     /**
      * The longest any item has ever been active, in whole local days. 0 when none.
      *

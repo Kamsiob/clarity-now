@@ -59,6 +59,8 @@ class ReportPersonaTest {
         val bySize = IntArray(ReportComposer.MAX_OBSERVATIONS + 1)
         val suppressed = mutableListOf<String>()
         val broken = mutableListOf<String>()
+        val rhythm = ReportRhythm()
+        val dropped = mutableMapOf<String, Int>()
 
         for (persona in SimulationPersona.ALL) {
             val log = SimulatorLog(
@@ -92,6 +94,10 @@ class ReportPersonaTest {
                         if (report.headline != null) withHeadline++
                         if (report.pattern != null) withPattern++
                         bySize[report.observations.size]++
+                        rhythm.read(report)
+                        report.dropped.forEach { line ->
+                            dropped.merge(line.reason.substringBefore(','), 1, Int::plus)
+                        }
                         ReportInvariants.violations(report, facts).forEach {
                             broken += "${persona.key} day $day: $it"
                         }
@@ -122,6 +128,12 @@ class ReportPersonaTest {
         // qualified. The day it does not, this line says so rather than a screen quietly
         // opening without its largest text.
         println("  reports with no headline at all: ${composed - withHeadline}")
+
+        // 9.2's two rhythm rules, as readings rather than assertions, for the reason
+        // `ReportRhythm` states: both are preferences and both are allowed a residue, so the
+        // number and the reason for it are what a later reader needs.
+        print(rhythm.render())
+        println("  lines the composer dropped, by rule: " + dropped.entries.sortedBy { it.key })
 
         assertTrue(
             "the composer built a report its own integrity layer refused:\n" +

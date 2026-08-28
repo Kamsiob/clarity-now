@@ -136,9 +136,12 @@ internal object KnownCorpusViolations {
             note = "the totals table agrees, and so does every prose total in the file. " +
                 "Phase 9 closed this volume: eleven of its thirteen benches are grown and " +
                 "every family clearing forty firings a year now sits inside 11.1's hot band. " +
-                "The twelfth, weekQuiet, is deliberately left at eight lines because it has " +
-                "never once spoken, which is a register rule to amend rather than a bench to " +
-                "deepen; strongPace is the thirteenth and does not clear forty. The figure " +
+                "The twelfth, weekQuiet, was left at eight lines because it had never once " +
+                "spoken, which was a register rule to amend rather than a bench to deepen. " +
+                "The amendment landed: 7.4 marks it unflattering, it takes 240 banner " +
+                "windows a year and it is now the deepest bench debt in the corpus at eight " +
+                "lines against a hot target of sixty, recorded in CorpusGateBaseline. " +
+                "strongPace is the thirteenth and does not clear forty. The figure " +
                 "this entry used to record as stale, 112 Momentum headlines against 96 " +
                 "authored, was corrected by the facts phase and is recounted by " +
                 "CorpusTotalsAuditTest on every run",

@@ -150,22 +150,33 @@ object EngineFamilies {
  * split at the magnitude the corpus already states for the matching Pulse ladder, and
  * only the higher one is unflattering. Recorded in the phase 5 report.
  *
- * **Addendum 01 7c's widening has landed, and it added two entries rather than a list.**
- * 14b.10 widens the enumeration to cover every rule concerning a decline, a gap, a neglect,
- * an imbalance or an unmet expectation, and 7.4 now names the two the old enumeration
- * missed: `intakeVsOutput` **stage 1**, whose own corpus header reads `mild imbalance`, and
- * `estimateCalibration`, whose whole subject is a prediction that days did not meet.
+ * **Addendum 01 7c's widening has landed, in two passes.** 14b.10 widens the enumeration to
+ * cover every rule concerning a decline, a gap, a neglect, an imbalance or an unmet
+ * expectation. The first pass named the two Report rules the old enumeration missed:
+ * `intakeVsOutput` **stage 1**, whose own corpus header reads `mild imbalance`, and
+ * `estimateCalibration`, whose whole subject is a prediction that days did not meet. The
+ * second pass reached the surface nobody had looked at, and named **`weekQuiet`**: every
+ * one of the Areas banner's eight quiet week lines is `[N]` by `CORPUS_3_MOMENTUM.md`'s
+ * authoring rule 5, nothing could ask for that register, and the family qualified on real
+ * windows and produced nothing across eleven simulated years. It is the only rule outside
+ * the Report that carries the flag, and 7.4 records the three Momentum families considered
+ * beside it and left alone.
  *
  * **The widening stops where the register does, and 7.4 says so.** The flag has exactly one
  * effect, which is whether the realizer may reach `NEUTRAL_AGENT`, and `CORPUS_2_REPORT.md`
  * carries a register tag in section 2 alone: `ReportWalker` refuses one in a headline or a
  * pattern line, so those benches are `PLAIN` by construction. Marking a headline rule would
- * change nothing a person reads and would owe a bench nobody can author. The three families
+ * change nothing a person reads and would owe a bench nobody can author. The families
  * considered and left alone are recorded in 7.4 with the reason for each.
  */
 object UnflatteringRules {
 
-    /** Report families where every rule is unflattering, whatever its stage. 7.4. */
+    /**
+     * Families where every rule is unflattering, whatever its stage. 7.4.
+     *
+     * All but the last are Report families. `weekQuiet` is the Areas banner's quiet week and
+     * the only rule outside the Report that carries the flag; see the class note.
+     */
     val WHOLE_FAMILY: Set<FamilyKey> = setOf(
         "estimateCalibration",
         "queuePressure",
@@ -179,6 +190,7 @@ object UnflatteringRules {
         "narrowingFocus",
         "focusHabitFading",
         "abandonmentPattern",
+        "weekQuiet",
     )
 
     /** Report families unflattering only at named stages. 7.4. */

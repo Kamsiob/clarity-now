@@ -109,6 +109,83 @@ class MeasureProvenanceTest {
         assertNull(Measures.byId("dominantAreaAgo")?.read(facts, "2", EngineFacts.ZONE))
     }
 
+    /**
+     * The dated series read at an offset, which is what every `since {sinceRef}` in a
+     * report pattern comes from.
+     *
+     * Offset zero is the week being described and offset three is three buckets back, the
+     * same direction every other offset measure counts in. Past the end of the history it
+     * answers null rather than the oldest bucket it has, so a family whose rule reaches
+     * further than the person's history drops the line instead of naming the wrong week.
+     */
+    @Test
+    fun `a numbered week back renders the month that week began in`() {
+        val dated = datedWeeks(listOf(4, 5, 6, 7))
+        val measure = requireNotNull(Measures.byId("weekRefAgo"))
+        assertEquals("March", (measure.read(dated, "0", EngineFacts.ZONE) as MeasureValue.Date).display)
+        assertEquals("February", (measure.read(dated, "3", EngineFacts.ZONE) as MeasureValue.Date).display)
+        assertNull("a week older than the history is not a week", measure.read(dated, "4", EngineFacts.ZONE))
+        assertNull("an offset that is not a number addresses nothing", measure.read(dated, "x", EngineFacts.ZONE))
+    }
+
+    /**
+     * `What is waiting has doubled since {sinceRef}` finds the nearest week it is true of.
+     *
+     * Queues of three, two, five and eight. Two weeks back holds five and doubling that
+     * would be ten, so the claim is not true of it; three weeks back holds two, and the
+     * nearest week the doubling actually happened since is the one the sentence names.
+     */
+    @Test
+    fun `the doubling reference is the newest week the doubling is true of`() {
+        val measure = requireNotNull(Measures.byId("queueDoubledSinceRef"))
+        val doubled = measure.read(datedWeeks(listOf(3, 2, 5, 8)), null, EngineFacts.ZONE)
+        assertEquals("February", (doubled as MeasureValue.Date).display)
+        assertEquals(EngineFacts.dateKey(-14), doubled.weekKey)
+        assertNull(
+            "a queue that grew steadily never doubled from any week in the history",
+            measure.read(datedWeeks(listOf(6, 7, 8, 9)), null, EngineFacts.ZONE),
+        )
+        assertNull(
+            "one thing becoming three is a doubling by arithmetic and not a sentence",
+            measure.read(datedWeeks(listOf(1, 1, 2, 3)), null, EngineFacts.ZONE),
+        )
+    }
+
+    /** The month a gap started in, which is the other end of the gap `{ageDays}` renders. */
+    @Test
+    fun `a returned area names the month it was last active in before the gap`() {
+        val returned = EngineFacts.factSet(
+            areas = listOf(EngineFacts.area("home", "Home", events = 3, dormantDaysBeforeReturn = 9)),
+        )
+        val measure = requireNotNull(Measures.byId("areaDormancyStartRef"))
+        val ref = measure.read(returned, "home", EngineFacts.ZONE) as MeasureValue.Date
+        assertEquals(EngineFacts.dateKey(-9), ref.weekKey)
+        assertNull(
+            "an area that did not come back has no gap to date",
+            measure.read(EngineFacts.factSet(areas = listOf(EngineFacts.area("home", "Home"))), "home", EngineFacts.ZONE),
+        )
+    }
+
+    /** The week that beat this one, as a length, beside the same week as a date. */
+    @Test
+    fun `the weeks since the better week read back through their own ref`() {
+        val dated = datedWeeks(listOf(4, 5, 6, 7), betterWeekKey = EngineFacts.dateKey(-14))
+        val measure = requireNotNull(Measures.byId("weeksSinceBetterWeek"))
+        assertEquals(MeasureValue.Number(2), measure.read(dated, null, EngineFacts.ZONE))
+        assertEquals(2, FactLookup.readNumber(dated, measure.refFor(null), EngineFacts.ZONE))
+    }
+
+    /** Four dated weekly buckets ending on day zero, with the queue sizes a test names. */
+    private fun datedWeeks(queues: List<Int>, betterWeekKey: String? = null): FactSet =
+        EngineFacts.factSet(
+            history = EngineFacts.history(
+                daysSinceInstall = 90,
+                weekQueueSizes = queues,
+                weekTotalEvents = queues,
+                mostRecentBetterWeekKey = betterWeekKey,
+            ),
+        )
+
     // ------------------------------------------------------------------ fixture
 
     private fun entitiesFor(measure: Measure): List<String?> = when (measure.scope) {

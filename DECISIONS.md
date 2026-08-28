@@ -71,6 +71,82 @@ The old entry stays where it is, wrong, dated, and useful.
 
 ---
 
+## August 28, 2026: the eighth measurement, and the one line that is three quarters of Pulse silence
+
+**Decided.** Four passes that had each verified themselves alone were run together for the
+first time and the integrated tree is green: `verifyClarity` at **1,024 unit tests**, taken
+from a full `--rerun-tasks` build rather than an up to date one. The eighth measurement is
+that integrated tree and not any one pass, so the column the register pass had already
+written into `CLARITY_LOGIC_ENGINE.md` 12 is corrected in place rather than given a ninth
+column of its own: variant repeats read **2,411** and not 2,414, band collisions **289** and
+not 288, parallel numeric runs **148** and not 138. Two rows were added to the table, lines
+the engine cannot say, **86 to 2**, and unbound markers in the corpus, **99 to 0**. Nothing
+was committed.
+
+**And the finding the pass exists for.** Pulse silence is **65.7 percent, 2,067 of 3,148
+opens, splitting 1,161 filtered, 895 nothing qualified, 11 insufficient** for the third
+measurement running, identical to the sixth and the seventh to the day. `Selector.select`
+was instrumented temporarily to record which of its five filters emptied the candidate list.
+**The Pulse repeat filter produces 878 of the 1,164 filtered days, 75.4 percent.** Cooldown
+produces 268, the horizon 18, and family availability and callback resolution produce
+**none**, as does the realizer, whose `ALL_CANDIDATES_VETOED` has been zero in every
+measurement ever taken. The same run computed the counterfactual: **574 of the 878 would
+speak if the filter were removed and 304 would still be caught by the cooldown behind it,
+which is silence at 47.4 percent instead of 65.7.** The two filters are not redundant
+because they are keyed differently, the repeat filter on the family alone and the cooldown
+on the `(family, subject)` pair.
+
+**Why this is the explanation and the corpus never was.** The filter is one line,
+`.filterNot { purpose == Purpose.PULSE && it.rule.family == facts.pulse.lastGeneratedFamily }`,
+and 366 of its 878 firings are a day where `persistence` was the only family that qualified
+and had spoken the day before, 271 are `quietDay` alone and 168 are `concentration` alone.
+On those days a stage holding sixty to a hundred lines is discarded whole, at family level,
+**before `VariantChoice` is ever asked for a different sentence**. That is the mechanism
+under phase 9's result: 3,230 lines could not move a number decided one layer above the
+bench. An 18.3 point move is larger than every previous pass together, against 5 points for
+the persona repair, 2 for the presence fix and 0 for the corpus.
+
+**Considered and rejected.** *Removing or shortening the Pulse repeat filter in this pass.*
+It is a deliberate behavior rule, behavior is `MASTER_BUILD_PROMPT.md`'s authority and not a
+measurement's, and letting one family speak two days running is a change a person would feel
+on the first screen. The cost of keeping it is now a number rather than a guess, so the
+question is recorded as open below and left to the owner. *Building a permanent per filter
+counter into `Selector`.* Rejected as the less reversible option: it puts mutable
+accounting inside a layer whose purity contract is a build rule, for a question asked once.
+The instrumentation was a temporary patch, reverted, and `Selector.kt` checksummed back to
+byte identity and confirmed unmodified against HEAD. *Believing the 535 millisecond green
+this pass opened with.* Every task was up to date and the corpus files are declared inputs,
+so it was probably honest, but it was somebody else's run and phase 9 has already shipped one
+cached green over a corpus no test had read. *Giving the integration a ninth column.* It
+would imply nine instrument readings where eight were taken, and three of the register pass's
+cells were never true of any tree that also carried the bindings pass.
+
+**Where the three corrected cells came from.** `Realizer` drops every variant in
+`SlotBindings.EXCLUDED` from the bench, so the bindings pass retiring sixty two lines and
+binding twenty two changes which line is picked on days neither pass considered. The report
+composer cannot move either rhythm row, because `ClaritySimulator` never calls
+`ReportComposer`; the seventeen corpus rewordings cannot move the numeric row, because every
+one of those lines already rendered a digit out of a slot.
+
+**Open, for the owner, with the recommendation stated and not taken.** The Pulse repeat
+filter costs 574 spoken days a year across eleven personas. When it was written the deepest
+Pulse stage held eight lines and refusing yesterday's family was the only thing standing
+between a person and the same sentence twice; a stage now holds sixty to a hundred, and 7.6's
+ninety day exclusion already guarantees a different line. **The recommendation is that the
+filter is now redundant with the machinery below it and should be replaced by nothing rather
+than by a shorter wait, and the recommendation is not taken here.** It is worth reading
+beside the second half of the problem, which no filter change reaches: `balancedAcrossFour`
+speaks nine times, all between January 5 and January 20, and is then filtered on 348
+consecutive days. For that life silence is an absorbing state rather than a rate.
+
+**Revisit if** the owner rules on the repeat filter, at which point the 574 is the number to
+re-measure against and the ninth measurement is the run that does it; or if the Pulse is ever
+measured after 17:00, which is still the one column no measurement has filled, since the
+simulator builds only the before 17:00 window and the Pulse's reflective bench has therefore
+never been read.
+
+---
+
 ## August 28, 2026: the seventh measurement, and what a deeper bench cannot buy
 
 The pass that compiled phase 9. Eight sessions wrote 3,230 corpus lines across three

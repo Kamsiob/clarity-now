@@ -4,7 +4,6 @@ import com.kamsiob.claritynow.domain.engine.AreaFacts
 import com.kamsiob.claritynow.domain.engine.FactSet
 import com.kamsiob.claritynow.domain.engine.FamilyKey
 import com.kamsiob.claritynow.domain.engine.catalog.Register
-import com.kamsiob.claritynow.domain.engine.realize.Candidate
 
 /**
  * Everything section 9 says must be true of a finished report, restated here from the
@@ -20,6 +19,21 @@ import com.kamsiob.claritynow.domain.engine.realize.Candidate
  * [violations] answers a list rather than throwing, so a run over ten thousand generated
  * weeks reports how many reports were wrong and in how many ways, rather than stopping at
  * the first one and hiding the shape of the failure.
+ *
+ * ## What is not here, and why leaving it out is the honest move
+ *
+ * **Neither of 9.2's two rhythm rules is a violation.** The length band rule was never
+ * asserted here, because `MASTER_BUILD_PROMPT.md` 15 records it as a preference the
+ * realizer and the composer express rather than a property a report holds. The parallel
+ * clause cap now sits beside it for the same reason: it used to be enforced by dropping the
+ * third numeric lead, which is the one trade 11.4 forbids, and it is a preference on the
+ * reading order instead. A preference that can be overruled by there being nothing else to
+ * say cannot be asserted as an invariant without the assertion meaning `and a true sentence
+ * was thrown away to satisfy me`.
+ *
+ * They are **counted** instead, by `ReportRhythm`, over the same runs that call this, and
+ * the count is printed with the cause of every residue beside it. A rule nobody can assert
+ * and nobody measures is the state 9.2 was in for four phases.
  */
 internal object ReportInvariants {
 
@@ -101,13 +115,6 @@ internal object ReportInvariants {
         // 7.4 step 3.
         val editorial = observations.count { it.register == Register.EDITORIAL }
         if (editorial > EDITORIAL_BUDGET) out += "$editorial editorial leads"
-
-        // 7.4b. Three parallel numeric leads in a row.
-        var run = 0
-        for (candidate in observations) {
-            run = if (isParallelNumeric(candidate)) run + 1 else 0
-            if (run > MAX_PARALLEL_CLAUSES) out += "three parallel numeric leads in a row"
-        }
 
         // 6.3. A pattern needs three weeks behind it, and no trend means no section.
         if (report.pattern != null && facts.history.weeksOfData < PATTERN_WEEKS) {
@@ -194,9 +201,6 @@ internal object ReportInvariants {
         else -> null
     }
 
-    private fun isParallelNumeric(candidate: Candidate): Boolean =
-        candidate.slots.values.count { it.numericValue != null } >= 2
-
     /**
      * 12.3's narrowing, as families. `neglectedArea` speaks about seven and fourteen days
      * of silence and `areaGoneQuiet` about three weeks of it, and both name the area
@@ -216,7 +220,6 @@ internal object ReportInvariants {
     private const val MAX_OBSERVATIONS = 4
     private const val MAX_AREA_MENTIONS = 2
     private const val EDITORIAL_BUDGET = 2
-    private const val MAX_PARALLEL_CLAUSES = 2
     private const val PATTERN_WEEKS = 3
     private const val INTENT_QUALIFIED_ANSWERS = 3
 }

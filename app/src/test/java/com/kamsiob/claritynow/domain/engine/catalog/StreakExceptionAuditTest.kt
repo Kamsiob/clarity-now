@@ -309,6 +309,11 @@ class StreakExceptionAuditTest {
         "RollupFacts.freshStartAreaIds" to Grain.AREA,
         "ItemFacts.activeByArea" to Grain.AREA,
         "ItemFacts.completedInWindow" to Grain.ITEM,
+        // The dates behind every other weekly series, one entry per bucket. It names days,
+        // and the days it names are one every seven, each of them the first of a bucket, so
+        // it resolves no day inside a week and no run of days can be counted from it. It is
+        // the one member here whose entries are day keys and whose grain is still a week.
+        "HistoryFacts.weekStartKeySeries" to Grain.WEEK,
         "HistoryFacts.weekCompletionsSeries" to Grain.WEEK,
         "HistoryFacts.weekQueueSizeSeries" to Grain.WEEK,
         "HistoryFacts.weekTotalEventsSeries" to Grain.WEEK,

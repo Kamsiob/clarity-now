@@ -26,6 +26,11 @@ package com.kamsiob.claritynow.domain.engine.corpus
  * the cap. An author who grows a bench inherits its debt, which is right: they are the only
  * person who will ever be in a position to pay it.
  *
+ * **An exemption holds at the recorded size and at no other, in both directions.** A bench
+ * that loses a line is not the bench somebody looked at, and reading the record as a ceiling
+ * meant a shrinking corpus was an excused one. `CorpusCensus` carries the incident that
+ * made the point and the floor that answers it.
+ *
  * Where the rule is about a specific pair of lines rather than about a bench, the pair is
  * recorded by key instead, because the instruction to phase 9 is not to reword an approved
  * line.

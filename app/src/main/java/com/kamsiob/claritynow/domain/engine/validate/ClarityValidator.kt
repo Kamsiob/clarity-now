@@ -511,24 +511,8 @@ class ClarityValidator(private val zone: ZoneId) : CandidateValidator {
                 FactLookup.measureOf(ref)?.id?.startsWith(Measures.ESTIMATE_MEASURE_PREFIX) == true
             }
 
-    /**
-     * The rendered text with the person's own strings replaced by a single token.
-     *
-     * Only [Slot.Text] values are masked, which is exactly the set of strings the person
-     * wrote or chose: area names, item titles and the response label they tapped. Every
-     * other word in the sentence came from a corpus file.
-     *
-     * A blank value is skipped rather than replaced, because replacing an empty string
-     * inserts the token between every character of the sentence. Longest first, so a short
-     * name that is a substring of a long one does not mask half of it.
-     */
     private fun mask(text: String, candidate: Candidate): String =
-        candidate.slots.values
-            .filterIsInstance<Slot.Text>()
-            .map { it.value }
-            .filter { it.isNotBlank() }
-            .sortedByDescending { it.length }
-            .fold(text) { masked, value -> masked.replace(value, MASK_TOKEN, ignoreCase = true) }
+        maskPersonalStrings(text, candidate.slots.values)
 
     private fun liveItemIds(facts: FactSet): Set<String> = buildSet {
         facts.items.activeByArea.values.forEach { add(it.itemId) }
@@ -584,6 +568,33 @@ class ClarityValidator(private val zone: ZoneId) : CandidateValidator {
 
         /** The slots that quote something the person tapped. */
         internal val RESPONSE_LABEL_SLOTS: Set<SlotKey> = setOf("priorLabel")
+
+        /**
+         * The rendered text with the person's own strings replaced by a single token.
+         *
+         * Only [Slot.Text] values are masked, which is exactly the set of strings the person
+         * wrote or chose: area names, item titles and the response label they tapped. Every
+         * other word in the sentence came from a corpus file.
+         *
+         * A blank value is skipped rather than replaced, because replacing an empty string
+         * inserts the token between every character of the sentence. Longest first, so a
+         * short name that is a substring of a long one does not mask half of it.
+         *
+         * **Public because the simulator's vocabulary check has to ask the same question**,
+         * and a second transcription of this rule in `devtools` would be a second rule. That
+         * check reads a spoken sentence and asserts no banned word reached a surface, which
+         * is only true of the words the app chose: `persistence.s1.55` reads `Nothing behind
+         * {itemTitle} in {areaName} has moved yet.` and an item somebody called `Plan the
+         * trip route` turns that into `behind Plan`, which 11.3's own pattern for the evaluative
+         * sense of `behind` matches. The line is correct, the person named their own item,
+         * and this is the function that tells those two apart.
+         */
+        fun maskPersonalStrings(text: String, slots: Collection<Slot>): String = slots
+            .filterIsInstance<Slot.Text>()
+            .map { it.value }
+            .filter { it.isNotBlank() }
+            .sortedByDescending { it.length }
+            .fold(text) { masked, value -> masked.replace(value, MASK_TOKEN, ignoreCase = true) }
 
         /** Stands in for a person's own words. A letter, so it never reads as slot syntax. */
         private const val MASK_TOKEN = "X"

@@ -379,13 +379,23 @@ object SimulationChecks {
      * Enforced from today. Layer 5 already vetoes every one of these on the way out, so a
      * dump containing one is not a corpus problem, it is evidence that a sentence reached a
      * surface without passing through the validator.
+     *
+     * **Read over the masked text, because that is the text the validator reads.** Checks 7,
+     * 8 and 10 mask the person's own area names, item titles and tapped labels before
+     * scanning, per the note on `ClarityValidator`: the words the app chose are the words
+     * the app is answerable for. Reading the rendered form here made this check stricter
+     * than the layer it claims to be a backstop for, so it reported a bypass that had not
+     * happened. It surfaced the day the register chooser landed and `persistence.s1.55` and
+     * `persistence.s2.60` became reachable: both read `nothing behind {itemTitle}`, and a
+     * persona whose item is called `Plan the trip route` renders `behind Plan`, which is
+     * 11.3's own pattern for the evaluative sense of `behind` matching a person's own noun.
      */
     private fun noBannedLanguage(runs: List<SimulationRun>): CheckOutcome {
         val failures = mutableListOf<String>()
         for (run in runs) {
             for (invocation in run.invocations) {
                 val spoken = invocation.spoken ?: continue
-                for (text in listOfNotNull(spoken.statement, spoken.question)) {
+                for (text in listOfNotNull(spoken.maskedStatement, spoken.maskedQuestion)) {
                     failures += offenses(text).map { "${run.persona.key} ${spoken.variantKey}: $it" }
                 }
             }

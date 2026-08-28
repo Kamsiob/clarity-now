@@ -142,6 +142,18 @@ for writing more. It is an argument that one of two things has to change, and ne
 authoring: either the sizing target is stated per register, or the realizer chooses across
 the registers it can fill rather than stopping at the first.
 
+**Answered on August 28, 2026, the day after this file was taken, and the second option is
+the one that landed.** Everything above this note describes the run this review is of and is
+left as it was written, because a review that quietly edits itself is not a record. What
+changed is 7.4: step 4 is a tier of registers chosen among rather than an order, and the
+enumeration in it now names `weekQuiet`. Re-measured over the same eleven persona years, the
+Momentum headline reads plain 1,052, observational 1,007 and reflective 1,074, the banner
+reads 788, 840, 760 and 240 neutral agent, the morning Pulse splits 541 plain to 540
+observational, and `weekQuiet` speaks 240 times a year having spoken zero in every
+measurement before it. **Variant repeats inside ninety days fell from 3,898 to 2,414 with no
+line added**, which is what the paragraph above predicted from the other end: the bench was
+always that deep and the chooser could not see it.
+
 ---
 
 ## 1. Queue hoarder, the talkative year

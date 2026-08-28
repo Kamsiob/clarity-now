@@ -252,37 +252,34 @@ class SlotBindingsTest {
          * [SlotBindings]: a marker nothing fills costs a line, and a marker filled from the
          * wrong fact costs the credibility of everything else the app says.
          *
-         * **The membership is unchanged and every entry means something different.** The
-         * facts phase gave nine families a rule and would have added all nine here; each
-         * was given a binding instead, so none joined. What did not change is that these
-         * five have nothing to fill, and `PULSE quietDay` now says so for a new reason.
+         * **Four rather than five, and the four mean something different from what they
+         * used to.** The binding pass decided every unbound marker in the corpus and left
+         * none: `queueEquilibrium` gained a binding, because `since {sinceRef}` there is the
+         * oldest of the four weeks its own rule reads, and every marker line in the other
+         * four is now in `SlotBindings.EXCLUDED` with the reason recorded beside its key.
+         * So these are no longer families waiting for a fact. They are families whose
+         * marker lines were retired, and they stay listed here because the corpus still
+         * holds those lines and this test reads the corpus.
          */
         val KNOWN_UNBOUND: Set<String> = setOf(
-            // Stages 2 and 3 have a rule now, over `HistoryFacts.currentQuietRunDays`, and
-            // this is the one entry that is a refusal rather than a gap. `{dayCount}` is the
-            // run itself; `{sinceRef}` is the day it began, which is the same fact read as a
-            // date; `{itemTitle}` appears only beside `{dayCount}`. `StreakExceptionAudit`
-            // asserts that no measure's value moves when only a run moves, over every measure
-            // and not only the numeric ones, and the run is capped at thirty, so at the cap it
+            // Twelve lines, all retired. `{dayCount}` is the quiet run and `{sinceRef}` is
+            // the day it began, and `StreakExceptionAudit.NEVER_RENDERED` forbids a measure
+            // whose value moves with a run: the run is capped at thirty, so at the cap it
             // means at least thirty and `thirty days` would be false as well as forbidden.
-            // Stage 1 is authored without a marker in it and speaks. Neither progress nor a
-            // regression: the fact arrived, and the sentences that would print it are exactly
-            // the ones it may not fill.
+            // Stage 1 is authored without a marker and speaks normally.
             "PULSE quietDay",
-            // The first focus session's own length, and the days from adding an item to
-            // finishing it. WindowFacts carries a total and ItemFacts a median. Unchanged:
-            // no fact this phase declared is either quantity.
+            // Three lines, all retired. The first focus session's own length, the age of one
+            // specific completed item, and a count of completions after a first in a family
+            // that fires on six different kinds of first.
             "REPORT_OBSERVATION firstMilestone",
-            // `{pct} of your activity was after 5pm` needs a share of the day that stops at
-            // midnight, and PartOfDay.NIGHT runs to five in the morning. Unchanged.
+            // Two lines, both retired. `{pct} of your activity was after 5pm` needs a share
+            // of the day that stops at midnight and `PartOfDay.NIGHT` runs to five in the
+            // morning; `{n} of your {m} completions were before midday` needs completions
+            // split by part of day and only events of every kind are bucketed.
             "REPORT_OBSERVATION timeOfDay",
-            // `since {sinceRef}` here means the week the queues stopped moving, which no
-            // fact records. `weekQueueSizeSeries` says the queues held their length and not
-            // which week they stopped moving in, so this is unchanged too.
-            "REPORT_PATTERN queueEquilibrium",
-            // Counts an answer given in each of three separate weeks. PulseFacts carries
-            // the answers and not the weeks they fall in, and its subject is NONE, so
-            // `{itemTitle}` in `pt.rva.01` has nothing to resolve through either. Unchanged.
+            // Three lines, all retired. Answers bucketed by week, one response option named
+            // as though it were the only one, and an item this family has no subject to
+            // resolve.
             "REPORT_PATTERN reportedVsActual",
         )
     }

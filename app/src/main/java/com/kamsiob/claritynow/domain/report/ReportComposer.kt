@@ -48,7 +48,8 @@ import java.time.ZoneId
  *
  * - **Reading order.** Where each observation is read, and therefore what follows what
  * - **The area mention cap.** One area named three times makes a report about an area
- * - **The parallel clause cap.** Three numeric parallels in a row is the three part list
+ * - **The two rhythm rules of 9.2.** The length band alternation, and the cap on runs of
+ *   numeric leads. Both decide the order and neither removes a line; see [arrange]
  * - **The intent gate.** 12.3: a callback insight needs three or more answered pulses
  *
  * ## Nothing is ever padded, and nothing is ever backfilled
@@ -64,6 +65,13 @@ import java.time.ZoneId
  * So [compose] asks for four, and a report where two of them were dropped is a report of
  * two. [ClarityReport.dropped] records every one, because a report of two is otherwise
  * indistinguishable from a quiet week and those are different states.
+ *
+ * **And nothing is ever dropped for rhythm.** The three rules that remove a line remove it
+ * because it would state something the report may not state: an area named a third time, a
+ * third editorial voice, an answer quoted on the strength of one pulse. The two rules in
+ * 9.2 that are about cadence decide the **order** and take the highest ranked line anyway
+ * when the order cannot be made to hold them. A report that is allowed to be short is not
+ * thereby allowed to lose a true sentence to its own rhythm.
  */
 class ReportComposer(private val catalog: ClarityCatalog, private val zone: ZoneId) {
 
@@ -146,8 +154,7 @@ class ReportComposer(private val catalog: ClarityCatalog, private val zone: Zone
         val gated = intentGate(observations, facts, dropped)
         val within = areaMentionCap(gated, facts, dropped)
         val budgeted = editorialBudget(within, dropped)
-        val arranged = arrange(budgeted)
-        val kept = parallelClauseCap(arranged, dropped)
+        val kept = arrange(budgeted, headline)
 
         val basis = language.basis(facts, dateKey)
         val report = ClarityReport(
@@ -320,7 +327,7 @@ class ReportComposer(private val catalog: ClarityCatalog, private val zone: Zone
 
     /**
      * Reading order: the sections in the order `design-v3.md` 11.1 lists them, and inside a
-     * section the highest ranked line whose length band is not the one just used.
+     * section the highest ranked line that holds both of 9.2's rhythm rules.
      *
      * ## Why the observations are grouped rather than left in rank order
      *
@@ -330,86 +337,65 @@ class ReportComposer(private val catalog: ClarityCatalog, private val zone: Zone
      * between them. A repeated sidehead reads as a bug, and the sideheads are the only
      * structure a page of prose has.
      *
-     * ## What grouping costs, and how it is paid
+     * ## The two rules, and both of them are preferences
      *
-     * 7.5 forbids two consecutive leads from the same length band, and the engine applies
-     * that while it realizes, in rank order. Regrouping can therefore put two leads of one
-     * band together. So the band rule is applied again here, over the order the page is
-     * actually read in, as the same preference the realizer treats it as: the next line is
-     * the highest ranked one in this section whose band differs, and where every remaining
-     * line in the section shares the band, the highest ranked one is taken anyway.
+     * 9.2 states a length band rule and a parallel clause cap side by side. Neither is a
+     * veto here. The next line is the highest ranked one in this section that holds both,
+     * and where no remaining line does, the highest ranked one is taken anyway.
      *
      * 11.4 forbids padding a section to reach a minimum, and dropping a true observation to
      * improve the cadence is the same trade in the other direction. **Rhythm is worth a
      * line, not a paragraph.**
+     *
+     * ## Where the two rules disagree, the clause cap wins
+     *
+     * A line can break the band and hold the run, or hold the band and be the third numeric
+     * lead, and one of them has to give. The cap wins, for two reasons that point the same
+     * way. A band collision is a property of two adjacent lines and the very next line is
+     * another chance to fix the rhythm; a numeric run is a property of three, so the chance
+     * to repair it is scarcer. And 7.5 says what the failure costs: the three part list is a
+     * rhetorical reflex and once a reader sees it they cannot stop seeing it, which is a
+     * louder complaint than two sentences of one length.
+     *
+     * ## Seeded by the headline, and not looked ahead to the pattern
+     *
+     * The headline is read immediately before the first observation, so it seeds both the
+     * band and the run. It is free and it was missing: the band rule used to start each page
+     * against nothing, which left the one seam a reader meets first unchecked.
+     *
+     * The pattern is read immediately after the last observation and is deliberately **not**
+     * looked ahead to. It is one line, its position is fixed, and the only thing a lookahead
+     * could change is which observation lands last, so it would buy one seam by putting a
+     * weight on a trade 9.2 states as two equal rules. It is measured instead:
+     * `ReportRhythm` counts the seam and names it, so the price of leaving it is a number
+     * rather than a silence.
      */
-    private fun arrange(observations: List<Candidate>): List<ReportObservation> {
+    private fun arrange(observations: List<Candidate>, headline: Candidate?): List<ReportObservation> {
         val sections = observations.groupBy { ReportSection.of(it.familyKey) }
         val out = mutableListOf<ReportObservation>()
-        var previous: LengthBand? = null
+        var previous: LengthBand? = headline?.lengthBand
+        var run = if (headline != null && isParallelNumeric(headline)) 1 else 0
         for (section in ReportSection.entries) {
             val remaining = sections[section].orEmpty().toMutableList()
             while (remaining.isNotEmpty()) {
-                val pick = remaining.firstOrNull { it.lengthBand != previous } ?: remaining.first()
+                val holdsBand = { candidate: Candidate -> candidate.lengthBand != previous }
+                val holdsRun = { candidate: Candidate -> !isThirdInARun(candidate, run) }
+                val pick = remaining.firstOrNull { holdsBand(it) && holdsRun(it) }
+                    ?: remaining.firstOrNull(holdsRun)
+                    ?: remaining.firstOrNull(holdsBand)
+                    ?: remaining.first()
                 remaining.remove(pick)
                 previous = pick.lengthBand
+                run = if (isParallelNumeric(pick)) run + 1 else 0
                 out += ReportObservation(section, pick)
             }
         }
         return out
     }
 
-    /**
-     * CLARITY_LOGIC_ENGINE.md 7.5 and `CORPUS_2_REPORT.md` 7.4b. At most two in a row.
-     *
-     * > No more than two parallel numeric clauses may appear consecutively. Where a third
-     * > would follow, the composer drops it or re-realizes it at a different length. The
-     * > three-part list is a rhetorical reflex and once a reader sees it they cannot stop
-     * > seeing it.
-     *
-     * ## What counts as one, which the specification leaves open
-     *
-     * A lead is a parallel numeric clause here when it **renders two or more numbers**. That
-     * is the shape the corpus actually writes them in, *You added 9 things and finished 6*,
-     * one number set against another inside one sentence, and three of those in a row is the
-     * three part list at the only scale a composer can see it.
-     *
-     * **The obvious reading is any lead containing a number at all**, and it is wrong in a
-     * way that would be hard to find afterwards: nearly every observation in this corpus
-     * carries one number, so capping runs of them at two would silently drop the third and
-     * fourth observation of almost every report, and the reports would get quietly shorter
-     * with no test failing. Dropping a true observation for cadence is the same trade 11.4
-     * forbids in the other direction. Section 15, and the choice is recorded rather than
-     * assumed.
-     *
-     * Re-realizing at a different length, the other resolution 7.5 offers, needs the bench
-     * and the composer holds finished sentences, so this drops.
-     */
-    private fun parallelClauseCap(
-        observations: List<ReportObservation>,
-        dropped: MutableList<DroppedLine>,
-    ): List<ReportObservation> {
-        var run = 0
-        val kept = mutableListOf<ReportObservation>()
-        for (observation in observations) {
-            if (!isParallelNumeric(observation.candidate)) {
-                run = 0
-                kept += observation
-                continue
-            }
-            if (run >= MAX_PARALLEL_CLAUSES) {
-                dropped += DroppedLine(
-                    observation.candidate.variantKey,
-                    observation.candidate.familyKey,
-                    "would be the third parallel numeric lead in a row, and 7.4b allows two",
-                )
-                continue
-            }
-            run++
-            kept += observation
-        }
-        return kept
-    }
+    /** True where placing [candidate] after a run of [run] would be the third in a row. */
+    private fun isThirdInARun(candidate: Candidate, run: Int): Boolean =
+        isParallelNumeric(candidate) && run >= MAX_PARALLEL_CLAUSES
 
     /**
      * 9.2's map: every rendered numeric slot in the whole report against its [FactRef].
@@ -443,8 +429,36 @@ class ReportComposer(private val catalog: ClarityCatalog, private val zone: Zone
         return numbers
     }
 
+    /**
+     * True where [candidate] is a numeric clause for the purposes of 9.2's cap.
+     * CLARITY_LOGIC_ENGINE.md 7.5 and `CORPUS_2_REPORT.md` 7.4b.
+     *
+     * > No more than two parallel numeric clauses may appear consecutively. Where a third
+     * > would follow, the composer drops it or re-realizes it at a different length. The
+     * > three-part list is a rhetorical reflex and once a reader sees it they cannot stop
+     * > seeing it.
+     *
+     * ## A lead that renders a number at all, which is wider than this used to read
+     *
+     * The narrow reading was a lead rendering **two or more** numbers, one set against
+     * another inside one sentence, and it was chosen because the rule dropped the third
+     * lead: nearly every observation in this corpus carries one number, so the wide reading
+     * plus a drop would have quietly shortened almost every report and no test would have
+     * failed. That argument was about the drop and it went with it. A preference that
+     * reorders costs no true sentence, so the reading can be the one 7.5 is actually about,
+     * and the numbers say it has to be. Across eleven persona years the narrow reading found
+     * **one** run of three and the wide reading finds a hundred and forty seven, which is
+     * the difference between a rule and a decoration.
+     *
+     * **Counted from the slots rather than from the digits in the rendered string.** The
+     * simulator reads its own dump and has only the string, so it asks whether a lead
+     * contains a digit; an area named `Q3` or an item titled `Rewrite intro v2` is a digit
+     * this app did not choose to say. A slot is a number the engine stated, which is the
+     * thing the rule is about. For a Report lead the two readings otherwise agree, because
+     * 7.2 renders every number on this surface as a digit and spells none of them out.
+     */
     private fun isParallelNumeric(candidate: Candidate): Boolean =
-        candidate.slots.values.count { it.numericValue != null } >= PARALLEL_CLAUSE_NUMBERS
+        candidate.slots.values.any { it.numericValue != null }
 
     private fun spoken(result: EngineResult): Candidate? = (result as? EngineResult.Spoke)?.output?.meta
 
@@ -456,11 +470,8 @@ class ReportComposer(private val catalog: ClarityCatalog, private val zone: Zone
         /** 7.4 step 3. */
         const val EDITORIAL_BUDGET = 2
 
-        /** 7.4b. Two consecutive, never three. */
+        /** 7.4b. Two consecutive, never three, as a preference. See [arrange]. */
         const val MAX_PARALLEL_CLAUSES = 2
-
-        /** How many numbers make a lead a parallel numeric clause. See [parallelClauseCap]. */
-        const val PARALLEL_CLAUSE_NUMBERS = 2
 
         /** 12.3. Below this, the report is trail data only. */
         const val INTENT_QUALIFIED_ANSWERS = 3

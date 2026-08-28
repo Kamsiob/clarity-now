@@ -11,6 +11,7 @@ import com.kamsiob.claritynow.domain.engine.catalog.Purpose
 import com.kamsiob.claritynow.domain.engine.catalog.Register
 import com.kamsiob.claritynow.domain.engine.catalog.Template
 import com.kamsiob.claritynow.domain.engine.catalog.Variant
+import com.kamsiob.claritynow.domain.engine.realize.MeasureKind
 import com.kamsiob.claritynow.domain.engine.realize.Measures
 import com.kamsiob.claritynow.domain.engine.realize.SlotBindings
 import com.kamsiob.claritynow.domain.engine.validate.LengthLimits
@@ -37,6 +38,7 @@ internal object CorpusGates {
             overusedConstructions(catalog),
             bannedVocabulary(catalog),
             slotBindings(catalog),
+            unitNouns(catalog),
             lengthBands(catalog),
             registerDepth(catalog),
             nearDuplicates(catalog),
@@ -488,6 +490,130 @@ internal object CorpusGates {
             )
         }
     }
+
+
+    // ------------------------------------------------------------------ 4b. unit nouns
+
+    /**
+     * A marker standing in front of a unit noun is bound to a measure that counts in that unit.
+     *
+     * **This is the failure the binding gate cannot see and the render gate cannot see
+     * either.** A slot with no binding drops its line, which is the harmless outcome
+     * `SlotBindings` is built around. A slot bound to the *wrong* measure renders, and it
+     * passes layer 5, because check 3 re-reads the `FactRef` the binding produced and the
+     * number really is that number. What reaches the screen is a sentence that is
+     * arithmetically correct and false, which 1.1 calls the one failure there is no
+     * recovering from.
+     *
+     * `ob.since.e02` is the shape, and it is what this gate was written from: *It has been
+     * {n} weeks* with `{n}` bound to the family's event count rendered *It has been 47
+     * weeks* about a week five weeks ago. Nothing in the build could see it. The binding
+     * gate saw a marker with a binding, the render gate saw a line that filled and passed,
+     * and the two together are why it had survived every pass so far.
+     *
+     * ## Why the check is possible at all
+     *
+     * A [Measure] carries the noun it counts, because 7.2 makes the measure responsible for
+     * the plural. So where an authored line writes the noun out after the marker, the line
+     * has said which quantity it means in English and the table has said which quantity it
+     * means in code, and the two can be compared. Nothing else in the build compares them.
+     *
+     * ## Why only some nouns
+     *
+     * **Only a noun that carries a dimension counts as a claim.** `things`, `items`,
+     * `moves`, `events` and `times` are interchangeable ways to count occurrences, and
+     * English lets any of them stand in front of any count: *you swapped {n} times*,
+     * *{n} things happened*. A gate that read those as claims would report forty four
+     * findings on this corpus, forty three of which are one word standing in for another.
+     * `days`, `weeks`, `months`, `minutes`, `areas`, `sessions` and `sittings` are
+     * different: each names what is being counted, and a count of one of them standing for
+     * a count of another is a false sentence rather than a synonym.
+     *
+     * The asymmetry is deliberate and runs one way. A dimensioned noun in the corpus must
+     * meet a measure in the same dimension. A dimensioned **measure** in front of a generic
+     * corpus noun is fine, because *{sessions} times* is exactly how English counts
+     * sessions.
+     *
+     * [Slot.Text] and [Slot.DateRef] slots are skipped entirely. A name can stand in front
+     * of any word at all, and both false positives on this corpus were of that shape:
+     * *It was a {areaName} week* and *{areaName} moves in bursts*.
+     */
+    fun unitNouns(catalog: ClarityCatalog): GateOutcome {
+        val findings = mutableListOf<GateFinding>()
+        val grandfathered = mutableListOf<GateFinding>()
+        var checked = 0
+        for (variant in catalog.allVariants) {
+            if (SlotBindings.isExcluded(variant.key)) continue
+            val bindings = SlotBindings.bindingsFor(variant.purpose, variant.family, variant.stage, variant.key)
+            for ((slot, noun) in markersBeforeAUnit(variant.statement.text)) {
+                val measure = bindings[slot]?.let { Measures.byId(it.measure) } ?: continue
+                checked++
+                val wanted = DIMENSIONS.getValue(noun)
+                val detail = when (measure.kind) {
+                    MeasureKind.TEXT, MeasureKind.DATE -> continue
+                    MeasureKind.DAYS, MeasureKind.PERCENT ->
+                        "{$slot} stands in front of `$noun` and is bound to `${measure.id}`, a " +
+                            "${measure.kind} slot, which renders its own unit and never a bare number"
+                    MeasureKind.COUNT ->
+                        if (DIMENSIONS[measure.plural.lowercase()] == wanted) {
+                            continue
+                        } else {
+                            "{$slot} stands in front of `$noun` and is bound to `${measure.id}`, which " +
+                                "counts ${measure.plural}. The line names a count of $wanted and the " +
+                                "table reads something else, so the sentence would be arithmetic that is " +
+                                "right about a quantity nobody asked for"
+                        }
+                }
+                val finding = GateFinding(variant.key, detail, variant.origin)
+                if (CorpusGateBaseline.isRecordedMisbound(variant.key, slot)) grandfathered += finding
+                else findings += finding
+            }
+        }
+        return GateOutcome(
+            id = "unit",
+            name = "a marker in front of a unit noun counts in that unit",
+            citation = "CLARITY_LOGIC_ENGINE.md 7.2 and 8 check 3, against Measure.singular and plural",
+            findings = findings,
+            grandfathered = grandfathered,
+            measured = "$checked markers stand in front of one of the ${DIMENSIONS.size} " +
+                "dimensioned nouns the corpus uses",
+        )
+    }
+
+    /** Every marker in [text] immediately followed by a dimensioned noun, lowercased. */
+    private fun markersBeforeAUnit(text: String): List<Pair<String, String>> =
+        Template.MARKER.findAll(text).mapNotNull { marker ->
+            val after = NEXT_WORD.find(text, marker.range.last + 1) ?: return@mapNotNull null
+            if (after.range.first != marker.range.last + 1) return@mapNotNull null
+            val noun = after.groupValues[1].lowercase()
+            if (noun !in DIMENSIONS) return@mapNotNull null
+            marker.groupValues[1] to noun
+        }.toList()
+
+    /**
+     * The nouns that name what is being counted, and what each of them names.
+     *
+     * Read out of the corpus and out of [Measures], both forms of each. Everything absent
+     * from this map is a generic countable and makes no claim this gate can check.
+     *
+     * **`hours` is deliberately absent, and it is the one exception worth stating.** The
+     * only corpus line that uses it is `ob.est.l02`, *A thing estimated at an hour tends to
+     * be active for about {n} hours*, where `{n}` is the estimate multiple and the sentence
+     * multiplies it by a unit it states itself. The line is true and the marker counts
+     * `times`; a gate that read the following noun as the unit would call it a defect. One
+     * line is not worth a rule with a hole in it, so the noun is out rather than exempted.
+     */
+    private val DIMENSIONS: Map<String, String> = mapOf(
+        "day" to "days", "days" to "days",
+        "week" to "weeks", "weeks" to "weeks",
+        "month" to "months", "months" to "months",
+        "minute" to "minutes", "minutes" to "minutes",
+        "area" to "areas", "areas" to "areas",
+        "session" to "sessions", "sessions" to "sessions",
+        "sitting" to "sessions", "sittings" to "sessions",
+    )
+
+    private val NEXT_WORD = Regex("""\s+([A-Za-z]+)""")
 
     // ------------------------------------------------------------------ 4. length bands
 

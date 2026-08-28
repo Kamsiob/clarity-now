@@ -37,6 +37,16 @@ class RealizerTest {
     /** Enough days for the variant hash to walk a bench of seventy. */
     private val NAMING_DAYS = 40
 
+    /**
+     * Enough days for the register chooser to be seen choosing.
+     *
+     * A voice is one of three, so a handful of days proves nothing: three registers over
+     * ten days come up one-voiced about one run in twenty thousand, and over three days
+     * about one in nine. A season is the shortest window where a frozen chooser cannot
+     * pass by luck.
+     */
+    private val SEASON_DAYS = 60
+
     private fun rule(key: String): ClarityRule =
         catalog.rules.firstOrNull { it.key == key } ?: error("no rule $key in the catalog")
 
@@ -108,13 +118,33 @@ class RealizerTest {
      * `persistence.s2.15` already did, so which line the hash picks decides whether an item is
      * named. What the validator actually needs is the correspondence: an id is recorded when
      * and only when the sentence carries the name.
+     *
+     * **The area is named `Allotment` here and nowhere else in this file, and that is the
+     * whole point.** The correspondence is checked by looking for the area's name inside the
+     * rendered string, so the name has to be one that cannot arrive any other way.
+     * `persistence.s2.56` reads `Work has happened elsewhere.`, where `Work` is the common
+     * noun at the head of a sentence, and against a fixture area called `Work` that reads as
+     * a named area the candidate never recorded. The line is correct, the fixture was not,
+     * and it went unseen for as long as it did because the register was chosen by a list:
+     * that line is `[O]`, the morning Pulse always took `[P]`, and no test in the build could
+     * reach it.
      */
     @Test
     fun `the item and the area a sentence names are recorded for the validator`() {
+        val allotment = EngineFacts.area(
+            areaId = "allotment", name = "Allotment", events = 4, completions = 1, share = 1.0,
+            activeItemId = "item-1", activeItemTitle = "Rewrite the proposal intro",
+            activeItemAgeDays = 9, queueLength = 2,
+        )
+        val facts = EngineFacts.factSet(
+            window = EngineFacts.window(totalEvents = 4, completions = 1, activeDays = 1),
+            areas = listOf(allotment),
+            dominantAreaId = "allotment",
+        )
         var named = 0
         for (day in 1..NAMING_DAYS) {
             val moment = EngineMoment(EngineFacts.dateKey(day), PartOfDay.MORNING)
-            val candidate = rendered(realize("pulse.persistence.s2", persistenceFacts, item, moment = moment))
+            val candidate = rendered(realize("pulse.persistence.s2", facts, item, moment = moment))
             val carriesTitle = "Rewrite the proposal intro" in candidate.rendered
             if (carriesTitle) named++
             assertEquals(
@@ -122,10 +152,10 @@ class RealizerTest {
                 if (carriesTitle) setOf("item-1") else emptySet(),
                 candidate.namedItemIds,
             )
-            assertTrue(candidate.namedAreaIds.all { it == "work" })
+            assertTrue(candidate.namedAreaIds.all { it == "allotment" })
             assertEquals(
                 "the recorded area ids have to match the names in `${candidate.rendered}`",
-                if ("Work" in candidate.rendered) setOf("work") else emptySet(),
+                if ("Allotment" in candidate.rendered) setOf("allotment") else emptySet(),
                 candidate.namedAreaIds,
             )
         }
@@ -255,6 +285,91 @@ class RealizerTest {
         assertFalse('{' in candidate.rendered)
     }
 
+    /**
+     * The defect this suite could not see, and the reason it could not.
+     *
+     * Every other test here asks the realizer for one sentence on one day and checks the
+     * sentence. The register was decided by a list, so a stage of sixty lines in three
+     * voices handed back the same voice on every one of those days, and no single day's
+     * assertion could tell that from a bench doing its job. It takes a run of days.
+     */
+    @Test
+    fun `a Momentum family is heard in every voice its bench holds, across a season`() {
+        val facts = EngineFacts.factSet(
+            window = EngineFacts.window(
+                startDay = 0, endDay = 14, totalEvents = 20, completions = 9, additions = 8, activeDays = 10,
+            ),
+            areas = listOf(
+                EngineFacts.area("work", "Work", events = 12, completions = 6, share = 0.6),
+                EngineFacts.area("health", "Health", events = 8, completions = 3, share = 0.4),
+            ),
+            dominantAreaId = "work",
+            history = EngineFacts.history(daysSinceInstall = 120),
+        )
+        val heard = (0 until SEASON_DAYS)
+            .map { day ->
+                rendered(
+                    realize(
+                        "momentum.steadyStretch", facts,
+                        moment = EngineMoment(EngineFacts.dateKey(day), PartOfDay.MORNING),
+                    ),
+                ).register
+            }
+            .toSet()
+        assertEquals(
+            "the open tier in 7.4 step 4 offers three voices and this family authored all three",
+            setOf(Register.REFLECTIVE, Register.OBSERVATIONAL, Register.PLAIN),
+            heard,
+        )
+    }
+
+    /** The morning Pulse hears both of the voices 7.4 step 2 names, not only the first one. */
+    @Test
+    fun `the morning Pulse is heard in both of the plainer voices`() {
+        val heard = (0 until SEASON_DAYS)
+            .map { day ->
+                rendered(
+                    realize(
+                        "pulse.persistence.s2", persistenceFacts, item,
+                        moment = EngineMoment(EngineFacts.dateKey(day), PartOfDay.MORNING),
+                    ),
+                ).register
+            }
+            .toSet()
+        assertEquals(setOf(Register.PLAIN, Register.OBSERVATIONAL), heard)
+    }
+
+    /**
+     * A voice with nothing sayable in it falls through to the next one rather than to
+     * silence, which is the property 7.4 step 4 exists to have.
+     *
+     * Read against `persistentItem` at stage 1, whose rule carries no flag and whose bench
+     * has no reflective line, because `CORPUS_2_REPORT.md` authors none anywhere. The open
+     * tier offers `REFLECTIVE` on every one of these days, it is empty on every one of them,
+     * and every one of them still speaks, in both of the voices that are left.
+     */
+    @Test
+    fun `a register with nothing at this stage falls through rather than going silent`() {
+        val stage = requireNotNull(
+            catalog.familiesFor(Purpose.REPORT_OBSERVATION).first { it.key == "persistentItem" }.stage(1),
+        )
+        assertTrue(
+            "this test is vacuous unless the bench really has no reflective line",
+            stage.variants.none { it.register == Register.REFLECTIVE },
+        )
+        val heard = (0 until SEASON_DAYS).map { day ->
+            rendered(
+                realizer.realize(
+                    selection("report.observation.persistentItem.low", item, windowDays = 7),
+                    persistenceFacts,
+                    FiringHistory.EMPTY,
+                    EngineMoment(EngineFacts.dateKey(day), PartOfDay.MORNING),
+                ),
+            ).register
+        }.toSet()
+        assertEquals(setOf(Register.OBSERVATIONAL, Register.PLAIN), heard)
+    }
+
     @Test
     fun `the previous lead's length band is avoided where the bench allows it`() {
         val facts = persistenceFacts
@@ -306,19 +421,6 @@ class RealizerTest {
         morning,
     )
 
-    /**
-     * Families the register rule cannot reach, recorded rather than worked around.
-     *
-     * `bn.quiet` is authored entirely in the neutral agent register, because
-     * `CORPUS_3_MOMENTUM.md` authoring rule 5 puts every quiet or low activity line there.
-     * 7.4 reaches that register only through a rule marked `unflattering` and enumerates no
-     * Momentum rule, so the family cannot speak. `MomentumRules` records the same conflict
-     * from the other side and `MASTER_BUILD_PROMPT.md` 14b.10 marks the amendment pending
-     * in phase 9. Widening the register rule here would pre-empt a decision that belongs to
-     * that phase.
-     */
-    private val UNREACHABLE_UNDER_7_4 = setOf("weekQuiet")
-
     @Test
     fun `every Pulse family with a rule can be realized from facts that qualify it`() {
         for ((key, scenario) in pulseScenarios()) {
@@ -328,19 +430,52 @@ class RealizerTest {
         }
     }
 
+    /**
+     * The family whose whole bench is `[N]`, and the rule that now reaches it.
+     *
+     * `bn.quiet` is authored entirely in the neutral agent register because
+     * `CORPUS_3_MOMENTUM.md` authoring rule 5 puts every quiet or low activity line there,
+     * and 7.4 reaches that register only through a rule marked `unflattering`. Before the
+     * widening in 14b.10 and Addendum 01 7c, no Momentum or banner rule carried the flag, so
+     * the family qualified on real windows and the realizer returned `NotProducible` every
+     * time. This asserts both halves of the repair: the family is still the only one on
+     * these two surfaces written wholly in one gated register, and the catalog now marks it.
+     */
     @Test
-    fun `the one family whose whole bench is out of reach is the one 7_4 has not been amended for`() {
-        val unreachable = (catalog.familiesFor(Purpose.MOMENTUM_HEADLINE) + catalog.familiesFor(Purpose.AREAS_BANNER))
+    fun `the family written wholly in the neutral agent register is the one 7_4 marks unflattering`() {
+        val surfaces = catalog.familiesFor(Purpose.MOMENTUM_HEADLINE) + catalog.familiesFor(Purpose.AREAS_BANNER)
+        val wholeBenchIsGated = surfaces
             .filter { family -> family.allVariants.all { it.register == Register.NEUTRAL_AGENT } }
             .map { it.key }
             .toSet()
-        assertEquals(
+        assertEquals(setOf("weekQuiet"), wholeBenchIsGated)
+        val marked = catalog.rules.filter { it.unflattering }.map { it.family }.toSet()
+        assertTrue(
             "a family whose every line is neutral agent can only be reached by a rule marked " +
-                "unflattering, and 7.4 marks no Momentum rule. MomentumRules records the same " +
-                "conflict, and Addendum 01 7c is the amendment that resolves it in phase 9",
-            UNREACHABLE_UNDER_7_4,
-            unreachable,
+                "unflattering, and without one it qualifies and says nothing",
+            wholeBenchIsGated.all { it in marked },
         )
+    }
+
+    /** The same claim from the realizer's end: it renders, in the register nothing could ask for. */
+    @Test
+    fun `the banner's quiet week renders now that a rule marks it`() {
+        val rule = catalog.rulesFor(Purpose.AREAS_BANNER).first { it.family == "weekQuiet" }
+        val quietWeek = EngineFacts.factSet(
+            window = EngineFacts.window(startDay = 0, endDay = 3, totalEvents = 1, completions = 0, activeDays = 1),
+            areas = listOf(EngineFacts.area("work", "Work", events = 1, share = 1.0)),
+            dominantAreaId = "work",
+        )
+        val candidate = rendered(
+            realizer.realize(
+                Selection(rule, Purpose.AREAS_BANNER, null, null, windowDays = 7),
+                quietWeek,
+                FiringHistory.EMPTY,
+                morning,
+            ),
+        )
+        assertEquals(Register.NEUTRAL_AGENT, candidate.register)
+        assertFalse('{' in candidate.rendered)
     }
 
     private data class Scenario(val facts: FactSet, val subject: Subject?)
@@ -449,8 +584,7 @@ class RealizerTest {
                 mostRecentBetterWeekKey = "2026-01-11",
             ),
         )
-        val rules = (catalog.rulesFor(Purpose.MOMENTUM_HEADLINE) + catalog.rulesFor(Purpose.AREAS_BANNER))
-            .filterNot { it.family in UNREACHABLE_UNDER_7_4 }
+        val rules = catalog.rulesFor(Purpose.MOMENTUM_HEADLINE) + catalog.rulesFor(Purpose.AREAS_BANNER)
         for (rule in rules) {
             val subject = if (rule.family == "comeback" || rule.family == "singleAreaWeek") workArea else null
             val result = realizer.realize(

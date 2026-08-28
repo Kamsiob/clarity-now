@@ -272,6 +272,7 @@ private class Extraction(
             swaps = queries.swapsBetween(start, end),
             deletions = queries.deletionsBetween(start, end),
             focusStarted = focus.started,
+            focusDays = queries.focusStartsPerDay(start, end).size,
             focusCompleted = focus.completed,
             focusEndedEarly = focus.endedEarly,
             focusSecondsTotal = queries.focusSecondsTotal(start, end),
@@ -309,6 +310,8 @@ private class Extraction(
         val lastEventAt = queries.lastEventForArea(areaId, end)
         val createdAt = queries.areaCreatedAt(areaId)
         val ageDays = if (createdAt == null) 0 else daysTo(createdAt)
+        val dormancy = dormancyBeforeReturn(areaId)
+        val activeSince = activeItemId?.let { queries.activeSinceForItem(it, end) }
         return AreaFacts(
             areaId = areaId,
             nameSnapshot = name,
@@ -327,7 +330,10 @@ private class Extraction(
             queueDelta = queueLength - queueStart,
             queueDrainedFrom = drainHeightOf(queueSeriesByArea[areaId].orEmpty()),
             daysSinceLastEvent = if (lastEventAt == null) Int.MAX_VALUE else daysTo(lastEventAt),
-            dormantDaysBeforeReturn = dormantDaysBeforeReturn(areaId),
+            dormantDaysBeforeReturn = dormancy?.days,
+            dormancyStartKey = dormancy?.startKey,
+            completionsSinceActiveItemStarted =
+                if (activeSince == null) 0 else queries.completionsBetween(activeSince, end),
             lifetimeEvents = lifetimeEventsPerArea[areaId] ?: 0,
             lifetimeCompletions = lifetimeCompletionsPerArea[areaId] ?: 0,
             ageDays = ageDays,
@@ -390,14 +396,23 @@ private class Extraction(
      * five day floor lives in the rollup rather than here: this is the measurement
      * and that is the family's own threshold.
      */
-    private fun dormantDaysBeforeReturn(areaId: String): Int? {
+    private fun dormancyBeforeReturn(areaId: String): Dormancy? {
         val firstIn = queries.firstEventForArea(areaId, start, end) ?: return null
         val previous = queries.lastEventForArea(areaId, firstIn) ?: return null
-        return FactDates.daysBetween(
-            FactDates.dateOf(previous, zone),
-            FactDates.dateOf(firstIn, zone),
+        val previousDate = FactDates.dateOf(previous, zone)
+        return Dormancy(
+            days = FactDates.daysBetween(previousDate, FactDates.dateOf(firstIn, zone)),
+            startKey = FactDates.keyOf(previousDate),
         )
     }
+
+    /**
+     * A gap an area returned from, read once and used twice.
+     *
+     * The length and the day it started from come out of the same two events, and asking
+     * for them separately would walk the log twice to answer one question about one area.
+     */
+    private data class Dormancy(val days: Int, val startKey: String)
 
     /**
      * The height a queue fell from, given the queue's shape across a window.
@@ -533,6 +548,7 @@ private class Extraction(
             isFirstWeekEver = daysSinceInstall < 7,
             lifetimeCompletions = queries.completionsBetween(Long.MIN_VALUE, end),
             lastWeekCompletions = lastBucket,
+            weekStartKeySeries = seriesIndices.map { FactDates.keyOf(bucketFirstDate(it)) },
             weekCompletionsSeries = completionsSeries,
             weekQueueSizeSeries = queueSeries,
             weekTotalEventsSeries = eventsSeries,
@@ -558,6 +574,7 @@ private class Extraction(
             } else {
                 FactDates.keyOf(bucketFirstDate(betterIndex))
             },
+            weeksSinceBetterWeek = if (betterIndex == -1) null else betterIndex,
             longestEverActiveDays = longestEver?.second ?: 0,
             longestEverActiveItemId = longestEver?.first,
             personalBestFocusMinutesWeek = bestFocusMinutes,

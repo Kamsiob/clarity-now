@@ -51,6 +51,7 @@ class ReportPropertyTest {
         val bySize = IntArray(ReportComposer.MAX_OBSERVATIONS + 1)
         val suppressed = mutableListOf<String>()
         val broken = mutableListOf<String>()
+        val rhythm = ReportRhythm()
 
         for (case in 0 until GeneratedWeeks.CASES) {
             val facts = GeneratedWeeks.facts(case)
@@ -65,6 +66,7 @@ class ReportPropertyTest {
                     if (report.pattern != null) withPattern++
                     observations += report.observations.size
                     bySize[report.observations.size]++
+                    rhythm.read(report)
                     ReportInvariants.violations(report, facts).forEach { broken += "case $case: $it" }
                 }
             }
@@ -78,6 +80,7 @@ class ReportPropertyTest {
             "  headline on $withHeadline, pattern on $withPattern, " +
                 "$observations observations, by size ${bySize.toList()}",
         )
+        print(rhythm.render())
 
         assertTrue(
             "the composer built a report its own integrity layer refused, ${suppressed.size} times:\n" +

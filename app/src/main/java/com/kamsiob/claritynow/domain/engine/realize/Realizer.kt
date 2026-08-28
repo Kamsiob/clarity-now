@@ -34,6 +34,13 @@ import java.time.ZoneId
  * ordinary: the caller takes the next ranked selection, which is what 8 prescribes for a
  * vetoed candidate and what 7.2 prescribes for a missing slot.
  *
+ * **The register is chosen and not fallen through to.** 7.4 hands down tiers of registers
+ * of equal standing rather than an order, and this walks them: inside a tier it asks
+ * [RegisterChoice] which voice speaks today, and where that voice has nothing it can fill
+ * it drops it and asks again, then moves to the next tier. Taking the first register with a
+ * fillable line, which is what this did before, made the first entry of 7.4's fallback the
+ * only voice on every surface whose rule left the question open.
+ *
  * ## The one thing it refuses to do
  *
  * It never renders a template it cannot fill completely, and it never fills a slot from
@@ -66,19 +73,33 @@ class Realizer(private val catalog: ClarityCatalog, private val zone: ZoneId) {
         val stage = family.stage(stageIndex)
             ?: return Realization.NotProducible("${family.key} has no stage $stageIndex")
 
-        val registers = RegisterChoice.preference(
+        val tiers = RegisterChoice.preference(
             purpose = purpose,
             unflattering = rule.unflattering,
             partOfDay = moment.partOfDay,
             notable = rule.specificity >= RegisterChoice.NOTABLE_SPECIFICITY,
             editorialBudgetSpent = options.editorialBudgetSpent,
         )
+        val lastVoice = RegisterChoice.lastSpoken(family.allVariants, history)
 
-        for (register in registers) {
-            val bench = producible(stage, register, selection, facts, purpose)
-            if (bench.isEmpty()) continue
-            val choice = choose(bench, options.avoidBand, moment.dateKey, history) ?: continue
-            return rendered(choice, selection, facts, history, moment, family, stage, register)
+        for (tier in tiers) {
+            // Only the registers with a line at this stage are offered, so the chooser
+            // never spends a pick on a voice the author never wrote here, and the bench is
+            // filled once rather than three times per firing.
+            val offered = tier.filterTo(mutableSetOf()) { register -> stage.holdsLinesIn(register) }
+            while (offered.isNotEmpty()) {
+                val register = RegisterChoice.choose(offered, lastVoice, moment.dateKey, family.key, stageIndex)
+                    ?: break
+                val bench = producible(stage, register, selection, facts, purpose)
+                val choice = if (bench.isEmpty()) null else choose(bench, options.avoidBand, moment.dateKey, history)
+                if (choice != null) {
+                    return rendered(choice, selection, facts, history, moment, family, stage, register)
+                }
+                // A register whose every line lost a slot falls through to the next voice
+                // in the same tier, and then to the next tier. **Reachability is the fix,
+                // and a new way to be silent would be the opposite of it.**
+                offered -= register
+            }
         }
         return Realization.NotProducible(
             "no line in ${family.key} stage $stageIndex can be filled from the facts on hand",
@@ -127,6 +148,10 @@ class Realizer(private val catalog: ClarityCatalog, private val zone: ZoneId) {
     }
 
     // --------------------------------------------------------------- the bench
+
+    /** Whether the author wrote any line at this stage in [register] that a binding admits. */
+    private fun EscalationStage.holdsLinesIn(register: Register): Boolean =
+        variants.any { it.register == register && !SlotBindings.isExcluded(it.key) }
 
     /** Every line at this stage and register that can be filled, already rendered. */
     private fun producible(

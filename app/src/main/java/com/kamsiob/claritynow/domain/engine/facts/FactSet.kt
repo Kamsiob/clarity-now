@@ -86,6 +86,19 @@ data class WindowFacts(
     val focusEndedEarly: Int,
     val focusSecondsTotal: Long,
     val focusMinutesTotal: Int,
+    /**
+     * Local days inside the window on which at least one focus session was started.
+     *
+     * Not [activeDays], which counts days with anything in them at all, and not
+     * [focusStarted], which counts the sessions. Four sessions on one afternoon and
+     * four sessions across four days are the same total and a different week, and
+     * `focusInvestment` says so in two of its lines: *Focused time appeared on {n}
+     * different days* and *You protected time on {n} of the seven days*.
+     *
+     * Read from the same lifetime per day focus map `CueFacts` is built from, so a day
+     * means one thing to a cue and to a count.
+     */
+    val focusDays: Int,
     val activeDays: Int,
     /**
      * The local day carrying the most events, or null when the window is empty.

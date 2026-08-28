@@ -12,17 +12,30 @@ import com.kamsiob.claritynow.domain.engine.FamilyKey
  * last fourteen days and nothing else. There is no comparison against a plan, no
  * inference about why, and no family whose trigger is a judgment.
  *
- * **Every rule here is `unflattering = false`, and one of them is arguably wrong.** 7.4
- * enumerates the rules that carry the flag and every one is a Report family, so
- * everything here is false by the rule that everything not enumerated is. But
- * `CORPUS_3_MOMENTUM.md`'s own authoring rule 5 says every quiet or low activity line in
- * that file is `[N]`, and twenty six such lines are authored. Under 7.4 as it stands
- * those lines cannot be reached, because the neutral agent register is only ever selected
- * for a rule marked unflattering. Addendum 01 7c widens the enumeration to cover exactly
- * this case and `MASTER_BUILD_PROMPT.md` 14b.10 marks that widening pending in phase 9.
- * This file follows 7.4 as written and the conflict is recorded rather than pre empted.
+ * **One rule here carries `unflattering = true` and it is `banner.weekQuiet`.** Every flag
+ * in this file is read from [UnflatteringRules] rather than written here, so 7.4's
+ * enumeration is the only place the question is answered. 14b.10 and Addendum 01 7c widen
+ * that enumeration to every rule concerning a decline, a gap, a neglect, an imbalance or an
+ * unmet expectation, and the quiet week is the one state on these two surfaces where
+ * `CORPUS_3_MOMENTUM.md`'s authoring rule 5 applies: all eight of `bn.quiet`'s lines are
+ * `[N]`, and before the widening nothing could ask for that register, so the family
+ * qualified on real windows and said nothing across eleven simulated years.
+ *
+ * **`quietStretch`, `singleAreaWeek` and `weekMixed` were considered and left alone**, with
+ * the reasons in 7.4. The short version is that the flag exists to stop agentive second
+ * person landing on unflattering content, and not one line in `mo.quiet` is agentive: the
+ * fortnight is the subject of every one of its sixty six lines whatever its register tag
+ * says. Marking it would have bought nothing and cost a family that fires a hundred and
+ * twenty four times a year two of its three voices.
  */
 internal object MomentumRules {
+
+    /**
+     * Neither surface escalates, so every family here is one stage, numbered from one like
+     * every other. 6.5: these surfaces state the current shape and have nothing to escalate
+     * about.
+     */
+    private const val ONLY_STAGE = 1
 
     /** Momentum reads the last fourteen days. */
     private const val FORTNIGHT_HORIZON = 14
@@ -66,8 +79,8 @@ internal object MomentumRules {
         criteria = criteria,
         priority = priority,
         horizonDays = horizonDays,
-        unflattering = false,
-        stage = 1,
+        unflattering = UnflatteringRules.isUnflattering(family, ONLY_STAGE),
+        stage = ONLY_STAGE,
     )
 
     /** Completions this week set against the average of the weeks before it. */

@@ -66,6 +66,10 @@ internal object EngineFacts {
         focusCompleted: Int = 0,
         focusEndedEarly: Int = 0,
         focusMinutes: Int = 0,
+        // A session a day until the window runs out of days, which is the shape a fixture
+        // naming a session count usually means. Pass it where the point is several
+        // sessions on one afternoon.
+        focusDays: Int = minOf(focusStarted, endDay - startDay),
         activeDays: Int = 0,
         busiestDayKey: String? = null,
         busiestDayCount: Int = 0,
@@ -85,6 +89,7 @@ internal object EngineFacts {
         focusEndedEarly = focusEndedEarly,
         focusSecondsTotal = focusMinutes * SECONDS_PER_MINUTE,
         focusMinutesTotal = focusMinutes,
+        focusDays = focusDays,
         activeDays = activeDays,
         busiestDayKey = busiestDayKey,
         busiestDayCount = busiestDayCount,
@@ -119,6 +124,11 @@ internal object EngineFacts {
         focusMinutes: Int = 0,
         swapsInWindow: Int = 0,
         dormantDaysBeforeReturn: Int? = null,
+        // The day the gap started, derived from the gap so a fixture cannot hold a length
+        // and a date that disagree. Day zero is the window opening in every fixture here,
+        // so a nine day gap started on day minus nine.
+        dormancyStartKey: String? = dormantDaysBeforeReturn?.let { dateKey(-it) },
+        completionsSinceActiveItemStarted: Int = 0,
         weekEventsSeries: List<Int> = emptyList(),
         dipPrecedent: Precedent = Precedent.INSUFFICIENT,
     ) = AreaFacts(
@@ -140,6 +150,8 @@ internal object EngineFacts {
         queueDrainedFrom = queueDrainedFrom,
         daysSinceLastEvent = daysSinceLastEvent,
         dormantDaysBeforeReturn = dormantDaysBeforeReturn,
+        dormancyStartKey = dormancyStartKey,
+        completionsSinceActiveItemStarted = completionsSinceActiveItemStarted,
         lifetimeEvents = lifetimeEvents,
         lifetimeCompletions = lifetimeCompletions,
         ageDays = ageDays,
@@ -226,12 +238,28 @@ internal object EngineFacts {
         activityDipPrecedent: Precedent = Precedent.INSUFFICIENT,
         focusDipPrecedent: Precedent = Precedent.INSUFFICIENT,
         isJustBackFromAbsence: Boolean = false,
+        // The dates behind the weekly series, one entry per bucket, oldest first, spaced
+        // seven days and ending on day zero. Every fixture here opens its window on day
+        // zero, which is where the extractor puts the newest bucket's first day, so the
+        // default lines the keys up with the numbers rather than leaving a caller to.
+        weekStartKeys: List<String> = weekStartKeysFor(
+            maxOf(
+                weekCompletions.size, weekQueueSizes.size, weekTotalEvents.size,
+                weekAreaCounts.size, weekFocusStarted.size,
+            ),
+        ),
+        // Derived from the key, so a fixture naming a better week gets its length for free
+        // and the two can never disagree. Null when the named week is outside the series,
+        // which is what a real history does when the record is older than twelve buckets.
+        weeksSinceBetterWeek: Int? =
+            weekStartKeys.indexOf(mostRecentBetterWeekKey).takeIf { it >= 0 }?.let { weekStartKeys.size - 1 - it },
     ) = HistoryFacts(
         daysSinceInstall = daysSinceInstall,
         weeksOfData = daysSinceInstall / DAYS_PER_WEEK,
         isFirstWeekEver = daysSinceInstall < DAYS_PER_WEEK,
         lifetimeCompletions = lifetimeCompletions,
         lastWeekCompletions = lastWeekCompletions,
+        weekStartKeySeries = weekStartKeys,
         weekCompletionsSeries = weekCompletions,
         weekQueueSizeSeries = weekQueueSizes,
         weekTotalEventsSeries = weekTotalEvents,
@@ -249,6 +277,7 @@ internal object EngineFacts {
         personalBestWeekKey = personalBestWeekKey,
         weeksSincePersonalBest = weeksSincePersonalBest,
         mostRecentBetterWeekKey = mostRecentBetterWeekKey,
+        weeksSinceBetterWeek = weeksSinceBetterWeek,
         longestEverActiveDays = longestEverActiveDays,
         longestEverActiveItemId = longestEverActiveItemId,
         personalBestFocusMinutesWeek = personalBestFocusMinutesWeek,
@@ -263,6 +292,10 @@ internal object EngineFacts {
         focusDipPrecedent = focusDipPrecedent,
         isJustBackFromAbsence = isJustBackFromAbsence,
     )
+
+    /** [count] bucket start days, oldest first, the newest of them day zero. */
+    fun weekStartKeysFor(count: Int): List<String> =
+        (count - 1 downTo 0).map { dateKey(-DAYS_PER_WEEK * it) }
 
     private const val DAYS_PER_WEEK = 7
 

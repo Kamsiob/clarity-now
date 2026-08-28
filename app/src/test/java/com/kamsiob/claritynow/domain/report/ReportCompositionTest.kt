@@ -168,7 +168,12 @@ class ReportCompositionTest {
             rendered = "Work is moving again after a stretch of nothing much at all.",
             namedAreaIds = setOf(ReportFixture.WORK),
         )
-        val report = composed(listOf(ReportFixture.workShare(), second, third))
+        val report = composed(
+            listOf(ReportFixture.workShare(), second, third),
+            // A band nothing else here uses, so which two survive is the only thing this
+            // test measures and the reading order is not quietly part of it.
+            headline = ReportFixture.headline(lengthBand = LengthBand.LONG),
+        )
         assertEquals(listOf("singleFocus", "queueDrained"), familiesOf(report))
         assertEquals(listOf("areaRevival"), report.dropped.map { it.family })
         assertTrue(report.dropped.single().reason, "third time" in report.dropped.single().reason)
@@ -279,7 +284,13 @@ class ReportCompositionTest {
     fun `no two consecutive leads share a length band where the section has an alternative`() {
         val alsoMedium = ReportFixture.queues(variantKey = "ob.qp.l02", lengthBand = LengthBand.MEDIUM)
         val short = ReportFixture.persistentItem(lengthBand = LengthBand.SHORT)
-        val report = composed(listOf(ReportFixture.workShare(lengthBand = LengthBand.MEDIUM), alsoMedium, short))
+        val report = composed(
+            listOf(ReportFixture.workShare(lengthBand = LengthBand.MEDIUM), alsoMedium, short),
+            // A band of its own, so the headline seeds the run without seeding the band into
+            // the middle of what this test is about. `the headline counts toward the run
+            // beneath it` is where the seam itself is checked.
+            headline = ReportFixture.headline(lengthBand = LengthBand.LONG),
+        )
         val bands = report.observations.map { it.candidate.lengthBand }
         assertEquals(listOf(LengthBand.MEDIUM, LengthBand.SHORT, LengthBand.MEDIUM), bands)
     }
@@ -294,34 +305,112 @@ class ReportCompositionTest {
 
     // --------------------------------------------------------- 7.4b, the parallel clauses
 
+    /**
+     * A lead with no number in it is pulled forward to break a run of two, and nothing goes.
+     *
+     * The three numeric leads are all in one section and so is the one that states no
+     * number, so the composer has a real choice about which line is read third. It takes the
+     * one that ends the run, and all four observations are still on the page: 11.4 allows a
+     * report to be short and does not allow it to lose a true sentence to its own rhythm.
+     */
     @Test
-    fun `a third consecutive parallel numeric lead is dropped`() {
-        // Three leads that each set one number against another. The third is the three part
-        // list, and it is the one that goes.
+    fun `a lead with no number is preferred where a third numeric lead would follow two`() {
+        val report = composed(
+            listOf(
+                ReportFixture.workShare(lengthBand = LengthBand.MEDIUM),
+                ReportFixture.flow(lengthBand = LengthBand.SHORT),
+                ReportFixture.queues(lengthBand = LengthBand.LONG),
+                ReportFixture.noNumber(lengthBand = LengthBand.MEDIUM),
+            ),
+            headline = ReportFixture.headline(lengthBand = LengthBand.LONG),
+        )
+        assertEquals(4, report.observations.size)
+        assertTrue("nothing may be dropped for rhythm: ${report.dropped}", report.dropped.isEmpty())
+        assertEquals(
+            listOf("singleFocus", "intakeVsOutput", "steadyPace", "queuePressure"),
+            familiesOf(report),
+        )
+    }
+
+    /**
+     * And where the section has nothing but numeric leads left, the third one is still said.
+     *
+     * This is the half of the rule that a drop would have got wrong. Every remaining line
+     * states a number, so no order avoids the run, and the alternative to reading the third
+     * one is not reading it at all.
+     */
+    @Test
+    fun `a third numeric lead is still read where no order avoids it`() {
         val report = composed(
             listOf(
                 ReportFixture.workShare(lengthBand = LengthBand.MEDIUM),
                 ReportFixture.flow(lengthBand = LengthBand.SHORT),
                 ReportFixture.queues(lengthBand = LengthBand.LONG),
             ),
+            headline = ReportFixture.headline(lengthBand = LengthBand.LONG),
         )
-        assertEquals(2, report.observations.size)
-        assertEquals(listOf("queuePressure"), report.dropped.map { it.family })
-        assertTrue(report.dropped.single().reason, "third parallel numeric" in report.dropped.single().reason)
+        assertEquals(3, report.observations.size)
+        assertTrue(report.dropped.isEmpty())
+        assertEquals(listOf("singleFocus", "intakeVsOutput", "queuePressure"), familiesOf(report))
     }
 
+    /**
+     * The headline is read first, so it seeds the run rather than being invisible to it.
+     *
+     * The same three observations in the same ranked order, under two headlines that differ
+     * in one respect. A headline that states a number is the first of the run, so the second
+     * observation is the third numeric lead and the line that states nothing countable is
+     * pulled up in front of it. Under a headline that states none, the ranked order stands.
+     */
     @Test
-    fun `two parallel numeric leads in a row are allowed, and a single number lead resets the run`() {
+    fun `the headline counts toward the run beneath it`() {
+        val observations = listOf(
+            ReportFixture.workShare(lengthBand = LengthBand.MEDIUM),
+            ReportFixture.queues(lengthBand = LengthBand.LONG),
+            ReportFixture.noNumber(lengthBand = LengthBand.SHORT),
+        )
+        assertEquals(
+            "a numeric headline and one numeric lead are a run of two",
+            listOf("singleFocus", "steadyPace", "queuePressure"),
+            familiesOf(
+                composed(
+                    observations,
+                    headline = ReportFixture.headline(lengthBand = LengthBand.LONG, numeric = true),
+                ),
+            ),
+        )
+        assertEquals(
+            "with no number above them the ranked order stands",
+            listOf("singleFocus", "queuePressure", "steadyPace"),
+            familiesOf(
+                composed(observations, headline = ReportFixture.headline(lengthBand = LengthBand.LONG)),
+            ),
+        )
+    }
+
+    /** Where the two rules disagree, the clause cap takes the pick. See `ReportComposer.arrange`. */
+    @Test
+    fun `the clause cap outranks the length band where one line cannot hold both`() {
         val report = composed(
             listOf(
                 ReportFixture.workShare(lengthBand = LengthBand.MEDIUM),
                 ReportFixture.flow(lengthBand = LengthBand.SHORT),
-                ReportFixture.persistentItem(lengthBand = LengthBand.LONG),
+                // Holds the band and would be the third numeric lead.
                 ReportFixture.queues(lengthBand = LengthBand.MEDIUM),
+                // Ends the run and shares the band with the line above it.
+                ReportFixture.noNumber(lengthBand = LengthBand.SHORT),
             ),
+            headline = ReportFixture.headline(lengthBand = LengthBand.LONG),
         )
-        assertEquals(4, report.observations.size)
-        assertTrue(report.dropped.isEmpty())
+        assertEquals(
+            listOf("singleFocus", "intakeVsOutput", "steadyPace", "queuePressure"),
+            familiesOf(report),
+        )
+        assertEquals(
+            "the band collision is the price of holding the cap, and it is paid rather than hidden",
+            listOf(LengthBand.MEDIUM, LengthBand.SHORT, LengthBand.SHORT, LengthBand.MEDIUM),
+            report.observations.map { it.candidate.lengthBand },
+        )
     }
 
     // ------------------------------------------------------------------- the integrity seam

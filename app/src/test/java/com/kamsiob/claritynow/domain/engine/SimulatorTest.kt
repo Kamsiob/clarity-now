@@ -8,6 +8,7 @@ import com.kamsiob.claritynow.devtools.SimulationDump
 import com.kamsiob.claritynow.devtools.SimulationPersona
 import com.kamsiob.claritynow.devtools.SimulationRun
 import com.kamsiob.claritynow.domain.engine.catalog.CorpusFixture
+import com.kamsiob.claritynow.domain.engine.catalog.Register
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -221,6 +222,78 @@ class SimulatorTest {
         assertFalse("a plan line reached the dump", ClaritySimulator.PLAN_LINE_MARKER in SimulationDump.of(run))
     }
 
+    /**
+     * Every register the rules offer is actually reached, on every surface.
+     *
+     * **The reading this exists for.** 11.1 sizes a bench per stage and the chooser sees a
+     * register, so a stage of sixty lines split three ways buys as much variety as the one
+     * register the realizer asks for. Before this test the Pulse spoke plain on 1,080 of
+     * 1,081 firings and Momentum and the banner spoke reflective on all 5,594, because 7.4
+     * step 4 was read as an order and the first register with a fillable line won every
+     * time. A count of families is not the instrument: the number that matters is how many
+     * registers each **surface** was heard in across eleven simulated years.
+     *
+     * The table is printed either way, because the distribution is the finding and a test
+     * that printed only on failure would say nothing about how lopsided a passing run is.
+     *
+     * **Asserted as an exact set per surface rather than as a floor**, so it fails in both
+     * directions: a voice going quiet is a regression, and a voice appearing where 7.4 says
+     * it cannot is the neutral agent or the editorial register escaping its rule.
+     */
+    @Test
+    fun `every surface is heard in every register its corpus and its rules can offer`() {
+        val spoken = runs.flatMap { run -> run.invocations }
+            .mapNotNull { invocation -> invocation.spoken?.let { invocation.surface to it } }
+        assertTrue("a year of eleven personas produced no sentence at all", spoken.isNotEmpty())
+
+        val bySurface = spoken.groupBy({ it.first }, { it.second.register })
+        val report = StringBuilder("registers reached, by surface\n")
+        for (surface in SimulatedSurface.entries) {
+            val heard = bySurface[surface].orEmpty()
+            val counts = Register.entries.map { it to heard.count { r -> r == it } }.filter { it.second > 0 }
+            report.append(
+                "  %-18s %5d firings  %s\n".format(
+                    surface.label,
+                    heard.size,
+                    counts.joinToString("  ") { "${it.first.name.lowercase()}=${it.second}" },
+                ),
+            )
+        }
+        println(report)
+
+        assertEquals(
+            "a surface heard in fewer registers than its corpus and its rules can offer is a " +
+                "bench the chooser never sees the rest of, per CLARITY_LOGIC_ENGINE.md 7.4 " +
+                "and 11.1:\n$report",
+            REGISTERS_A_SURFACE_CAN_REACH,
+            bySurface.mapValues { (_, heard) -> heard.toSet() },
+        )
+    }
+
+    /**
+     * The family whose whole bench is `[N]`, said out loud at least once in eleven years.
+     *
+     * `weekQuiet` qualified on real windows and produced nothing at all before 7.4 was
+     * widened, because every one of its eight lines is neutral agent and nothing could ask
+     * for that register. A family that qualifies and says nothing is invisible from every
+     * other reading in this file, so it gets its own assertion.
+     */
+    @Test
+    fun `the banner's quiet week speaks`() {
+        val quiet = runs.flatMap { run -> run.invocations }
+            .mapNotNull { it.spoken }
+            .filter { it.familyKey == "weekQuiet" }
+        assertTrue(
+            "weekQuiet qualified and said nothing, which is what 14b.10 widened 7.4 to fix",
+            quiet.isNotEmpty(),
+        )
+        assertTrue(
+            "weekQuiet spoke in a register other than neutral agent, and every line it has is [N]",
+            quiet.all { it.register == Register.NEUTRAL_AGENT },
+        )
+        println("weekQuiet spoke ${quiet.size} times, across ${quiet.map { it.variantKey }.toSet().size} of its eight lines")
+    }
+
     /** Two runs of the same persona produce the same year, down to the character. */
     @Test
     fun `the simulator is deterministic`() {
@@ -242,6 +315,42 @@ class SimulatorTest {
          * persona is the slowest thing in this suite by a wide margin.
          */
         val runs: List<SimulationRun> by lazy { ClaritySimulator(CorpusFixture.catalog).runAll() }
+
+        /**
+         * Every register each surface can reach, and every one of them is a rule rather than
+         * a count.
+         *
+         * Written out rather than derived, because each row is a different fact about the
+         * corpus or about 7.4 and a formula over them would hide all six.
+         *
+         * - **pulse** reaches the two voices 7.4 step 2 offers before 17:00 and no more. The
+         *   simulator opens at 07:00 and builds only the before 17:00 window, so the evening
+         *   tier is never asked for and roughly 312 reflective Pulse lines are unmeasured.
+         *   That is the instrument and not the engine, and it is the eighth measurement's
+         *   first job. `RealizerTest` covers the evening tier directly
+         * - **momentum** reaches all three of the open tier, which is what the fix bought
+         * - **banner** reaches those three plus `NEUTRAL_AGENT`, which is `weekQuiet` and
+         *   only `weekQuiet`, per the widened enumeration in 7.4
+         * - **report headline** and **report pattern** reach `PLAIN` alone, and no author can
+         *   change that: `CORPUS_2_REPORT.md` carries a register tag in section 2 alone and
+         *   `ReportWalker` refuses one on a headline or a pattern line, so every variant in
+         *   those two sections is plain by construction
+         * - **report observation** reaches four. Not `REFLECTIVE`, because volume 2 authors
+         *   no reflective line anywhere, which is exactly the case the open tier has to fall
+         *   through rather than fall silent on
+         */
+        val REGISTERS_A_SURFACE_CAN_REACH: Map<SimulatedSurface, Set<Register>> = mapOf(
+            SimulatedSurface.PULSE to setOf(Register.PLAIN, Register.OBSERVATIONAL),
+            SimulatedSurface.MOMENTUM to setOf(Register.PLAIN, Register.OBSERVATIONAL, Register.REFLECTIVE),
+            SimulatedSurface.BANNER to setOf(
+                Register.PLAIN, Register.OBSERVATIONAL, Register.REFLECTIVE, Register.NEUTRAL_AGENT,
+            ),
+            SimulatedSurface.REPORT_HEADLINE to setOf(Register.PLAIN),
+            SimulatedSurface.REPORT_OBSERVATION to setOf(
+                Register.PLAIN, Register.OBSERVATIONAL, Register.EDITORIAL, Register.NEUTRAL_AGENT,
+            ),
+            SimulatedSurface.REPORT_PATTERN to setOf(Register.PLAIN),
+        )
 
         /** Section 12 names eleven synthetic histories. */
         const val EXPECTED_PERSONAS = 11

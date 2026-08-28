@@ -72,6 +72,17 @@ internal object SlotBindings {
         /** An area that went from a queue to nothing inside the window. */
         DRAINED_AREA,
 
+        /**
+         * The oldest item still active anywhere, which is `ItemFacts.longestActiveItemId`.
+         *
+         * For the one family that speaks about an item without having selected one. A
+         * quiet week has no subject and `ob.quiet.e04` names an item all the same; of
+         * every item it could mean, the one that has been sitting longest is the only
+         * choice a reader would recognize, and it is the item `persistentItem` would have
+         * spoken about had it fired instead.
+         */
+        LONGEST_ACTIVE_ITEM,
+
         /** The label from the callback the rule resolved, quoted exactly as it was stored. */
         CALLBACK_LABEL,
 
@@ -125,6 +136,10 @@ internal object SlotBindings {
             "itemTitle" to subject("itemTitle"),
             "areaName" to subject("itemAreaName"),
             "ageDays" to subject("itemAgeDays"),
+            // `{n}` appears in two lines of this family and means the same thing in both:
+            // everything finished while this one thing did not. Nothing counts the item
+            // itself, which is still active.
+            "n" to subject("completionsSinceItemActive"),
         ),
         // concentration, the area's share of the window. `{m}` is the window total in
         // every line but one, which is in OVERRIDES.
@@ -187,13 +202,14 @@ internal object SlotBindings {
         ),
         // rebalance. `{ageDays}` is the gap the area returned from and never the days since
         // it returned, which is the distinction `AreaFacts.dormantDaysBeforeReturn` exists
-        // to hold. `{sinceRef}` is the month the area was last active **before** that gap
-        // and stays unbound: `areaLastEventRef` reads the last event of any kind, and the
-        // return is one of them, so it would answer with the month of the return itself.
+        // to hold. `{sinceRef}` is the month the area was last active **before** that gap,
+        // which is the same two events read as a date; `areaLastEventRef` still cannot
+        // serve, because it reads the last event of any kind and the return is one of them.
         family(
             Purpose.PULSE, "rebalance",
             "areaName" to subject("areaName"),
             "ageDays" to subject("areaDormancyDays"),
+            "sinceRef" to subject("areaDormancyStartRef"),
         ),
         // quietDay stage 1 is written without a marker in it, which is why nothing is
         // declared for it. Stages 2 and 3 have a rule now, over
@@ -305,6 +321,12 @@ internal object SlotBindings {
     // ------------------------------------------------------------------ Report observations
 
     private val OBSERVATIONS = listOf(
+        // singleFocus. The two runner up names are ranked by events like everywhere else,
+        // so both are areas that moved. `ob.single.s1.l10` is the only line that can use
+        // them, because it says the others were *largely* still, which is what second and
+        // third place in a week one area dominated actually is. The two lines that said an
+        // other area had not moved at all are in EXCLUDED: check 1 refuses to name an area
+        // with no events outside an absence family, and this is not one.
         family(
             Purpose.REPORT_OBSERVATION, "singleFocus",
             "areaName" to dominant("areaName"),
@@ -312,6 +334,8 @@ internal object SlotBindings {
             "n" to dominant("areaEvents"),
             "m" to bind("totalEvents"),
             "sessions" to dominant("areaFocusSessions"),
+            "otherArea" to bind("areaName", EntitySource.SECOND_AREA),
+            "thirdArea" to bind("areaName", EntitySource.THIRD_AREA),
         ),
         // intakeVsOutput is the one family whose markers change meaning between stages,
         // because stages 1 and 2 describe intake running ahead and stage 3 describes output
@@ -333,11 +357,16 @@ internal object SlotBindings {
             "n" to bind("completions"), "m" to bind("additions"), "k" to bind("queueShrink"),
             "areaName" to dominant("areaName"),
         ),
+        // focusInvestment. `{n}` is the number of **days** focus appeared on in the two
+        // leads that use it bare, `Focused time appeared on {n} different days` and `You
+        // protected time on {n} of the seven days`. Every other `{n}` in the family sits
+        // in an extension that names what it counts and carries its own override.
         family(
             Purpose.REPORT_OBSERVATION, "focusInvestment",
             "sessions" to bind("focusSessions"),
             "minutes" to bind("focusMinutes"),
             "areaName" to dominant("areaName"),
+            "n" to bind("focusDays"),
         ),
         family(
             Purpose.REPORT_OBSERVATION, "neglectedArea",
@@ -365,7 +394,16 @@ internal object SlotBindings {
             "ageDays" to subject("itemAgeDays"),
             "priorLabel" to bind("labelText", EntitySource.CALLBACK_LABEL),
         ),
-        family(Purpose.REPORT_OBSERVATION, "quietWeek", "n" to bind("totalEvents")),
+        // quietWeek names no subject, and one of its extensions names an item anyway. The
+        // oldest thing still sitting there is the only item a reader of a quiet week would
+        // take `{itemTitle}` to mean, and check 2 asks only that the id resolve in the fact
+        // set, which `ItemFacts.longestActiveItemId` does by construction.
+        family(
+            Purpose.REPORT_OBSERVATION, "quietWeek",
+            "n" to bind("totalEvents"),
+            "itemTitle" to bind("itemTitle", EntitySource.LONGEST_ACTIVE_ITEM),
+            "ageDays" to bind("itemAgeDays", EntitySource.LONGEST_ACTIVE_ITEM),
+        ),
         family(
             Purpose.REPORT_OBSERVATION, "queuePressure",
             "n" to bind("queueTotal"),
@@ -381,6 +419,8 @@ internal object SlotBindings {
             Purpose.REPORT_OBSERVATION, "areaRevival",
             "areaName" to subject("areaName"),
             "ageDays" to subject("areaDormancyDays"),
+            "sinceRef" to subject("areaDormancyStartRef"),
+            "n" to subject("areaCompletions"),
         ),
         family(
             Purpose.REPORT_OBSERVATION, "persistentItem",
@@ -471,6 +511,23 @@ internal object SlotBindings {
 
     // ------------------------------------------------------------------ Report patterns
 
+    /**
+     * How far back `since {sinceRef}` reaches in a pattern family, as a weekly offset.
+     *
+     * **The offset is the family's own run length minus one, and it is stated at each
+     * family rather than computed.** `growingQueues` reads three buckets strictly rising,
+     * so its claim starts at the oldest of the three and that is offset two;
+     * `consistentRhythm` reads four and starts at offset three. The number belongs beside
+     * the family because it is a fact about that family's rule, and a shared constant here
+     * would be a claim that every pattern reaches the same distance, which four of them do
+     * not.
+     *
+     * Every one of these is true rather than merely permitted: each rule requires enough
+     * weeks of data that the week named is at or after the day the person installed the
+     * app, so the reach never points at a week that did not happen.
+     */
+    private fun sinceWeeksBack(back: Int) = weeksAgo("weekRefAgo", back)
+
     private val PATTERNS = listOf(
         // The three week series lines. Oldest first: `{k}, then {m}, then {n}`.
         family(
@@ -484,18 +541,21 @@ internal object SlotBindings {
             "k" to weeksAgo("weekQueueSizeAgo", 2),
             "m" to weeksAgo("weekQueueSizeAgo", 1),
             "n" to weeksAgo("weekQueueSizeAgo", 0),
+            "sinceRef" to sinceWeeksBack(2),
         ),
         family(
             Purpose.REPORT_PATTERN, "improvingThroughput",
             "k" to weeksAgo("weekCompletionsAgo", 2),
             "m" to weeksAgo("weekCompletionsAgo", 1),
             "n" to weeksAgo("weekCompletionsAgo", 0),
+            "sinceRef" to sinceWeeksBack(2),
         ),
         family(
             Purpose.REPORT_PATTERN, "decliningActivity",
             "k" to weeksAgo("weekEventsAgo", 2),
             "m" to weeksAgo("weekEventsAgo", 1),
             "n" to weeksAgo("weekEventsAgo", 0),
+            "sinceRef" to sinceWeeksBack(2),
         ),
         family(
             Purpose.REPORT_PATTERN, "areaGoneQuiet",
@@ -504,7 +564,17 @@ internal object SlotBindings {
             "n" to subject("areaQueue"),
             "sinceRef" to subject("areaLastEventRef"),
         ),
-        family(Purpose.REPORT_PATTERN, "consistentRhythm", "n" to bind("activityBandWidth")),
+        family(
+            Purpose.REPORT_PATTERN, "consistentRhythm",
+            "n" to bind("activityBandWidth"),
+            "sinceRef" to sinceWeeksBack(3),
+        ),
+        // queueEquilibrium reads four buckets inside a band and says so, so `since
+        // {sinceRef}` is the oldest of the four. It was recorded as a family with nothing
+        // to bind on the reading that the sentence meant the week the queues stopped
+        // moving, which no fact carries. The family's own rule is what settles it: the
+        // claim is about four weeks and it starts at the first of them.
+        family(Purpose.REPORT_PATTERN, "queueEquilibrium", "sinceRef" to sinceWeeksBack(3)),
         // The area count series, read at both ends of the sentence the two families share:
         // `Three weeks ago you touched {n} areas. This week, {m}`. Both numbers come from
         // one series, so the comparison is between two readings of one measurement, and
@@ -516,6 +586,7 @@ internal object SlotBindings {
             Purpose.REPORT_PATTERN, "narrowingFocus",
             "n" to weeksAgo("weekAreaCountAgo", 2),
             "m" to weeksAgo("weekAreaCountAgo", 0),
+            "sinceRef" to sinceWeeksBack(2),
         ),
         family(
             Purpose.REPORT_PATTERN, "broadeningFocus",
@@ -532,6 +603,9 @@ internal object SlotBindings {
             "k" to weeksAgo("weekFocusStartedAgo", 2),
             "m" to weeksAgo("weekFocusStartedAgo", 1),
             "n" to weeksAgo("weekFocusStartedAgo", 0),
+            // Four rather than three: this rule requires a session in each of four weeks,
+            // which is what `pt.hab.01` claims when it says every week since.
+            "sinceRef" to sinceWeeksBack(3),
         ),
         family(
             Purpose.REPORT_PATTERN, "focusHabitFading",
@@ -543,7 +617,11 @@ internal object SlotBindings {
         // against the total series over the four buckets this family speaks about. The two
         // count the same events over the same days, so the share is a division and not an
         // estimate.
-        family(Purpose.REPORT_PATTERN, "weekendShift", "pct" to bind("weekdayShareOfMonth")),
+        family(
+            Purpose.REPORT_PATTERN, "weekendShift",
+            "pct" to bind("weekdayShareOfMonth"),
+            "sinceRef" to sinceWeeksBack(3),
+        ),
         // `{n} of your last {m} sessions ended before the timer` is this week's pair, and
         // the same two counts `focusAbandonment` reads for the same sentence. The family's
         // claim spans three weeks and this line does not: it names sessions, and the week
@@ -552,6 +630,11 @@ internal object SlotBindings {
             Purpose.REPORT_PATTERN, "abandonmentPattern",
             "n" to bind("focusEndedEarly"),
             "m" to bind("focusStarted"),
+            // `Started sessions have outnumbered finished ones since {sinceRef}` follows
+            // from the rule rather than needing one of its own: a session either finishes,
+            // ends early, or is still open, so more ending early than finishing in each of
+            // three weeks makes more starting than finishing in each of them.
+            "sinceRef" to sinceWeeksBack(2),
         ),
         // comebackPattern names its subject area. The two other markers it carries are
         // quantities nothing holds: `{sinceRef}` is the week the first of the two silences
@@ -608,6 +691,10 @@ internal object SlotBindings {
         "ob.best.e01" to mapOf("n" to dominant("areaCompletions")),
         "ob.best.e04" to mapOf("m" to bind("queueGrowth")),
         "ob.since.l05" to mapOf("n" to bind("completions")),
+        // `It has been {n} weeks` is the family's own `{sinceRef}` read as a length. The
+        // family binds `{n}` to the week's event count, which is right for `{n} moves went
+        // through the app this week` and rendered `It has been 47 weeks` here.
+        "ob.since.e02" to mapOf("n" to bind("weeksSinceBetterWeek")),
         "ob.day.l03" to mapOf("n" to bind("activeDays")),
         "ob.day.l05" to mapOf("n" to bind("quietDays")),
         "ob.aban.l05" to mapOf("n" to bind("focusSessions")),
@@ -616,6 +703,9 @@ internal object SlotBindings {
         // thing. The measure answers null when the fall began after Sunday, which drops this
         // lead off the bench and leaves the other four to speak.
         "ob.drain.l01" to mapOf("n" to subject("areaDrainedFromAtStart")),
+        // `has outlasted {n} other items you completed` counts what was finished while
+        // this item sat, which is a different quantity from what is queued behind it.
+        "ob.pers.l03" to mapOf("n" to subject("completionsSinceItemActive")),
         "ob.stead.l05" to mapOf(
             "n" to weeksAgo("weekEventsAgo", 0),
             "m" to weeksAgo("weekEventsAgo", 1),
@@ -625,6 +715,11 @@ internal object SlotBindings {
         "ob.bal.e02" to mapOf("n" to dominant("areaCompletions"), "m" to bind("completions")),
         "ob.qp.l02" to mapOf("n" to bind("areaQueue", EntitySource.LONGEST_QUEUE_AREA)),
         "ob.qp.l06" to mapOf("n" to bind("areaQueue", EntitySource.LONGEST_QUEUE_AREA)),
+        // Report patterns ----------------------------------------------------
+        // `What is waiting has doubled since {sinceRef}` reaches for a week the doubling
+        // is true of rather than for the start of the run, so it is the one line in this
+        // family whose `since` is not offset two.
+        "pt.grow.08" to mapOf("sinceRef" to bind("queueDoubledSinceRef")),
     )
 
     /**
@@ -643,6 +738,168 @@ internal object SlotBindings {
      * because holding a line out of a bench belongs to the realizer and not to a criterion.
      */
     val EXCLUDED: Map<VariantKey, String> = mapOf(
+        // Lines whose only quantity is a run of days. -------------------------------
+        //
+        // **Eighteen, and they are the largest single group in this table.** Every one of
+        // them asks for `HistoryFacts.currentQuietRunDays` or `currentSingleAreaRunDays`,
+        // as a count in `{dayCount}` or as the day it began in `{sinceRef}`, and 1.1's
+        // streak ban was granted exactly one exception and this is not inside it.
+        // `StreakExceptionAudit.NEVER_RENDERED` says why in full: the run may scope an
+        // observation and may never become a number, because it is capped at thirty and a
+        // value at the cap means at least thirty, so `thirty days` would be false as well
+        // as forbidden, and a number a person can watch go up is the thing the ban is
+        // about. The audit is a test rather than a convention, so no binding could be
+        // written for these even by somebody who disagreed.
+        //
+        // Stage 1 of `quietDay` and stages 1 and 2 of `concentration` are authored without
+        // a marker and speak normally. What is retired here is the half of two hot benches
+        // that was written against a fact the app is not allowed to print, and retiring it
+        // changes nothing a person would see: not one of these has ever rendered.
+        "quietday.s2.01" to "{dayCount} is the run itself and {sinceRef} is the day it began, and StreakExceptionAudit.NEVER_RENDERED forbids a measure whose value moves with a run",
+        "quietday.s2.02" to "{dayCount} is the run itself and {sinceRef} is the day it began, and StreakExceptionAudit.NEVER_RENDERED forbids a measure whose value moves with a run",
+        "quietday.s2.04" to "{dayCount} is the run itself and {sinceRef} is the day it began, and StreakExceptionAudit.NEVER_RENDERED forbids a measure whose value moves with a run",
+        "quietday.s2.05" to "{dayCount} is the run itself and {sinceRef} is the day it began, and StreakExceptionAudit.NEVER_RENDERED forbids a measure whose value moves with a run",
+        "quietday.s2.08" to "{dayCount} is the run itself and {sinceRef} is the day it began, and StreakExceptionAudit.NEVER_RENDERED forbids a measure whose value moves with a run",
+        "quietday.s2.10" to "{dayCount} is the run itself and {sinceRef} is the day it began, and StreakExceptionAudit.NEVER_RENDERED forbids a measure whose value moves with a run",
+        "quietday.s3.01" to "{dayCount} is the run itself and {sinceRef} is the day it began, and StreakExceptionAudit.NEVER_RENDERED forbids a measure whose value moves with a run",
+        "quietday.s3.02" to "{dayCount} is the run itself and {sinceRef} is the day it began, and StreakExceptionAudit.NEVER_RENDERED forbids a measure whose value moves with a run",
+        "quietday.s3.03" to "{dayCount} is the run itself and {sinceRef} is the day it began, and StreakExceptionAudit.NEVER_RENDERED forbids a measure whose value moves with a run",
+        "quietday.s3.06" to "{dayCount} is the run itself and {sinceRef} is the day it began, and StreakExceptionAudit.NEVER_RENDERED forbids a measure whose value moves with a run",
+        "quietday.s3.08" to "{dayCount} is the run itself and {sinceRef} is the day it began, and StreakExceptionAudit.NEVER_RENDERED forbids a measure whose value moves with a run",
+        "quietday.s3.09" to "{dayCount} is the run itself and {sinceRef} is the day it began, and StreakExceptionAudit.NEVER_RENDERED forbids a measure whose value moves with a run",
+        "concentration.s3.02" to "{dayCount} is the run itself and {sinceRef} is the day it began, and StreakExceptionAudit.NEVER_RENDERED forbids a measure whose value moves with a run",
+        "concentration.s3.03" to "{dayCount} is the run itself and {sinceRef} is the day it began, and StreakExceptionAudit.NEVER_RENDERED forbids a measure whose value moves with a run",
+        "concentration.s3.04" to "{dayCount} is the run itself and {sinceRef} is the day it began, and StreakExceptionAudit.NEVER_RENDERED forbids a measure whose value moves with a run",
+        "concentration.s3.06" to "{dayCount} is the run itself and {sinceRef} is the day it began, and StreakExceptionAudit.NEVER_RENDERED forbids a measure whose value moves with a run",
+        "concentration.s3.07" to "{dayCount} is the run itself and {sinceRef} is the day it began, and StreakExceptionAudit.NEVER_RENDERED forbids a measure whose value moves with a run",
+        "concentration.s3.10" to "{dayCount} is the run itself and {sinceRef} is the day it began, and StreakExceptionAudit.NEVER_RENDERED forbids a measure whose value moves with a run",
+
+        // Lines that name an area with no events. -------------------------------------
+        //
+        // Check 1 refuses to name an area that did nothing in the window unless the rule
+        // carries `absenceSubject`, and none of these three rules does. `SlotBindings.ranked`
+        // enforces the same thing one layer earlier by ranking only areas with events, so
+        // `{otherArea}` in a family like this can never resolve to the area the sentence is
+        // about. Both halves would have to be undone to say these, and `AbsenceSubject`
+        // carries the argument for why neither should be.
+        "concentration.s3.11" to "`{otherArea} has not moved while {areaName} took everything` needs to name an area with no events, and this rule is not an absence rule",
+        "ob.single.s1.e06" to "`{otherArea} has now been quiet for {ageDays}` needs to name an area with no events in a family whose subject is the busiest one",
+        "ob.single.s2.e03" to "`{otherArea} has not moved in {ageDays}` makes the same claim as ob.single.s1.e06 and is refused by check 1 for the same reason",
+
+        // Lines claiming a record the family's own rule does not establish. -----------
+        //
+        // Each of these says `the highest`, `the widest`, `the strongest`, `the previous
+        // high` or `the shortest`, and every one of them sits in a family whose rule is a
+        // band or a count. A measure that searched the history for a week making the claim
+        // true would be a criterion written into the measure table, which is the one thing
+        // `Measures` says it is not for, and it would put a superlative in front of a
+        // person on a week nothing about the data called exceptional.
+        "throughput.s3.03" to "`the shortest they have been in {sinceRef}` is a record claim about the queues, and a Pulse describes one day against a history bucketed by week",
+        "ob.flow.s2.e01" to "`the widest gap in {sinceRef}` needs intake against output for each earlier week, and the weekly series carry completions, events and queue size",
+        "ob.flow.s3.e01" to "`the strongest net week since {sinceRef}` needs the same weekly intake series as ob.flow.s2.e01, and the rule establishes no record either",
+        "ob.focus.s2.e01" to "`That is your highest since {sinceRef}` names no quantity, follows leads that carry two, and sits under a rule that is a band of four to seven sessions",
+        "ob.focus.s3.e01" to "`The previous high was {m} minutes, in {sinceRef}` presupposes a current high that a rule counting eight sessions does not establish, and no fact carries the week the focus minutes record fell in",
+
+        // Lines needing a quantity the fact set does not carry. -----------------------
+        "ob.flow.s1.e05" to "`Nothing added on {dayName} has moved yet` needs the day things were added, and the window carries the busiest day by events of any kind",
+        "ob.focus.s1.e01" to "`All of it on {dayName}` needs the days the sessions fell on, which is what ob.day.e05 is held out for as well",
+        "ob.focus.s1.e02" to "`More than last week, which had {m}` is a comparison the rule does not make, under a stage that is a band of one to three sessions",
+        "ob.focus.s2.e02" to "`{n} of them were in the morning` needs focus sessions split by part of day, and eventsByPartOfDay counts events of every kind",
+        "ob.qp.e03" to "`The oldest is {itemTitle}, queued {ageDays} ago` needs a queued item and its age, and the fact set carries only each area active item",
+        "ob.qp.e05" to "`Nothing in {areaName} queue has moved since {sinceRef}` needs the age of the queued items, which is what ob.qp.e01 is held out for",
+        "ob.rev.e03" to "`It has come back before, in {sinceRef}, and stayed for {n} weeks` needs an earlier return dated and measured, and the rule reads one window return",
+        "ob.since.e01" to "`That week was mostly {areaName} too` needs the leading area of the week being named, and dominantAreaLastThreeWeeks reaches three weeks",
+        "ob.since.e04" to "`The weeks between averaged {m}` needs a mean across the span to the named week, and averageWeekCompletions is a fixed eight week mean",
+        "ob.tod.l02" to "`{n} of your {m} completions were before midday` needs completions split by part of day, and only events of every kind are bucketed",
+        "ob.tod.l05" to "`{pct} of your activity was after 5pm` needs a share that stops at midnight, and PartOfDay.NIGHT runs from ten at night to five in the morning",
+        "ob.drain.e04" to "`The last item had been queued since {sinceRef}` needs the day an item entered a queue, which nothing in ItemFacts records",
+        "ob.first.l02" to "`Your first focus session, {minutes} minutes` needs one session own length, and focusMinutesTotal is the window total across every session in it",
+        "ob.first.e01" to "`It took {ageDays} from when you added it` needs the age of one specific completed item, and nothing selects which of the window completions is meant",
+        "ob.first.e03" to "`There were {n} more after it` counts completions after a first, and this family fires once per FirstEver flag and five of the six are not a completion",
+
+        // The switching leads, held out by a decision recorded in ReportRules. --------
+        //
+        // `switchingBehavior` keeps `Subjects.NONE` on the argument that the Pulse
+        // `switching` family is the per area reading of the same fact and 9.1 exists to
+        // stop two families sitting on one fact at two grains. Seven of its nine leads and
+        // one extension need an area, a per area swap count or a count of items rather
+        // than of swaps, and the rule that would give them one is the rule that decision
+        // refuses. They are recorded here rather than left unbound so that the reason
+        // reads as a decision rather than as an oversight.
+        "ob.swi.l02" to "`{areaName} changed its active item {n} times` needs an area subject, which ReportRules withholds from this family on the 9.1 argument",
+        "ob.swi.l03" to "`{n} different items took turns at the front of {areaName}` counts items rather than swaps, and two swaps leave three items at the front",
+        "ob.swi.l04" to "`{areaName} was hard to settle this week` needs an area subject, which ReportRules withholds from this family on the 9.1 argument",
+        "ob.swi.l05" to "`{n} swaps across {areaCount} areas` needs how many areas the swaps fell in, and the window carries one total and each area own count",
+        "ob.swi.l06" to "`Nothing stayed at the front of {areaName} for more than {ageDays}` needs the shortest time an item held the front, which nothing measures",
+        "ob.swi.l07" to "`The front of {areaName} changed {n} times` needs an area subject, which ReportRules withholds from this family on the 9.1 argument",
+        "ob.swi.l08" to "`{n} different items held {areaName} active slot` counts items rather than swaps and needs an area, so it fails on both halves",
+        "ob.swi.e01" to "`{n} of those swaps went back and forth between the same two items` needs the items each swap moved between, and only a count of swaps is kept",
+
+        // The callback lines that need the answer rather than its label. --------------
+        //
+        // `selfReportVsData` resolves a specific stored answer and `ResolvedCallback`
+        // carries it with its own age in days. Only the **label** reaches the realizer:
+        // `SlotBindings.resolveEntity` is handed `callbackLabel` and nothing else, so a
+        // measure cannot read the day the answer was given. `ob.srvd.l08` and `ob.srvd.l10`
+        // are held out for that reason and no other, and the fix is plumbing rather than a
+        // fact: widening `resolveEntity` to take the resolved callback would reach both.
+        // Finding the answer by its label instead would be wrong often enough to matter,
+        // because the same label is given about different items on different days.
+        "ob.srvd.l02" to "`you said deep work` names one of the two options while this callback resolves either, and the age of the item on the day of the answer is not carried",
+        "ob.srvd.l04" to "`It has since finished {n} things` counts completions in an area since the answer, and the fact set counts them across the window",
+        "ob.srvd.l07" to "`It has grown by {n} since` needs the queue growth since the answer, and queueGrowth is measured across the window",
+        "ob.srvd.l08" to "`{n} days later, it is unchanged` is the age of the resolved answer, which ResolvedCallback holds and resolveEntity is not given",
+        "ob.srvd.l10" to "`You said {priorLabel} on {dayName}` is the weekday of the resolved answer, which resolveEntity cannot reach for the same reason as ob.srvd.l08",
+
+        // Report patterns. -----------------------------------------------------------
+        "pt.grow.06" to "`The queues have not been shorter since {sinceRef}` reads as naming the last time they were shorter, which on a strictly rising series is always last week",
+        "pt.broad.05" to "`{areaName} share has fallen each week since {sinceRef}` needs a dominant share per week, which is what pt.broad.03 is held out for",
+        "pt.fade.03" to "`Protected time has been dropping since {sinceRef}` is minutes and the series behind this family is sessions, which is what pt.hab.03 is held out for",
+        "pt.fade.05" to "`The last focus session was {ageDays} ago` is a gap in days and every focus fact behind this family is a weekly bucket",
+        "pt.fade.06" to "`Focus was weekly in {sinceRef}` is a claim about a calendar month, and the buckets are twelve rolling seven day spans that do not align to one",
+        "pt.rva.01" to "`You have answered deep work {n} times about {itemTitle}` names one response option and one item, and this family has neither a subject nor a callback",
+        "pt.rva.02" to "`{n} weeks running` needs the answers bucketed by week, which is what pt.rva.05 is held out for",
+        "pt.rva.07" to "`and again this week` is a claim the rule does not make, and pinning the earlier answer needs the answer rather than a label, which only a callback rule resolves",
+        "pt.come.05" to "`Every time {areaName} returns, it lasts about {ageDays}` names a typical duration in days, and an area own history is twelve weekly buckets",
+        // Lines with no marker at all, claiming a record their rule does not establish. -
+        //
+        // **The one group here that no gate could have found, and the only one already
+        // reaching a screen.** Every other entry in this table is a line that never
+        // rendered: a marker with no binding drops it, and both corpus gates report it.
+        // These eight carry no marker or carry only names, so they filled, passed layer 5,
+        // and were said. `ob.focus.s3.l02` is said thirty five times a year to one persona.
+        //
+        // They are the second shape this table already records, `Three weeks of stillness`
+        // under a stage that begins at fourteen days, taken one step further: the words
+        // claim a **record** and the family's rule counts something else entirely. A
+        // criterion cannot rescue them, because the rule is right for the other five or ten
+        // lines of its bench and narrowing it to the record would silence all of them, and
+        // 7.3's device of a second rule is not available either: both rules would draw from
+        // one bench and the looser one could pick the strict line. `ReportRules` makes that
+        // argument where it declines to split `weekendShift`.
+        //
+        // Each of them is a corpus split rather than a missing fact, in the sense
+        // `pt.fade.04` is recorded under: the shape is real and belongs to a family of its
+        // own. For `ob.focus.s3.l02` the fact even exists,
+        // `HistoryFacts.personalBestFocusMinutesWeek`, and what is missing is the family,
+        // which would be the focus sibling of `personalBest`.
+        "ob.focus.s3.l02" to "`more focused time than any week before this one` is a record and the " +
+            "rule counts eight sessions, which says nothing about minutes against any earlier week",
+        "persistence.s3.16" to "`the longest anything has stayed active in {areaName}` is a per area " +
+            "record, and longestEverActiveDays is across the whole app rather than one area",
+        "ob.pers.e02" to "`the longest anything has been active in {areaName}` makes the same per area " +
+            "record claim as persistence.s3.16 and needs the same fact",
+        "burst.s2.02" to "`the most {areaName} has moved in one day` is a per area daily record, and " +
+            "the only per area history is twelve weekly buckets",
+        "burst.s2.08" to "`{areaName} has not had a day like that before` is the same record as " +
+            "burst.s2.02 in other words, and this rule counts five completions in a window",
+        "ob.single.s2.e01" to "`the most concentrated week you have had` needs a dominant share per " +
+            "earlier week, which is the fact pt.broad.03 is held out for",
+        "ob.tod.e04" to "`Your longest focus sessions were the early ones` needs the length of each " +
+            "session and the hour it fell in, and every focus fact is a count or a total",
+        "concentration.s3.24" to "`Yesterday's record has one area in it` is true on the run branch of " +
+            "this stage and false on the share branch, which fires at ninety five percent",
+        // The lines held out before this pass. ---------------------------------------
         "switching.s2.02" to "`{areaName} has had {n} different priorities recently` counts " +
             "the items that reached the front, and two swaps leave three of them there",
         "switching.s2.04" to "`Three items have taken turns being active` states a count in " +
@@ -684,8 +941,6 @@ internal object SlotBindings {
             "each queued item",
         "ob.rev.e01" to "`{n} of its {m} queued items went` counts completions as queue " +
             "departures, and the active item is not part of the queue",
-        "ob.pers.l03" to "`has outlasted {n} other items you completed` needs the completions " +
-            "since this item became active, not what is queued behind it",
         "ob.pers.e01" to "`when it was {n} days old` needs the age of the item on the day the " +
             "answer was given",
         "ob.pers.e05" to "`survived {n} focus sessions` needs the sessions since this item " +
@@ -770,6 +1025,7 @@ internal object SlotBindings {
         EntitySource.LONGEST_QUEUE_AREA -> longestQueue(facts)?.areaId
         EntitySource.DRAINED_AREA ->
             facts.rollup.queueDrainedAreaIds.sorted().firstOrNull { (facts.areas[it]?.eventsInWindow ?: 0) > 0 }
+        EntitySource.LONGEST_ACTIVE_ITEM -> facts.items.longestActiveItemId
         EntitySource.CALLBACK_LABEL -> callbackLabel
         EntitySource.MOST_GIVEN_LABEL ->
             (Measures.byId("mostGivenLabel")?.read(facts, null, UTC) as? MeasureValue.Text)?.value

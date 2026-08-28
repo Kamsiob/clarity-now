@@ -135,6 +135,36 @@ data class AreaFacts(
      * floor of five days applied.
      */
     val dormantDaysBeforeReturn: Int?,
+    /**
+     * The local day of this area's own last event **before** the gap it returned from,
+     * or null when it did not come back here.
+     *
+     * The other end of [dormantDaysBeforeReturn], which is measured from exactly this
+     * event to the area's first event inside the window. The gap was already computed
+     * from this instant and the instant was thrown away; the corpus needs it, because
+     * *{areaName} had been quiet since {sinceRef}* names the month the quiet started
+     * and `daysSinceLastEvent` is zero the moment the area moves again.
+     *
+     * Null exactly where [dormantDaysBeforeReturn] is null and for the same two
+     * reasons, so a line reading one and a line reading the other are available on the
+     * same windows.
+     */
+    val dormancyStartKey: String?,
+    /**
+     * Completions anywhere in the log since this area's active item became active, or 0
+     * when there is no active item.
+     *
+     * **Everything finished while this one thing did not.** The `persistence` ladder
+     * says it twice, *You have finished {n} other things since {itemTitle} became
+     * active* and *You have completed {n} things elsewhere while {itemTitle} stayed
+     * put*, and `persistentItem` says it once. The subject item is still active and so
+     * is not among them, which is what makes `other` true without an exclusion.
+     *
+     * Counted across the whole log rather than across the window, because the age it is
+     * set against is the item's whole age. A window count beside a lifetime age would
+     * be two spans in one sentence.
+     */
+    val completionsSinceActiveItemStarted: Int,
     val lifetimeEvents: Int,
     val lifetimeCompletions: Int,
     /** Whole local days since AREA_CREATED, as of the window end. */

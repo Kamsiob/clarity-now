@@ -30,8 +30,8 @@ import com.kamsiob.claritynow.domain.engine.HistoryFacts
  * writing a rule over `currentQuietRunDays` or `currentSingleAreaRunDays`: the exception
  * is a shape, not a permission, and the audit is what keeps it from widening.
  *
- * **`unflattering` is false throughout.** 7.4 enumerates the rules that carry it and every
- * one of them is a Report family. Pulse asks a question and offers two answers that are
+ * **`unflattering` is false throughout.** 7.4 enumerates the rules that carry it and not
+ * one of them is a Pulse family. Pulse asks a question and offers two answers that are
  * equally valid read out of context, which is a different mechanism for the same problem
  * and does not need the neutral agent register. `CORPUS_1_PULSE.md` authors no `[N]`
  * lines at all, so there would be nothing to select even if one were marked.

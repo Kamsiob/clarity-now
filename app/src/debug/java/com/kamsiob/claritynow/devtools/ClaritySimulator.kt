@@ -438,6 +438,10 @@ class ClaritySimulator(
             factSnapshot = factSnapshot(candidate),
             statement = output.text,
             question = output.question,
+            maskedStatement = ClarityValidator.maskPersonalStrings(output.text, candidate.slots.values),
+            maskedQuestion = output.question?.let {
+                ClarityValidator.maskPersonalStrings(it, candidate.slots.values)
+            },
             responses = output.responses,
             subjectId = candidate.subjectId,
             subjectKind = candidate.payloadSubjectKind(),
@@ -673,6 +677,16 @@ data class SpokenLine(
     val factSnapshot: Map<String, String>,
     val statement: String,
     val question: String?,
+    /**
+     * The same two strings with the person's own area names, item titles and tapped labels
+     * replaced, exactly as `ClarityValidator` masks them before checks 7, 8 and 10.
+     *
+     * Carried rather than recomputed because the vocabulary check in `SimulationChecks` is
+     * a claim about the words the app chose, and the rendered form contains words the person
+     * chose. See `ClarityValidator.maskPersonalStrings`.
+     */
+    val maskedStatement: String,
+    val maskedQuestion: String?,
     val responses: List<ResponseOption>,
     val subjectId: String?,
     val subjectKind: SubjectKind?,

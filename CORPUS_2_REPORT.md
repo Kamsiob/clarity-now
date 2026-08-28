@@ -801,7 +801,7 @@ The gap between what was added and what was finished.
 ob.flow.s1.l01  [P]  You added {n} things and finished {m}.
 ob.flow.s1.l02  [P]  {n} in, {m} out.
 ob.flow.s1.l03  [O]  A little more arrived than left.
-ob.flow.s1.l04  [O]  The queues are {k} longer than they were on Sunday.
+ob.flow.s1.l04  [O]  The queues are {k} longer than they were a week ago.
 ob.flow.s1.l05  [O]  Intake edged ahead of output.
 ob.flow.s1.l06  [E]  The week was slightly better at noticing than finishing.
 ob.flow.s1.l07  [P]  Your queues gained {k} this week.
@@ -845,7 +845,7 @@ ob.flow.s1.l44  [O]  There is a gap between what arrived and what left, and it r
 ob.flow.s1.l45  [O]  {n} things went onto the lists this week and {m} came off them over the same seven days.
 ob.flow.s1.l46  [P]  {m} finished. {n} arrived.
 ob.flow.s1.l47  [P]  A gap of a few things.
-ob.flow.s1.l48  [P]  {k} more waiting than on Sunday.
+ob.flow.s1.l48  [P]  {k} more waiting than a week ago.
 ob.flow.s1.l49  [P]  Seven days, {n} and {m}.
 ob.flow.s1.l50  [P]  {n} things added, {m} things gone.
 ob.flow.s1.l51  [P]  The week in two numbers.
@@ -890,7 +890,7 @@ ob.flow.s1.e20  [P]  The week added {n}.
 ```
 ob.flow.s2.l01  [P]  You added {n} things and finished {m}.
 ob.flow.s2.l02  [O]  Considerably more arrived than left this week.
-ob.flow.s2.l03  [O]  The queues are {k} longer than they were on Sunday.
+ob.flow.s2.l03  [O]  The queues are {k} longer than they were a week ago.
 ob.flow.s2.l04  [E]  This was a week of collecting rather than closing.
 ob.flow.s2.l05  [P]  {n} added, {m} completed, {k} net.
 ob.flow.s2.l06  [O]  Nothing you added this week has been finished.
@@ -899,7 +899,7 @@ ob.flow.s2.l08  [E]  The list grew faster than you could work it.
 ob.flow.s2.l09  [O]  Your queues now hold {n} things.
 ob.flow.s2.l10  [N]  {n} things arrived. {m} left.
 ob.flow.s2.l11  [N]  The queues took on {n} and released {m}.
-ob.flow.s2.l12  [N]  {k} more things are waiting than were on Sunday.
+ob.flow.s2.l12  [N]  {k} more things are waiting than were a week ago.
 ob.flow.s2.l13  [N]  Arrivals outpaced departures by {k}.
 ob.flow.s2.l14  [N]  Nothing added this week has left yet.
 ob.flow.s2.l15  [P]  {n} in, {m} out.                                    [S]
@@ -928,7 +928,7 @@ ob.flow.s2.l37  [O]  More arrived than left this week by a clear margin.
 ob.flow.s2.l38  [O]  Collecting ran ahead of finishing.
 ob.flow.s2.l39  [O]  You noticed more than you closed.
 ob.flow.s2.l40  [O]  {n} things went onto the lists and {m} came off.
-ob.flow.s2.l41  [O]  The lists are longer than they were on Sunday.
+ob.flow.s2.l41  [O]  The lists are longer than they were a week ago.
 ob.flow.s2.l42  [O]  This was a week of adding.
 ob.flow.s2.l43  [O]  The week ran one way.
 ob.flow.s2.l44  [O]  {n} things arrived over seven days, which is more than left in the same seven.
@@ -964,7 +964,7 @@ ob.flow.s2.e09  [P]  Seven days, {n} additions.
 ob.flow.s2.e10  [P]  The gap is five things or more.
 ob.flow.s2.e11  [O]  The lists are longer for it.
 ob.flow.s2.e12  [O]  {areaName} moved more than any other area this week.
-ob.flow.s2.e13  [O]  It did not close by Sunday.
+ob.flow.s2.e13  [O]  It did not close this week.
 ob.flow.s2.e14  [O]  Nothing here says how long any of it will wait, or whether any of it needs to be waited on at all.
 ob.flow.s2.e15  [O]  Five is the point at which this reads as a direction rather than a wobble.
 ob.flow.s2.e16  [E]  A week is long enough to add things to a list and short enough not to finish them, and this one did both.
@@ -980,7 +980,7 @@ ob.flow.s2.e20  [E]  A list that grows is a list being used, and a list that onl
 ```
 ob.flow.s3.l01  [P]  You finished {n} things and added {m}.
 ob.flow.s3.l02  [O]  Considerably more left than arrived this week.
-ob.flow.s3.l03  [O]  The queues are {k} shorter than they were on Sunday.
+ob.flow.s3.l03  [O]  The queues are {k} shorter than they were a week ago.
 ob.flow.s3.l04  [E]  This was a week of closing rather than collecting.
 ob.flow.s3.l05  [P]  {n} completed against {m} added.
 ob.flow.s3.l06  [O]  {areaName} cleared {k} of them.
@@ -1017,7 +1017,7 @@ ob.flow.s3.l36  [O]  Five things or more separate what left this week from what 
 ob.flow.s3.l37  [P]  {n} gone, {m} arrived.
 ob.flow.s3.l38  [P]  The lists are {k} shorter.
 ob.flow.s3.l39  [P]  {n} completions this week.
-ob.flow.s3.l40  [P]  {k} fewer waiting than on Sunday.
+ob.flow.s3.l40  [P]  {k} fewer waiting than a week ago.
 ob.flow.s3.l41  [P]  The queues gave up {k}.
 ob.flow.s3.l42  [P]  {n} things left. {m} came in.
 ob.flow.s3.l43  [P]  The week put {n} things away and took {m} on.
@@ -1119,7 +1119,7 @@ ob.focus.s2.e06  [O]  {areaName} completed {n} things across those sessions.
 ob.focus.s3.l01  [P]  {sessions} focus sessions, {minutes} minutes.
 ob.focus.s3.l02  [O]  That is more focused time than any week before this one.
 ob.focus.s3.l03  [E]  Focus stopped being an event this week and became a routine.
-ob.focus.s3.l04  [O]  You protected time on {n} of the seven days.
+ob.focus.s3.l04  [O]  You protected time on {n} days out of 7.
 ob.focus.s3.l05  [P]  {minutes} minutes across {sessions} sittings.
 ob.focus.s3.l06  [E]  Whatever else the week was, it was deliberate.
 ```
@@ -1397,7 +1397,7 @@ ob.quiet.l11  [N]  Seven days, {n} things.                               [S]
 
 **Extensions**
 ```
-ob.quiet.e01  [O]  Everything is where you left it on Sunday.
+ob.quiet.e01  [O]  Everything is where you left it a week ago.
 ob.quiet.e02  [O]  Last week had {n}.
 ob.quiet.e03  [E]  A quiet week is data too, it is just quieter data.
 ob.quiet.e04  [O]  {itemTitle} has now been active {ageDays}.
@@ -1429,7 +1429,7 @@ ob.qp.l18  [N]  A queue grew this week.
 ob.qp.l19  [N]  {n} things are waiting across the areas.
 ob.qp.l20  [N]  The queues hold {n} things and one of them got longer.
 ob.qp.l21  [N]  {areaName} holds the longest queue of the {areaCount}.
-ob.qp.l22  [N]  {n} things are waiting. {m} were waiting on Sunday.
+ob.qp.l22  [N]  {n} things are waiting. {m} were waiting a week ago.
 ob.qp.l23  [N]  One queue at least is longer than it was.
 ob.qp.l24  [N]  The queues came out of the week holding {n} things.
 ob.qp.l25  [N]  {areaCount} areas have something behind the item in front.
@@ -1456,7 +1456,7 @@ ob.qp.l45  [O]  Waiting is what {n} things are doing right now, in {areaCount} a
 ob.qp.l46  [O]  Your queues held {m} things when the week opened and {n} at the end of it, and one of them grew somewhere in between.
 ob.qp.l47  [P]  {n} queued.
 ob.qp.l48  [P]  Something behind the front in {areaCount} places.
-ob.qp.l49  [P]  {n} now, {m} on Sunday.
+ob.qp.l49  [P]  {n} now, {m} a week back.
 ob.qp.l50  [P]  The front of {areaName} has a line behind it.
 ob.qp.l51  [P]  {n} things across {areaCount} areas.
 ob.qp.l52  [P]  {n} in all.
@@ -1575,11 +1575,11 @@ ob.rev.e10  [O]  The quiet ran to {ageDays}.
 ob.rev.e11  [O]  Nothing here says why it stopped.
 ob.rev.e12  [O]  Nothing here says why it started again either.
 ob.rev.e13  [O]  The report had not named it in {ageDays}.
-ob.rev.e14  [O]  It is one week against {ageDays}.
+ob.rev.e14  [O]  It is 1 week against {ageDays}.
 ob.rev.e15  [O]  Whether the next week has it too is not known yet.
 ob.rev.e16  [E]  A return is easier to see than a stop.
 ob.rev.e17  [E]  Stopping and starting are the same act seen from two ends, and the record shows the second one more clearly.
-ob.rev.e18  [E]  One week and {ageDays} are two different lengths of time.
+ob.rev.e18  [E]  1 week and {ageDays} are two different lengths of time.
 ob.rev.e19  [O]  The last {ageDays} in {areaName} held nothing at all. This week is the first thing in the record since.
 ob.rev.e20  [E]  An area that has been quiet for {ageDays} and then moves says nothing at all about the week after this one.
 ```
@@ -1862,9 +1862,9 @@ Which days carried the week.
 ```
 ob.day.l01  [P]  {dayName} carried the week, with {n} of the {m} events.
 ob.day.l02  [O]  Most of the week happened on two days.
-ob.day.l03  [O]  {n} of seven days had activity.
+ob.day.l03  [O]  {n} of 7 days had activity.
 ob.day.l04  [E]  The week was not spread evenly. It was mostly {dayName}.
-ob.day.l05  [P]  Nothing happened on {n} of the seven days.
+ob.day.l05  [P]  Nothing happened on {n} of the 7 days.
 ob.day.l06  [O]  Your busiest day was {dayName}, at {n} events.
 ob.day.l07  [E]  This week had a shape: quiet, then a burst, then quiet again.
 ```
@@ -2020,7 +2020,7 @@ ob.aban.e04  [O]  Last week every session ran to the end.
 
 **Leads**
 ```
-ob.drain.l01  [P]  {areaName} is empty. It held {n} things on Sunday.
+ob.drain.l01  [P]  {areaName} is empty. It held {n} things a week ago.
 ob.drain.l02  [O]  {areaName} cleared its entire queue this week.
 ob.drain.l03  [O]  Two areas ended the week with nothing waiting.
 ob.drain.l04  [E]  There is an area with nothing in it for the first time.

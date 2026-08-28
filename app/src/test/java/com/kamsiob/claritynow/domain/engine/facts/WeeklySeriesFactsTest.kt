@@ -2,9 +2,12 @@ package com.kamsiob.claritynow.domain.engine.facts
 
 import com.kamsiob.claritynow.domain.engine.FactExtractor
 import com.kamsiob.claritynow.domain.engine.FactSet
+import com.kamsiob.claritynow.data.event.FocusStarted
 import com.kamsiob.claritynow.domain.query.TrailTestLog
 import com.kamsiob.claritynow.domain.query.area
 import com.kamsiob.claritynow.domain.query.at
+import com.kamsiob.claritynow.domain.query.complete
+import com.kamsiob.claritynow.domain.query.dateKey
 import com.kamsiob.claritynow.domain.query.item
 import com.kamsiob.claritynow.domain.query.promote
 import org.junit.Assert.assertEquals
@@ -225,6 +228,11 @@ class WeeklySeriesFactsTest {
             6,
             work.daysSinceLastEvent,
         )
+        assertEquals(
+            "the other end of the same gap: the day the area was last active before it",
+            dateKey(10),
+            work.dormancyStartKey,
+        )
     }
 
     @Test
@@ -232,7 +240,9 @@ class WeeklySeriesFactsTest {
         val log = twoAreas()
         log.item(at(10, 10), "w1", "work", "Before")
 
-        assertNull(extract(log, 21, 28).areas.getValue("work").dormantDaysBeforeReturn)
+        val work = extract(log, 21, 28).areas.getValue("work")
+        assertNull(work.dormantDaysBeforeReturn)
+        assertNull("the length and the date go absent together", work.dormancyStartKey)
     }
 
     @Test
@@ -260,5 +270,143 @@ class WeeklySeriesFactsTest {
         val facts = extract(log, 21, 28)
         assertEquals(2, facts.areas.getValue("health").dormantDaysBeforeReturn)
         assertEquals(listOf("work"), facts.rollup.dormantReturnedAreaIds)
+    }
+
+    // The dates behind the series ---------------------------------------------
+
+    /**
+     * Every weekly series is dated, and the dates are the buckets the numbers came from.
+     *
+     * A window of days 21 to 28 gives four buckets, days 0 to 6, 7 to 13, 14 to 20 and
+     * 21 to 27, and the keys are their first days. This is asserted rather than derived
+     * because the whole value of the field is that nothing outside the extractor has to
+     * know the rule `endDate - 7k - 6`; a series that quietly used a different anchor
+     * would print a plausible month beside a claim about a trend.
+     */
+    @Test
+    fun `the week start keys date each bucket and line up with every other series`() {
+        val log = twoAreas()
+        log.item(at(7, 10), "w1", "work", "Week two")
+        log.item(at(21, 10), "w2", "work", "This week")
+
+        val history = extract(log, 21, 28).history
+        assertEquals(
+            listOf(dateKey(0), dateKey(7), dateKey(14), dateKey(21)),
+            history.weekStartKeySeries,
+        )
+        assertEquals(
+            "a key per bucket, so an offset means one week in the dates and in the numbers",
+            history.weekTotalEventsSeries.size,
+            history.weekStartKeySeries.size,
+        )
+    }
+
+    /**
+     * The week that beat this one, as a date and as a length, from one measurement.
+     *
+     * Three completions in the bucket two weeks back and one in this one, with the bucket
+     * between them empty, so the newest week that beats this one is the older of the two
+     * and both facts have to name it.
+     */
+    @Test
+    fun `the weeks since the better week count back to the week the key names`() {
+        val log = twoAreas()
+        log.item(at(7, 9), "a", "work", "A")
+        log.item(at(7, 9, 1), "b", "work", "B")
+        log.item(at(7, 9, 2), "c", "work", "C")
+        log.complete(at(8, 10), "a", "work", "A")
+        log.complete(at(9, 10), "b", "work", "B")
+        log.complete(at(10, 10), "c", "work", "C")
+        log.item(at(21, 9), "d", "work", "D")
+        log.complete(at(22, 10), "d", "work", "D")
+
+        val history = extract(log, 21, 28).history
+        assertEquals(listOf(0, 3, 0, 1), history.weekCompletionsSeries)
+        assertEquals(dateKey(7), history.mostRecentBetterWeekKey)
+        assertEquals(
+            "the key and the length are one bucket read two ways",
+            history.weekStartKeySeries.indexOf(history.mostRecentBetterWeekKey),
+            history.weekStartKeySeries.size - 1 - requireNotNull(history.weeksSinceBetterWeek),
+        )
+        assertEquals(2, history.weeksSinceBetterWeek)
+    }
+
+    @Test
+    fun `a week nothing earlier beat has no length to count back`() {
+        val log = twoAreas()
+        log.item(at(21, 9), "d", "work", "D")
+        log.complete(at(22, 10), "d", "work", "D")
+
+        val history = extract(log, 21, 28).history
+        assertNull(history.mostRecentBetterWeekKey)
+        assertNull(history.weeksSinceBetterWeek)
+    }
+
+    // Days with focus in them --------------------------------------------------
+
+    /**
+     * Focus days are days and not sessions.
+     *
+     * Three sessions across two days. `Focused time appeared on {n} different days` and
+     * `{sessions} focus sessions` are two readings of one week and the corpus says both,
+     * so the two counts have to be able to disagree.
+     */
+    @Test
+    fun `the focus day count counts days rather than sessions`() {
+        val log = twoAreas()
+        log.item(at(21, 9), "w1", "work", "Thing")
+        log.add(at(22, 9), FocusStarted("f1", "work", "w1", 1_500))
+        log.add(at(22, 14), FocusStarted("f2", "work", "w1", 1_500))
+        log.add(at(24, 9), FocusStarted("f3", "work", "w1", 1_500))
+
+        val window = extract(log, 21, 28).window
+        assertEquals(3, window.focusStarted)
+        assertEquals(2, window.focusDays)
+    }
+
+    @Test
+    fun `a week with no focus in it has no focus days`() {
+        val log = twoAreas()
+        log.item(at(21, 9), "w1", "work", "Thing")
+
+        assertEquals(0, extract(log, 21, 28).window.focusDays)
+    }
+
+    // What was finished while one thing sat ------------------------------------
+
+    /**
+     * Completions since the active item became active, counted across the whole log.
+     *
+     * The span is the item's own age rather than the window, because the age it is set
+     * against in `You have finished {n} other things since {itemTitle} became active` is
+     * the item's whole age. A completion before the promotion is outside the claim.
+     */
+    @Test
+    fun `the count of what was finished elsewhere runs from the promotion`() {
+        val log = twoAreas()
+        log.item(at(5, 9), "early", "work", "Early")
+        log.complete(at(6, 10), "early", "work", "Early")
+        log.item(at(9, 9), "sitter", "work", "The one that sits")
+        log.promote(at(10, 9), "sitter", "work", "The one that sits")
+        log.item(at(11, 9), "x1", "work", "X one")
+        log.complete(at(12, 10), "x1", "work", "X one")
+        log.item(at(20, 9), "x2", "work", "X two")
+        log.complete(at(22, 10), "x2", "work", "X two")
+
+        val work = extract(log, 21, 28).areas.getValue("work")
+        assertEquals("sitter", work.activeItemId)
+        assertEquals(
+            "the completion before the promotion is outside the span the sentence names",
+            2,
+            work.completionsSinceActiveItemStarted,
+        )
+    }
+
+    @Test
+    fun `an area with nothing active counts nothing`() {
+        val log = twoAreas()
+        log.item(at(21, 9), "w1", "work", "Queued and never promoted")
+
+        assertEquals(0, extract(log, 21, 28).areas.getValue("work").completionsSinceActiveItemStarted)
     }
 }

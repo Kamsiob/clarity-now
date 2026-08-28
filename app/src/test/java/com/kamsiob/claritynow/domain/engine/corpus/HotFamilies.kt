@@ -94,8 +94,24 @@ internal object HotFamilies {
         Hot(Purpose.MOMENTUM_HEADLINE, "quietStretch", 124),
         Hot(Purpose.MOMENTUM_HEADLINE, "cleanSlate", 42),
         Hot(Purpose.AREAS_BANNER, "weekMixed", 1308),
-        Hot(Purpose.AREAS_BANNER, "weekStarting", 804),
+        // 804 at the sixth measurement. The register pass gave `weekQuiet` a voice it could
+        // speak in, and 73 of the windows this family used to take are windows where the
+        // quiet week now outranks it. Those windows did not change; what changed is that
+        // one of the two candidates on them stopped being unrealizable.
+        Hot(Purpose.AREAS_BANNER, "weekStarting", 731),
         Hot(Purpose.AREAS_BANNER, "weekBuilding", 284),
+        // **New, and it is the finding rather than a row.** This family fired zero times in
+        // every measurement before the register pass, because all eight of its lines are
+        // `[N]` and nothing could ask for that register: it qualified, the realizer answered
+        // `NotProducible`, and the selector moved on. 7.4 now marks it unflattering and it
+        // takes 240 banner windows a year, 167 of which nothing spoke on at all.
+        //
+        // **240 firings makes it hot, and it holds eight lines against 11.1's sixty.** That
+        // is the largest bench debt in the corpus and it is recorded in
+        // `CorpusGateBaseline.REGISTERS` rather than paid, because authoring is not this
+        // pass's to do. `CORPUS_3_MOMENTUM.md` says the bench was left at eight on purpose
+        // "because it has never once spoken", which was true and is not any more.
+        Hot(Purpose.AREAS_BANNER, "weekQuiet", 240),
         Hot(Purpose.AREAS_BANNER, "weekStrong", 65),
     )
 

@@ -217,15 +217,55 @@ internal object ReportFixture {
         namedAreaIds = setOf(ValidateFixture.WORK),
     )
 
-    /** The headline, `Work carried the week.` */
-    fun headline(family: FamilyKey = "singleFocus", rendered: String = "Work carried the week."): Candidate =
-        observation(
+    /**
+     * A lead that states nothing countable. `steadyPace`, and it is read in `Your week`.
+     *
+     * The composer's cap on runs of numeric leads can only be held by having something else
+     * to read, and every other observation here carries a number. `focus` states none either
+     * and is read under its own sidehead, so it can never be the alternative inside the
+     * section the run is in.
+     */
+    fun noNumber(
+        variantKey: VariantKey = "ob.stead.l02",
+        lengthBand: LengthBand = LengthBand.SHORT,
+    ): Candidate = observation(
+        family = "steadyPace",
+        ruleKey = "report.observation.steadyPace",
+        variantKey = variantKey,
+        lengthBand = lengthBand,
+        rendered = "The week held its shape from one day to the next.",
+    )
+
+    /**
+     * The headline, `Work carried the week.`
+     *
+     * [numeric] gives it a number, because the headline is read immediately above the first
+     * observation and therefore seeds both of 9.2's rhythm rules. The number is the week's
+     * twelve events, stated in the sentence and addressed by a real [FactRef], so a headline
+     * built this way is re-read by report check 4 rather than tolerated by it.
+     */
+    fun headline(
+        family: FamilyKey = "singleFocus",
+        rendered: String = PLAIN_HEADLINE,
+        lengthBand: LengthBand = LengthBand.MEDIUM,
+        numeric: Boolean = false,
+    ): Candidate {
+        val text = if (numeric && rendered == PLAIN_HEADLINE) NUMERIC_HEADLINE else rendered
+        return observation(
             family = family,
             ruleKey = "report.headline.$family",
             variantKey = "hd.$family.01",
-            rendered = rendered,
-            namedAreaIds = if ("Work" in rendered) setOf(ValidateFixture.WORK) else emptySet(),
+            lengthBand = lengthBand,
+            rendered = text,
+            slots = if (numeric) mapOf("n" to Slot.Count("n", 12, "event", "events")) else emptyMap(),
+            sourceFacts = if (numeric) mapOf("n" to TOTAL_EVENTS) else emptyMap(),
+            namedAreaIds = if ("Work" in text) setOf(ValidateFixture.WORK) else emptySet(),
         ).copy(purpose = Purpose.REPORT_HEADLINE)
+    }
+
+    private const val PLAIN_HEADLINE = "Work carried the week."
+
+    private const val NUMERIC_HEADLINE = "Work carried 12 of the week's events."
 
     /** A pattern line. Real key, so the matrix can look it up. */
     fun pattern(family: FamilyKey = "consistentRhythm"): Candidate = observation(

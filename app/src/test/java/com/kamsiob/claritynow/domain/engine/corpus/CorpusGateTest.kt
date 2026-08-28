@@ -110,6 +110,48 @@ class CorpusGateTest {
         )
     }
 
+    /**
+     * The gate that finds a number describing a quantity nobody asked for.
+     *
+     * The plant is the shape the gate was written from. `{areaCount}` is bound to the areas
+     * that moved, so a line writing `days` after it would render a count of areas in front
+     * of the word days, on a screen, with a `FactRef` behind it that check 3 re-reads
+     * happily. Neither the binding gate nor the render gate can see that: the marker has a
+     * binding and the line fills and passes layer 5.
+     */
+    @Test
+    fun `a number standing in front of the wrong unit is caught`() {
+        val planted = CorpusGates.unitNouns(
+            catalogWith(
+                pulse = CorpusFixture.pulseText.replace(
+                    "spread.s1.01  [P]  Yesterday touched {areaCount} areas.",
+                    "spread.s1.01  [P]  Yesterday touched {areaCount} days.",
+                ),
+            ),
+        )
+        assertTrue(
+            "a count of areas rendered in front of the word days was not found: ${planted.findings}",
+            planted.findings.any { it.subject == "spread.s1.01" && "areasWithEvents" in it.detail },
+        )
+    }
+
+    /**
+     * And the same gate is silent where English counts one thing with another thing's noun.
+     *
+     * `You sat down for focused time {sessions} times` counts sessions and writes `times`,
+     * which is how English counts occurrences of anything. A gate that read every noun after
+     * a marker as the unit would report forty three of these on the corpus as it stands, and
+     * an author would turn it off rather than argue with it.
+     */
+    @Test
+    fun `a generic countable after a marker is not a claim about the unit`() {
+        val outcome = CorpusGates.unitNouns(catalog)
+        assertTrue(
+            "the corpus counts sessions as `times` and swaps as `times`, and neither is a defect",
+            outcome.findings.isEmpty() && outcome.grandfathered.isEmpty(),
+        )
+    }
+
     @Test
     fun `a near duplicate of an approved line is caught`() {
         val planted = CorpusGates.nearDuplicates(
