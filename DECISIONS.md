@@ -71,6 +71,347 @@ The old entry stays where it is, wrong, dated, and useful.
 
 ---
 
+## August 28, 2026: the persona defect, and the fifth measurement
+
+The workflow the owner ordered on a finding from the rules pass: that seven of the nine
+Pulse families that never fired were dark because of **the simulator's persona set rather
+than the catalog**, and that every silence number taken so far had therefore been read
+through an instrument that could not represent a person finishing more than they wrote
+down.
+
+Two fixes landed on that finding. This entry records what each was, what a fifth run of
+the same eleven personas over the same simulated year says, which of the two fixes
+actually moved the numbers, and **the determination the owner gated phase 9 on.**
+
+**Not one corpus line was written, added or edited.** That is still phase 9.
+
+### Decided
+
+**Phase 9 is authoring to fix silence, not repeats.** Pulse silence is **63.9 percent** of
+opened days against a band of 8 to 25. That is not near band, and the owner's rule reads
+the same on a sound instrument as it did on a broken one.
+
+**No further engine pass is proposed**, per the standing instruction. The number is
+reported, the cause is named below, and the work moves on.
+
+### The defect the instrument had
+
+Every persona reached the log through `SimulationPersona.work`, which takes a capture
+count and a completion count as adjacent parameters, and **every call site in all eleven
+personas passed a completion count no greater than its capture count.** Nobody chose that.
+It is what two adjacent numeric parameters invite. The result was a set of eleven
+synthetic lives in which `additions >= completions` held on every single day and therefore
+on every single week, and in which per area daily completions could not exceed two.
+
+That one property made `throughput`, `netOutflow` and `intakeVsOutput` stage 3
+mathematically impossible, and starved `burst`, which needs three completions in one area
+in one day, and `queueDrain`, which needs three promotions. **A person who clears a
+backlog on a Sunday is completely ordinary, and no persona in section 12 could do it.**
+
+### The two fixes
+
+**1. `SimulationPersona.clearOut`, the act `work` could not express.** A sitting down that
+finishes and captures nothing, whose size comes from what had piled up rather than from a
+literal beside a capture count. It works through the queue plus whatever is active, up to
+a bound stated at every call site. Four personas have one, each shaped to that life:
+`sporadic` has an afternoon roughly every ninth day, `longDormantRevival` has the first
+week back on a list nobody kept, `queueHoarder` has a monthly household purge that never
+catches up with the intake, and `fastCompleter` has a Saturday errand run. **The one that
+must never have one is `acceptsEveryPlan`**, whose entire value is that it never completes,
+and it does not have one.
+
+No count anywhere is a literal, and no session was sized to a threshold. `burst` wants
+three in an area in a day; the sessions are sized to what their person gets through in one
+sitting, and what that produces is the measurement rather than an arrangement.
+
+**2. `AreaFacts.queueDrainedFrom`, the fact 3.1 owed the three drain families.** The height
+an area's queue fell from, in one uninterrupted fall to nothing that has held to the window
+end, read backwards from the window end so that any arrival ends the fall. Null when no
+such fall happened. It replaces `queueLengthAtWindowStart` in `pulse.queueDrain`,
+`report.observation.queueDrained` and `report.headline.clearing`, all of which describe a
+transition and all of which were reading a difference of two boundaries. A queue built on
+Tuesday and finished on Saturday read as no drain at all. `RuleBuilders.drainedByFinishing`
+now counts completions against the fall rather than against the boundary, because a queue
+built inside the window and emptied inside it holds nothing at the boundary and the old
+reading made that guard `completions >= 0` on exactly the shape the fact was declared to
+reach.
+
+### Which fix moved the numbers, measured rather than argued
+
+The two landed in one commit, so an entry that credited the drain fact with lighting
+`throughput` would have been wrong in a way nobody could later catch. **Three runs of the
+year were made instead of one**, and they separate the two completely.
+
+**Run A, the control: the current engine, drain fact included, against the pre-fix persona
+set.** It is **byte for byte identical to the fourth measurement**. Not one family, not one
+day, not one repeat, not one collision. 68.8 percent silence, 8 of 11 Pulse families, the
+same 1,185 / 971 / 11 split, and `queueDrain`, `queueDrained` and `clearing` all still
+dark.
+
+**Run B, the probe: the fixed persona set, with `queueDrainedFrom` computed the old way**,
+as the boundary queue when the queue is now empty. Everything else is current, so this
+isolates the fact itself rather than the rules that read it.
+
+**Run C is the fifth measurement**, both fixes as committed.
+
+| reading | A: fact only | B: personas only | C: both |
+|---|---|---|---|
+| Pulse silence | 68.8 percent | **63.9 percent** | 63.9 percent |
+| the silent day split | 1,185 / 971 / 11 | **1,099 / 903 / 11** | 1,099 / 903 / 11 |
+| Pulse families that fired | 8 of 11 | **11 of 11** | 11 of 11 |
+| every declared family | 65 of 78 | **71 of 78** | 71 of 78 |
+| `pulse.queueDrain` | 0 | **6** | 6 |
+| `report.observation.queueDrained` | 0 | 5 | **11** |
+| `report.headline.clearing` | 0 | 0 | **2** |
+| `report.headline.risingActivity` | 3 | 1 | **0** |
+| variant repeats | 7,376 | 7,415 | 7,418 |
+
+**Every silence number in this entry is the persona fix and none of it is the drain fact.**
+A persona set that never drives a queue to nothing gives the fact nothing to read, and the
+fact changed nothing at all on its own.
+
+**The drain fact's whole measured effect is two families it lights and three it displaces,
+all on the Report, and it moved no silence number even with the fixed personas present.**
+It doubled `queueDrained`, from 5 to 11, and it is solely responsible for
+`report.headline.clearing`, which stays dark at 0 under boundary anchoring and fires twice
+with the fact. It did not move `pulse.queueDrain` by one firing, because a Pulse window is
+one day long and the queue an afternoon clears was already sitting at that day's opening
+boundary. The two `clearing` headlines it bought displaced exactly two others, one
+`comeback` and the last surviving `risingActivity`. The six extra `queueDrained`
+observations added seven observation slots and gained `firstMilestone` one, 14 to 15.
+Beyond those five families, variant repeats moved from 7,415 to 7,418 and length band
+collisions from 714 to 719, and every other reading in the run is identical.
+
+**So the fact is justified on correctness and not on coverage, which is what its entry
+claimed.** Without it `report.headline.clearing` cannot see a week's clearing that begins
+and ends between two boundaries, and `drainedByFinishing` degenerates into
+`completions >= 0` on precisely the shape the fixed personas now produce: a queue built
+inside the window and emptied inside it holds nothing at either end.
+
+### The fifth reading, beside all four before it
+
+Eleven personas, a full simulated year each. 3,148 opens, 15,626 events, 451 reports, 419
+pattern slots, 11,907 engine invocations. The four earlier columns are the tables in the
+four entries below this one and none of them is changed.
+
+| gate, `CLARITY_LOGIC_ENGINE.md` 12 | target | phase 5 | facts | bindings | rules pass | personas and the drain fact |
+|---|---|---|---|---|---|---|
+| Pulse silence, every persona together | 8 to 25 percent of opened days | 76 percent | 73 percent | 68 percent | 68 percent | **63 percent, 63.9 exact** |
+| Pulse silence, per persona | the same band | 43 to 98 | 42 to 98 | 40 to 97 | 40 to 97 | **37 to 97, none in band** |
+| Pulse families that ever fired | 11 of 11 | 6 of 11 | 7 of 11 | 8 of 11 | 8 of 11 | **11 of 11** |
+| every family the corpus declares fires | 78 of 78 | not measured | 58 of 78 | 60 of 78 | 65 of 78 | **71 of 78** |
+| every stage of every hot family fires | all | 29 hot, one gap | 31 hot, two gaps | 33 hot, two gaps | 35 hot, two gaps | **36 hot, one gap** |
+| no variant repeats inside ninety days | none | 7,384 | 7,430 | 7,445 | 7,376 | **7,418, tightest after 1 day** |
+| no family over a fifth of a year's Pulses | 20 percent | 27 to 60 | 25 to 57 | 25 to 51 | 25 to 51 | **25 to 48** |
+| no two consecutive report leads share a band | none | 715 | 725 | 716 | 712 | **719** |
+| no three consecutive parallel numeric clauses | none | 27 runs | 37 runs | 36 runs | 41 runs | **41 runs** |
+| layer 5 vetoes across the run | none | not reported | not reported | 107, every one check 1 | 0, and 92 absences on purpose | **0, and 85 absences on purpose** |
+| pattern slots, and their concentration | no family holds a section | not reported | not reported | 416 of 419, 8 families, top three 402 | 401 of 419, 12 families, top three 296 | **399 of 419, 13 families, top three 295** |
+| layer 6 silence | at least 15 percent of reports | not measurable | not measurable | not measurable | not measurable | **not measurable, layer 6 is phase 9b** |
+
+The silent day split, which is the reading the determination turns on:
+
+| silent Pulse days, out of 3,148 opens | bindings | rules pass | now |
+|---|---|---|---|
+| a rule qualified and every candidate was filtered | 1,185 | 1,185 | **1,099** |
+| nothing qualified at all | 971 | 971 | **903** |
+| too little data to describe anything | 11 | 11 | **11** |
+| total | 2,167 | 2,167 | **2,013** |
+| the floor authoring alone could reach | 31.2 percent | 31.2 percent | **29.0 percent** |
+| personas in band at that floor | 5 of 11 | 5 of 11 | **5 of 11** |
+
+**Pulse silence per persona:** `queueHoarder` 37, `brandNew` 42, `sporadic` 51,
+`heavySingleArea` 61, `highFocus` 61, `fastCompleter` 61, `lowFocus` 63,
+`acceptsEveryPlan` 63, `abandoning` 75, `longDormantRevival` 75, `balancedAcrossFour` 97.
+Not one is in the band. **Exactly four moved, and they are exactly the four that gained a
+clearing session:** `fastCompleter` 92 to 61, `sporadic` 62 to 51, `longDormantRevival` 78
+to 75, `queueHoarder` 40 to 37. The other seven are unchanged to the day, which is the
+cleanest confirmation available that the movement is the fix and not drift.
+
+**The four enforced checks still pass**, and one of them is worth naming: the
+plan-accepting, plan-ignoring persona read 1,386 invocations and produced zero references
+to a plan, a commitment, an intention or a failure to act.
+
+### The nine dark families, measured against what the rules pass predicted
+
+The rules pass diagnosed every one of them at the rule that carries it and moved no
+threshold. It named `throughput`, `burst`, `netOutflow` and `intakeVsOutput` stage 3 as the
+persona set, and `queueDrain`, `queueDrained` and `clearing` as a single anchoring error.
+**Every family it named lit, the stage it named closed, and one it did not name lit
+alongside them.** Nothing it diagnosed as needing something else moved.
+
+| family | fourth measurement | now | what lit it |
+|---|---|---|---|
+| `pulse.throughput` | 0 | **35** | the persona fix |
+| `pulse.burst` | 0 | **12** | the persona fix |
+| `pulse.queueDrain` | 0 | **6** | the persona fix alone, measured |
+| `report.observation.queueDrained` | 0 | **11** | the persona fix for 5, the drain fact for 6 |
+| `report.headline.clearing` | 0 | **2** | the drain fact, measured, and dark without it |
+| `report.headline.netOutflow` | 0 | **1** | the persona fix |
+| `report.pattern.improvingThroughput` | 0 | **1** | the persona fix, and not predicted |
+| `report.headline.fragmented` | 0 | **0** | needs a persona that both hoards and switches |
+| `report.headline.queuePressure` | 0 | **0** | still never qualified |
+
+`intakeVsOutput` reached stage 3 for the first time, which closes one of the two short hot
+family stages. **`accumulation` stage 2 is the last one and it did not close.**
+`weekendShift` and `shiftingFocus` are still dark, and `weekendShift` still has the reason
+the rules pass gave it: no persona in section 12 knows what day of the week it is, so a
+weekend carries the same load as a Tuesday.
+
+**One family went dark that had been firing: `report.headline.risingActivity`, 3 to 1 to
+0**, and the three runs say exactly how. Its criterion is a strictly rising three week run
+of total events, which is a fragile shape, and four of the eleven lives now have an
+irregular clearing session in them that makes a monotone three week run rarer: that took it
+from 3 to 1. The last one was not lost but outranked, by a `clearing` headline on the same
+week. It is recorded rather than chased.
+
+### What this says about every earlier reading
+
+**Every reading of family coverage taken before this run was a reading of the instrument.**
+Six of eleven, then seven, then eight: that sequence was never measuring corpus depth or
+rule thresholds. It was measuring a persona set in which nobody ever finished a backlog.
+The number is 11 of 11 the first time a life in the set can, and no rule and no corpus line
+changed to get there.
+
+**Every reading of Pulse silence taken before this run was overstated by about five
+points, and no more than that.** 68.8 becomes 63.9. That is the honest size of the defect
+on this particular number, and it is worth stating plainly because the temptation on
+finding a broken instrument is to assume the reading was broken by as much as the
+instrument was. It was not. Silence was 68 percent for reasons that had almost nothing to
+do with completions, and it is 63 percent now for the same reasons.
+
+**The floor moved by two points, from 31.2 to 29.0 percent.** The floor is the days where
+nothing qualified plus the days with too little data, and it is what authoring alone could
+ever reach. Five of eleven personas reach the band at that floor, the same five as before,
+and six do not.
+
+**So the conclusion the fourth measurement reached survives its own instrument being
+repaired.** That is the strongest thing that can be said about it. A finding that holds
+after the tool that produced it is fixed is a finding about the thing measured.
+
+### The determination
+
+> If silence lands near band, phase 9 is authoring to fix repeats. If it does not, phase 9
+> is authoring to fix silence. Those are different jobs. Say which one you are doing.
+
+**63.9 percent against a ceiling of 25 is not near band. Phase 9 is authoring to fix
+silence.**
+
+> If after the rules pass and the hot family growth silence is still outside the band, do
+> not keep grinding. Report the number, state the cause, and move on. An app that ships
+> with 30 percent silence is better than one that does not ship.
+
+The number is **63.9 percent**. The floor authoring can reach is **29.0 percent**. The
+cause is that 903 of the 2,013 silent days are days on which no rule qualified at all,
+which is a fact about the eleven lives and the catalog's trigger windows rather than about
+bench depth, and bench depth is the only thing phase 9 moves. **Bench depth is necessary
+and provably not sufficient, and no further engine pass is proposed.**
+
+*Considered and rejected:* another rules pass aimed at the 903. It loses on the owner's
+standing instruction, and it loses on its own terms as well: every remaining Pulse stage
+threshold is a corpus stage header parsed by `StageRangeTest`, so moving one makes the
+engine say a sentence about a day that did not happen. *Revisit if:* a real person's log
+produces a silence rate materially different from 63 percent, which is the only evidence
+that could reopen this, and it cannot exist before the app ships.
+
+### Two decisions inside this workflow
+
+**1. `clearOut` takes its size from the queue and not from a literal.** *Why:* the entire
+defect was literals. A completion count written beside a capture count invites the two to
+be written together, and eleven personas did exactly that without anybody deciding to. A
+session that reads what piled up cannot be quietly re-tuned into agreement with its own
+capture count. *Considered and rejected:* passing a completion count to `work` greater
+than its capture count at four call sites, which is a smaller change and loses because it
+leaves the shape that caused the defect in place and reintroduces the literal.
+*Revisit if:* a persona ever needs a session whose size is genuinely fixed rather than
+determined by the backlog, at which point it is a different method and not a parameter on
+this one.
+
+**2. The two fixes were separated by two extra runs rather than attributed by reasoning.**
+*Why:* they landed in one commit and both had a written prediction attached, so any
+attribution written from the diagnosis would have been unfalsifiable. Two extra runs cost
+two recompiles and about ten minutes, and one of them returned a byte identical dump, which
+is a stronger answer than any argument and reversed what the diagnosis would have credited
+the drain fact with. *Considered and rejected:* reasoning from the rules and the persona
+shapes, which is what the fourth measurement had to do and which would have credited the
+drain fact with `pulse.queueDrain`, a family it does not move by a single firing.
+*Revisit if:* two changes ever land together with no cheap way to build one without the
+other, in which case the honest entry says the attribution was not separated.
+
+### Two deferrals the owner authorized, carried forward
+
+**Warm and long tail families stay at their current depth for v1.** 11.1 grows hot
+families from four to eight lines per stage to sixty to a hundred; the warm and long tail
+tiers are not grown with them. *Why:* a family that fires five times a year cannot repeat
+itself inside ninety days no matter how thin its bench is, so lines added there buy variety
+nobody encounters, while the same effort on a hot family moves the one column authoring can
+move. The fifth reading does not change that: of the seven families that lit, five fire in
+single figures across a whole simulated year. *Revisit if:* a real person's firing counts
+turn out to differ from the simulated ones enough to make a warm family hot.
+
+**Variant repeats at roughly 7,400 are the baseline phase 9 moves, not a defect.** 7,418
+in this run, against 7,376, 7,445, 7,430 and 7,384 in the four before it. The number has
+sat in a band 70 wide across five measurements and two of the five moved it up. *Why:*
+7.6 excludes a variant for ninety days and the benches are the size phase 5 found them,
+four to eight lines per stage. A bench of `n` lines firing every `d` days holds out for
+`n * d` days and no longer, and the hot families fire most days. **The number is what
+phase 9 moves and its movement is how phase 9 is measured.** A session that finds it high
+before phase 9 has found the baseline rather than a regression. *Revisit if:* it rises
+after phase 9 rather than falling, which would mean the bench grew and the selector
+stopped spreading across it.
+
+### The two contradiction fixes from the rules pass, and how they read now
+
+Both were settled in the entry below this one and both are confirmed by this run rather
+than changed by it, so they are recorded here only as readings.
+
+**Check 1 was narrowed rather than the three silence families loosened.**
+`neglectedArea`, `areaGoneQuiet` and `areaRevival` have absence as their subject, so every
+candidate they produced named an area with no events in the window and layer 5 vetoed all
+107 of them. `ClarityRule.absenceSubject` and `AbsenceSubject` now hold the one exception,
+gated on a real lifetime, not being new, and a measured `daysSinceLastEvent`. **This run
+records 0 vetoes and 85 absences named on purpose**, against 92 in the fourth. The drop is
+the persona fix: an area that gets cleared out is an area that had events, and four lives
+have fewer silent areas than they did.
+
+**`insufficientData` left the engine.** Its rule required `weeksOfData < 3` and the
+composer only asks for a pattern at `weeksOfData >= 3`, so the two were complements and the
+family's four authored lines were unreachable. `ReportRules.RENDERED_DIRECTLY` records it,
+`ReportComposer` renders it through `ReportLanguage`, and layer 5 still validates the line.
+It is the reason `REPORT_PATTERN` reads 13 of 16 rather than 13 of 15: the family is
+counted and will never fire, and `SimulationChecks` says so on its own failure line.
+
+### The pattern cooldown, and what three weeks actually bought
+
+`Selector.PATTERN_COOLDOWN_DAYS` is 21, applied with `maxOf` against whatever the family
+declares and only to `Purpose.REPORT_PATTERN`. Measured across two runs now:
+
+| pattern section | before the cooldown | after it | now |
+|---|---|---|---|
+| slots filled, of 419 | 416 | 401 | **399** |
+| families that ever held one | 8 | 12 | **13** |
+| share taken by the top three | 402 of 416, 97 percent | 296 of 401, 74 percent | **295 of 399, 74 percent** |
+
+It did what was predicted and no more. Three weeks rotates two pairs at the head, which is
+why the top three fell to roughly three quarters and stopped there; reaching the four
+families still starved would take eight weeks, and that number is the owner's. It cost
+fill exactly as predicted, and the persona fix cost two slots more. *Revisit if:* the
+owner wants the remaining pattern families to hold a slot, at which point the number is
+eight weeks and the price is more empty slots.
+
+### What ran, and what did not
+
+**No Gradle task and no `adb` command was run in this workflow.** The readings were
+produced the way the second, third and fourth measurements produced theirs: by compiling
+`domain`, `data.event` and `devtools` with a driver out of tree against the committed
+corpus files and running the year. **Three runs of the full year were made**: the fifth
+measurement, the control on the pre-fix persona set, and the boundary anchored probe. All
+three compiled clean with warnings as errors, and neither the control nor the probe touched
+a file in the repository. **The unit suite has not been run on this work**, and the closing
+build settles whether `verifyClarity` is green.
+
+---
+
 ## August 27, 2026: the rules pass, and the fourth measurement
 
 The pass the owner ordered after reading the third measurement. The finding it was

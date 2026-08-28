@@ -562,10 +562,15 @@ private class RecordingValidator(private val delegate: ClarityValidator) : Candi
  *
  * [catalog] is the one the year was run against, carried because a reading of what **did
  * not** happen needs it. A firing count taken from the invocations alone can only list the
- * families that fired, which is how "six of eleven families ever fired" stayed a sentence
- * somebody remembered rather than a number something watched: the four that never fired
- * leave no trace in a year of output. The catalog is where they are, so it travels with the
- * run rather than being fetched again beside it and drifting.
+ * families that fired, which is how phase 5's "six of eleven Pulse families ever fired"
+ * stayed a sentence somebody remembered rather than a number something watched: the five
+ * that did not fire leave no trace in a year of output. The catalog is where they are, so
+ * it travels with the run rather than being fetched again beside it and drifting.
+ *
+ * All eleven fire today, and that is the point rather than a reason to drop this. The
+ * reading only became watchable once something held the denominator, and what it then
+ * caught was that the quiet ones were quiet because of the persona set rather than the
+ * catalog.
  */
 data class SimulationRun(
     val persona: SimulationPersona,
