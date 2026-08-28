@@ -22,6 +22,18 @@ import com.kamsiob.claritynow.domain.engine.realize.EngineMoment
  * cannot detect after the fact: two phones holding the same log say different things about
  * the same week, and nothing on either screen looks wrong.
  *
+ * **Step 1b is numbered rather than inserted**, for the reason `PulseGeneration` numbers
+ * its own 2b: the seven steps are cited by number from three documents and renumbering
+ * them would break those citations in silence. It holds the two family scope gates of
+ * `MASTER_BUILD_PROMPT.md` 14b, the week of withholding after a return and the capacity
+ * gate, both of which decide whether a family gets a turn rather than which turn it gets.
+ * Every step from 1b to 5 is a filter, so they commute and the placement changes no
+ * outcome; it is first among them because 14b.4's word is `unavailable`. **It runs inside
+ * the filter chain rather than over `qualified`**, so a purpose whose every qualifying
+ * family was withheld reports `ALL_QUALIFIED_RULES_FILTERED` and not `NO_RULE_QUALIFIED`.
+ * Those are different states, the simulator has to be able to tell them apart, and a week
+ * the engine chose not to describe is not a week it had nothing to say about.
+ *
  * The ranking is specificity descending, then priority descending, then key ascending, and
  * the last term is the load bearing one even though it decides almost nothing. Without it,
  * two rules of equal specificity and priority resolve by whatever order the catalog was
@@ -52,6 +64,9 @@ class Selector(private val catalog: ClarityCatalog) {
             )
         }
 
+        // 1b. Availability. A family withheld for the week after a return, or gated by a
+        // precedent, per MASTER_BUILD_PROMPT 14b.4 and 14b.9. See [FamilyAvailability] for
+        // both tables and for why neither gate is a criterion.
         // 2. Resolve callbacks. A rule with an unresolvable callback does not fire and never
         // degrades into a version without the quote, because the sentence was authored
         // around it.
@@ -60,6 +75,7 @@ class Selector(private val catalog: ClarityCatalog) {
         // 5. Cooldown. A (family, subject) pair that fired inside its cooldown, which is
         // the family's own everywhere but the pattern section. See [PATTERN_COOLDOWN_DAYS].
         val ranked = qualified
+            .filter { FamilyAvailability.unavailable(it, facts) == null }
             .mapNotNull { withCallback(it, facts, moment) }
             .filter { withinHorizon(it, facts, moment) }
             .filterNot { purpose == Purpose.PULSE && it.rule.family == facts.pulse.lastGeneratedFamily }

@@ -273,6 +273,31 @@ internal object Measures {
         },
         Measure("longestEverActiveDays", "history", MeasureKind.DAYS, MeasureScope.WINDOW,
             "the longest anything has ever stayed active") read@{ facts, _, _ -> days(facts.history.longestEverActiveDays) },
+        // The two estimate calibration measures of MASTER_BUILD_PROMPT 14b.8. Both are
+        // counts and neither is a percent, which is the section's own rule: a ratio of 2.4
+        // rendered as 240 percent is one literal hundred away from `You were off by 140
+        // percent`, and a multiple has no such neighbor. There is deliberately no measure
+        // for a quantity of minutes, estimated or actual, because no such quantity exists
+        // anywhere in the fact set and adding one here would put the delta back within
+        // reach of a template.
+        Measure("estimatedCompletions", "history", MeasureKind.COUNT, MeasureScope.WINDOW,
+            "completed things in the calibration window that carried an estimate", "thing", "things") read@{ facts, _, _ ->
+            // Reported truthfully whatever it is, including under the floor. 14b.8 requires
+            // the count to travel as a FactRef so the validator re-reads the number that
+            // gated the sentence; a measure that refused under five would make that ref
+            // unreadable and check 3 would veto for untraceability, which is a true veto
+            // with the wrong reason on it. The floor is `RuleBuilders.estimateFloor`.
+            count(facts.history.estimatedCompletions)
+        },
+        Measure("estimateMultiple", "history", MeasureKind.COUNT, MeasureScope.WINDOW,
+            "how many times its own estimate an estimated thing typically stays active", "time", "times") read@{ facts, _, _ ->
+            // Null under the floor, because the ratio itself is. Null again when the
+            // rounded multiple is zero, which is somebody who finishes in under half what
+            // they predicted: `count` refuses it and the line drops off the bench, which is
+            // right, because `about zero times your estimate` is not a sentence and the
+            // tendency slot is what that person's family should be reading.
+            count(facts.history.activeToEstimateRatio?.roundToInt())
+        },
         Measure("activityBandWidth", "history", MeasureKind.COUNT, MeasureScope.WINDOW,
             "the spread between the busiest and quietest of the last four weeks", "event", "events") read@{ facts, _, _ ->
             val recent = facts.history.weekTotalEventsSeries.takeLast(RHYTHM_WEEKS)
@@ -536,6 +561,17 @@ internal object Measures {
 
     /** Every measure that produces a number the validator must be able to re-read. */
     val NUMERIC: List<Measure> = ALL.filter { it.kind != MeasureKind.TEXT && it.kind != MeasureKind.DATE }
+
+    /**
+     * Every measure reading an estimate calibration fact begins with this.
+     *
+     * `ClarityValidator` check 11 asks whether a candidate's numbers came from an estimate,
+     * and it asks by prefix rather than against a list of ids. A list would be a second
+     * copy of this table, and the failure of a second copy here is a rendered percentage
+     * beside somebody's estimate that nothing refused. The naming convention is the same
+     * one `SHARE_READING_PREFIX` uses on criterion ids, one layer down.
+     */
+    const val ESTIMATE_MEASURE_PREFIX = "estimate"
 }
 
 /**

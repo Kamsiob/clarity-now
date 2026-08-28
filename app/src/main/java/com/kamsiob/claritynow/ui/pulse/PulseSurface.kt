@@ -203,7 +203,10 @@ private fun PulseQuestion(
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = ClaritySpacing.screenPadding, vertical = ROOM_PADDING),
+                .padding(
+                    horizontal = ClaritySpacing.screenPadding,
+                    vertical = ClaritySpacing.scaled(ROOM_PADDING,
+                )),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -215,7 +218,7 @@ private fun PulseQuestion(
             )
 
             pulse.entry.question?.let { question ->
-                Spacer(Modifier.height(18.dp))
+                Spacer(Modifier.height(ClaritySpacing.scaled(18.dp)))
                 Text(
                     text = question,
                     style = type.body,
@@ -226,10 +229,10 @@ private fun PulseQuestion(
             }
 
             if (pulse.responses.isNotEmpty()) {
-                Spacer(Modifier.height(36.dp))
+                Spacer(Modifier.height(ClaritySpacing.scaled(36.dp)))
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(10.dp)),
                 ) {
                     pulse.responses.forEach { option ->
                         PulseResponsePill(
@@ -244,7 +247,7 @@ private fun PulseQuestion(
             }
 
             pulse.acknowledgment?.let { line ->
-                Spacer(Modifier.height(26.dp))
+                Spacer(Modifier.height(ClaritySpacing.scaled(26.dp)))
                 Text(
                     text = line,
                     style = type.body,
@@ -306,7 +309,10 @@ private fun PulseAmbient(
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = ClaritySpacing.screenPadding, vertical = ROOM_PADDING),
+                .padding(
+                    horizontal = ClaritySpacing.screenPadding,
+                    vertical = ClaritySpacing.scaled(ROOM_PADDING,
+                )),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             PulseRhythmRow(marks = state.rhythm, modifier = Modifier.widthIn(max = MEASURE))
@@ -322,7 +328,7 @@ private fun PulseAmbient(
                     modifier = Modifier.widthIn(max = MEASURE),
                 )
                 entry.question?.let { question ->
-                    Spacer(Modifier.height(6.dp))
+                    Spacer(Modifier.height(ClaritySpacing.scaled(6.dp)))
                     Text(
                         text = question,
                         style = type.body,
@@ -332,14 +338,18 @@ private fun PulseAmbient(
                     )
                 }
                 entry.responseLabel?.let { label ->
-                    Spacer(Modifier.height(20.dp))
+                    Spacer(Modifier.height(ClaritySpacing.scaled(20.dp)))
                     Text(
                         text = stringResource(R.string.pulse_answered_label),
                         style = type.caption,
-                        color = contemplative.textFaint,
+                        // design-v3.md 13's 55 percent floor. The eyebrow is a rank
+                        // under the question by being `caption` against `body`, which
+                        // is 5.3's scale doing the work; 32 percent measured 2.637 to
+                        // one on this ground.
+                        color = contemplative.textDim,
                         textAlign = TextAlign.Center,
                     )
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(ClaritySpacing.scaled(4.dp)))
                     Text(
                         // Verbatim, off the event. `PULSE_ANSWERED` stores the label the
                         // pill carried, so this quotes what the person actually saw.
@@ -358,7 +368,7 @@ private fun PulseAmbient(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.widthIn(max = MEASURE),
                 )
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(ClaritySpacing.scaled(8.dp)))
                 Text(
                     text = stringResource(R.string.pulse_idle_body),
                     style = type.body,

@@ -14,9 +14,11 @@ import com.kamsiob.claritynow.MainActivity
  * deep links correctly", and it is not visible from either side alone.
  *
  * `MainActivity` is `singleTask`, so an intent from a notification arrives at a live
- * process through `onNewIntent` and at a dead one through `onCreate`. Both have to
- * be handled by whoever owns that Activity, and [opensFocusSession] answers both the
- * same way.
+ * process through `onNewIntent` and at a dead one through `onCreate`. Both are handled,
+ * and phase 12's routing pass moved the branch itself into `ui/nav/ExternalRequest.kt`,
+ * which reads the action string rather than calling [opensFocusSession]. The predicate
+ * stays because it is the readable statement of the contract and because a test asserts
+ * every `ACTION_` constant in this file is routed somewhere. It is not the caller.
  */
 object FocusIntents {
 

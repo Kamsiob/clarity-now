@@ -32,6 +32,19 @@ import kotlin.math.abs
  * variants adapted on their own: eight of the 96 changed, three in light and five in
  * dark. What did not adapt was the assumption underneath them, and it was wrong. See
  * the calm ground note in `AreaPalette.kt`.
+ *
+ * ## What this file still owns, since the audit arrived
+ *
+ * `ContrastAuditTest` now runs the total enumeration: every token by reflection, every
+ * ground the design permits, every one of the 48 colors at every wash depth, calm on and
+ * off, in four worlds. It subsumes the first test below and holds a wider version of it.
+ *
+ * What is kept here is the part that is about **calm mode specifically** and that a
+ * general audit cannot state: the reading of design-v3.md 3.4 that was rejected and what
+ * it costs, the fact that the label is one color with the switch either way, and the
+ * bound on how far the transform is allowed to move a ratio it does not own. Those are
+ * findings rather than floors, and a finding has to be written down where the argument
+ * for it is.
  */
 class CalmModeContrastTest {
 
@@ -291,17 +304,23 @@ class CalmModeContrastTest {
     }
 
     /**
-     * The Trail's event circle, design-v3.md 11: the area accent at 12 percent behind an
-     * `inkSecondary` glyph. Calm mode desaturates the circle, so the glyph inside it is
-     * measured with the transform applied.
+     * A mark drawn on a tinted ground, with the tint desaturated.
      *
-     * A glyph is a graphic and takes the 3 to 1 floor rather than 4.5. It measures 4.48
-     * in light and 5.99 in dark, and calm mode moves it by 0.01. The light figure rose
-     * from 4.12 in phase 3c: the circle sits on the canvas, which moved down, and the
-     * glyph is `inkSecondary`, which went up.
+     * **This used to be the Trail's event circle and that circle no longer exists.**
+     * design-v3.md 11 asked for "a 23dp circle tinted with the event color", phase 3
+     * resolved the undefined phrase to the area accent at 12 percent, and phase 12b
+     * removed the circle entirely: see the note on `TrailEventRow` in `TrailScreen.kt`,
+     * which records that a container able to hold no information is a container. Nothing
+     * in `ui/` now puts an ink mark on an accent tint over the canvas.
+     *
+     * The measurement is kept because the shape it measures is still permitted and still
+     * arriving. design-v3.md 3.4 allows an accent as a wash from 3 to 16 percent, 12.1
+     * puts a widget's tint at 3 to 5 percent light and 5 to 7 dark, and a mark on one of
+     * those is the next thing somebody draws. It measures 4.48 in light and 5.99 in dark
+     * against the 3 to 1 graphic floor, and calm mode moves it by 0.01.
      */
     @Test
-    fun `the trail event glyph clears the graphic floor with the circle desaturated`() {
+    fun `an ink mark on a desaturated accent tint clears the graphic floor`() {
         val failures = worlds.flatMap { world ->
             palette.flatMap { hex ->
                 val accent = parseAreaColor(hex)

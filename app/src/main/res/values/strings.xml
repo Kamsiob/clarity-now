@@ -692,6 +692,32 @@
     <string name="settings_theme_dark">Dark</string>
     <string name="settings_theme_system">System</string>
     <string name="settings_appearance_note">Focus, Pulse and Report are always dark by design.</string>
+
+    <!--
+        Text size, design-v3.md 13 and Addendum 01 8f.
+
+        Fixed interface labels. A size control has no data behind it and says
+        nothing about the person, so these belong here rather than in a corpus,
+        which is the line MASTER_BUILD_PROMPT 14b.11 and design-v3.md 13.1 draw.
+
+        The five names are the platform's own vocabulary for its own font size
+        steps, because the app setting multiplies those steps rather than
+        replacing them and two words for one quantity would have been worse than
+        one repeated word.
+
+        `settings_text_size_at_ceiling` appears only when the phone's own setting
+        has used up the 200 percent headroom, so a larger choice here would not
+        move anything. It states what is deciding and nothing else: it is not an
+        instruction, and it does not tell anybody what they should have set.
+    -->
+    <string name="settings_text_size">Text size</string>
+    <string name="settings_text_size_small">Small</string>
+    <string name="settings_text_size_default">Default</string>
+    <string name="settings_text_size_large">Large</string>
+    <string name="settings_text_size_larger">Larger</string>
+    <string name="settings_text_size_largest">Largest</string>
+    <string name="settings_text_size_note">This builds on your phone\'s own text size rather than replacing it, and the spacing grows with the text.</string>
+    <string name="settings_text_size_at_ceiling">Your phone\'s own text size setting already brings this app to its largest.</string>
     <!-- `settings_calm_mode` and `settings_calm_mode_caption` were written in
          phase 3b beside the preference itself and are used from here unchanged. -->
 

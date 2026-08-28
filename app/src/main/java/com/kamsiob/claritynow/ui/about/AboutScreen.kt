@@ -22,6 +22,7 @@ import com.kamsiob.claritynow.ui.components.ClarityIcon
 import com.kamsiob.claritynow.ui.components.ClarityIcons
 import com.kamsiob.claritynow.ui.components.Sidehead
 import com.kamsiob.claritynow.ui.settings.PushedScreen
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityShapes
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
@@ -82,34 +83,38 @@ internal fun AboutScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 modifier = Modifier.size(MARK_SIZE),
             )
         }
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(16.dp)))
         Text(
             text = stringResource(R.string.about_name),
             style = type.displayTitle,
             color = colors.inkPrimary,
         )
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(4.dp)))
         Text(
             text = stringResource(R.string.about_version, BuildConfig.VERSION_NAME),
             style = type.caption,
-            color = colors.inkTertiary,
+            // design-v3.md 3.1 and 13. The `caption` role under a `displayTitle` is
+            // the rank; the color is not asked to carry it as well.
+            color = colors.inkSecondary,
         )
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(20.dp)))
         Text(
             text = stringResource(R.string.about_paragraph),
             style = type.bodySerif,
             color = colors.inkSecondary,
         )
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
         Text(
             text = stringResource(R.string.about_disclaimer),
             style = type.caption,
-            color = colors.inkTertiary,
+            // The disclaimer phase 13 landed here. A disclaimer at 2.337 to one is a
+            // disclaimer that has not been made. design-v3.md 3.1 and 13.
+            color = colors.inkSecondary,
         )
 
-        Spacer(Modifier.height(30.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(30.dp)))
         Sidehead(text = stringResource(R.string.about_elsewhere), modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(4.dp)))
         ElsewhereRow(
             icon = ClarityIcons.openExternal,
             label = stringResource(R.string.about_link_youtube),
@@ -141,11 +146,11 @@ internal fun AboutScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             onClick = { openExternalLink(context, ClarityLinks.FEEDBACK) },
         )
 
-        Spacer(Modifier.height(30.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(30.dp)))
         SupportBlock()
 
-        Spacer(Modifier.height(26.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Spacer(Modifier.height(ClaritySpacing.scaled(26.dp)))
+        Column(verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(6.dp))) {
             listOf(
                 R.string.about_license_app,
                 R.string.about_license_fonts,
@@ -154,7 +159,10 @@ internal fun AboutScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 Text(
                     text = stringResource(line),
                     style = type.caption,
-                    color = colors.inkTertiary,
+                    // The three license lines. What makes them quiet is 30dp of space
+                    // and the smallest role in 5.3, 6.1's first separation device.
+                    // design-v3.md 3.1 and 13.
+                    color = colors.inkSecondary,
                 )
             }
         }

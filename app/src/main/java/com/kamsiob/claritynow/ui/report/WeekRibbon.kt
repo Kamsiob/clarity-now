@@ -175,9 +175,17 @@ internal fun WeekRibbon(
                     if (scale >= 1f) {
                         Spacer(Modifier.height(INITIAL_GAP))
                         Text(
+                            // `textDim`, where design-v3.md 11.1 item 4 said
+                            // `textFaint`, and that section is corrected rather than
+                            // left standing beside 13's floor. The initials are what
+                            // say which mark is which day, and at 8sp they are already
+                            // the smallest thing in the app: the size is the rank, and
+                            // asking the color to say it as well took them to 2.637 to
+                            // one. 55 percent measures 5.698 on the same ground. The
+                            // caption below is 12sp, so the two are still a step apart.
                             text = initials.getOrElse(day.date.dayOfWeek.value - 1) { "" },
                             style = type.caption.copy(fontSize = INITIAL_SIZE),
-                            color = contemplative.textFaint,
+                            color = contemplative.textDim,
                             textAlign = TextAlign.Center,
                         )
                     }

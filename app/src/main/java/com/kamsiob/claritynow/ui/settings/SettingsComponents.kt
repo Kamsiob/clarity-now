@@ -33,12 +33,14 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kamsiob.claritynow.ui.components.ClarityIcon
 import com.kamsiob.claritynow.ui.components.ClarityIcons
 import com.kamsiob.claritynow.ui.components.Sidehead
 import com.kamsiob.claritynow.ui.components.clarityClickable
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityHaptics
 import com.kamsiob.claritynow.ui.theme.LocalClarityShapes
@@ -60,6 +62,17 @@ import com.kamsiob.claritynow.ui.theme.opticallyCentered
  * is not a card is that a card would be a second one.
  */
 private val ROW_MIN_HEIGHT = 56.dp
+private val ROW_PADDING_VERTICAL = 10.dp
+private val TITLE_CAPTION_GAP = 2.dp
+
+/**
+ * The badge, its glyph and the gap before the title, all fixed at every text size.
+ *
+ * The badge holds an icon rather than a string, so nothing inside it grows, and the gap
+ * before the title is horizontal, which is the axis a phone runs out of first. A badge
+ * that grew with the type would take the room a settings title needs at exactly the size
+ * it needs it most. design-v3.md 10.11 and 13.
+ */
 private val BADGE_SIZE = 26.dp
 private val BADGE_ICON_SIZE = 15.dp
 private val BADGE_GAP = 14.dp
@@ -112,7 +125,10 @@ internal fun SettingsGroup(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        Sidehead(text = title, modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp))
+        Sidehead(
+            text = title,
+            modifier = Modifier.fillMaxWidth().padding(bottom = ClaritySpacing.scaled(6.dp)),
+        )
         content()
     }
 }
@@ -152,15 +168,24 @@ internal fun SettingsRow(
     ) {
         val colors = LocalClarityColors.current
         val type = LocalClarityTypography.current
+        // design-v3.md 10.11 said `caption inkTertiary` here and 3.1 says
+        // `inkTertiary` carries no text anywhere in this app. 10.11 is corrected
+        // rather than left standing, the same way 10.3 and 10.19 were: this readout
+        // is the current value of the setting, which is the one thing on the row a
+        // person came to check, and at 2.337 to one on the canvas it was the least
+        // readable thing on it. The `caption` role against the title's 15sp semibold
+        // is what keeps it trailing and quiet.
         if (value != null) {
-            Text(text = value, style = type.caption, color = colors.inkTertiary)
+            Text(text = value, style = type.caption, color = colors.inkSecondary)
         }
         if (chevron) {
             Spacer(Modifier.width(6.dp))
             ClarityIcon(
                 icon = ClarityIcons.chevron,
                 contentDescription = null,
-                tint = colors.inkTertiary,
+                // The chevron is what says the row goes somewhere, so it is a graphic
+                // that carries meaning and takes design-v3.md 13's 3.0 floor.
+                tint = colors.inkSecondary,
                 modifier = Modifier.size(18.dp),
             )
         }
@@ -247,8 +272,8 @@ private fun SettingsRowFrame(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .defaultMinSize(minHeight = ROW_MIN_HEIGHT)
-                .padding(vertical = 10.dp),
+                .defaultMinSize(minHeight = ClaritySpacing.scaled(ROW_MIN_HEIGHT))
+                .padding(vertical = ClaritySpacing.scaled(ROW_PADDING_VERTICAL)),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
@@ -275,8 +300,11 @@ private fun SettingsRowFrame(
                     color = colors.inkPrimary,
                 )
                 if (caption != null) {
-                    Spacer(Modifier.height(2.dp))
-                    Text(text = caption, style = type.caption, color = colors.inkTertiary)
+                    Spacer(Modifier.height(ClaritySpacing.scaled(TITLE_CAPTION_GAP)))
+                    // The caption explains what the setting does, and 10.11's note
+                    // naming `inkTertiary` for it is corrected in that section. The
+                    // rank is the `caption` role under a 15sp semibold title.
+                    Text(text = caption, style = type.caption, color = colors.inkSecondary)
                 }
             }
             Spacer(Modifier.width(12.dp))
@@ -292,6 +320,74 @@ private fun SettingsRowFrame(
         }
     }
 }
+
+/**
+ * One row of a choice list: a label, and a check when it is the current answer.
+ *
+ * **The app's one option list, in one place.** It was private to `SettingsSheets.kt`
+ * until the text size control needed the same thing on the screen rather than in a
+ * sheet, and a second copy of it would have been a second selection language on the one
+ * screen where both would be visible at once. [horizontalInset] is passed rather than
+ * defaulted because the two callers genuinely differ: a sheet holds its own 20dp inset
+ * and this screen already sits on `screenPadding`, so a default would be wrong for one
+ * of them and silently wrong for whichever came third.
+ *
+ * The inset is inside the row rather than on the column around it, so the target is the
+ * full width of the sheet or the screen and not the width of the text.
+ *
+ * Selection is never carried by color alone, per design-v3.md 13: the check is a shape,
+ * the label moves from `inkSecondary` to `inkPrimary` with it, and `selected` is set in
+ * semantics so a screen reader is told the same thing a third way.
+ */
+@Composable
+internal fun SettingsChoiceRow(
+    label: String,
+    selected: Boolean,
+    horizontalInset: Dp,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalClarityColors.current
+    val type = LocalClarityTypography.current
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = ClaritySpacing.scaled(CHOICE_ROW_MIN_HEIGHT))
+            .clarityClickable(
+                haptic = ClarityHapticEvent.SELECT,
+                role = Role.RadioButton,
+                onClickLabel = label,
+                onClick = onClick,
+            )
+            .semantics { this.selected = selected }
+            .padding(
+                horizontal = horizontalInset,
+                vertical = ClaritySpacing.scaled(CHOICE_ROW_PADDING),
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = type.body,
+            color = if (selected) colors.inkPrimary else colors.inkSecondary,
+            modifier = Modifier.weight(1f),
+        )
+        if (selected) {
+            ClarityIcon(
+                icon = ClarityIcons.check,
+                contentDescription = null,
+                tint = colors.actionBlue,
+                modifier = Modifier.size(CHOICE_CHECK_SIZE),
+            )
+        }
+    }
+}
+
+private val CHOICE_ROW_MIN_HEIGHT = 52.dp
+private val CHOICE_ROW_PADDING = 14.dp
+
+/** A glyph, so it holds its size while the label beside it grows. design-v3.md 7. */
+private val CHOICE_CHECK_SIZE = 18.dp
 
 /**
  * The two option choice under After completing, MASTER_BUILD_PROMPT 14.1.
@@ -359,7 +455,7 @@ private fun SettingsSegment(
     )
     Box(
         modifier = modifier
-            .defaultMinSize(minHeight = 42.dp)
+            .defaultMinSize(minHeight = ClaritySpacing.scaled(SEGMENT_MIN_HEIGHT))
             .clip(shapes.settingsBadge)
             .background(background)
             .clarityClickable(
@@ -382,3 +478,5 @@ private fun SettingsSegment(
         )
     }
 }
+
+private val SEGMENT_MIN_HEIGHT = 42.dp

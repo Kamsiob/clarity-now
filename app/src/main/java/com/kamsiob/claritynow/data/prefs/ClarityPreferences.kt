@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.kamsiob.claritynow.ui.theme.ClarityTextSize
 import com.kamsiob.claritynow.ui.theme.ClarityThemeSetting
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -89,6 +90,7 @@ class ClarityPreferences(private val context: Context) {
     private object Keys {
         val theme = stringPreferencesKey("theme")
         val calmMode = booleanPreferencesKey("calmMode")
+        val textSize = stringPreferencesKey("textSize")
         val focusDurationMinutes = intPreferencesKey("focusDurationMinutes")
         val focusHighlightEnabled = booleanPreferencesKey("focusHighlightEnabled")
         val focusSessionId = stringPreferencesKey("focusSessionId")
@@ -140,6 +142,36 @@ class ClarityPreferences(private val context: Context) {
      */
     val calmMode: Flow<Boolean?> = context.store.data.map { it[Keys.calmMode] }
 
+    /**
+     * The in app text size, design-v3.md 13 and Addendum 01 8f.
+     *
+     * **It multiplies the OS font scale rather than replacing it**, and the combined
+     * result is held at or below 200 percent. `ui.theme.ClarityTextSize` carries the
+     * reasoning for both halves and design-v3.md 13 records the decision.
+     *
+     * **Not null the way `calmMode` is null, and the difference is the point.** Calm
+     * mode's absent state means "follow the system", because its specified default is a
+     * system setting rather than a value. This setting already follows the system, at
+     * every step including [ClarityTextSize.DEFAULT], because it is a multiplier on what
+     * the phone asked for. So absence has nothing left to mean and `DEFAULT` is a real
+     * default rather than a placeholder: it says "whatever my phone says", which is
+     * exactly what a person who has never opened this row wants.
+     *
+     * **A device preference and not engine state**, by the test `CLAUDE.md` rule 6 is
+     * really applying: no corpus line, no observation and no engine layer reads it, so
+     * two devices holding the same log compute the same sentence and render it at
+     * different sizes. It is a fact about a screen, like `theme` and `calmMode`.
+     * MASTER_BUILD_PROMPT 5.4 and 14b.12.
+     *
+     * An unrecognized stored name resolves to `DEFAULT` rather than throwing, which is
+     * what a downgrade to a build with fewer steps looks like from here.
+     */
+    val textSize: Flow<ClarityTextSize> = context.store.data.map { prefs ->
+        prefs[Keys.textSize]?.let { name ->
+            ClarityTextSize.entries.firstOrNull { it.name == name }
+        } ?: ClarityTextSize.DEFAULT
+    }
+
     val focusDurationMinutes: Flow<Int> =
         context.store.data.map { it[Keys.focusDurationMinutes] ?: DEFAULT_FOCUS_MINUTES }
 
@@ -189,6 +221,7 @@ class ClarityPreferences(private val context: Context) {
 
     /** The first call stops calm mode following the system setting, per design-v3.md 16.1. */
     suspend fun setCalmMode(value: Boolean) = put(Keys.calmMode, value)
+    suspend fun setTextSize(value: ClarityTextSize) = put(Keys.textSize, value.name)
     suspend fun setFocusDurationMinutes(value: Int) = put(Keys.focusDurationMinutes, value)
     suspend fun setFocusHighlightEnabled(value: Boolean) = put(Keys.focusHighlightEnabled, value)
 

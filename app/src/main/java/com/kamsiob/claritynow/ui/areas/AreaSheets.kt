@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
@@ -53,6 +54,7 @@ import com.kamsiob.claritynow.ui.components.ClarityTextField
 import com.kamsiob.claritynow.ui.components.Sidehead
 import com.kamsiob.claritynow.ui.components.clarityClickable
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.clarityMotion
@@ -114,7 +116,7 @@ fun AddItemSheet(
             // the app mentioning the inbox twice on the way to writing one sentence.
             if (areaName != null) {
                 Text(text = areaName, style = type.label, color = colors.inkSecondary)
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(ClaritySpacing.scaled(16.dp)))
             }
             ClarityTextField(
                 value = title,
@@ -123,18 +125,18 @@ fun AddItemSheet(
                 focusRequester = focus,
                 imeAction = ImeAction.Next,
             )
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(20.dp)))
             ClarityTextField(
                 value = note,
                 onValueChange = { note = it },
                 label = stringResource(R.string.field_note_optional),
                 singleLine = false,
             )
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(20.dp)))
             FirstStepField(value = firstStep, onValueChange = { firstStep = it })
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(20.dp)))
             EstimateField(value = estimate, onValueChange = { estimate = it })
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(18.dp)))
             Text(
                 text = stringResource(
                     when {
@@ -144,9 +146,14 @@ fun AddItemSheet(
                     },
                 ),
                 style = type.caption,
-                color = colors.inkTertiary,
+                // design-v3.md 3.1: `inkTertiary` carries no text anywhere in this
+                // app, and this line tells a person where the thing they are typing
+                // will end up. The caption size is what makes it quieter than the
+                // fields above it; the color is not asked to do that job. Same
+                // correction as 10.3 and 10.19, and every other one in this file.
+                color = colors.inkSecondary,
             )
-            Spacer(Modifier.height(22.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(22.dp)))
             ClarityButton(
                 label = stringResource(R.string.action_add),
                 enabled = title.isNotBlank(),
@@ -155,7 +162,7 @@ fun AddItemSheet(
                     onAdd(title, note.ifBlank { null }, firstStep.ifBlank { null }, estimate.toMinutes())
                 },
             )
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
         }
     }
 }
@@ -273,21 +280,21 @@ fun EditItemSheet(
                 label = stringResource(R.string.field_title),
                 imeAction = ImeAction.Next,
             )
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(20.dp)))
             ClarityTextField(
                 value = note,
                 onValueChange = { note = it },
                 label = stringResource(R.string.field_note_optional),
                 singleLine = false,
             )
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(20.dp)))
             // Emptying either field is an ordinary edit and deletes the value. There
             // is no separate clear control, because a field a person can empty is a
             // field they already know how to clear.
             FirstStepField(value = firstStep, onValueChange = { firstStep = it })
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(20.dp)))
             EstimateField(value = estimate, onValueChange = { estimate = it })
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(24.dp)))
 
             if (canMoveToFront) {
                 SheetActionRow(
@@ -303,7 +310,7 @@ fun EditItemSheet(
                 onClick = onDelete,
             )
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(20.dp)))
             ClarityButton(
                 label = stringResource(R.string.action_save),
                 enabled = title.isNotBlank(),
@@ -312,7 +319,7 @@ fun EditItemSheet(
                     onSave(title, note.ifBlank { null }, firstStep.ifBlank { null }, estimate.toMinutes())
                 },
             )
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
         }
     }
 }
@@ -382,17 +389,22 @@ fun AreaDetailSheet(
                 }
             }
 
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(18.dp)))
             Sidehead(
                 text = stringResource(R.string.sidehead_active),
                 modifier = Modifier.padding(horizontal = SheetPadding),
             )
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
             if (active == null) {
+                // The same string design-v3.md 10.3 resolved on the card, drawn the
+                // same way here: weight 500 rather than the role's 650, and a color
+                // that clears section 13's floor. The alternative branch below is the
+                // real title at the same size, so before this the two states differed
+                // by color alone and the idle one measured 2.402 to one.
                 Text(
                     text = stringResource(R.string.area_idle_title),
-                    style = type.itemTitle,
-                    color = colors.inkTertiary,
+                    style = type.itemTitle.copy(fontWeight = FontWeight(500)),
+                    color = colors.inkSecondary,
                     modifier = Modifier.padding(horizontal = SheetPadding),
                 )
             } else {
@@ -413,7 +425,9 @@ fun AreaDetailSheet(
                         text = firstStep,
                         style = type.body,
                         color = colors.inkPrimary,
-                        modifier = Modifier.padding(horizontal = SheetPadding).padding(top = 6.dp),
+                        modifier = Modifier
+                            .padding(horizontal = SheetPadding)
+                            .padding(top = ClaritySpacing.scaled(6.dp)),
                     )
                 }
                 active.note?.let { note ->
@@ -421,7 +435,10 @@ fun AreaDetailSheet(
                         text = note,
                         style = type.body,
                         color = colors.inkSecondary,
-                        modifier = Modifier.padding(horizontal = SheetPadding, vertical = 6.dp),
+                        modifier = Modifier.padding(
+                            horizontal = SheetPadding,
+                            vertical = ClaritySpacing.scaled(6.dp,
+                        )),
                     )
                 }
                 // design-v3.md 10.17. The estimate appears here and on no other
@@ -434,11 +451,17 @@ fun AreaDetailSheet(
                     Text(
                         text = pluralStringResource(R.plurals.item_estimate_minutes, minutes, minutes),
                         style = type.caption,
-                        color = colors.inkTertiary,
-                        modifier = Modifier.padding(horizontal = SheetPadding).padding(top = 8.dp),
+                        // The third rank in this block is the caption size, not a
+                        // third ink. design-v3.md 3.1 gives the ladder two ranks that
+                        // carry text and keeps `inkTertiary` for shapes, so the title,
+                        // the note and the estimate separate by 5.3's scale.
+                        color = colors.inkSecondary,
+                        modifier = Modifier
+                            .padding(horizontal = SheetPadding)
+                            .padding(top = ClaritySpacing.scaled(8.dp)),
                     )
                 }
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
                 Row(
                     modifier = Modifier.padding(horizontal = SheetPadding),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -462,18 +485,23 @@ fun AreaDetailSheet(
                 }
             }
 
-            Spacer(Modifier.height(26.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(26.dp)))
             Sidehead(
                 text = stringResource(R.string.sidehead_queue),
                 modifier = Modifier.padding(horizontal = SheetPadding),
             )
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(6.dp)))
             if (queue.isEmpty()) {
                 Text(
                     text = stringResource(R.string.queue_empty),
                     style = type.body,
-                    color = colors.inkTertiary,
-                    modifier = Modifier.padding(horizontal = SheetPadding, vertical = 8.dp),
+                    // design-v3.md 10.13: an empty state is an invitation. An
+                    // invitation at 2.402 to one is not one.
+                    color = colors.inkSecondary,
+                    modifier = Modifier.padding(
+                        horizontal = SheetPadding,
+                        vertical = ClaritySpacing.scaled(8.dp,
+                    )),
                 )
             } else {
                 queue.forEach { item ->
@@ -481,7 +509,7 @@ fun AreaDetailSheet(
                 }
             }
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
             SheetActionRow(
                 icon = ClarityIcons.add,
                 label = stringResource(R.string.area_add_item),
@@ -490,7 +518,7 @@ fun AreaDetailSheet(
             )
 
             if (completed.isNotEmpty()) {
-                Spacer(Modifier.height(18.dp))
+                Spacer(Modifier.height(ClaritySpacing.scaled(18.dp)))
                 val chevronRotation by animateFloatAsState(
                     targetValue = if (showCompleted) 180f else 0f,
                     animationSpec = motion.springStandard(),
@@ -500,7 +528,10 @@ fun AreaDetailSheet(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clarityClickable { showCompleted = !showCompleted }
-                        .padding(horizontal = SheetPadding, vertical = 10.dp),
+                        .padding(
+                            horizontal = SheetPadding,
+                            vertical = ClaritySpacing.scaled(10.dp,
+                        )),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
@@ -512,13 +543,19 @@ fun AreaDetailSheet(
                     Text(
                         text = completed.size.toString(),
                         style = type.caption,
-                        color = colors.inkTertiary,
+                        // A queried number read straight off the state, so it is read.
+                        // The sidehead beside it is a different type role, which is
+                        // what separates them now that both clear section 13.
+                        color = colors.inkSecondary,
                     )
                     Spacer(Modifier.weight(1f))
                     ClarityIcon(
                         icon = ClarityIcons.expand,
                         contentDescription = null,
-                        tint = colors.inkTertiary,
+                        // The rotation is the disclosure state, so this glyph carries
+                        // meaning and takes design-v3.md 13's 3.0 floor for a graphic.
+                        // `inkTertiary` misses it in the light world at 2.402.
+                        tint = colors.inkSecondary,
                         modifier = Modifier.size(20.dp).rotate(chevronRotation),
                     )
                 }
@@ -535,12 +572,12 @@ fun AreaDetailSheet(
                 }
             }
 
-            Spacer(Modifier.height(22.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(22.dp)))
             Sidehead(
                 text = stringResource(R.string.sidehead_area_actions),
                 modifier = Modifier.padding(horizontal = SheetPadding),
             )
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(4.dp)))
             SheetActionRow(
                 icon = ClarityIcons.archive,
                 label = stringResource(R.string.action_archive),
@@ -552,7 +589,7 @@ fun AreaDetailSheet(
                 tint = colors.deleteMuted,
                 onClick = onDelete,
             )
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(8.dp)))
         }
     }
 }
@@ -572,14 +609,17 @@ private fun QueueRow(item: ItemState, onClick: () -> Unit) {
     ) {
         Column(Modifier.weight(1f)) {
             Text(text = item.title, style = type.body, color = colors.inkPrimary)
+            // The note is a rank below the title and stays one: `caption` against
+            // `body`, design-v3.md 5.3. The ink is the same, because 3.1 gives this
+            // app two inks that carry text and the third is for shapes.
             item.note?.let {
-                Text(text = it, style = type.caption, color = colors.inkTertiary)
+                Text(text = it, style = type.caption, color = colors.inkSecondary)
             }
         }
         ClarityIcon(
             icon = ClarityIcons.chevron,
             contentDescription = null,
-            tint = colors.inkTertiary,
+            tint = colors.inkSecondary,
             modifier = Modifier.size(18.dp),
         )
     }
@@ -592,19 +632,26 @@ private fun CompletedRow(item: ItemState, onReopen: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = SheetPadding, vertical = 10.dp),
+            .padding(horizontal = SheetPadding, vertical = ClaritySpacing.scaled(10.dp)),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ClarityIcon(
             icon = ClarityIcons.completed,
             contentDescription = null,
-            tint = colors.positiveGreen,
+            // design-v3.md 3.1 as amended by the phase 13 contrast audit: positiveGreen
+            // is the fill and positiveInk is the foreground. The glyph measured 2.20 to
+            // one on this sheet's card in the fill color, against a floor of 3.0 for a
+            // graphic, and 7.00 in the ink.
+            tint = colors.positiveInk,
             modifier = Modifier.size(17.dp),
         )
         Text(
             text = item.title,
             style = type.body.copy(textDecoration = TextDecoration.LineThrough),
-            color = colors.inkTertiary,
+            // The strike and the check to its left are what say completed, and
+            // design-v3.md 13 requires exactly that: color is never the only signal.
+            // So the color has nothing left to say and is free to be readable.
+            color = colors.inkSecondary,
             modifier = Modifier.weight(1f).padding(start = 10.dp),
         )
         Text(
@@ -629,7 +676,7 @@ private fun SheetActionRow(
         modifier = Modifier
             .fillMaxWidth()
             .clarityClickable(onClickLabel = label, onClick = onClick)
-            .padding(horizontal = SheetPadding, vertical = 14.dp),
+            .padding(horizontal = SheetPadding, vertical = ClaritySpacing.scaled(14.dp)),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ClarityIcon(icon = icon, contentDescription = null, tint = tint, modifier = Modifier.size(20.dp))
@@ -679,14 +726,14 @@ fun AreaEditorSheet(
                     focusRequester = nameFocus,
                 )
             }
-            Spacer(Modifier.height(26.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(26.dp)))
             AreaColorPicker(
                 areaName = name,
                 selectedHex = hex,
                 onSelect = { hex = it },
                 previewItemTitle = previewItemTitle,
             )
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(20.dp)))
             Column(modifier = Modifier.padding(horizontal = SheetPadding)) {
                 ClarityButton(
                     label = stringResource(R.string.action_save),
@@ -697,7 +744,7 @@ fun AreaEditorSheet(
                     },
                 )
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(12.dp)))
         }
     }
 }
@@ -723,15 +770,18 @@ fun SwapChooserSheet(
                     Text(
                         text = stringResource(R.string.swap_demoting),
                         style = type.caption,
-                        color = colors.inkTertiary,
+                        // This sentence is the only place the sheet says what happens
+                        // to the item being replaced, which makes it the one line here
+                        // a person has to be able to read.
+                        color = colors.inkSecondary,
                     )
                 }
-                Spacer(Modifier.height(18.dp))
+                Spacer(Modifier.height(ClaritySpacing.scaled(18.dp)))
             }
             queue.forEach { item ->
                 QueueRow(item = item, onClick = { onChoose(item) })
             }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
             Column(modifier = Modifier.padding(horizontal = SheetPadding)) {
                 ClarityButton(
                     label = stringResource(R.string.action_never_mind),
@@ -755,7 +805,7 @@ fun QueueChooserSheet(
             queue.forEach { item ->
                 QueueRow(item = item, onClick = { onChoose(item) })
             }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
             Column(modifier = Modifier.padding(horizontal = SheetPadding)) {
                 ClarityButton(
                     label = stringResource(R.string.queue_choice_dismiss),
@@ -795,28 +845,28 @@ fun DeleteAreaSheet(
                 style = type.readSerif,
                 color = colors.inkPrimary,
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(12.dp)))
             Text(text = areaName, style = type.bodyStrong, color = colors.inkSecondary)
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
             Text(
                 text = stringResource(R.string.delete_area_body),
                 style = type.body,
                 color = colors.inkSecondary,
             )
-            Spacer(Modifier.height(22.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(22.dp)))
             ClarityTextField(
                 value = typed,
                 onValueChange = { typed = it },
                 label = stringResource(R.string.delete_area_confirm_hint),
             )
-            Spacer(Modifier.height(22.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(22.dp)))
             ClarityButton(
                 label = stringResource(R.string.action_delete),
                 role = ClarityButtonRole.DESTRUCTIVE,
                 enabled = armed,
                 onClick = onConfirm,
             )
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(8.dp)))
             ClarityButton(
                 label = stringResource(R.string.delete_area_keep),
                 role = ClarityButtonRole.TERTIARY,

@@ -17,6 +17,7 @@ import com.kamsiob.claritynow.data.repo.ClarityRepository
 import com.kamsiob.claritynow.data.repo.IngestMode
 import com.kamsiob.claritynow.di.ClarityGraph
 import com.kamsiob.claritynow.domain.ClarityClock
+import com.kamsiob.claritynow.ui.theme.ClarityTextSize
 import com.kamsiob.claritynow.ui.theme.ClarityThemeSetting
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
@@ -56,6 +57,7 @@ internal sealed interface DataMessage {
 @Immutable
 internal data class SettingsUiState(
     val theme: ClarityThemeSetting = ClarityThemeSetting.SYSTEM,
+    val textSize: ClarityTextSize = ClarityTextSize.DEFAULT,
     val afterCompleting: AfterCompleting = AfterCompleting.AUTO_PROMOTE,
     val focusHighlight: Boolean = true,
     val focusMinutes: Int = ClarityPreferences.DEFAULT_FOCUS_MINUTES,
@@ -97,10 +99,22 @@ internal class SettingsViewModel(
 
     private val tasks = MutableStateFlow(TaskState())
 
-    private val choicePrefs: Flow<ChoicePrefs> =
-        combine(preferences.theme, preferences.afterCompleting) { theme, after ->
-            ChoicePrefs(theme, after)
-        }
+    /**
+     * The three settings that are a choice among named values.
+     *
+     * **Text size sits here and not where calm mode sits, which is nowhere.** Calm mode
+     * is absent from this state because its stored value is nullable and the resolved
+     * answer already reaches the screen through `LocalCalmMode`. Text size has no third
+     * state to resolve and nothing computes it from a system setting, so the screen needs
+     * the stored value itself to show which row carries the check, and this is where it
+     * comes from. What the screen must not read for that is `LocalDensity`, whose
+     * `fontScale` is the phone's setting and this one already multiplied together.
+     */
+    private val choicePrefs: Flow<ChoicePrefs> = combine(
+        preferences.theme,
+        preferences.textSize,
+        preferences.afterCompleting,
+    ) { theme, textSize, after -> ChoicePrefs(theme, textSize, after) }
 
     private val focusPrefs: Flow<FocusPrefs> = combine(
         preferences.focusHighlightEnabled,
@@ -139,6 +153,7 @@ internal class SettingsViewModel(
     ) { choice, focus, reminder, data, task ->
         SettingsUiState(
             theme = choice.theme,
+            textSize = choice.textSize,
             afterCompleting = choice.afterCompleting,
             focusHighlight = focus.highlight,
             focusMinutes = focus.minutes,
@@ -166,6 +181,12 @@ internal class SettingsViewModel(
     fun suggestedFileName(): String = backups.suggestedFileName()
 
     fun setTheme(value: ClarityThemeSetting) = write { preferences.setTheme(value) }
+
+    /**
+     * design-v3.md 13. It multiplies the phone's font scale rather than replacing it,
+     * so every step including `DEFAULT` still follows the phone.
+     */
+    fun setTextSize(value: ClarityTextSize) = write { preferences.setTextSize(value) }
 
     /** The first call stops calm mode following the system. design-v3.md 16.1. */
     fun setCalmMode(value: Boolean) = write { preferences.setCalmMode(value) }
@@ -318,6 +339,7 @@ internal class SettingsViewModel(
 
     private data class ChoicePrefs(
         val theme: ClarityThemeSetting,
+        val textSize: ClarityTextSize,
         val afterCompleting: AfterCompleting,
     )
 

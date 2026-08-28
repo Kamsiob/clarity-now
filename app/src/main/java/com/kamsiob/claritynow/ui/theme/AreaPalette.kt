@@ -35,21 +35,29 @@ object AreaPalette {
     val all: List<String> = moods.flatMap { it.colors }
 
     /**
-     * The four palette entries the default walk never hands out, because each one is
-     * byte identical to a function color in design-v3.md 3.1 or 3.2.
+     * The four palette entries the default walk never hands out, because each one is a
+     * function color in design-v3.md 3.1 or 3.2 or that color's own hue.
      *
-     * `#2D7FF9` is `actionBlue` in light, `#4DA3FF` is `actionBlue` in dark, `#22C55E`
-     * is `positiveGreen` and `#F59E0B` is `warnAmber`. On a screen carrying any of
-     * them, the color that means "this is your area" and the color that means "this is
-     * a button", "this is done" or "there is a Pulse waiting" are the same pixel value,
-     * and an identity that is indistinguishable from a status is not an identity.
+     * `#4DA3FF` is `actionBlue` in dark, `#22C55E` is `positiveGreen` and `#F59E0B` is
+     * `warnAmber`, byte for byte. On a screen carrying any of them, the color that means
+     * "this is your area" and the color that means "this is done" or "there is a Pulse
+     * waiting" are the same pixel value, and an identity that is indistinguishable from
+     * a status is not an identity.
+     *
+     * **`#2D7FF9` is the fourth, and the phase 13 contrast audit changed why rather than
+     * whether.** It was `actionBlue` in light until that audit took the light token to
+     * `#004BAE`, which is the same OKLab hue at a lower lightness: a lighter step of the
+     * same blue rather than a different one. An area drawn in it sits beside a FAB and a
+     * primary button that are that color brightened, which is the collision this list
+     * exists to prevent, so it stays out of the walk on its hue rather than on its bytes.
+     * Byte identity was never the point; it was the evidence.
      *
      * The audit found the first of these on the first run screen, where the shipped
-     * walk gave area one `#2D7FF9` beside a FAB in `#2D7FF9`. It is not a single
-     * collision. `#22C55E` is the first color of Meadow, so the shipped walk also gave
-     * area five the completion color, and the walk reaches both inside the first eight
-     * areas from any starting point. Moving where the walk starts cannot fix that;
-     * naming what it may not hand out can.
+     * walk gave area one `#2D7FF9` beside a FAB that was `#2D7FF9` at the time. It is
+     * not a single collision. `#22C55E` is the first color of Meadow, so the shipped
+     * walk also gave area five the completion color, and the walk reaches both inside
+     * the first eight areas from any starting point. Moving where the walk starts cannot
+     * fix that; naming what it may not hand out can.
      *
      * **This is not a locked subset.** design-v3.md 3.4 opens with "All 48 available to
      * everyone" and that is untouched: every one of these four is still in the picker
@@ -74,10 +82,10 @@ object AreaPalette {
      * narrowest step is 68 degrees. That is the widest that any of the eight possible
      * starts produces, measured across all eight rather than assumed.
      *
-     * It also answers the collision the audit named. `#D946EF` is 76 degrees from
-     * `actionBlue` and in a different family entirely, so on the first run screen, where
-     * the only two colored things are one area and one FAB, they cannot be read as the
-     * same thing.
+     * It also answers the collision the audit named. `#D946EF` is 78 degrees from
+     * `actionBlue`, which sits at hue 214 since phase 13, and in a different family
+     * entirely, so on the first run screen, where the only two colored things are one
+     * area and one FAB, they cannot be read as the same thing.
      *
      * **The obvious start is not this one.** The obvious move is one step along the
      * list, to Twilight, and Twilight's `#6366F1` is 23 degrees from `actionBlue`: an
@@ -238,6 +246,37 @@ private fun labelGrounds(accent: Color, colors: ClarityColors): List<Color> {
 
 private fun Color.clears(grounds: List<Color>): Boolean =
     grounds.all { contrastRatio(this, it) >= 4.5 }
+
+/**
+ * The check on a selected swatch, design-v3.md 10.9 stage two and onboarding's color
+ * rows, in white or in ink depending on which one reads on that swatch.
+ *
+ * **A white check is what 10.9 asked for and it fails on 17 of the 48 colors**, worst on
+ * `#FBBF24` at 1.67 to one against design-v3.md 13's floor of 3.0 for a graphic. A swatch
+ * is the accent at full strength, which is the only place in the app where an area color
+ * is a large solid field, so half the palette is too light to hold white and the other
+ * half is too dark to hold ink. Neither constant works and the swatch decides.
+ *
+ * The worst of the 48 measures 4.23 to one on whichever of the two it picks, which is
+ * well clear of a floor of 3.0, and the margin is the reason the rule is "whichever reads
+ * better" rather than "white unless it fails": the second would leave a swatch sitting on
+ * 3.05 with a white check and nothing between it and the floor.
+ *
+ * **The obvious answers are a white check with a drop shadow, or a white check with a
+ * dark outline, and both are refused.** design-v3.md 6.1 gives an element exactly one
+ * separation device and a glyph that carries a shadow to be legible has borrowed a second
+ * one; an outline on a check is the same move with a hairline. Choosing the ink per
+ * swatch is also what this file already does for the area label in 3.4, so it is the
+ * mechanism the design has rather than a new one. design-v3.md 15.
+ *
+ * Nobody sees the two inks side by side: 10.9's grid has one selected swatch at a time.
+ */
+fun swatchCheckColor(accent: Color): Color =
+    if (contrastRatio(Color.White, accent) >= contrastRatio(InkLight, accent)) {
+        Color.White
+    } else {
+        InkLight
+    }
 
 /** Blends further toward [toward] in 5 percent steps until 4.5:1 is met or the blend is spent. */
 private fun Color.forceContrast(against: List<Color>, toward: Color): Color {

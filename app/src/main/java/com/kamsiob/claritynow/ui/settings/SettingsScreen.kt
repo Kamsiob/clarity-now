@@ -19,6 +19,7 @@ import com.kamsiob.claritynow.ui.about.SupportBlock
 import com.kamsiob.claritynow.ui.components.ClarityCard
 import com.kamsiob.claritynow.ui.components.ClarityIcons
 import com.kamsiob.claritynow.ui.theme.ClaritySpacing
+import com.kamsiob.claritynow.ui.theme.ClarityTextSize
 import com.kamsiob.claritynow.ui.theme.ClarityThemeSetting
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
@@ -34,6 +35,14 @@ import java.time.ZoneId
  * The one card on this screen is the permission card under Privacy, which 14.1 asks
  * for by name. It is not a row and it is not a container for rows.
  *
+ * **Appearance holds three things rather than two since issue #51**: the theme tiles, the
+ * text size control and calm mode. Text size went in that group rather than in an eighth
+ * one because 14.1 fixes the seven groups and their order, and because it is plainly an
+ * appearance setting. It also makes this screen the preview for itself: every row,
+ * sidehead, caption and switch above and below the control re-lays out at the chosen size
+ * the moment it is tapped, which is the whole reason `TextSizePicker` ships no specimen
+ * paragraph of its own. design-v3.md 13.2.
+ *
  * [calmMode] arrives already resolved, from `LocalCalmMode`, because the stored value
  * is nullable and the interface never shows the third state. design-v3.md 16.1.
  */
@@ -44,6 +53,7 @@ internal fun SettingsScreen(
     zone: ZoneId,
     onBack: () -> Unit,
     onThemeChange: (ClarityThemeSetting) -> Unit,
+    onTextSizeChange: (ClarityTextSize) -> Unit,
     onCalmModeChange: (Boolean) -> Unit,
     onFocusHighlightChange: (Boolean) -> Unit,
     onTransitionWarningChange: (Boolean) -> Unit,
@@ -138,7 +148,7 @@ internal fun SettingsScreen(
         GroupGap()
 
         SettingsGroup(title = stringResource(R.string.settings_group_after)) {
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(4.dp)))
             SettingsSegmentedChoice(
                 options = listOf(
                     AfterCompleting.AUTO_PROMOTE to stringResource(R.string.settings_after_promote),
@@ -148,7 +158,7 @@ internal fun SettingsScreen(
                 selected = state.afterCompleting,
                 onSelect = onAfterCompletingChange,
             )
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
             Text(
                 text = when (state.afterCompleting) {
                     AfterCompleting.AUTO_PROMOTE ->
@@ -165,7 +175,7 @@ internal fun SettingsScreen(
         GroupGap()
 
         SettingsGroup(title = stringResource(R.string.settings_group_appearance)) {
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(4.dp)))
             AppearancePicker(
                 selected = state.theme,
                 onSelect = onThemeChange,
@@ -173,13 +183,21 @@ internal fun SettingsScreen(
                 darkLabel = stringResource(R.string.settings_theme_dark),
                 systemLabel = stringResource(R.string.settings_theme_system),
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(12.dp)))
             Text(
                 text = stringResource(R.string.settings_appearance_note),
                 style = type.caption,
-                color = colors.inkTertiary,
+                // design-v3.md 3.1 and 13. The note explains what the three theme
+                // choices actually do, which is the only place that is said.
+                color = colors.inkSecondary,
             )
-            Spacer(Modifier.height(14.dp))
+            // Text size sits inside Appearance rather than in a group of its own,
+            // because MASTER_BUILD_PROMPT 14.1 fixes the seven groups and their order and
+            // an eighth would be a change to that document rather than an addition to
+            // this screen. It is also, plainly, an appearance setting.
+            Spacer(Modifier.height(ClaritySpacing.scaled(20.dp)))
+            TextSizePicker(selected = state.textSize, onSelect = onTextSizeChange)
+            Spacer(Modifier.height(ClaritySpacing.scaled(16.dp)))
             SettingsToggleRow(
                 icon = ClarityIcons.editArea,
                 groupColor = SettingsGroupColors.appearance,
@@ -224,7 +242,7 @@ internal fun SettingsScreen(
             // conditional: a permanent line on this screen saying the file is readable
             // would be false for everybody who used one.
             if (state.exportIsStale) {
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(ClaritySpacing.scaled(12.dp)))
                 Text(
                     text = stringResource(R.string.settings_export_stale),
                     style = type.caption,
@@ -234,14 +252,14 @@ internal fun SettingsScreen(
             val busy = state.busy
             val message = state.message
             if (busy != null) {
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(ClaritySpacing.scaled(6.dp)))
                 Text(
                     text = stringResource(busyLabelOf(busy)),
                     style = type.caption,
                     color = colors.inkSecondary,
                 )
             } else if (message != null) {
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(ClaritySpacing.scaled(6.dp)))
                 Text(
                     text = dataMessageText(message),
                     style = type.caption,
@@ -266,7 +284,7 @@ internal fun SettingsScreen(
                 onClick = onOpenLicenses,
                 divider = false,
             )
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
             PermissionCard()
         }
 
@@ -296,23 +314,27 @@ internal fun SettingsScreen(
             )
         }
 
-        Spacer(Modifier.height(30.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(30.dp)))
         SupportBlock()
 
-        Spacer(Modifier.height(26.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(26.dp)))
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = stringResource(R.string.settings_version_line, BuildConfig.VERSION_NAME),
                 style = type.caption,
-                color = colors.inkTertiary,
+                // The colophon is quiet because of where it sits and how small it is,
+                // 6.1's first device, not because of its color. A version string a
+                // person is asked to quote in a bug report has to be readable.
+                // design-v3.md 3.1 and 13.
+                color = colors.inkSecondary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(Modifier.height(3.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(3.dp)))
             Text(
                 text = stringResource(R.string.settings_license_line),
                 style = type.caption,
-                color = colors.inkTertiary,
+                color = colors.inkSecondary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -343,7 +365,7 @@ private fun PermissionCard() {
                 style = type.bodyStrong,
                 color = colors.inkPrimary,
             )
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(8.dp)))
             Text(
                 text = stringResource(R.string.permission_card_body),
                 style = type.bodySerif,

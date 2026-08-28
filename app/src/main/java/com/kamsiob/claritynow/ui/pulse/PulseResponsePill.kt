@@ -38,6 +38,7 @@ import com.kamsiob.claritynow.ui.components.clarityClickable
 import com.kamsiob.claritynow.ui.components.clarityFocusRing
 import com.kamsiob.claritynow.ui.components.clarityPressScale
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalCalmMode
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.LocalContemplativeColors
@@ -188,7 +189,10 @@ internal fun PulseResponsePill(
             // frame in which bright type sits on full amber.
             color = lerp(contemplative.textBright, contemplative.deepBlack, fill.value),
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = LABEL_PADDING, vertical = LABEL_PADDING_VERTICAL),
+            modifier = Modifier.padding(
+                horizontal = LABEL_PADDING,
+                vertical = ClaritySpacing.scaled(LABEL_PADDING_VERTICAL,
+            )),
         )
     }
 }

@@ -2,6 +2,7 @@ package com.kamsiob.claritynow.domain.engine
 
 import com.kamsiob.claritynow.devtools.ClaritySimulator
 import com.kamsiob.claritynow.devtools.SimulatedSurface
+import com.kamsiob.claritynow.devtools.SimulationAggregate
 import com.kamsiob.claritynow.devtools.SimulationChecks
 import com.kamsiob.claritynow.devtools.SimulationDump
 import com.kamsiob.claritynow.devtools.SimulationPersona
@@ -155,6 +156,14 @@ class SimulatorTest {
     fun `the simulator checks run, and the enforced ones pass`() {
         val report = SimulationChecks.run(runs)
         println(report)
+        // The readings the checks summarize and do not replace, eight kilobytes of them.
+        // Four rows of the table in CLARITY_LOGIC_ENGINE.md 12 are quoted from here rather
+        // than from the check report above: why each silent day was silent, every family
+        // that fired with its count, every hot family's stages, and how the three report
+        // sections shared their slots out. All of it has been computed on every run since
+        // phase 5 and printed by nothing, so each of the six measurements taken so far began
+        // with somebody writing a harness to see it. One line, and the seventh is free.
+        println(SimulationAggregate.of(runs))
         assertTrue(
             "enforced checks failed:\n" + report.fatal.joinToString("\n") { "${it.name}: ${it.failures.take(5)}" },
             report.fatal.isEmpty(),

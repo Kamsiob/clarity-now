@@ -157,11 +157,20 @@ internal object FocusWidgetPalette {
 
     val textBright = ColorProvider(day = ContemplativeBright, night = ContemplativeBright)
 
-    val textFaint = ColorProvider(day = ContemplativeFaint, night = ContemplativeFaint)
+    /**
+     * `design-v3.md` 3.3's `textDim` at 55 percent, and it replaced `textFaint` at 32.
+     *
+     * 13 says Contemplative text stays at or above 55 percent opacity where it is meant
+     * to be read, and 32 percent measures **2.674 to one** on this widget's ground, the
+     * outer stop of 3.3's radial drawn flat. This value measures 5.577 on the same
+     * ground. It is the one word under the numeral, `remaining`, and a widget that says
+     * how long is left has to be readable at arm's length on a home screen.
+     */
+    val textDim = ColorProvider(day = ContemplativeDim, night = ContemplativeDim)
 }
 
 private val ContemplativeBright = Color(0xFFF3F1EC)
-private val ContemplativeFaint = Color(0xFFF3F1EC).copy(alpha = 0.32f)
+private val ContemplativeDim = Color(0xFFF3F1EC).copy(alpha = 0.55f)
 
 /**
  * Calm mode as one boolean, resolved the way the app resolves it. `design-v3.md` 16.1

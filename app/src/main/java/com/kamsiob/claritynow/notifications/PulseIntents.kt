@@ -33,10 +33,12 @@ object PulseIntents {
     /**
      * True when [intent] is the reminder asking for the Pulse surface.
      *
-     * Whoever owns `MainActivity` calls this from `onCreate` and from `onNewIntent` and
-     * routes to the Pulse surface when it answers true, exactly as it already does with
-     * [FocusIntents.opensFocusSession]. There is no second way for a notification to
-     * reach a screen in this app.
+     * The routing itself lives in `ui/nav/ExternalRequest.kt`, which reads the action
+     * string, and `MainActivity` notes the request from both `onCreate` and
+     * `onNewIntent`. This predicate is the readable statement of the contract rather
+     * than the caller, and a test asserts that every `ACTION_` constant in this file is
+     * routed somewhere. There is no second way for a notification to reach a screen in
+     * this app.
      */
     fun opensPulse(intent: Intent?): Boolean = intent?.action == ACTION_OPEN_PULSE
 

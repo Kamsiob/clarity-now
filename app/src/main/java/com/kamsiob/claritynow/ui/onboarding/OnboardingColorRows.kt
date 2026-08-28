@@ -28,7 +28,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -42,11 +41,13 @@ import com.kamsiob.claritynow.ui.components.ClarityIcons
 import com.kamsiob.claritynow.ui.components.clarityClickable
 import com.kamsiob.claritynow.ui.theme.AreaPalette
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityShapes
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.LocalContemplativeColors
 import com.kamsiob.claritynow.ui.theme.clarityMotion
 import com.kamsiob.claritynow.ui.theme.parseAreaColor
+import com.kamsiob.claritynow.ui.theme.swatchCheckColor
 
 /**
  * The mood color rows beat 2 opens on a selection. design-v3.md 10.9, Contemplative.
@@ -97,7 +98,7 @@ internal fun OnboardingColorRows(
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(16.dp)))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -145,7 +146,7 @@ private fun MoodPill(
                 onClickLabel = name,
                 onClick = onClick,
             )
-            .padding(vertical = 8.dp),
+            .padding(vertical = ClaritySpacing.scaled(8.dp)),
     ) {
         Box(contentAlignment = Alignment.Center) {
             if (selected) {
@@ -174,14 +175,17 @@ private fun MoodPill(
                 }
             }
         }
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(6.dp)))
         Text(
             text = name,
             style = type.caption.copy(
                 fontSize = MOOD_NAME_SIZE,
                 fontWeight = if (selected) FontWeight(700) else FontWeight(400),
             ),
-            color = if (selected) contemplative.textBright else contemplative.textFaint,
+            // `textDim` rather than `textFaint`, which measures 2.636 to one on
+            // `deepBlack`. design-v3.md 13: Contemplative text stays at or above 55
+            // percent opacity where it is meant to be read, and a mood's name is read.
+            color = if (selected) contemplative.textBright else contemplative.textDim,
             textAlign = TextAlign.Center,
             modifier = Modifier.width(MOOD_PILL_WIDTH + MOOD_RING_EXTENT * 2),
         )
@@ -190,7 +194,7 @@ private fun MoodPill(
 
 /**
  * design-v3.md 10.9 stage two. A square at 16dp radius that scales to 1.06 when selected
- * and carries a white check at 20dp.
+ * and carries a check at 20dp in whichever of white or ink reads on that swatch, 3.4.
  *
  * The 2.5dp ring 10.9 gives the selected swatch is drawn as a scale and a check here and
  * not as a ring, because a ring "in the swatch color at 50 percent" needs a ground darker
@@ -231,7 +235,9 @@ private fun Swatch(
             ClarityIcon(
                 icon = ClarityIcons.check,
                 contentDescription = null,
-                tint = Color.White,
+                // The same check as the Daylight picker's, and the same reason: white
+                // fails on 17 of the 48 swatches, worst at 1.67 to one.
+                tint = swatchCheckColor(parseAreaColor(hex)),
                 modifier = Modifier.size(20.dp),
             )
         }

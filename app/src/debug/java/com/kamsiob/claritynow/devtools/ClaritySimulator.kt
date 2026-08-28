@@ -102,13 +102,16 @@ class ClaritySimulator(
         val invocations = mutableListOf<SimulatedInvocation>()
         var openDays = 0
 
+        // A day nobody was there is a day nothing is written. `SimulationPersona.isPresentOn`
+        // carries the whole test and the reasoning behind it: an ITEM_ADDED on a day with no
+        // APP_OPENED is an event the app cannot produce, and the areas are created inside
+        // the first session rather than beside it.
         for (day in 0 until days) {
+            if (!persona.isPresentOn(day)) continue
             if (day == persona.installDay) persona.setUp(log)
-            if (day >= persona.installDay && persona.opensOn(day)) {
-                openDays++
-                log.opened(day, OPEN_HOUR)
-                openTheApp(persona, log, engine, validator, day, invocations)
-            }
+            openDays++
+            log.opened(day, OPEN_HOUR)
+            openTheApp(persona, log, engine, validator, day, invocations)
             persona.act(log, day)
         }
 

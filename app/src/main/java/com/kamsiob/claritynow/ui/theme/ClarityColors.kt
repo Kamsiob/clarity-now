@@ -18,13 +18,18 @@ import androidx.compose.ui.graphics.Color
  *
  * | rank | token | light | dark | what sits here |
  * |---|---|---|---|---|
- * | ground | `canvas` | L* 91.4 | L* 4.1 | the page |
- * | chrome | `raise` | L* 95.8 | L* 8.5 | the floating tab bar, unselected chips |
+ * | ground | `canvas` | L* 91.4 | L* 4.1 | the page, and a focused field's well |
+ * | chrome | `raise` | L* 95.8 | L* 8.5 | the tab bar, unselected chips, a field's well |
  * | content | `card` | L* 98.6 | L* 11.1 | area cards, sheets, the undo snackbar |
  *
- * **Content is the top plane and chrome recedes from it.** That is the whole rule,
- * and it is the same statement in both worlds, which is why the gaps are matched
+ * **Content is the top plane and everything else recedes from it.** That is the whole
+ * rule, and it is the same statement in both worlds, which is why the gaps are matched
  * across them rather than each world being tuned on its own.
+ *
+ * Phase 12b added the second kind of thing that recedes. A tab bar recedes because it
+ * serves the content; a text field's well recedes because content is put into it. Both
+ * are one rank under the surface they sit on and neither is chrome in the other's sense,
+ * which is why the middle rank is named for its position rather than for its job.
  *
  * Before phase 3c the light world spanned 4.73 L* from `canvas` to `card` and
  * `raise` had no call site at all, so the card, the tab bar, the sheets, the chips
@@ -52,6 +57,7 @@ data class ClarityColors(
     val hairline: Color,
     val actionBlue: Color,
     val positiveGreen: Color,
+    val positiveInk: Color,
     val warnAmber: Color,
     val parchment: Color,
     val deleteMuted: Color,
@@ -61,7 +67,14 @@ data class ClarityColors(
     val cardWashActiveAlpha: Float,
 )
 
-private val InkLight = Color(0xFF17171C)
+/**
+ * The base the light world's ink tokens are struck from. It reaches a screen as
+ * `inkPrimary`, `inkSecondary`, `inkTertiary` or `hairline`, and in one place of its own:
+ * [swatchCheckColor] draws the check on a selected color swatch in this or in white,
+ * whichever reads on the swatch, and a swatch is neither a Daylight surface nor a
+ * Contemplative one so it cannot take a world's ink token.
+ */
+internal val InkLight = Color(0xFF17171C)
 private val InkDark = Color(0xFFF0EEF1)
 
 /**
@@ -94,6 +107,46 @@ private val InkDark = Color(0xFFF0EEF1)
  *   area card, and at 0.64 it measures 4.75:1, so every ground now clears.
  *
  * Card to canvas: 1.126:1 to 1.202:1. Span: 4.73 L* to 7.19 L*.
+ *
+ * ## Three more moved in the phase 13 contrast audit, and one token is new
+ *
+ * The audit in `ui/theme` measures every pair the app can put on a screen rather than
+ * the pairs somebody listed, and it found that three of the four function colors in 3.1
+ * were being asked to do a job their value could not do. Each fix below is a value
+ * chosen against a measurement, on the token's own OKLab hue, holding hue and taking the
+ * deepest chroma the gamut allows at the new lightness.
+ *
+ * - **`actionBlue` `#2D7FF9` to `#004BAE`.** One color was carrying two jobs it could
+ *   not both hold. As a fill it has to be dark enough for a label to sit on it, and
+ *   white measured **3.81:1** on the old value; as text it has to be dark enough to be
+ *   read on the ladder, and it measured **3.06:1** on the canvas, 3.43 on the raise and
+ *   3.68 on the card, at five call sites from the tertiary button to the undo snackbar.
+ *   Both wants point the same way, so one value serves both: on `#004BAE` the ladder
+ *   reads 6.45, 7.23 and 7.76, the selected tab's label on its own 10 percent pill reads
+ *   6.14, and an inverted label on the fill reads 7.76. The value is pinned by the
+ *   hardest of its grounds, which is the Swap swipe face: the face is this same token at
+ *   12 percent deepening to 16.8, and a token has to be legible on its own tint. That
+ *   ground is what takes it from `#0058C8`, which clears everything else, to `#004BAE`,
+ *   which clears that too at 4.95.
+ * - **`deleteMuted` `#8A5A5A` to `#724444` in light and `#B98685` in dark.** It was one
+ *   value in both worlds, which is only possible for a token nothing reads. It carries
+ *   the Delete action's 22dp glyph and its 10.5sp label on a face tinted from itself, so
+ *   it needs to be dark on a light ground and light on a dark one. At `#8A5A5A` it
+ *   measured 3.66 on its own face in light, and 2.94, 3.10 and 3.38 on the three dark
+ *   ranks. The two values measure 4.93 and 4.88 on their faces and clear every rank.
+ * - **`positiveInk` `#03652B` is new, and it is the reason `positiveGreen` did not
+ *   move.** `positiveGreen` is a fill: a 13 percent button, an 8 percent Trail mint, an
+ *   18 percent Complete face. Every one of those has to stay light enough for what sits
+ *   on it, and design-v3.md 11 calls the Trail's ground a mint, which a forest green at
+ *   8 percent is not. As a foreground the same value measured 1.83 on the canvas and
+ *   1.68 as the positive button's own label. The two wants are opposite, so the design
+ *   states two tokens rather than one compromise: `positiveGreen` is the fill and
+ *   **carries no foreground anywhere in this app**, which `FaintInkTest` holds by
+ *   scanning the sources rather than by a floor, and `positiveInk` is every green
+ *   foreground: the completion check, the positive button's label, and the Complete
+ *   swipe face's icon and label, where it replaces the hardcoded `#15803D` that
+ *   design-v3.md 10.3.1 named and that measured 3.40 on the face it was drawn on. It
+ *   reads 5.83 on the canvas, 5.34 on the button's own fill and 4.91 on the face.
  */
 val ClarityLightColors = ClarityColors(
     isDark = false,
@@ -104,11 +157,12 @@ val ClarityLightColors = ClarityColors(
     inkSecondary = InkLight.copy(alpha = 0.64f),
     inkTertiary = InkLight.copy(alpha = 0.38f),
     hairline = InkLight.copy(alpha = 0.08f),
-    actionBlue = Color(0xFF2D7FF9),
+    actionBlue = Color(0xFF004BAE),
     positiveGreen = Color(0xFF22C55E),
+    positiveInk = Color(0xFF03652B),
     warnAmber = Color(0xFFF59E0B),
     parchment = Color(0xFFEFEEE2),
-    deleteMuted = Color(0xFF8A5A5A),
+    deleteMuted = Color(0xFF724444),
     cardWashAlpha = 0.06f,
     cardWashActiveAlpha = 0.13f,
 )
@@ -143,6 +197,22 @@ val ClarityLightColors = ClarityColors(
  * points of blue over red, and design-v3.md 1's "dark surfaces are warm blacks" is the
  * unresolved half of the same contradiction the light `card` resolves. It is a
  * separate decision and is left to be taken as one.
+ *
+ * **`actionBlue` is deliberately held at `#4DA3FF` while the light world's moved**, and
+ * the asymmetry is the point. An action color has to be legible on the ladder of its own
+ * world, and the two ladders run in opposite directions: light needs a dark blue and dark
+ * needs a light one. What the dark world cannot then do is put white on it, which
+ * measured 2.63 on the primary button's label and on the FAB's glyph. There is no value
+ * that is both light enough to read on `#0E0E13` and dark enough for white, so the label
+ * inverts instead, to `card`, which is the same inversion design-v3.md 10.7 and 10.8
+ * already use for the destructive button and the selected chip. It reads 6.38 here and
+ * 7.76 in light, so one rule covers both worlds.
+ *
+ * **`positiveInk` holds `positiveGreen`'s own value here**, because a mint light enough
+ * to tint a near black surface is already light enough to be read on one: it measures
+ * 8.45 on the canvas and 5.42 on the Complete face. The pair exists so that the light
+ * world's difference between a fill and a foreground is visible in the token set rather
+ * than hidden in a branch at a call site.
  */
 val ClarityDarkColors = ClarityColors(
     isDark = true,
@@ -155,9 +225,10 @@ val ClarityDarkColors = ClarityColors(
     hairline = Color.White.copy(alpha = 0.09f),
     actionBlue = Color(0xFF4DA3FF),
     positiveGreen = Color(0xFF22C55E),
+    positiveInk = Color(0xFF22C55E),
     warnAmber = Color(0xFFF59E0B),
     parchment = Color(0xFF211F16),
-    deleteMuted = Color(0xFF8A5A5A),
+    deleteMuted = Color(0xFFB98685),
     cardWashAlpha = 0.08f,
     cardWashActiveAlpha = 0.16f,
 )

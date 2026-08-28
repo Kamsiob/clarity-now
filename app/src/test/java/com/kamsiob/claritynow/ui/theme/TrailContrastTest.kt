@@ -30,6 +30,13 @@ import java.io.File
  * re-measurement, and one of the findings this file recorded no longer holds. It is
  * marked where it is.
  *
+ * **The `inkTertiary` gate below is the Trail's half of a rule that covers the whole
+ * app**, and for three phases it was the only half anybody checked. `FaintInkTest` now
+ * scans every screen and both widget packages for the same thing and finds thirty one
+ * foregrounds drawn in it, which is what a rule proved on one directory buys. This test
+ * is kept rather than folded in, because the Trail is where the finding was made and
+ * because a screen specific test names the screen.
+ *
  * Every figure is what the running app computes, which means 8 bits per channel: an
  * `androidx.compose.ui.graphics.Color` in the sRGB space quantizes on construction, so
  * a wash composited onto a card lands on a real pixel value and not on a float. Two of

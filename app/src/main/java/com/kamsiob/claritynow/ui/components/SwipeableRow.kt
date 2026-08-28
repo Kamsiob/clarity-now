@@ -42,7 +42,6 @@ import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityHaptics
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
-import com.kamsiob.claritynow.ui.theme.calmAccent
 import com.kamsiob.claritynow.ui.theme.clarityMotion
 import com.kamsiob.claritynow.ui.theme.opticallyCentered
 import kotlinx.coroutines.launch
@@ -89,9 +88,6 @@ private const val COMMIT_FRACTION = 0.55f
 private const val FLING_DP_PER_SECOND = 1_200f
 private val ACTION_WIDTH = 66.dp
 
-/** design-v3.md 10.3.1. The check and label on the Complete action. */
-private val CompleteInk = Color(0xFF15803D)
-
 /**
  * design-v3.md 10.3.1.
  *
@@ -102,13 +98,41 @@ private val CompleteInk = Color(0xFF15803D)
  * A gesture whose initial direction is predominantly vertical never becomes a
  * swipe: the horizontal drag only claims the pointer after horizontal touch slop,
  * so a list scroll that curves still scrolls.
+ *
+ * ## Every face carries its own color, and the phase 13 audit is why that is a token
+ *
+ * A face is its action's token at 12 to 18 percent over the page, deepening by 40
+ * percent past the commit threshold, and the icon and the 10.5sp label on it are the
+ * same color read at full strength. **So a swipe face is the one ground in the app where
+ * a token has to be legible on its own tint**, and it was the weakest reading in the
+ * whole app when it was measured: 3.40 on Complete, 3.66 on Delete in light and 2.93 in
+ * dark, and 1.03 on Swap.
+ *
+ * Two of the three are answered by 3.1's tokens, which moved for this: `actionBlue`
+ * carries Swap at 4.95 in light and 5.74 in dark, and `deleteMuted`, now one value per
+ * world, carries Delete at 4.93 and 4.88. Complete takes `positiveInk` rather than
+ * `positiveGreen`, because its face has to stay a light mint while its label has to be
+ * dark, and it reads 4.91 and 5.42. That token replaces the literal `#15803D` this file
+ * used to hold, which design-v3.md 10.3.1 named and which measured 3.40 on the face it
+ * was drawn on: a hex in a component is a value nothing re-measures when a ground moves.
+ *
+ * **The Swap face no longer draws the area's accent, and that is the finding rather than
+ * a simplification.** 10.3.1 asked for the area color here, and it fails on 43 of the 48
+ * colors in light and 28 in dark, worst at 1.03. The remedy 3.4 names for an area color
+ * that misses the floor is to darken the label variant, and that mechanism does not
+ * reach this ground: on a card the variant sits on a 13 percent wash of its own hue, so
+ * a small blend keeps it recognizable, while a swipe face is a fixed blue and 44 of the
+ * 48 would have to move, a median of 34 percent toward black and five of them by more
+ * than half. A color blended past half is no longer the color it identifies, so the face
+ * would be claiming an identity it had already lost. 3.4 permits an area accent in four
+ * forms and a 10.5sp action label is not one of them; the card being swiped carries the
+ * dot and the area's name eight dp away, which is where identity already lives.
  */
 @Composable
 fun SwipeableRow(
     key: String,
     coordinator: SwipeCoordinator,
     actions: SwipeActions,
-    accent: Color,
     modifier: Modifier = Modifier,
     shape: RoundedCornerShape = RoundedCornerShape(18.dp),
     content: @Composable () -> Unit,
@@ -118,13 +142,6 @@ fun SwipeableRow(
     val motion = clarityMotion()
     val density = LocalDensity.current
     val scope = rememberCoroutineScope()
-
-    // design-v3.md 16.2. The Swap action's face is tinted with the area's accent, and
-    // the accent is not one of the two uses 16.2 excludes by name, so it takes the
-    // transform like every other atmospheric use of a color. The three action
-    // backgrounds behind it do not: positiveGreen, actionBlue and deleteMuted are each
-    // scoped to one job in 3.1, and a desaturated action color is a less legible one.
-    val faceAccent = calmAccent(accent)
 
     val offset = remember { Animatable(0f) }
     var rowWidth by remember { mutableIntStateOf(0) }
@@ -207,7 +224,7 @@ fun SwipeableRow(
                     SwipeActionFace(
                         icon = ClarityIcons.check,
                         label = actions.completeLabel,
-                        tint = CompleteInk,
+                        tint = colors.positiveInk,
                         reveal = reveal,
                         onClick = { commit(actions.onComplete) },
                     )
@@ -229,7 +246,7 @@ fun SwipeableRow(
                             SwipeActionFace(
                                 icon = ClarityIcons.swap,
                                 label = actions.swapLabel,
-                                tint = faceAccent,
+                                tint = colors.actionBlue,
                                 reveal = reveal,
                                 onClick = { commit(swap) },
                             )

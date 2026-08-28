@@ -71,6 +71,906 @@ The old entry stays where it is, wrong, dated, and useful.
 
 ---
 
+## August 28, 2026: the surfaces pass, the size control, and the contrast audit
+
+Three passes landed in one tree in one night, and this entry carries the choices from
+all three because they argue with each other in places. Phase 12b is the surfaces half
+of the polish pass, issue #54. The accessibility pass is issue #51 and Addendum 01 8f.
+The contrast remediation is what the audit that pass built then found.
+
+### Decided
+
+- The scroll edge is a **fade that erases**, drawn with `BlendMode.DstOut` over an
+  offscreen layer, and never a blur and never a ground colored scrim
+- `ClarityElevation.sheet` keeps its value and gets **no call site**, because it is
+  unreachable through theming and would be a second separation device anyway
+- The Trail's **event circle is removed** and the glyph grows inside the same slot
+- **An inactive tab keeps no label**, and a new rule constrains section 7: a
+  destination whose glyph cannot be recognized on its own does not get an unlabeled
+  state
+- A **text field is a well** on `raise`, stepping down the surface ladder, with no
+  hairline
+- **Nothing in this app moves at rest**, and section 14 is narrowed rather than
+  satisfied
+- The in app text size control **multiplies** the OS font scale, and the combined
+  scale **caps at 2.0**
+- The control is a **list of five steps**, not a slider, and every option label is set
+  at the **current** size rather than at its own
+- The **WCAG large text exemption is declined**. One floor, 4.5, for all text
+- **No dyslexia friendly typeface**, per 8f
+- Light `actionBlue` moves to `#004BAE`, dark holds, and **a filled action inverts its
+  label to `card`** rather than using white
+- `positiveGreen` splits into a fill and a new `positiveInk`, and carries no
+  foreground anywhere
+- The Swap swipe face **takes `actionBlue` rather than the raw area accent**
+- `design-v3.md` 3.1 and 3.2's wash ranges **narrow** to exactly the depth 3.4 solves
+  the area label against
+
+### Why: the fade erases rather than paints
+
+The obvious implementation is a rectangle in the ground color faded to transparent. It
+is wrong on three surfaces in this app, and not marginally: the Report's ground is two
+centers of gold light, the Pulse's shifts with the time of day, and Focus is a radial
+gradient. A flat scrim would cut a visible band across a gradient at exactly the edge
+the treatment exists to soften. Erasing the content's own alpha reveals what is
+genuinely behind it, which is also what makes the sentence about the treatment true.
+
+**Revisit if** a surface arrives whose ground cannot be composited against, or if the
+offscreen layer proves to cost frames on the Trail's list while scrolling.
+
+### Why: no blur, and the refusal is a test
+
+15.1 lists glassmorphism used as decoration rather than to solve a layering problem.
+Content passing under a floating bar is a real layering problem, so the entry does not
+forbid an answer; it forbids reaching for the blur because it looks more modern. The
+fade is the quieter answer and it is the one that is actually true about what is
+behind the bar. `ScrollEdgeTest` now fails the build on `.blur(`, `BlurEffect`,
+`RenderEffect` or `BlurMaskFilter` anywhere in `ui/`, because a prohibition that rests
+on somebody remembering it has a shelf life.
+
+**Revisit if** the platform grows a backdrop blur that is cheap and that solves a
+layering problem this app actually has.
+
+### Why: the sheet shadow is refused, and it costs nothing
+
+`ClarityElevation.sheet` having no call site read as an oversight for eight phases. It
+is not reachable: `ModalBottomSheet` takes no shadow parameter, and the caller's
+modifier attaches to a node that stays at the top of the window while the content is
+placed at an offset inside it, so a shadow drawn there would land at the top of the
+screen. That was verified against the shipped artifact rather than assumed.
+
+**And it would have been wrong even if it were reachable.** A sheet sits on a 42
+percent scrim, which is a roughly 42 point lightness step under a surface at L* 98.6.
+6.1 says stop at the first device that reads, and it reads at device two, so the
+shadow was always the third device on an element that already had one.
+
+**Considered and rejected: deleting the token.** It records an analysis worth keeping,
+and a later Material release may grow a hook.
+
+**Revisit if** `ModalBottomSheet` gains a shadow parameter or exposes its content
+node's offset before the anchors exist.
+
+### Why: the Trail's event circle goes
+
+It was tinted by area, so on a one area app every circle was the same disc and the
+icon column carried nothing the sentence did not. Section 11 said "the event color"
+and defined it nowhere.
+
+**Considered and rejected: a semantic event palette**, green completions, amber
+Pulses, red deletes. It is the statistically common answer and it is unavailable by
+construction here: 3.1 scopes `positiveGreen`, `warnAmber` and `deleteMuted` to one
+job each, and 3.4 permits an area accent in four forms of which the only one a 23dp
+shape may take is a 5 to 14 percent wash. Eight moods at 12 percent over the canvas
+are not distinguishable at a glance, so the disc could not carry identity either.
+
+**Considered and rejected: keeping the tint and making it louder.** 3.4 forbids the
+depth that would take.
+
+A container that can hold no information is not a container. Removing it also resolves
+a contradiction that had stood since phase 3: a glyph in a tonal circle beside one
+sentence is a stock Material list row, and section 14 forbids those on primary
+screens.
+
+**Revisit if** the Trail ever gains a second axis that genuinely needs a colored
+container, rather than one that would merely fill it.
+
+### Why: an inactive tab keeps no label
+
+The shipped behavior was the Material 3 Expressive default, arrived at with no
+recorded reason, which is exactly the move 15.3 names. It survives, but as a rule with
+a constraint attached.
+
+The bar is the only element in the app with a width it cannot grow out of. Icons do
+not scale with `fontScale` and labels do. On a 360dp phone the bar has 314dp. At 200
+percent, one label plus four icons is roughly 290dp of that and four labels roughly
+570dp. Section 13 requires 200 percent without clipping, so labels-always either clips
+a destination name, which is the failure the rule would exist to prevent, or grows the
+one piece of chrome present on every screen and takes four screens' content padding
+with it. The figures are estimated from font advances rather than measured on a
+device, and the conclusion survives being a third wrong in either direction.
+
+**10.15's no hidden navigation is satisfied and is a different claim.** All four are
+always on screen, in fixed order, and each announces its name to TalkBack.
+
+**The new rule is the part that binds later work:** a destination whose glyph cannot
+be recognized on its own does not get an unlabeled state. `arrow_outward` fails it and
+is recorded in 7.2's mapping table.
+
+**Revisit if** the tab bar stops being a floating pill, or if a fifth destination
+arrives.
+
+### Why: a text field is a well
+
+The choice was open, 10 never having said. The obvious answers are what shipped, an
+underlined field with a colored focus rule, and Material's outlined or filled fields.
+
+Walking 6.1 in the order 6.1 gives reaches neither. Whitespace genuinely fails,
+because an empty field with no target is not a target. Device two does not fail. So
+the field steps **down** a rank, to `raise` on a `card` sheet, and the hairline goes,
+because 6.1 puts a hairline fourth and only if all three above have genuinely failed.
+Those four rules were the third and fourth hairlines in the whole app.
+
+Focus takes the well one rank further down to `canvas`, which is the same device
+speaking louder rather than a second device arriving, and the caret is the second
+signal.
+
+**Revisit if** a field ever has to sit directly on `canvas`, where stepping down has
+nowhere to go.
+
+### Why: nothing moves at rest, and the sentence is narrowed instead
+
+Section 14 ended "nothing that is still. An app that never moves is an app that feels
+broken." Nothing in this app moves at rest, so that sentence was false.
+
+**Every conventional fix is on the tell list or beside it.** 15.3 refuses the pulse,
+breathe, glow loop and the ambient shimmer by name. And none of them says anything
+about the person's own data, which section 1's first rule requires of anything that
+takes attention.
+
+**But the sentence was not simply false, and that is what changed it.** Four things
+already move at rest and all four are time: the focus arc and numeral, an in session
+card's countdown, the focus glow's breath, and the Pulse's ground shifting through the
+day. Section 14 now says that and adds the amendment: **a screen with no time on it
+does not invent motion to prove it is alive.**
+
+A recorded absence is better than a tell.
+
+**Revisit if** a screen arrives that genuinely has time on it and does not show it
+moving.
+
+### Why: the size control multiplies rather than overrides
+
+**Overriding fails the person the feature exists for on their first screen.** Somebody
+at OS 200 percent has already told their phone they cannot read 100 percent, and an
+overriding app opens at 100 percent silently. The default step is exactly 1.0, so a
+person who never opens the row gets their phone's figure untouched.
+
+**Considered and rejected: overriding**, which gives one dial that means one thing, at
+the cost of ignoring a setting somebody may have set deliberately for every app they
+own. The cost falls on precisely the audience Addendum 01 is written for.
+
+**The 2.0 cap is a measurement rather than a round number.** Every clipping analysis in
+this project is written against the 200 percent condition: section 13 states it, 5.3
+caps the timer numeral at 1.3x of it, and the tab bar's own note measures the pill at
+roughly 290dp of the 314dp available. A control able to exceed 2.0 would invalidate all
+three at once, on a device nobody has run. The cost is stated rather than hidden: a
+phone already at 200 percent has no headroom, so the steps above default change
+nothing, they stay tappable because 10.16 forbids the disabled control question, and
+one line says the phone's own setting is what is deciding.
+
+**Revisit if** every screen has been walked at 200 percent on a device and found to
+have headroom, which is a device task and is in `HANDOFF.md`.
+
+### Why: a list rather than a slider, and labels at the current size
+
+A slider is continuous for a quantity that is discrete on this platform and a ladder in
+5.3. A preview paragraph is a specimen in a fixed box, which is the one thing that
+cannot show the half that matters, that spacing moved with the type. Settings is
+already real content, so **the screen is the preview**: sideheads, row titles,
+captions, a paragraph, switches and a card all re-lay out on the tap.
+
+**The second choice matters more than the first.** Every option label is set at the
+current size, never at its own. The tempting version shows the ladder at a glance, and
+it renders the two smallest rows below the size a person has already told the app they
+cannot read, which makes the affordance for a size control fail the need the size
+control serves.
+
+**Revisit if** the ladder ever gains enough steps that a list is a scroll.
+
+### Why: one contrast floor, and no dyslexia friendly typeface
+
+WCAG allows 3:1 for large text, and taking it is the common answer: it would put the
+21sp item title, the 40sp display hero and the 64sp timer numeral below the audit's
+reach for free.
+
+**It is refused for a reason specific to this app rather than for taste.** `sp` is not
+`pt`, so the boundary is already approximate on Android; and this pass added an in app
+size control on top of the OS font scale, so every size in the app moves by a factor
+the audit cannot know. **A floor that depends on a size is a floor that changes when
+somebody drags a slider.** Section 13 states one number for text and the audit uses
+it, keeping 3.0 for a shape rather than for a large word.
+
+**No dyslexia friendly typeface**, per 8f, whose argument is that the evidence for
+them is thin and that the same investment in size and contrast helps every condition
+in Addendum 01 and everybody else. The two bundled families stay Newsreader and Hanken
+Grotesk.
+
+**Revisit if** the evidence base for a typeface changes, or if the size control is
+removed.
+
+### Why: one action color per world, and a filled action inverts its label
+
+The audit found the same token failing in two directions: white on the light fill at
+3.81 to one, and the token itself as text at 3.06 on the canvas at five call sites. A
+fill has to be dark enough to carry a label and text has to be dark enough to be read.
+In the light world both wants point the same way, so one value serves both. **In the
+dark world no value does**: text needs a lightness above one threshold and white needs
+it below a lower one, and the two do not overlap. So the word white leaves the design
+and the label inverts to `card`, which is the inversion 10.8 already used for the
+destructive button and the selected chip.
+
+The binding constraint on the light value turned out to be the Swap face, because a
+token has to be legible on its own tint.
+
+**Considered and rejected: two blues, a bright fill and a darker text variant.** That
+is the statistically common answer and it does not work here.
+
+**Revisit if** a third role for the action color appears that neither value serves.
+
+### Why: `positiveGreen` splits, and the Swap face stops using the accent
+
+`positiveGreen` has to stay a light mint, because section 11 calls the Trail's ground a
+mint and 10.7 puts a label on a 13 percent button, and its foreground has to be dark.
+One value cannot do both, and that was measured rather than assumed: a single dark
+green breaks the surface ladder on the 13 percent fill and still cannot reach 4.5 on
+its own Complete face. `positiveInk` is new and retires a hardcoded green.
+
+**The Swap face was the wrong shape, and the evidence is a measurement.** 3.4's remedy
+for this exact problem elsewhere is to derive a readable variant of the area accent.
+Applied to this ground it would move **44 of 48 colors, a median of 34 percent toward
+black, five of them past half**. A color blended past half no longer identifies
+anything, so the mechanism does not belong here. The face takes the token its own
+ground is tinted from, matching Complete and Delete, and identity stays where 3.4 puts
+it: on the card being swiped, 8dp away.
+
+**Revisit if** the swipe faces stop being tinted from a token.
+
+### Why: the wash range narrows rather than the label being re-solved
+
+3.1 and 3.2 permitted a wash one point deeper than 3.4 solves the area label against.
+Nothing draws it, because the shipped depth is inside both, so this was **a trapdoor
+under a token that looked safe to nudge** rather than a live defect.
+
+Narrowing the stated range moves no shipped pixel. Re-solving the label against the
+wider range would have moved every area label in the app. The simpler and more
+reversible option wins, and the two functions that computed the two ranges are now
+one, so the trapdoor is structurally closed rather than numerically avoided. The test
+asserts that one point deeper still fails, so the narrowing stays load bearing rather
+than becoming a comment.
+
+**Revisit if** a wash depth outside the narrowed range is ever wanted, in which case
+the label variant is re-solved first and this entry is superseded.
+
+---
+
+## August 28, 2026: four calls taken during an unattended run
+
+The owner authorized an unattended run through phase 13 with a standing instruction:
+decide anything undecided, prefer the simpler and more reversible option, log it here
+with one line of reasoning, and continue. These are the ones that were not covered by
+a section above.
+
+### Decided
+
+- **The re-entry screen gets a phase**, 12c, issue #56
+- `androidx.benchmark` is pinned to **1.5.0-rc02**, the one prerelease in the catalog
+- The baseline profile journey is **cold start plus one fling**, and not a scripted tour
+- The **anti-slop sweep is not performed**, and 15.1 is not re-dated
+
+### Why: the re-entry screen gets a phase
+
+14b.4 specifies the screen in full and says assigning it a phase is the owner's call.
+Phase 6 built the two engine side consequences that follow it and the engine gaps pass
+built the third. Shipping all three suppressions without the screen means the app is
+careful not to mention an absence to somebody it then greets with nothing at all,
+which is half of a good idea. It is one screen and it is finished when it works.
+
+**Considered and rejected: folding it into phase 13.** Section 19 already makes that
+argument about 12b: work buried inside a ship phase is the first thing cut when a date
+moves.
+
+**Revisit if** the owner would rather ship without it, which is a scope call and not a
+correctness one.
+
+### Why: a release candidate in the version catalog
+
+`MASTER_BUILD_PROMPT.md` 3.3 requires checking the current stable release rather than
+trusting a version named in a document. The current stable `androidx.benchmark` is
+1.4.1 and **its Gradle plugin refuses to apply to this project**: it fails with
+"Module :app is not a supported android module" because it inspects AGP through
+interfaces AGP 9 changed. 1.5.0-rc02 applies cleanly.
+
+**Considered and rejected: shipping no baseline profile.** Nothing else generates one,
+and a slower cold start on every launch is a worse trade than a release candidate in a
+module that produces a build input and ships no code into the APK.
+
+**Revisit if** 1.5.0 final ships, at which point the pin moves and this entry is done.
+
+### Why: the baseline profile journey is short
+
+A baseline profile is compiled ahead of time and costs install time and disk for every
+class it names, so its value sits almost entirely in the path from tapping the icon to
+the first usable frame. Everything after that is already warm.
+
+**Considered and rejected: a scripted tour** through all four tabs, the Pulse, a
+session and the Report, on the theory that more coverage makes a better profile. Every
+step that waits on a specific string is a step that silently stops contributing the
+day that string moves, which is 3.4's failure mode exactly: a script that looks
+thorough and is not.
+
+**Revisit if** a phase that is genuinely expensive and genuinely on the critical path
+is added to startup, in which case it is added here and the commit says which frame it
+bought.
+
+### Why the anti-slop sweep was not performed
+
+15.2 makes it a release gate and 15.1 is a dated record of what the industry currently
+produces. **It cannot be re-derived from inside this repository or from a model's
+memory of the year before the list was written.** Phase 12b reached the same
+conclusion and deliberately did not re-date the list, and this run agrees rather than
+overruling it. Stamping a date on a sweep that did not happen is worse than an honest
+gap.
+
+What was honestly done: every entry of 15.1 and 15.3 was checked, one at a time,
+against everything phases 3c, 12, 12b, the accessibility pass and 13 built. Nothing
+built appears on the list and nothing built is refused by 15.3.
+
+**Revisit if** somebody with current information runs the sweep. It is in `HANDOFF.md`.
+
+---
+
+## August 28, 2026: the sixth measurement, and two tests that had never agreed with the code
+
+The first pass in this chain allowed to run Gradle. Three sessions wrote facts, two gates, a
+veto, a cyclical persona and two simulator repairs without compiling any of it. **All of it
+compiled on the first attempt and every test any of them wrote passed.** What did not pass
+was two tests nobody in this chain had touched.
+
+### The restatement test that had been red since the narrowing landed
+
+`ReportInvariants` restates section 9 by hand so that a report satisfying the production
+code and violating the document is a defect in one of the two. It was never given the one
+narrowing check 1 has: a rule carrying `ClarityRule.absenceSubject` may name an area with no
+events in the window when that area has a real lifetime, is not new, and has a measured
+`daysSinceLastEvent`. So it refused every `neglectedArea` and `areaGoneQuiet` sentence in the
+catalog while `ReportIntegrity` and `ClarityValidator` passed them both.
+
+**358 violations over ten thousand generated weeks and 112 across the eleven persona years,
+none of them a phantom area, and every one of them present at HEAD.** The failure is not new
+work; it arrived with the narrowing and was committed red. The presence fix in the entry
+below took the persona count from 112 to 36 without touching the cause, which is the only
+reason it looked like this session's problem.
+
+**The four conditions are restated there with their literals rather than read from
+`FactExtractor`.** `AbsenceSubject` takes the constant, deliberately, because production must
+not let the fact and the guard drift apart. A second encoding that reads the first one's
+numbers is not a second encoding, so the five is written out and cited. The cost is that a
+legitimate change to the floor fails this test, which is what the test is for.
+
+### A gate cannot only remove, at the level of a page
+
+`CapacityGatePersonaTest` asserted that no family speaks under the gate that did not speak
+without it, citing 11.4's `never pad a section to reach a minimum`. **That is false and has
+to be**: a report shows one headline and at most four observations out of everything that
+qualified, so removing a candidate frees a place and the next one takes it. Sixteen lines in
+the cyclical year are exactly that, and one of them is `datedFallback`, the rule `ReportRules`
+calls the one meant to pass most of the time, whose entire purpose is that a headline slot is
+never empty. Reading those as inventions reads 11.4 as a rule against the fallback the
+catalog is built around.
+
+**The claim belongs to the selector, and there it is true.** Step 1b is a filter over
+`qualified`, so for every purpose the gated ranking is a subsequence of the ungated one: same
+pairs, same order, some missing. 260 rankings compared across the year, none out of order.
+That assertion fails the moment somebody makes either gate a criterion instead, because
+`specificity` is `criteria.size` and a criterion reorders a ranking rather than shortening
+it, which is the mistake `FamilyAvailability` spends its class comment arguing against. The
+weaker claim was asserting the composer's arithmetic; this one asserts the design.
+
+### The sixth measurement, and which half of it is the instrument
+
+The full table is in `CLARITY_LOGIC_ENGINE.md` 12. **Silence is 65.7 percent against a
+ceiling of 25, and the fifth measurement's reading of it survives.** Emptying the filtered
+column entirely leaves 28.7 percent against 29.0 at the fifth: the same finding to within a
+rounding, so bench depth is necessary and provably not sufficient, and phase 9 is still
+authoring to fix silence rather than repeats.
+
+**The two causes were separated rather than argued.** The sixth run is the first carrying
+both the repaired instrument and the two gates, so a control ran the same year with
+`FamilyAvailability.unavailable` returning null throughout. Its silence table is identical to
+the sixth measurement in every cell. That was predictable from the tables alone, since no
+Pulse family appears in either gate and `RE_ENTRY_PURPOSES` excludes the Pulse outright, but a
+prediction and a reading are different things and only one of them is evidence. So 63 to 65
+is the presence fix entirely, and the gates cost no Pulse sentence.
+
+**What the gates cost is priced honestly.** `quietWeek` goes dark as a headline and absences
+named on purpose fall from 101 to 38. Both are the mechanism working: sixty three of those
+hundred and one were an area falling quiet in the same way it had fallen quiet before. The
+family coverage row moves down from 71 of 78 to 69 and should, because a family going dark is
+a cost wherever the reason for it lives. `abandonmentPattern` is the other one and it is the
+instrument rather than the gate: `abandoning` no longer writes on days it was not there.
+
+### One measurement was nearly reported wrong, and the harness was the reason
+
+The first attempt at the 14b.4 reading drove the persona by hand and did not call
+`SimulatorLog.opened`, so no `APP_OPENED` reached the log, `TrailQueries.lastReEntryOnOrBefore`
+found no return, and `isJustBackFromAbsence` was false all year. Read at face value it says
+the re-entry gate is unreachable in the simulator and the checklist line is vacuous. **The
+simulator writes the open on every present day and always has**, and the true reading is that
+the gate fires and removes seven sentences. The comment in `CapacityGatePersonaTest` that says
+no `APP_OPENED` is written is about that test's own hand rolled loop and is correct there;
+read as a statement about the simulator it is what sent the first harness wrong. The rule this
+leaves: **a measurement of a surface is taken through the thing that drives the surface, and
+a harness that reimplements the driver is measuring the harness.**
+
+### A Gradle failure worth writing down, because it looks like a test failure
+
+Two workflows were building the same checkout at the same time. The second one's
+`testDebugUnitTest` clears `app/build/test-results/testDebugUnitTest` while the first is
+writing into it, and the symptom is `java.io.EOFException` with a Kryo buffer underflow, or a
+`NoSuchFileException` on `in-progress-results-generic.bin`, on a task whose tests all passed.
+It cost a wrong diagnosis first: the output of `SimulationAggregate.of` was blamed for
+overflowing Gradle's output store, a comment was written into `SimulatorTest` saying so, and
+it is not true. **The fix is a separate build directory, not a smaller println**, and the
+comment is corrected rather than left standing.
+
+`SimulatorTest` now prints `SimulationAggregate.of(runs)`. Four rows of section 12's table are
+quoted from that object and from nowhere else, it has been computed on every run since phase
+5, and nothing printed it, so each of the six measurements began with somebody writing a
+harness to see numbers the suite already had.
+
+---
+
+## August 28, 2026: the day the app was never opened, and a cyclical life rather than a cycle
+
+Two defects in the same instrument, found in the same reading. The simulator wrote events
+onto days no persona had opened the app, and the persona built to prove the capacity gate
+was a waveform rather than a life. Both are fixed here, and one document amendment made a
+day earlier is withdrawn.
+
+**No corpus line was written, added or edited.** That is phase 9.
+
+### Decided
+
+**A persona is asked what it did only on a day it was there, and the install day is one of
+those days.** `SimulationPersona.isPresentOn` is the single gate. The simulator,
+`ReportPersonaTest` and `CapacityGatePersonaTest` all apply it and nothing else does.
+
+**A clearing session that lands on a day nobody was there is skipped, never deferred.**
+
+**`SimulationPersona.CYCLICAL` is rebuilt as twelve irregular episodes across a year**, and
+`CapacityGatePersonaTest` now asserts 14b.9's sentence with nothing added to it: no decline,
+neglect or fading observation in any of the fifty two weekly reports.
+
+**The amendment to `MASTER_BUILD_PROMPT.md` 17 that scoped that claim to the second half of
+the year is withdrawn**, along with the entry above this one that argued for it.
+
+### Why: the day the app was never opened
+
+`ClaritySimulator.run` asked `opensOn(day)` before writing `APP_OPENED` and running the
+engine, and then called `act(log, day)` **unconditionally**, outside that branch. So
+`sporadic`, which opens on 249 days of the 365, and `abandoning`, which opens on 153, wrote
+`ITEM_ADDED`, `ITEM_PROMOTED` and `ITEM_COMPLETED` onto days carrying no open marker at all.
+**Ninety six days across the two of them**, 52 and 44, each holding captures or completions
+the app has no path to write. **The real app cannot produce that log.** Nothing is captured,
+promoted, completed or focused on except through a screen, and the shell writes the marker on
+the first foreground of each local day.
+
+It is the same class of defect as the persona set in which nobody could finish a backlog,
+found in the same place, and it has the same consequence: **every silence and coverage number
+this project has recorded was read through an instrument that could represent a person who
+was not there.** It is fixed the same way too, in the instrument rather than in each life. A
+driver that has to ask two questions in the right order is a driver that will one day ask
+one, so there is now one question. `opensOn` stays as the thing a life decides and is never
+called by a driver; `isPresentOn` is what a driver calls.
+
+**The install day is inside the gate and that is the half that is easy to miss.** `setUp`
+writes `AREA_CREATED`, which is a screen gesture like any other, so an install day the
+persona happened not to open would put the same impossible event one line earlier than the
+ones the fix removes. Setting an app up is an app session, so the install day answers true
+whatever `opensOn` says, and a persona whose own plan had nothing for that day simply does
+nothing once the areas exist. That is what installing an app and not adding anything looks
+like. It also makes the fix safe for every persona written later, including ones whose
+`opensOn` is a hash that may say no on day zero.
+
+*Considered and rejected:* moving the `opensOn` test into each `act`. Eleven copies of one
+invariant, and the twelfth persona would forget it. *Also rejected:* leaving `setUp` outside
+the gate and documenting that install days must be open days. A documented invariant with
+nothing enforcing it is the same defect waiting on a different line.
+
+*Revisit if:* a persona ever needs to represent something the app records without a
+foreground, which today is nothing: every payload in `docs/EVENT_FORMAT.md` is written from
+a screen, a widget or a tile, and all three are foregrounds.
+
+**Skipped, not deferred, and the reason is `roll`.** Four personas gained a clearing session
+in the pass before this one and some of `sporadic`'s land on days it does not open. The
+alternative was to carry a pending session to the next day opened. It is rejected because
+`roll` is a hash of the persona, the day and a label and of nothing else, which is the
+property the whole persona file is built on and the reason a seeded `Random` was refused:
+what happens on a day must not depend on how many days came before it. A pending session is
+state carried across days. **`sporadic`'s session roll comes up 50 times in the year and 11
+of them land on a day it is not there, so it has 39 clearing afternoons rather than 50.**
+That is the correction showing and there is nothing to compensate for: an afternoon spent
+clearing a list without the app open is an afternoon the app has no record of.
+
+*Revisit if:* a persona is ever wanted whose whole point is that work happens away from the
+app and is entered later, which is a real behavior and a different life.
+
+### Why: a life rather than a waveform
+
+The persona built a day earlier was three weeks moving and three weeks still, all year.
+**A clean period passes the test and proves nothing**, because the precedent fact is then
+matching on a shape no person produces: every fall the same depth, the same length, the same
+distance apart, and every one of them a precedent for every other by construction. If the
+gate only holds for a regular cycle then the gate is wrong, and a persona with a period in it
+is the one instrument guaranteed not to find out.
+
+**What replaced it.** Fifty three weeks of capacity written out one at a time. Twelve
+episodes, one to three weeks long, arriving after gaps of two to six good weeks, bottoming
+out anywhere from thirteen events in a week down to one. The recoveries are of different
+heights and the days inside each week move, so two weeks of the same capacity are the same
+size and never the same week.
+
+**What is deliberately not varied, stated rather than hidden.** An episode begins on a week
+boundary. A seven day bucket anchored on the window end is the grain every fact in 3.1 is
+computed at, and an episode that straddled one would reach the precedent walk as two short
+falls where the person had one long one. That is a real shape and a fair thing to test, and
+it belongs to a persona of its own, because the reading it exercises is whether the fact
+recognizes a fall that is out of phase with the grid rather than whether the gate closes on
+one. Also not varied: the depth **band**. Every low week in the year is under half of this
+person's normal, because `Precedent` compares two falls by band and a year of dips scattered
+across two bands would be a year in which half of them are precedents for nothing. That is
+also a fair persona to build and it is also not this one.
+
+### Why the whole year can be silent, which the entry above this one said it could not
+
+The entry above argued that the first season must be allowed to speak, because the first fall
+has no precedent and the second arrives before the twelve weeks `Precedent.MIN_HISTORY_WEEKS`
+requires. **The premise is right and the conclusion does not follow.** What it missed is that
+the two definitions of a bad week are not the same width.
+
+`Precedent`'s low is a week under three quarters of the subject's own normal. **No decline
+family asks that question**, which is the argument that settled `CLOSES_THE_GATE` a day
+earlier, read in the other direction: `quietWeek` wants a week holding fewer events than it
+has days, `decliningActivity` wants three weeks falling strictly, `neglectedArea` wants seven
+days of silence in an area with five lifetime events and a fortnight behind it. So a week can
+be squarely inside a fall by the fact's reckoning and reach nothing that can be said out loud.
+
+**The first eleven weeks of this persona are made of exactly those weeks.** Two episodes, one
+of them three weeks long, every week in them between seven and nine events against a normal
+of about twenty five, and none of them arranged so that three weeks fall strictly in a row.
+By the twelfth week, which is where a precedent first becomes answerable, this person has a
+fall of every length and every depth band the rest of the year contains, and everything after
+it is familiar.
+
+`home` carries the same story and needs it more, because an area's quiet weeks are its own
+band and only an earlier empty stretch is a precedent for one. It is created on the first day
+and not opened until the fourth week, which is ordinary and is also the only window in which
+an area can be silent without `neglectedArea` being entitled to speak: under five lifetime
+events and under a fortnight old, both of that family's own guards are shut. Every later
+quiet stretch of `home` is measured against that fortnight, and none of them runs longer.
+
+*Considered and rejected:* keeping the second half scoping and leaving 14b.9's sentence
+qualified in section 17. It is the honest answer only if the sentence cannot be met, and it
+can. *Also rejected:* a persona whose first dip arrives after week twelve, so that the app
+has history before anything happens. It fails immediately: the first fall then has a full
+history behind it and no precedent in it, which is `NONE`, which is the permission.
+
+*Revisit if:* `Precedent.MIN_HISTORY_WEEKS`, the three quarters band or the half band moves.
+All three are load bearing for this persona and the second test below says so by name.
+
+### The second assertion, and why one was not enough
+
+`CapacityGatePersonaTest` composes each week twice and the control run, with every precedent
+forced to `NONE`, is the finding: **twenty nine gated observations across the year that this
+app would have said before 14b.9 existed.**
+
+The silence assertion alone would pass on a year in which a gated family never qualified,
+never won its ranking, or was held off by a cooldown, and none of those is the capacity gate.
+So there is a second test, and it is an assertion about the persona rather than about the
+engine: every gated observation the control run produced sits on a fall whose precedent reads
+`PRESENT`. Its failure message names the week, the family and the value it found instead,
+which is the difference between a red build somebody can act on and one somebody has to
+bisect. `NOT_IN_A_DIP` or `NONE` means the persona has drifted; `INSUFFICIENT` means something
+qualified in the first twelve weeks, where no gate can help.
+
+### What ran, and what did not
+
+**No Gradle task and no `adb` command was run in this workflow**, per the instruction. What
+was done instead is worth stating exactly, because it is stronger than reading the code and
+weaker than running it: **the fact extractor's precedent walk, its bucket arithmetic and the
+qualification test of all six gated rules were reimplemented outside the project and the
+persona's whole year was run through them**, including a mirror of `StableHash` down to the
+signed sixty four bit ordering the day picker sorts on. That model reports fifty two weekly
+readings, twenty nine gated firings and zero of them ungated. It is a model and not the
+suite: it does not build a report, does not rank, does not run layer five, and could be wrong
+about all three. **The first `./gradlew verifyClarity` is the real check**, and the assertion
+most likely to move is the second one above, whose message names what to look at.
+
+**Every number in the fifth measurement is now a reading of the previous instrument.** The
+presence fix moves `sporadic` and `abandoning` and therefore every aggregate row. The next
+run of the year is the sixth measurement, and the tables in `CLARITY_LOGIC_ENGINE.md` 12,
+`docs/BUILD_STATE.md` and the entry below this one are labeled current and are not until it
+happens. The fix was made deliberately before phase 9 rather than after, because phase 9
+authors against those numbers and re-authoring against a moved baseline is the expensive half.
+
+---
+
+## August 28, 2026: the gate, the veto and the criteria that read the three 14b facts
+
+The second half of the work Addendum 01 gave phase 8 and phase 8 did not carry. The pass
+before this one built three facts; this one built the things that read them: the capacity
+gate of 14b.9 and the family it fires into, the week of withholding after a return of
+14b.4, and the estimate delta veto and floor of 14b.8.
+
+**Not one corpus line was written, added or edited.** That is still phase 9, and two
+benches are now owed to it rather than one.
+
+### Decided
+
+**Both suppressions are one mechanism, at step 1b of selection, and neither is a
+criterion.** `FamilyAvailability` holds two tables and `Selector` applies them between
+step 1 and step 2. `WITHHELD_ON_RE_ENTRY` is 14b.4: thirteen families removed for seven
+days from a return, on the Report, the Momentum headline and the Areas banner.
+`PRECEDENT_GATED` is 14b.9: six families removed when the precedent for their own subject
+is `PRESENT`.
+
+**The estimate delta veto is check 11 in `ClarityValidator`**, appended rather than
+inserted, with a floor enforced the way the share floor is enforced.
+
+**The second branch of 14b.9 is a new family, `familiarDip`, declared with its three rules
+and held out of the catalog** in `FamiliesAwaitingLanguage` until phase 9 authors its
+bench.
+
+**The capacity gate closes on `PRESENT` alone.** This is the one reading in 14b.9 that had
+to be settled rather than transcribed, and both `CLARITY_LOGIC_ENGINE.md` 3.1 and
+`MASTER_BUILD_PROMPT.md` 14b.9 said something else before this entry. See below.
+
+### Why a filter and not a criterion
+
+**Specificity is `criteria.size` and nothing else.** A criterion added to `quietWeek` to
+make it check `!isJustBackFromAbsence` would raise that rule's specificity by one and make
+it outrank a rule that genuinely required more, which is a thumb on the ranking applied to
+exactly the families both sections want demoted. Section 4 also forbids padding a rule with
+a trivially true criterion, and `!isJustBackFromAbsence` is true on all but seven days of a
+person's life.
+
+Both sections describe a filter in their own words. 14b.4: "every rule in those families is
+**unavailable to selection** and the next ranked candidate is taken instead." 14b.9: the
+gate must "**gate those families rather than merely re-word them**". A filter removes and
+never reorders, which is what both sentences ask for and what the tests assert.
+
+**Step 1b is numbered rather than inserted.** The seven steps of section 5 are cited by
+number from three documents and from the tests. `PulseGeneration` already set the precedent
+with its own 2b, for the same reason and in the same section.
+
+*Considered and rejected:* a criterion on each rule, which is the obvious answer and is
+where a reader expects a condition to live. It loses on specificity, on padding, and on a
+third thing that only shows up at scale: fourteen families would need the criterion added
+by hand and nothing would fail if one were missed. A table fails a test when a key names
+nothing. *Revisit if:* a family ever needs to be withheld for a reason that is genuinely
+about its own week rather than about whether it may speak at all.
+
+### Why the capacity gate closes on `PRESENT` alone
+
+`Precedent` has four values. 14b.9 and 3.1 both said `NONE` is the permission, `PRESENT`
+is the veto, `INSUFFICIENT` is neither, and "both branches test for their own value, so a
+person with too short a history gets neither sentence". Read strictly, that asks a decline
+family to require `NONE`, which closes the gate on `INSUFFICIENT` **and on
+`NOT_IN_A_DIP`**.
+
+**`NOT_IN_A_DIP` is the argument, and it is not the one the sentence was written about.**
+This fact's notion of low is a week under three quarters of the subject's own normal. No
+decline family asks that question. `decliningActivity` reads a run of three falling weeks,
+which can end on a perfectly ordinary week; `neglectedArea` reads a gap measured in days,
+which can open inside a week the area was busy at the start of; `hardStretch` reads four
+weeks. Requiring `NONE` would silence a true observation every time the family's trigger
+and the fact's definition of a dip came apart, and **a missing sentence is the one defect
+nothing on the screen reveals**.
+
+`INSUFFICIENT` went the same way and the reasoning is separate. Closing on it would
+withhold every decline observation from every install between its fourth week, where the
+families first have a series to read, and its twelfth, where a precedent becomes
+answerable. That is eight weeks of an app that has noticed something and decided not to say
+it, on exactly the people 14b.10 says are deciding whether to keep it.
+
+**Both documents are corrected in place rather than left standing beside the code**, per the
+living documents rule, and the `Precedent` enum's own note with them. The decision is one
+line, `FamilyAvailability.CLOSES_THE_GATE`, and adding `Precedent.INSUFFICIENT` to it is the
+whole of the other reading; both persona tests would then measure it.
+
+*Considered and rejected:* implementing the sentence as written and recording the
+`NOT_IN_A_DIP` problem as an open question. It loses because the loss is invisible: a family
+that stops firing produces no error, no veto and no line in a dump, and nobody would find it
+without asking. *Revisit if:* the owner reads the two arguments above and prefers the strict
+reading, at which point it is one word and two test expectations.
+
+### Which families each gate names, and the rule that chose them
+
+**The precedent gate is the mapping the facts phase declared, and it is not widened.** A
+family is gated only where a precedent fact measures **the same quantity its claim is
+about**: the activity precedent answers for `decliningActivity`, `quietWeek` and
+`hardStretch`, the focus precedent for `focusHabitFading`, and the area precedent for
+`neglectedArea` and `areaGoneQuiet`.
+
+`narrowingFocus` is the family that tests the discipline and it is deliberately left out. It
+is a decline by any reading, and its claim is about how many areas moved, which no precedent
+fact measures. Gating it on the activity precedent would suppress a claim about breadth on
+the strength of a finding about volume, and the two come apart on exactly the person this
+section protects: somebody whose cycle narrows to one area without their total activity
+falling has a real narrowing and no precedent for it in any fact this app holds.
+
+**The re-entry set is derived from a stated rule as well**: a family belongs there when its
+trigger is a fall, a silence, or the gap a return came back from, because those are the
+three shapes an absence creates in the data.
+
+**The gap families are the half a reader will not expect, and they are the reason the set is
+not simply the decline list.** `mo.come.01` is `Back after {ageDays}` and `ob.rev.l01` is
+`{areaName} moved again after {ageDays} of nothing`. Both are warm, both are true, and both
+state the length of the absence in days on the first screen a returning person sees, which
+14b.4 forbids in as many words: not in days, not in weeks, not as a date. `comeback`,
+`areaRevival` and `comebackPattern` are in the set for that reason and for no other.
+
+**What is deliberately absent from the re-entry set.** `queuePressure` and `growingQueues`
+read a queue that grew, and a queue does not grow while nobody is there: nothing is added
+either, so both boundaries are equal. `focusAbandonment` and `abandonmentPattern` need
+sessions inside the window, so they describe what somebody did after coming back rather than
+the fact that they were gone. Withholding a family an absence cannot trigger costs a true
+observation for nothing.
+
+*Revisit if:* a family is added whose trigger is a fall, a silence or a gap, at which point
+it belongs in the table and `FamilyAvailabilityTest` will not notice on its own.
+
+### Where the two gates overlap, and why it does not matter
+
+A returning person is exactly the person a decline family fires on, so almost every
+precedent gated family is withheld twice. **Re-entry wins**, because it is unconditional and
+runs first, and it does not matter which wins, because both remove the same selection.
+
+What would have mattered is the second branch speaking in the withheld family's place. **A
+sentence about a familiar stretch of low weeks, said on the first report after a fortnight
+away, is the absence measured in a kinder vocabulary.** So `familiarDip` is in the re-entry
+set too, and a test asserts it, because the two mechanisms are otherwise one edit away from
+fighting.
+
+### The estimate veto, and why it is a check rather than a word
+
+**Check 11, appended.** The ten checks of section 8 are cited by number from this file, from
+`MASTER_BUILD_PROMPT.md` and from the tests, so an eleventh in the middle would renumber
+them silently.
+
+Two rules. **The language rule** vetoes any delta form anywhere in the sentence, whether or
+not the sentence mentions an estimate, because 14b.8's second forbidden line, `You were off
+by 140 percent`, never says the word. **The shape rule** vetoes a `Percent` slot in a
+sentence that is about an estimate, where about an estimate means the sentence says so or
+one of its numbers came from a measure whose id begins `estimate`. 14b.8 makes the reading a
+multiple and never a percentage for a stated reason, and this is that reason enforced.
+
+**It is a backstop and the file says so.** The prohibition is kept above this layer by
+arithmetic: `TrailQueries.estimateOutcomes` divides the two magnitudes inside its own body,
+no quantity of minutes exists anywhere in the fact set, and neither new measure produces
+one, so `actual - estimate` is not a subtraction any rule or template can write.
+
+*Considered and rejected:* adding `underestimated` to the banned word list in check 8, which
+is two lines instead of a check. It loses twice: a veto detail naming a banned word tells a
+reader months later nothing about which section was violated, and the shape rule has nowhere
+to live. *Revisit if:* section 8 is ever renumbered wholesale, at which point this becomes
+check 11 of eleven rather than an appendix.
+
+**The floor is a mechanism with no subjects yet, and that is what it is for.**
+`RuleBuilders.estimateFloor` is the criterion, `CatalogIntegrity.estimateRulesCarryAFloor`
+fails the build on any rule whose criteria read an estimate fact without it, and
+`estimatedCompletions` is the measure that carries the count to the validator so 11.4's
+re-read holds. The measure reports the count truthfully whatever it is, including under
+five: a measure that refused would make the ref unreadable and check 3 would veto for
+untraceability, which is a true veto with the wrong reason on it.
+
+### The reserved family, and the register that holds it
+
+`familiarDip` is declared in `FamiliesAwaitingLanguage`, which is the mirror of
+`RulesAwaitingFacts`: that one holds a family with language and no rule, this one holds a
+family with rules and no language.
+
+**The catalog cannot hold a half built family and neither check should be relaxed for it.**
+`ReportWalker.finish` throws when the families declared in `EngineFamilies` and the families
+found in the corpus file differ in either direction, and `CatalogIntegrity` fails a rule
+naming a family the corpus does not carry. A family with a rule and no bench would qualify,
+produce no sentence, and look exactly like a family that never happened to fire, which is
+the failure `RulesAwaitingFacts` exists to make visible from the other side.
+
+*Considered and rejected:* pointing the second branch at an existing family. `comebackPattern`
+is the closest, and it loses on both halves: it requires the area to have moved in the
+window, so it cannot speak during the fall it would be describing, and it is a pattern where
+the families being relieved are mostly observations. *Also rejected:* leaving the second
+branch unbuilt and recording it for phase 9. 14b.9 asks for the gate and the branch
+together, and a gate whose other side does not exist is an exclusion rather than a
+difference in language. *Revisit if:* phase 9 finds the family cannot be written under the
+five constraints recorded with it, in which case the honest outcome is a gate that excludes
+and says nothing, recorded as such rather than discovered.
+
+**The name is `familiarDip` rather than `rhythm`.** 14b.9 says "it is a rhythm, not a
+decline" in those words, which makes `rhythm` the obvious name, and it collides with
+`consistentRhythm`, an existing pattern family meaning something else entirely. A family key
+is not private: it is stored on every `REPORT_GENERATED` event, so it is in the export file
+and in `docs/EVENT_FORMAT.md`, which is the contract a second implementation is built from.
+DECISIONS C6 is the same argument about `FOCUS_ABANDONED`.
+
+### The twelfth persona, and where it does not live
+
+**Superseded in part by the entry above, dated the same day.** The persona's shape is
+rebuilt there and is no longer three weeks moving and three weeks still; where it lives is
+unchanged and the argument for that is below. The paragraph on its arranged shape and the
+subsection after it are the parts that no longer describe the code.
+
+`SimulationPersona.CYCLICAL` is three weeks moving and three weeks still, all year, and it
+is **not** in `SimulationPersona.ALL`.
+
+*Why:* `ALL` is section 12's enumeration and every measurement this project has recorded is
+quoted against those eleven years: five silence readings, five family coverage readings, the
+variant repeat baseline phase 9 is judged by, and the pattern section's concentration. A
+twelfth life in that list would move every one of those numbers, and a reader comparing a
+sixth measurement against the fifth would be comparing two instruments without being told.
+This persona is not a measurement; it is the proof of a gate. *Considered and rejected:*
+adding it to `ALL` and restating the five measurements, which is the thorough answer and
+costs a run of the year plus five table edits to buy nothing the gate test does not already
+prove. *Revisit if:* a sixth measurement is taken for its own reasons, at which point adding
+it is one line and the tables are being rewritten anyway.
+
+**One thing about its shape is arranged and it is recorded rather than hidden.** The good
+week is the **middle** of the three moving weeks. A person who builds up, peaks and tapers
+has no three consecutive weeks that fall strictly, so the only strictly falling run of three
+weeks the year contains is one that ends in a still week, which is a week the person is
+measurably low in. That matters because `decliningActivity` reads a falling run while the
+precedent fact reads how low the newest closed week is, and the two would come apart on
+somebody whose smooth three week descent ended at an ordinary week. **That shape is real and
+it belongs to a persona of its own**, and it is the same gap `narrowingFocus` sits in.
+
+### What the year is asserted to say, and what it is allowed to say
+
+**The second half of this subsection is reversed by the entry above, dated the same day.**
+The first season is not allowed to speak and nothing in the year is: the premise below is
+right and the conclusion drawn from it is not, for the reason given there. Composing each
+week twice is unchanged.
+
+`CapacityGatePersonaTest` composes each week **twice** from the same facts and the same
+firing history, once as the app now speaks and once with every precedent forced to `NONE`,
+which is the year this person would have had before 14b.9. **The control run is the
+finding.** A test that only asserted silence would pass on a persona nothing ever qualified
+for, which is the easiest green test in the world to write.
+
+**The first season is allowed to speak.** The first fall has no precedent because nothing
+has seen its like, and the second arrives before this person has the twelve weeks of history
+`Precedent.MIN_HISTORY_WEEKS` requires, so the decline families speak in the first season and
+fall silent afterward. That is correct rather than a hole in the gate: a cycle needs two
+turns before it is a cycle, and an app that recognized one from half of one would be
+guessing. Section 17's line said "receives no decline, neglect or fading observation at all",
+and it is amended to carry that qualification, because the sentence as written asks for
+something no fact can support.
+
+*Revisit if:* the owner wants the first season silent too, which is the `INSUFFICIENT`
+reading above and is the same one line.
+
+### What ran, and what did not
+
+**No Gradle task and no `adb` command was run in this workflow**, per the instruction. Brace
+and paren balance, the hygiene rules, and every API this pass calls were checked by reading
+the code that declares them. **The first `./gradlew verifyClarity` is the real check**, and
+one assertion is named in the handoff as the one most likely to need a second look:
+`CapacityGatePersonaTest`'s claim that the second half of the cyclical year is silent depends
+on the persona's shape rather than on the gate, and its failure message names the family, the
+day and the precedent so the next session can tell which of the two moved.
+
+---
+
 ## August 28, 2026: the persona defect, and the fifth measurement
 
 The workflow the owner ordered on a finding from the rules pass: that seven of the nine
@@ -577,10 +1477,17 @@ granted the exception. *Revisit if:* `absenceSubject` ever stops being decidable
 the rule key alone.
 
 **4. A queue that emptied has to have been finished, not deleted.**
-`drainedByFinishing()` requires `completionsInWindow >= queueLengthAtWindowStart` and is
+`drainedByFinishing()` requires `completionsInWindow >= queueDrainedFrom` and is
 carried by `pulse.queueDrain` at both stages and by `report.observation.queueDrained`.
-*Why:* `RollupFacts.queueDrainedAreaIds` reads a queue length at each end of the window
-and never asks how the items left, and both benches claim somebody finished something.
+**It read `queueLengthAtWindowStart` when this entry was written and it does not now**: the
+entry below this one replaced the boundary pair with `AreaFacts.queueDrainedFrom`, the
+height of the fall itself, and moved the guard onto it. The correction is not cosmetic. A
+queue built inside the window and emptied inside it holds nothing at either boundary, so
+the old reading made this guard `completions >= 0` on exactly the shape the drain fact was
+declared to reach: a person who added five things and deleted all five would have been told
+they cleared them.
+*Why:* `RollupFacts.queueDrainedAreaIds` never asks how the items left,
+and both benches claim somebody finished something.
 The realizer may select any line on a bench, so one false line is enough to require the
 guard. It is stricter than the truth by one item in exactly one case, an area that
 began the window holding a queue with nothing active, and one item of slack toward

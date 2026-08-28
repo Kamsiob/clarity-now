@@ -120,3 +120,44 @@ none of them, because the agent that owned the intents deliberately stayed out o
 That was the right call and it left the widgets opening the app at whatever tab it was
 on. A follow up is routing all of them, plus `PulseIntents.opensPulse`, which phase 6
 left unrouted for the same kind of reason.
+
+### The anti-slop sweep, `design-v3.md` 15.2
+
+**This is a release gate and it cannot be performed from inside this repository.**
+
+15.1 is a dated record of what the industry currently produces. Re-swearing it requires
+looking at what is being shipped now, and a model's memory of the year before the list
+was written is not that. Phase 12b reached the same conclusion and deliberately did not
+re-date the list rather than stamp a date on a sweep that did not happen, and this run
+agrees rather than overruling it.
+
+**What has honestly been done:** every entry of 15.1 and 15.3 was checked, one at a
+time, against everything phases 3c, 12, 12b and 13 built. Nothing built appears on the
+list and nothing built is refused by 15.3. That is a narrower claim than a fresh sweep,
+and it is the one that can be made.
+
+**What is owed:** a look at current work, and either a re-dated 15.1 or a note that the
+list still holds. Until then 15.1 reads as August 2026 and should be treated as such.
+
+### Widget preview captures
+
+Six widgets ship with no preview image, so the picker shows the loading layout.
+`design-v3.md` 12.1 requires the preview be generated from the real widget, and a hand
+written preview layout is exactly the mockup that rule forbids. Each widget's resource
+file says so at the place the attribute would go.
+
+The steps: install the release build, add each widget to a home screen, capture it with
+`adb exec-out screencap`, crop to the widget, and set `android:previewImage` on each of
+the six `res/xml/widget_*.xml` files. It is a device task and it is the last thing
+between phase 12 and closed.
+
+### Release signing
+
+`app/build.gradle.kts` has no `signingConfig` on the release build type, so
+`assembleRelease` produces an unsigned APK. That is correct for now: a keystore is a
+secret and this repository is public.
+
+Before the first upload, create an upload keystore, keep it and its passwords somewhere
+that survives this machine, and wire it through `gradle.properties` in `$HOME` rather
+than through anything in the repository. Losing it means never being able to update the
+app under the same listing.

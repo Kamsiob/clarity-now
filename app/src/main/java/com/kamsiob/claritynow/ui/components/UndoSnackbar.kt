@@ -30,6 +30,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import com.kamsiob.claritynow.ui.theme.ClarityElevation
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityHaptics
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
@@ -117,7 +118,10 @@ fun UndoSnackbar(
         ) {
             Column {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 13.dp),
+                    modifier = Modifier.fillMaxWidth().padding(
+                        horizontal = 16.dp,
+                        vertical = ClaritySpacing.scaled(13.dp,
+                    )),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {

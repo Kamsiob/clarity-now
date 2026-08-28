@@ -114,6 +114,7 @@ internal fun SettingsSurface(onDismiss: () -> Unit, modifier: Modifier = Modifie
                 zone = zone,
                 onBack = onDismiss,
                 onThemeChange = viewModel::setTheme,
+                onTextSizeChange = viewModel::setTextSize,
                 onCalmModeChange = viewModel::setCalmMode,
                 onFocusHighlightChange = viewModel::setFocusHighlight,
                 onTransitionWarningChange = viewModel::setTransitionWarning,

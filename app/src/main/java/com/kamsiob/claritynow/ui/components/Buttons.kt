@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
@@ -43,6 +44,22 @@ import com.kamsiob.claritynow.ui.theme.opticallyCentered
  * Destructive is inert grey until its condition is met and then ink filled. It is
  * never red, because red for an ordinary deliberate action is a warning tone this
  * design does not use.
+ *
+ * ## Two label colors moved in the phase 13 contrast audit
+ *
+ * **A filled surface inverts its label to `card`, and that is now one rule for two
+ * roles.** Primary's label was `Color.White`, which measured 3.81 to one on the light
+ * `actionBlue` and **2.63** on the dark one, against design-v3.md 13's floor of 4.5. The
+ * light half of that went away when `actionBlue` darkened, 3.1; the dark half could not,
+ * because no blue is both light enough to be read on `#0E0E13` and dark enough to hold
+ * white. Destructive already inverted to `card` on its ink fill, 10.7 and 10.8, so
+ * Primary takes the same inversion rather than a second rule: it measures 7.76 in light
+ * and 6.38 in dark. [ClarityFab]'s glyph moved with it for the same reason.
+ *
+ * **Positive's label is `positiveInk`.** `positiveGreen` on its own 13 percent fill
+ * measured 1.68 on the page and 1.98 on a card. 3.1 splits the completion color into a
+ * fill and a foreground precisely here: the fill has to stay a light mint for what sits
+ * on it, and a label on that fill has to be dark. The label reads 5.34 and 6.29.
  */
 enum class ClarityButtonRole { PRIMARY, POSITIVE, SECONDARY, TERTIARY, DESTRUCTIVE }
 
@@ -75,8 +92,8 @@ fun ClarityButton(
             if (enabled) colors.inkPrimary else colors.inkPrimary.copy(alpha = 0.10f)
     }
     val labelColor = when (role) {
-        ClarityButtonRole.PRIMARY -> Color.White
-        ClarityButtonRole.POSITIVE -> colors.positiveGreen
+        ClarityButtonRole.PRIMARY -> colors.card
+        ClarityButtonRole.POSITIVE -> colors.positiveInk
         ClarityButtonRole.SECONDARY -> colors.inkPrimary
         ClarityButtonRole.TERTIARY -> colors.actionBlue
         ClarityButtonRole.DESTRUCTIVE -> if (enabled) colors.card else colors.inkTertiary
@@ -92,7 +109,13 @@ fun ClarityButton(
         modifier = modifier
             .then(if (fillWidth) Modifier.fillMaxWidth() else Modifier)
             .scale(scale)
-            .height(50.dp)
+            // design-v3.md 10.7's 50dp, as a minimum rather than a height, and scaled.
+            // A fixed box here was a clipping site: the label is `bodyStrong`, it has no
+            // `maxLines`, and a two word button at 200 percent wraps to a second line
+            // that a `height` would have cut off with nothing to see it happen. The
+            // minimum grows with the text so the button stays a button rather than
+            // becoming a label with a tight collar. design-v3.md 13, Addendum 01 8f.
+            .heightIn(min = ClaritySpacing.scaled(BUTTON_HEIGHT))
             .clip(RoundedCornerShape(12.dp))
             .background(background)
             .clarityFocusRing(interaction, RoundedCornerShape(12.dp))
@@ -162,7 +185,9 @@ fun ClarityFab(
         ClarityIcon(
             icon = ClarityIcons.add,
             contentDescription = contentDescription,
-            tint = Color.White,
+            // The same inversion the primary button's label takes, and for the same
+            // measurement. See the note on ClarityButtonRole.
+            tint = colors.card,
             modifier = Modifier.size(24.dp),
         )
     }
@@ -259,7 +284,7 @@ fun ClarityChip(
                 .clip(CircleShape)
                 .background(background)
                 .clarityFocusRing(interaction, CircleShape)
-                .padding(horizontal = 15.dp, vertical = 9.dp),
+                .padding(horizontal = 15.dp, vertical = ClaritySpacing.scaled(9.dp)),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
@@ -286,3 +311,6 @@ fun ClarityChip(
         }
     }
 }
+
+/** design-v3.md 10.7. A minimum, never a height. See [ClarityButton]. */
+private val BUTTON_HEIGHT = 50.dp

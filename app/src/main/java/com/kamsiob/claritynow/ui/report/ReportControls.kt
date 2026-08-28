@@ -105,7 +105,12 @@ private fun ReportControl(
             // The clickable above already carries the label, so the glyph inside it is
             // decorative and announcing it again would read the control's name twice.
             contentDescription = null,
-            tint = contemplative.textFaint,
+            // An active control's glyph, so design-v3.md 13's 3.0 floor for a graphic
+            // is the least it has to clear and 32 percent misses it at 2.637 on this
+            // page. It takes `textDim` rather than a value between the two, because
+            // 3.3 gives the Contemplative world one token for secondary type and this
+            // is the same rank as the `Jump in` label and the onboarding controls.
+            tint = contemplative.textDim,
             modifier = Modifier.size(GLYPH_SIZE),
         )
     }

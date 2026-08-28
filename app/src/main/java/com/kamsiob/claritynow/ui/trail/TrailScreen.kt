@@ -63,14 +63,14 @@ import com.kamsiob.claritynow.domain.query.TrailSentenceKey
 import com.kamsiob.claritynow.ui.components.ClarityChip
 import com.kamsiob.claritynow.ui.components.ClarityIcon
 import com.kamsiob.claritynow.ui.components.ClarityIcons
+import com.kamsiob.claritynow.ui.components.ScrollEdge
 import com.kamsiob.claritynow.ui.components.TabBarHeight
 import com.kamsiob.claritynow.ui.components.TabBarInset
+import com.kamsiob.claritynow.ui.components.scrollEdgeFade
 import com.kamsiob.claritynow.ui.theme.ClaritySpacing
-import com.kamsiob.claritynow.ui.theme.LocalCalmMode
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityShapes
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
-import com.kamsiob.claritynow.ui.theme.calmed
 import com.kamsiob.claritynow.ui.theme.clarityMotion
 import com.kamsiob.claritynow.ui.theme.parseAreaColor
 import java.time.Instant
@@ -79,25 +79,6 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlinx.coroutines.launch
-
-/**
- * The tint of an event's circle, and the only alpha it is ever drawn at.
- *
- * design-v3.md 11 asks for "a 23dp circle tinted with the event color" and defines
- * no such color anywhere else in the document. It cannot be a semantic palette
- * (green completions, amber pulses, red deletes): 3.1 scopes `warnAmber` to the
- * Pulse dot and nothing else, `deleteMuted` to the delete swipe only, and 3.4 closes
- * the door on the rest: color appears only as a 7dp dot, a 5 to 14 percent wash, a
- * 60 percent Momentum tile and the area label, and "never as a stripe, bar, edge,
- * border or filled block". A 23dp circle at full saturation is a filled block, so the
- * only legal slot is the wash and the only broadly available color is the area's own,
- * as of that event.
- *
- * 12 percent sits inside 3.4's 5 to 14 band and inside 10.11's "tinted at 11 to 14
- * percent", which is the document's only precedent for tinting a shape of this size.
- * Named once so it cannot drift apart from the completed row's mint.
- */
-private const val EVENT_TINT_ALPHA = 0.12f
 
 /**
  * design-v3.md 11, exactly: "Completed events get a mint wash card at positiveGreen
@@ -109,6 +90,17 @@ private const val EVENT_TINT_ALPHA = 0.12f
  * darkens the ground to `#E0EDEA`, where `inkSecondary` measures 4.40 to one and
  * misses design-v3.md 13's floor of 4.5. Over `card` the ground is `#EDFAF2` and the
  * same text measures 4.57. `TrailContrastTest` holds both numbers.
+ *
+ * **Phase 12b put it on the same measure as everything else on the screen.** It used
+ * to sit at 8dp, 11.6dp outside every other element, because the list carried 8dp of
+ * content padding and each row added 12dp of its own, so the wash was applied outside
+ * the padding that set the text's measure. The list now carries the full 20dp of
+ * design-v3.md 6's screen padding and a row carries none, so the block spans exactly
+ * the measure the day headers and the title run on. **Its breathing room is vertical
+ * rather than horizontal**, 12dp against an ordinary row's 10dp: horizontal room would
+ * have to come from either pushing the block back outside the measure or pushing a
+ * completed row's sentence 12dp in from every other row's, and the second is the same
+ * defect with the sign flipped.
  */
 private const val COMPLETED_WASH_ALPHA = 0.08f
 
@@ -123,16 +115,22 @@ private const val SHIMMER_LOW = 0.02f
  */
 private val DAY_HEADER_RULE_RESERVE = 96.dp
 
-/** The circle is 23dp from design-v3.md 11, deliberately off the 4dp grid. */
-private val EVENT_CIRCLE = 23.dp
+/**
+ * The width of the icon column. 23dp, which is the circle design-v3.md 11 used to ask
+ * for, kept as a measure after the circle itself went so that the text column did not
+ * move when phase 12b settled what the circle carried.
+ */
+private val EVENT_SLOT = 23.dp
 
 /**
- * 14dp inside a 23dp circle leaves 4.5dp of tinted ring on every side, which reads
- * as a tinted disc rather than as a badge with a glyph jammed into it. Not a number
- * design-v3.md states; chosen, and stated here so it is one decision rather than
- * five call sites.
+ * The glyph, which is now the whole of the icon column.
+ *
+ * It was 14dp inside a tinted 23dp disc and is 18dp standing on the page, because a
+ * glyph that used to be read against a ground of its own has to hold the column by
+ * itself. Still inside the 23dp slot, so the sentences beside it keep one measure the
+ * whole way down.
  */
-private val EVENT_GLYPH = 14.dp
+private val EVENT_GLYPH = 18.dp
 
 /** The height of a shimmering stand in for a line of body text. */
 private val SHIMMER_BAR = 14.dp
@@ -168,10 +166,11 @@ private val DAY_FORMAT_WITH_YEAR: DateTimeFormatter =
  * and pagination here is scroll driven, so loading a page, reaching the end of
  * history and entering the tab are all silent.
  *
- * **The horizontal padding is split 8 plus 12 rather than being 20 in one place.**
- * That is what lets the completed row's mint reach 12dp wider than its own text while
- * the text stays on the same measure as every ordinary row above and below it.
- * design-v3.md 6 puts screen padding at 20dp and 8 plus 12 is 20.
+ * **The horizontal padding is 20dp in one place, and phase 12b moved it there.** It
+ * used to be split 8 plus 12, with the list holding 8 and each row holding 12, which
+ * put every sentence on design-v3.md 6's 20dp screen padding and the completed row's
+ * mint 12dp outside it. One measure, held by the list, is what makes the mint, the day
+ * headers, the title and the sentences all start at the same x.
  */
 @Composable
 fun TrailScreen(
@@ -198,23 +197,37 @@ fun TrailScreen(
         if (atEnd && !state.appending && !state.loading && !state.endOfHistory) onLoadMore()
     }
 
+    // The two insets the list scrolls under, read once because both the content padding
+    // and the phase 12b scroll edge fade are measured from them. design-v3.md 6.1.
+    val statusBar = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val navigationBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+
     Box(modifier = modifier.fillMaxSize().background(colors.canvas)) {
         if (state.isEmpty) {
             TrailEmptyState()
         } else {
             LazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    // Content no longer passes hard edged under the clock or behind the
+                    // floating pill: it dissolves into the page at both ends. See
+                    // `ScrollEdge.kt` for why this erases rather than paints, and for
+                    // why it is a fade and not the blur design-v3.md 15.3 refuses.
+                    .scrollEdgeFade(
+                        top = statusBar + ScrollEdge.underTheClock,
+                        bottom = navigationBar + TabBarInset + TabBarHeight +
+                            ScrollEdge.aboveTheBar,
+                    ),
                 contentPadding = PaddingValues(
-                    start = 8.dp,
-                    end = 8.dp,
+                    start = ClaritySpacing.screenPadding,
+                    end = ClaritySpacing.screenPadding,
                     // The list scrolls under the status bar rather than stopping at it.
-                    top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 8.dp,
+                    top = statusBar + 8.dp,
                     // No FAB on this screen, so the trailing gap is 24dp rather than
                     // the 76dp Areas needs to clear one. design-v3.md 10.5 puts the
                     // FAB on Areas only.
-                    bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() +
-                        TabBarHeight + TabBarInset + 24.dp,
+                    bottom = navigationBar + TabBarHeight + TabBarInset + 24.dp,
                 ),
             ) {
                 item(key = "title") { TrailHeader() }
@@ -239,7 +252,7 @@ fun TrailScreen(
                         // The chip row carries 4dp of its own, and the first day
                         // header takes no top gap, so the 12dp between them is made
                         // up here. On the 4dp grid, and chosen rather than specified.
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(ClaritySpacing.scaled(8.dp)))
                     }
                 }
 
@@ -316,7 +329,6 @@ private fun TrailHeader() {
         color = colors.inkPrimary,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
             .padding(top = 12.dp, bottom = 6.dp),
     )
 }
@@ -350,7 +362,7 @@ private fun TrailFilterRow(
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
             .selectableGroup()
-            .padding(horizontal = 12.dp, vertical = 4.dp),
+            .padding(vertical = ClaritySpacing.scaled(4.dp)),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -418,7 +430,6 @@ private fun TrailDayHeader(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
             .padding(top = if (isFirst) 0.dp else ClaritySpacing.sectionGap, bottom = 12.dp)
             .clearAndSetSemantics { contentDescription = description },
     ) {
@@ -467,8 +478,32 @@ private fun trailDayLabel(date: LocalDate, today: LocalDate, referenceYear: Int)
 }
 
 /**
- * One event. design-v3.md 11: "Events as icon plus text rows, the icon a 23dp circle
- * tinted with the event color."
+ * One event. design-v3.md 11 as amended in phase 12b: "Events as a glyph plus a
+ * sentence. The glyph stands on the page and carries no color of its own."
+ *
+ * **There is no tinted circle any more, and that is the settlement of an open choice
+ * rather than a simplification.** v3 asked for "a 23dp circle tinted with the event
+ * color" and defined no event colors anywhere, so phase 3 resolved the phrase to the
+ * area's own accent at 12 percent. Two things were wrong with that and the second is
+ * the one that closes the question.
+ *
+ * The first is redundancy: on a single area app every circle is the same disc, and the
+ * icon column carried nothing the sentence beside it did not.
+ *
+ * The second is that **no color could have carried it.** A per event palette is
+ * unavailable by construction: design-v3.md 3.1 scopes `positiveGreen` to completion,
+ * `warnAmber` to the Pulse dot and `deleteMuted` to the delete swipe, one job each, and
+ * 3.4 permits an area accent in four forms only, of which the only one a 23dp shape may
+ * take is a 5 to 14 percent wash. Eight moods at 12 percent over the canvas are not
+ * distinguishable from one another at a glance, so the disc could not carry identity
+ * either. A container that can hold no information is a container, and design-v3.md 14
+ * has a name for a glyph in a tonal circle beside a single sentence: a stock Material
+ * list row. So the circle went and the glyph grew from 14dp to 18dp.
+ *
+ * Area identity on this screen is where design-v3.md 3.4 puts it: the 7dp dot on the
+ * filter chips above, at the true accent. The completed row's mint is now the only
+ * colored surface in the list, which is the second thing this buys, because it used to
+ * compete with a disc on every row around it.
  *
  * **Top aligned, not centered.** design-v3.md 13 requires the app to hold together at
  * 200 percent font scale; the circle is a fixed 23dp and the text is not, so a
@@ -503,14 +538,10 @@ private fun TrailEventRow(row: TrailRow, zone: ZoneId) {
     }
     val sentence = trailSentence(row)
     val description = trailRowDescription(sentence, time)
-    // design-v3.md 16.2. The circle is the area's accent at 12 percent, which is an
-    // atmospheric use and not one of the two the transform excludes by name, so calm
-    // mode desaturates it. The filter chip's 7dp dot above is the excluded one and
-    // keeps the true color, which is the point: the dot is how an area is recognized
-    // and the circle is how a row is tinted.
-    val calm = LocalCalmMode.current
-    val tint = row.areaColorHex?.let { parseAreaColor(it).calmed(calm) } ?: colors.inkPrimary
-
+    // No area accent reaches this row any more. The one place an area color becomes a
+    // Color on this screen is the filter chip's 7dp dot, which design-v3.md 16.2
+    // excludes from the calm mode transform by name because it is identity rather than
+    // atmosphere. `CalmModeTest` holds the census.
     val outer = Modifier
         .fillMaxWidth()
         .clearAndSetSemantics { contentDescription = description }
@@ -524,14 +555,17 @@ private fun TrailEventRow(row: TrailRow, zone: ZoneId) {
 
     Box(modifier = surface) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    vertical = ClaritySpacing.scaled(
+                        if (row.isCompletion) 12.dp else 10.dp,
+                    ),
+                ),
             verticalAlignment = Alignment.Top,
         ) {
             Box(
-                modifier = Modifier
-                    .size(EVENT_CIRCLE)
-                    .clip(CircleShape)
-                    .background(tint.copy(alpha = EVENT_TINT_ALPHA)),
+                modifier = Modifier.size(EVENT_SLOT),
                 contentAlignment = Alignment.Center,
             ) {
                 // No description on the glyph: the row's own sentence already says
@@ -640,7 +674,7 @@ private fun TrailFooter(loading: Boolean, endOfHistory: Boolean) {
             style = type.caption,
             color = colors.inkSecondary,
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = ClaritySpacing.scaled(24.dp)),
         )
         // Idle with more to come draws nothing. A row of dots would be a spinner
         // wearing a hat.
@@ -669,10 +703,12 @@ private fun TrailShimmer() {
     Column(modifier = Modifier.fillMaxWidth()) {
         repeat(3) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+                modifier = Modifier.fillMaxWidth().padding(vertical = ClaritySpacing.scaled(10.dp)),
                 verticalAlignment = Alignment.Top,
             ) {
-                Box(Modifier.size(EVENT_CIRCLE).clip(CircleShape).background(ink))
+                Box(Modifier.size(EVENT_SLOT), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(EVENT_GLYPH).clip(CircleShape).background(ink))
+                }
                 Spacer(Modifier.width(12.dp))
                 Box(
                     modifier = Modifier
@@ -752,7 +788,7 @@ private fun TrailEmptyState() {
                 color = colors.inkPrimary,
                 textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
             Text(
                 text = stringResource(R.string.trail_empty_body),
                 style = type.body,

@@ -178,6 +178,59 @@ private class Extraction(
     private val seriesIndices: List<Int> =
         (0 until minOf(bucketCount, FactExtractor.SERIES_LENGTH)).reversed().toList()
 
+    /**
+     * Focus starts by local day, lifetime, read once.
+     *
+     * Two things want it: the twelve week cue window and the precedent walk over the
+     * whole history, and the second reads further back than the first. One map serves
+     * both, so a week means the same thing to a cue and to a precedent.
+     */
+    private val focusStartsByDay: Map<String, Int> = queries.focusStartsPerDay(Long.MIN_VALUE, end)
+
+    /**
+     * The newest bucket whose seven days have all closed, or null when there is none.
+     *
+     * **The precedent walk starts here rather than at bucket zero, and that is not a
+     * detail.** The Areas banner and the Momentum headline are recomputed during the
+     * day, so their newest bucket is clamped to the window end by [bucketEndMillis]
+     * and holds a part week. A part week is low against any normal, so reading it
+     * would put every subject into a fall every Wednesday morning, and a fall one week
+     * longer than it is needs a precedent one week longer than the one that exists.
+     * The reading would drift toward "no precedent" on exactly the surfaces that are
+     * refreshed most often. A week that has not finished is not a week anything may
+     * call low.
+     *
+     * The Report and the Pulse are unaffected either way: both windows end on a day
+     * boundary, so bucket zero closes exactly at the window end and is complete.
+     */
+    private val newestClosedBucket: Int? = run {
+        if (bucketCount == 0) return@run null
+        val closes = FactDates.startOfDayMillis(bucketFirstDate(0).plusDays(7L), zone)
+        val index = if (closes <= end) 0 else 1
+        index.takeIf { it < bucketCount }
+    }
+
+    /**
+     * Each area's own weekly events, oldest first, back to install.
+     *
+     * The same seven day buckets `AreaFacts.weekEventsSeries` uses, and not capped at
+     * twelve: a precedent is a question about a person's history and twelve weeks is
+     * one season of it. Built by bucketing the day keyed map once rather than by
+     * summing seven keys per bucket per area, which is the difference between one pass
+     * and several thousand string lookups on a two year old install.
+     */
+    private val areaWeeklyEvents: Map<String, IntArray> = run {
+        val out = HashMap<String, IntArray>()
+        if (bucketCount == 0) return@run out
+        for ((dayKey, byArea) in areaEventsByDay) {
+            val slot = bucketSlotOf(dayKey) ?: continue
+            for ((areaId, count) in byArea) {
+                out.getOrPut(areaId) { IntArray(bucketCount) }[slot] += count
+            }
+        }
+        out
+    }
+
     fun extract(): FactSet {
         val windowFacts = windowFacts()
         val areas = areaFacts()
@@ -282,6 +335,7 @@ private class Extraction(
             focusSecondsInWindow = focusSecondsPerArea[areaId] ?: 0L,
             focusSessionsInWindow = focusSessionsPerArea[areaId] ?: 0,
             weekEventsSeries = seriesIndices.map { bucketAreaEvents(it, areaId) },
+            dipPrecedent = precedentIn(areaWeeklyEvents[areaId] ?: IntArray(bucketCount)),
         )
     }
 
@@ -450,6 +504,7 @@ private class Extraction(
             queries.focusSessionCounts(bucketStartMillis(it), bucketEndMillis(it))
         }
         val singleAreaRun = currentSingleAreaRun()
+        val calibration = estimateCalibration()
 
         val thisBucket = if (bucketCount > 0) bucketSum(0, completionsByDay) else 0
         val lastBucket = if (bucketCount > 1) bucketSum(1, completionsByDay) else null
@@ -510,6 +565,12 @@ private class Extraction(
             currentQuietRunDays = currentQuietRunDays(),
             currentSingleAreaRunDays = singleAreaRun.days,
             currentSingleAreaRunAreaId = singleAreaRun.areaId,
+            estimatedCompletions = calibration.count,
+            activeToEstimateRatio = calibration.ratio,
+            estimateTendency = calibration.tendency,
+            activityDipPrecedent = precedentIn(weeklyTotals(eventsByDay)),
+            focusDipPrecedent = precedentIn(weeklyTotals(focusStartsByDay)),
+            isJustBackFromAbsence = justBackFromAbsence(),
         )
     }
 
@@ -666,6 +727,175 @@ private class Extraction(
         return strictMaxBy(events.entries.sortedBy { it.key }) { it.value }?.key
     }
 
+    // Precedent ---------------------------------------------------------------
+    //
+    // MASTER_BUILD_PROMPT 14b.9, Addendum 01 7b. A fluctuating condition looks
+    // identical to a decline in the data, and without this the app tells somebody with
+    // a cyclical or relapsing condition that they are deteriorating, on a fixed
+    // schedule, forever, being technically accurate every single time. The question
+    // these three functions answer is whether the subject has been this low, for this
+    // long, before. Everything about how it is answered is stated on `Precedent`.
+
+    /**
+     * Whether [series] has been where it is now, for as long, before.
+     *
+     * ## The yardstick
+     *
+     * A subject's **normal** is the median of the weeks it moved in, not the median of
+     * all of them. The all weeks median is zero for anybody quiet more than half the
+     * time, and a zero normal makes nothing low, which would let the gate pass for
+     * precisely the most cyclical people it exists to protect. Taking the median over
+     * the moving weeks makes a week with nothing in it unambiguously the deepest band
+     * and gives its earlier twins somewhere to be found.
+     *
+     * The current fall is measured against the same yardstick as every earlier one,
+     * and the yardstick is computed over the whole history including the fall.
+     * Excluding the recent weeks would measure the two things being compared with two
+     * different rulers.
+     *
+     * ## The walk
+     *
+     * The weeks before the subject's first week with anything in it are dropped. An
+     * area created three weeks ago has zeros behind it that are not silences: nothing
+     * had happened yet, and counting them would hand every new area a history of falls
+     * it was never in. This is the rule `FactAccess.returnsAfterSilence` already
+     * applies to the series beside this one.
+     *
+     * The **current fall** is the unbroken stretch of low weeks ending at the newest
+     * closed bucket. Its duration is that stretch and its depth is the deepest band
+     * inside it. A **precedent** is any earlier unbroken stretch, strictly older,
+     * that lasted at least as long and reached at least as deep. Comparability is
+     * banded rather than continuous on purpose: exact depths would make almost no two
+     * falls comparable and the answer would be "no precedent" forever, which is the
+     * answer this fact exists to stop the app from giving by default.
+     *
+     * ## The two ways of not knowing
+     *
+     * Under `Precedent.MIN_HISTORY_WEEKS` of the subject's own history the
+     * answer is `INSUFFICIENT`, because a person with six weeks of data has no
+     * precedent for anything and reporting that as "none" is a false confidence a
+     * decline family would then fire on. So is a fall so long that no earlier stretch
+     * of the same length could fit in the weeks behind it, which is the same ignorance
+     * arriving by a different route and is the case a long first decline is in.
+     */
+    private fun precedentIn(series: IntArray): Precedent {
+        val closed = newestClosedBucket ?: return Precedent.INSUFFICIENT
+        val newest = series.size - 1 - closed
+        if (newest < 0) return Precedent.INSUFFICIENT
+        val firstActive = (0..newest).firstOrNull { series[it] > 0 } ?: return Precedent.INSUFFICIENT
+        val weeks = newest - firstActive + 1
+        val moving = (firstActive..newest).map { series[it] }.filter { it > 0 }
+        val normal = medianOf(moving)
+        val bands = IntArray(weeks) { bandOf(series[firstActive + it], normal) }
+
+        var duration = 0
+        var depth = Precedent.BAND_STEADY
+        var index = weeks - 1
+        while (index >= 0 && bands[index] > Precedent.BAND_STEADY) {
+            duration++
+            depth = maxOf(depth, bands[index])
+            index--
+        }
+        if (duration == 0) return Precedent.NOT_IN_A_DIP
+        if (weeks < Precedent.MIN_HISTORY_WEEKS) return Precedent.INSUFFICIENT
+        val behind = weeks - duration
+        // A stretch of the same length, and one week between it and this one.
+        if (behind < duration + 1) return Precedent.INSUFFICIENT
+
+        var length = 0
+        var reached = Precedent.BAND_STEADY
+        for (older in 0 until behind) {
+            if (bands[older] == Precedent.BAND_STEADY) {
+                length = 0
+                reached = Precedent.BAND_STEADY
+                continue
+            }
+            length++
+            reached = maxOf(reached, bands[older])
+            if (length >= duration && reached >= depth) return Precedent.PRESENT
+        }
+        return Precedent.NONE
+    }
+
+    /** Which of the four depth bands one week falls in, against the subject's normal. */
+    private fun bandOf(level: Int, normal: Int): Int = when {
+        level <= 0 -> Precedent.BAND_EMPTY
+        level * Precedent.DEEP_DENOMINATOR < normal * Precedent.DEEP_NUMERATOR -> Precedent.BAND_DEEP
+        level * Precedent.LOW_DENOMINATOR < normal * Precedent.LOW_NUMERATOR -> Precedent.BAND_LOW
+        else -> Precedent.BAND_STEADY
+    }
+
+    /**
+     * The median of a non empty list, with an even count taking the lower middle pair
+     * rounded down.
+     *
+     * Separate from [median], which carries the three completion floor
+     * `ItemFacts.medianDaysToComplete` needs. A normal week has its own floor, which is
+     * that the subject moved at all, and it is applied by the caller.
+     */
+    private fun medianOf(values: List<Int>): Int {
+        val sorted = values.sorted()
+        val middle = sorted.size / 2
+        return if (sorted.size % 2 == 1) sorted[middle] else (sorted[middle - 1] + sorted[middle]) / 2
+    }
+
+    // Estimate calibration ----------------------------------------------------
+
+    /**
+     * How this person's estimates map onto their days, over the calibration window.
+     * MASTER_BUILD_PROMPT 14b.8.
+     *
+     * The window is `EstimateTendency.WINDOW_WEEKS` of the same buckets
+     * every series here uses. `TrailQueries.estimateOutcomes` decides which
+     * completions have a prediction behind them and returns ratios with no magnitude
+     * attached, so the delta 14b.8 forbids does not exist to be carried up here.
+     *
+     * The median rather than the mean, because one item left active over a holiday
+     * moves a mean to a number no week of the person's life resembles, and because
+     * "tend to" is a median word. The count is reported whatever it is, so a rule can
+     * read the floor and the validator can re-read the number that gated the sentence.
+     */
+    private fun estimateCalibration(): Calibration {
+        val weeks = minOf(bucketCount, EstimateTendency.WINDOW_WEEKS)
+        if (weeks <= 0) return Calibration(0, null, EstimateTendency.INSUFFICIENT)
+        val ratios = queries.estimateOutcomes(bucketStartMillis(weeks - 1), end)
+            .map { it.activeToEstimate }
+        val median = if (ratios.size < EstimateTendency.MIN_COMPLETIONS) {
+            null
+        } else {
+            val sorted = ratios.sorted()
+            val middle = sorted.size / 2
+            if (sorted.size % 2 == 1) {
+                sorted[middle]
+            } else {
+                (sorted[middle - 1] + sorted[middle]) / 2.0
+            }
+        }
+        return Calibration(ratios.size, median, EstimateTendency.of(median))
+    }
+
+    // Re-entry ----------------------------------------------------------------
+
+    /**
+     * Whether the last day this window describes is inside the quiet week after a
+     * return. MASTER_BUILD_PROMPT 14b.4.
+     *
+     * Asked of the day the sentence would be said on, and answered by the same
+     * `TrailQueries.lastReEntryOnOrBefore` the Pulse's own two day window asks, so the
+     * day the Report starts withholding and the day the Pulse starts speaking again
+     * are the same arithmetic run twice rather than two calculations that could
+     * disagree.
+     *
+     * Nothing here reads or returns the length of the absence, and there is nothing on
+     * the way in that could. `ReEntry` carries the date of the return alone, this
+     * carries one bit less, and 14b.4's prohibition holds by the shape of both.
+     */
+    private fun justBackFromAbsence(): Boolean {
+        val dayKey = FactDates.keyOf(endDate)
+        val returned = queries.lastReEntryOnOrBefore(dayKey) ?: return false
+        return returned.daysSince(dayKey) in 0 until HistoryFacts.RE_ENTRY_QUIET_DAYS
+    }
+
     // Pulse -------------------------------------------------------------------
 
     private fun pulseFacts(): PulseFacts {
@@ -746,10 +976,9 @@ private class Extraction(
             },
         )
 
-        val focusByDay = queries.focusStartsPerDay(Long.MIN_VALUE, end)
         val focusWeekday = cue(
-            weekdayCounts(focusByDay, cueStart, end),
-            indices.map { weekdayCountsInBucket(it, focusByDay) },
+            weekdayCounts(focusStartsByDay, cueStart, end),
+            indices.map { weekdayCountsInBucket(it, focusStartsByDay) },
         )
         val focusBand = cue(
             bandCounts(queries.focusStartsPerHourOfDay(cueStart, end)),
@@ -879,6 +1108,35 @@ private class Extraction(
 
     private fun bucketFirstDate(index: Int): LocalDate = endDate.minusDays(7L * index + 6L)
 
+    /**
+     * The oldest first position of the bucket holding [dayKey], or null when it is
+     * outside the history.
+     *
+     * The inverse of [bucketFirstDate], read as arithmetic on calendar dates so that a
+     * day key maps to the same bucket the seven key walk would have put it in. Null
+     * covers a key after the window end, a key older than the first bucket, and a key
+     * that is not a date at all, which is a payload that came from an import or from a
+     * second implementation.
+     */
+    private fun bucketSlotOf(dayKey: String): Int? {
+        val date = FactDates.parse(dayKey) ?: return null
+        val back = FactDates.daysBetween(date, endDate)
+        if (back < 0) return null
+        val index = back / 7
+        return if (index >= bucketCount) null else bucketCount - 1 - index
+    }
+
+    /** A day keyed map folded onto every bucket back to install, oldest first. */
+    private fun weeklyTotals(byDay: Map<String, Int>): IntArray {
+        val buckets = IntArray(bucketCount)
+        if (bucketCount == 0) return buckets
+        for ((dayKey, count) in byDay) {
+            val slot = bucketSlotOf(dayKey) ?: continue
+            buckets[slot] += count
+        }
+        return buckets
+    }
+
     private fun bucketStartMillis(index: Int): Long =
         FactDates.startOfDayMillis(bucketFirstDate(index), zone)
 
@@ -942,6 +1200,16 @@ private class Extraction(
     private fun daysTo(atMillis: Long): Int =
         FactDates.daysBetween(FactDates.dateOf(atMillis, zone), endDate).coerceAtLeast(0)
 }
+
+/**
+ * One reading of a person's estimates: how many had a prediction, how the stay ran
+ * against it, and which way that falls.
+ *
+ * The three travel together because none of them is readable alone. The ratio without
+ * the count is a tendency somebody might have shown twice, and the count without the
+ * ratio is a sample size for nothing.
+ */
+private data class Calibration(val count: Int, val ratio: Double?, val tendency: EstimateTendency)
 
 /** A cue that cleared its thresholds: what it is, how big, and how often it held. */
 private data class CueReading<T>(val key: T, val count: Int, val confidence: Double)

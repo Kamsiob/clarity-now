@@ -294,6 +294,140 @@ data class HistoryFacts(
      * they were.
      */
     val currentSingleAreaRunAreaId: AreaId?,
+    /**
+     * How many completed items in the calibration window had a prediction behind
+     * them. MASTER_BUILD_PROMPT 14b.8.
+     *
+     * **This is the floor and it travels.** 14b.8 sets it at five and requires the
+     * count itself to reach the validator as a `FactRef` so that the number gating
+     * the sentence is re-read rather than trusted, per 11.4. Under
+     * [EstimateTendency.MIN_COMPLETIONS] the tendency is
+     * [EstimateTendency.INSUFFICIENT] and [activeToEstimateRatio] is null, so a
+     * family reading either one cannot fire on four items whatever its criteria say.
+     *
+     * An item counts when it was completed inside the window, was active when it was
+     * completed, and carried an estimate at the moment it became active. See
+     * `TrailQueries.estimateOutcomes` for each of those three and why they are the
+     * three.
+     */
+    val estimatedCompletions: Int,
+    /**
+     * How many times its own estimate an estimated thing typically spends active, as
+     * a multiple. Null under the floor. MASTER_BUILD_PROMPT 14b.8, Addendum 01 7a.
+     *
+     * ## What it is, and the two things it is not
+     *
+     * The **median** of the per item ratios, never the mean and never the ratio of
+     * two totals. One item left active over a holiday moves a mean and a total ratio
+     * to somewhere no week of the person's life resembles, and "tend to" is a median
+     * word. `ItemFacts.medianDaysToComplete` takes the same view of the same kind of
+     * question.
+     *
+     * It is **a multiple and never a percentage.** A ratio of 2.4 rendered as 240
+     * percent is one literal hundred away from `You were off by 140 percent`, which is
+     * the second line 14b.8 forbids by name. A multiple has no such neighbor, and the
+     * corpus family is authored against a count rather than a percent slot.
+     *
+     * It is **a stay and not an effort.** The actual behind it is elapsed time from
+     * the promotion that made an item active to its completion, which is the actual
+     * 14b.3 says "comes free" and the only one the log holds. Nothing in this app
+     * measures time spent working. A family reading this must say what it measures: a
+     * thing estimated at an hour that sits on somebody's plate for a day and a half is
+     * a true and useful reading of how their estimates map onto their days, and
+     * "took a day and a half" is a different claim that this number does not support.
+     *
+     * ## Why no delta can be built out of it
+     *
+     * 14b.8 bans a rendered delta between an estimate and an actual. The ban is kept
+     * here by arithmetic rather than by inspection: **no quantity of minutes exists
+     * anywhere in the fact set**, estimated or actual, so `actual - estimate` is not a
+     * subtraction any rule, measure or template is able to write. `TrailQueries`
+     * divides the two magnitudes inside its own body and returns only the quotient,
+     * and this is the median of those quotients. `CompletedItem.daysActive` is the
+     * closest thing to an actual on the fact set and it is whole days for one item,
+     * with no estimate anywhere to set it against.
+     *
+     * Read over [EstimateTendency.WINDOW_WEEKS] weeks ending with the fact
+     * window, on the same seven day buckets every series here uses. Twelve weeks is
+     * the span this app already calls a pattern rather than an accident, per
+     * `CueFacts`. A one week reading of five items is an accident, and a lifetime
+     * reading would average somebody's calibration two years ago into their
+     * calibration now, which is the thing that is supposed to be able to change. The
+     * consequence for the corpus is a constraint rather than a freedom: a family
+     * reading this may not say "this week".
+     */
+    val activeToEstimateRatio: Double?,
+    /**
+     * Which way [activeToEstimateRatio] runs, or [EstimateTendency.INSUFFICIENT]
+     * under the floor.
+     *
+     * The band is drawn where the rendering is, not at a number somebody picked: a
+     * median that would print as `about one` is a person whose estimates land, and
+     * [EstimateTendency.CLOSE] says so with nothing to render. That is what keeps a
+     * family from announcing a tendency and then printing a one.
+     */
+    val estimateTendency: EstimateTendency,
+    /**
+     * Whether the person's activity as a whole has been as low as it is now, for as
+     * long, before. MASTER_BUILD_PROMPT 14b.9.
+     *
+     * Read over weekly user activity events, back to the first week the log holds
+     * any, on the definition in [Precedent]. This is the reading for the families
+     * 14b.9 names that have no subject: `decliningActivity` as a headline and as a
+     * pattern, `quietWeek`, and `hardStretch`, all of which describe the person's
+     * weeks rather than one area's.
+     */
+    val activityDipPrecedent: Precedent,
+    /**
+     * Whether focus has fallen away like this before, for as long, in this person's
+     * history. MASTER_BUILD_PROMPT 14b.9.
+     *
+     * Read over focus sessions **started** per week, which is the quantity
+     * [weekFocusStartedSeries] carries and the one `focusHabitFading` speaks about. A
+     * habit that comes and goes with a condition is the same shape as a habit that is
+     * fading, and only one of them is worth a sentence.
+     */
+    val focusDipPrecedent: Precedent,
+    /**
+     * Whether the last day this window describes falls inside the week after a return
+     * from a long absence. MASTER_BUILD_PROMPT 14b.4.
+     *
+     * ## What it is for
+     *
+     * 14b.4: "The Report suppresses every decline, neglect and gap observation for a
+     * full week back. For seven days from the re-entry date every rule in those
+     * families is unavailable to selection and the next ranked candidate is taken
+     * instead. The same suppression applies to the Momentum headline and the Areas
+     * banner, which read from the same catalog." All three surfaces extract their own
+     * facts through layer one, so all three get this from the same place and cannot
+     * disagree about the day the withholding ends. The Pulse's own two day window is
+     * older and sits above layer one in `PulseGeneration`, because the Pulse decides
+     * not to run the engine at all rather than to withhold some of its families.
+     *
+     * ## What it deliberately is not
+     *
+     * **It carries no date and no number, and there is nothing here to render.**
+     * 14b.4 forbids a returning person being greeted by a measurement of their
+     * absence "not in days, not in weeks, not as a date, not as `since March`", and
+     * says the value that answers this must carry the date of the return and never
+     * the length of the absence. `ReEntry` is that value and it holds `returnedOn`
+     * alone. What reaches a rule is one bit less than that: whether the app is inside
+     * the quiet week. A boolean has no length to leak and no date to print, and it is
+     * the whole of what a suppression needs, so 14b.4's prohibition holds here without
+     * resting on anybody remembering it.
+     *
+     * ## Which day it is asked about
+     *
+     * The last local day the window describes, which is the day the sentence would be
+     * said on. Asking about the window start would keep withholding for a fortnight
+     * after a return, because a trailing seven day window still reaches back into the
+     * quiet week for six days after it closes, and 14b.4 buys seven days rather than
+     * thirteen.
+     *
+     * False when there has never been a return, which is the ordinary case and the
+     * case a brand new install is in.
+     */
+    val isJustBackFromAbsence: Boolean,
 ) {
 
     companion object {
@@ -309,5 +443,18 @@ data class HistoryFacts(
          * or fewer, so the cap costs no family anything it can say.
          */
         const val MAX_RUN_DAYS = 30
+
+        /**
+         * How long [isJustBackFromAbsence] stays true, in calendar days from the
+         * return. MASTER_BUILD_PROMPT 14b.4.
+         *
+         * Seven, so the day of the return and the six days after it are inside the
+         * window and the eighth day is not. It is stated here rather than beside
+         * `ReEntry.MIN_GAP_DAYS` because it is a different number answering a
+         * different question: that one is the absence that puts the app into the
+         * re-entry state, and this one is how long the app then withholds. The Pulse
+         * has a third, two days, and it lives with the Pulse for the same reason.
+         */
+        const val RE_ENTRY_QUIET_DAYS = 7
     }
 }

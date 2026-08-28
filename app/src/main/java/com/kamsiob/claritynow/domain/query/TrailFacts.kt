@@ -39,6 +39,35 @@ data class CompletedRecord(
 )
 
 /**
+ * One completed item's actual against its own estimate, as a ratio and nothing else.
+ * MASTER_BUILD_PROMPT 14b.8, Addendum 01 7a.
+ *
+ * **Neither magnitude survives this type, and that is the whole point of it.** 14b.8
+ * bans a rendered delta between an estimate and an actual, and the strongest form of
+ * that ban is a fact set in which the subtraction cannot be performed rather than one
+ * in which a validator catches the answer afterward. [TrailQueries.estimateOutcomes]
+ * divides the two numbers inside its own body and returns this, so the minutes a
+ * person typed and the minutes an item was active exist nowhere a rule, a measure or
+ * a template can reach them. `actual - estimate` is not a subtraction anything above
+ * this line is able to write.
+ *
+ * [activeToEstimate] is how many times the item's own estimate the item spent active:
+ * 1.0 is a prediction that landed, 3.0 is a thing that took three times as long as
+ * the person thought. It is a **multiple and never a percentage**, because a
+ * percentage is one subtraction from the second forbidden line in 14b.8: a ratio of
+ * 2.4 rendered as 240 percent is `You were off by 140 percent` with a literal
+ * hundred taken off it. A multiple has no such neighbor.
+ *
+ * **It is a stay, not an effort.** The actual is elapsed time from the promotion that
+ * made the item active to the completion, which is what the log records and what
+ * 14b.3 means by "the actual comes free". It is not time spent working, which nothing
+ * in this app measures, and a family reading it must say what it means: an hour long
+ * thing that sits on a plate for a day and a half is a true and useful reading of a
+ * person's days, and "took a day and a half" is not.
+ */
+data class EstimateOutcome(val itemId: String, val activeToEstimate: Double)
+
+/**
  * Focus session outcomes in a window, attributed to the FOCUS_STARTED instant.
  *
  * [unresolved] exists so that no rule anywhere ever infers an early ending by

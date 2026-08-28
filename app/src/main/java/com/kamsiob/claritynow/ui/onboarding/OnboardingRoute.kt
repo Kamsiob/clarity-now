@@ -300,9 +300,22 @@ private fun BoxScope.ClosingLine(opacity: Float) {
  * The persistent nav overlay. MASTER_BUILD_PROMPT 13.1.
  *
  * A back chevron at 35 percent white, hidden on beat 1; an 80dp progress line filling by
- * beat; and `Jump in` at 30 percent white, always visible. The three sit in one row with
+ * beat; and `Jump in` in `textDim`, always visible. The three sit in one row with
  * the line centered on the screen rather than between the two controls, so it does not
  * shift sideways when the chevron appears on beat 2.
+ *
+ * **`Jump in` was 30 percent white and MASTER_BUILD_PROMPT 13.1 still says so.** At that
+ * opacity it measures 2.643 to one on `deepBlack`, against design-v3.md 13's floor of 4.5
+ * for text, and it is the control that leaves onboarding: the one label on the surface a
+ * person who does not want the tour is looking for. design-v3.md wins on anything visual,
+ * 13 states one floor for text, and the value that meets it is the one 3.3 already names
+ * for secondary Contemplative type, `textDim`, at 5.629. It is the same token the
+ * progress line's fill takes, one element away, so the two things in this row that a
+ * person is meant to read now carry the same value rather than two guesses at it.
+ *
+ * The chevron is left at 35 percent white, which measures 3.133 against the 3.0 a graphic
+ * takes: it is a glyph rather than a word, its label is spoken, and it is the control a
+ * person reaches for second.
  *
  * The progress line's track and fill are the two values 13.1 leaves open. The fill is
  * `textDim`, which is the value design-v3.md 3.3 already gives to secondary Contemplative
@@ -382,7 +395,7 @@ private fun BoxScope.OnboardingNav(
         Text(
             text = stringResource(R.string.onboarding_jump_in),
             style = type.label,
-            color = Color.White.copy(alpha = JUMP_IN_ALPHA),
+            color = contemplative.textDim,
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .padding(end = 6.dp)
@@ -393,7 +406,7 @@ private fun BoxScope.OnboardingNav(
                     onClickLabel = stringResource(R.string.onboarding_jump_in),
                     onClick = onJumpIn,
                 )
-                .padding(horizontal = 14.dp, vertical = 15.dp),
+                .padding(horizontal = 14.dp, vertical = ClaritySpacing.scaled(15.dp)),
         )
     }
 }
@@ -455,8 +468,8 @@ private val PROGRESS_WIDTH = 80.dp
 private val PROGRESS_HEIGHT = 2.dp
 private const val PROGRESS_TRACK_ALPHA = 0.12f
 private val NAV_HEIGHT = 56.dp
+/** 3.133 to one on `deepBlack`, against design-v3.md 13's 3.0 for a graphic. */
 private const val CHEVRON_ALPHA = 0.35f
-private const val JUMP_IN_ALPHA = 0.30f
 
 /**
  * How far a horizontal drag has to travel to count as a swipe.

@@ -12,11 +12,16 @@ import com.kamsiob.claritynow.domain.engine.catalog.Template
 import com.kamsiob.claritynow.domain.engine.realize.Candidate
 import com.kamsiob.claritynow.domain.engine.realize.FactLookup
 import com.kamsiob.claritynow.domain.engine.realize.MeasureValue
+import com.kamsiob.claritynow.domain.engine.realize.Measures
 import com.kamsiob.claritynow.domain.engine.realize.Slot
 import java.time.ZoneId
 
 /**
- * The ten checks in CLARITY_LOGIC_ENGINE.md 8, in order, over one realized candidate.
+ * The eleven checks in CLARITY_LOGIC_ENGINE.md 8, in order, over one realized candidate.
+ *
+ * Ten of them are section 8's own. The eleventh is the estimate delta veto of
+ * `MASTER_BUILD_PROMPT.md` 14b.8, appended rather than inserted so the ten keep the
+ * numbers three documents cite them by.
  *
  * ## What this layer is for
  *
@@ -122,7 +127,7 @@ class ClarityValidator(private val zone: ZoneId) : CandidateValidator {
     }
 
     /**
-     * The ten checks of section 8, in the order that section states.
+     * The eleven checks of section 8, in the order that section states.
      *
      * A check returns null when it passes and the veto detail when it does not. The detail
      * is written to be read months later beside a rule key, so it names the fact, the id or
@@ -139,6 +144,7 @@ class ClarityValidator(private val zone: ZoneId) : CandidateValidator {
         ValidationCheck.FORBIDDEN_VOCABULARY to ::forbiddenVocabulary,
         ValidationCheck.LENGTH to ::length,
         ValidationCheck.REGISTER_INTEGRITY to ::registerIntegrity,
+        ValidationCheck.ESTIMATE_DELTA to ::estimateDelta,
     )
 
     /** Exposed so a test can assert the list is complete and in the order section 8 gives. */
@@ -448,6 +454,64 @@ class ClarityValidator(private val zone: ZoneId) : CandidateValidator {
     }
 
     /**
+     * Check 11. No sentence states a delta between an estimate and an actual.
+     * `MASTER_BUILD_PROMPT.md` 14b.8, Addendum 01 7a.
+     *
+     * **Only ratios and tendencies.** 14b.8 permits `Things you estimate at an hour tend to
+     * take about three` and forbids both `You underestimated by two hours` and `You were
+     * off by 140 percent`. The difference is not politeness. A ratio describes how this
+     * person's estimates map onto their days; a delta is a score against a target they set
+     * themselves, and time blindness is the reason the estimate was wrong in the first
+     * place, so the delta measures the symptom and reports it as a mistake.
+     *
+     * **It is a backstop and it knows it.** The prohibition is kept above this layer by
+     * arithmetic: `TrailQueries.estimateOutcomes` divides the two magnitudes inside its own
+     * body, no quantity of minutes exists anywhere in the fact set, and no measure produces
+     * one, so `actual - estimate` is not a subtraction any rule or template can write.
+     * 14b.8 asks for this check anyway, for a number arriving some other way, and a
+     * backstop with nothing to catch is what a backstop should look like.
+     *
+     * Two rules, and the second is the one a reader will not expect.
+     *
+     * **The language rule** vetoes any of [ValidatorVocabulary.ESTIMATE_DELTA_FORMS]
+     * anywhere in the sentence, whether or not the word estimate appears, because the
+     * percentage example never says it.
+     *
+     * **The shape rule** vetoes a `Percent` slot in a sentence that is about an estimate,
+     * where about an estimate means the sentence says so or one of its numbers came from an
+     * estimate measure. 14b.8 makes the ratio a multiple and never a percentage for a
+     * stated reason: 2.4 rendered as 240 percent is one literal hundred away from the
+     * second forbidden line. Nothing in `Measures` can produce that percentage today, which
+     * is exactly why the rule is written against the slot rather than against the table.
+     *
+     * Read over the masked text, per the note on this class: an area somebody named
+     * `Estimates` is their word and not the app's.
+     */
+    private fun estimateDelta(inspection: Inspection): String? {
+        for (text in inspection.masked) {
+            for ((pattern, name) in ValidatorVocabulary.ESTIMATE_DELTA_FORMS) {
+                val hit = pattern.find(text)
+                if (hit != null) {
+                    return "states a delta between an estimate and an actual: `${hit.value}` is $name. " +
+                        "14b.8 permits a ratio and a tendency and forbids a difference"
+                }
+            }
+        }
+        if (!isAboutAnEstimate(inspection)) return null
+        val percent = inspection.slots.firstOrNull { it is Slot.Percent } ?: return null
+        return "renders {${percent.key}} as a percentage in a sentence about an estimate. 14b.8 " +
+            "makes the reading a multiple and never a percentage, because a ratio of 2.4 shown " +
+            "as 240 percent is one literal hundred from `You were off by 140 percent`"
+    }
+
+    /** Whether the sentence says estimate, or one of its numbers came from an estimate measure. */
+    private fun isAboutAnEstimate(inspection: Inspection): Boolean =
+        inspection.masked.any { ValidatorVocabulary.ESTIMATE_MENTION.containsMatchIn(it) } ||
+            inspection.candidate.sourceFacts.values.any { ref ->
+                FactLookup.measureOf(ref)?.id?.startsWith(Measures.ESTIMATE_MEASURE_PREFIX) == true
+            }
+
+    /**
      * The rendered text with the person's own strings replaced by a single token.
      *
      * Only [Slot.Text] values are masked, which is exactly the set of strings the person
@@ -529,7 +593,7 @@ class ClarityValidator(private val zone: ZoneId) : CandidateValidator {
 }
 
 /**
- * The ten checks of CLARITY_LOGIC_ENGINE.md 8, numbered as that section numbers them.
+ * The eleven checks of CLARITY_LOGIC_ENGINE.md 8, numbered as that section numbers them.
  *
  * The numbers are part of the specification and are carried here so a veto in a simulator
  * dump or a debug log can be read against the document without anybody having to count.
@@ -545,6 +609,21 @@ enum class ValidationCheck(val number: Int, val what: String) {
     FORBIDDEN_VOCABULARY(8, "forbidden vocabulary"),
     LENGTH(9, "length"),
     REGISTER_INTEGRITY(10, "register integrity"),
+
+    /**
+     * Not in section 8's original list of ten. `MASTER_BUILD_PROMPT.md` 14b.8 requires a
+     * veto of its own and section 17 lists a test that constructs the forbidden form, so
+     * it is a check rather than an extra clause on check 8: a veto detail naming the
+     * estimate rule is what a reader months later needs, and check 8 would report it as a
+     * banned word.
+     *
+     * **Appended rather than inserted.** The numbers are cited from three documents and
+     * from the tests, and renumbering ten checks to put an eleventh in the middle would
+     * break those citations silently. It runs last for the same reason the order is data:
+     * a candidate breaking several checks is reported against the most fundamental thing
+     * wrong with it, and a fabricated area name is more fundamental than a sentence shape.
+     */
+    ESTIMATE_DELTA(11, "estimate delta"),
     ;
 
     override fun toString(): String = "check $number, $what"

@@ -172,7 +172,7 @@ data class WindowFacts(
     val startInstant: Long, val endInstant: Long, val dayCount: Int,
     val totalEvents: Int, val completions: Int, val additions: Int,
     val promotions: Int, val swaps: Int, val deletions: Int,
-    val focusStarted: Int, val focusCompleted: Int, val focusAbandoned: Int,
+    val focusStarted: Int, val focusCompleted: Int, val focusEndedEarly: Int,
     val focusSecondsTotal: Long, val focusMinutesTotal: Int,
     val activeDays: Int,
     val busiestDayKey: String?,          // null when totalEvents == 0
@@ -194,7 +194,11 @@ data class AreaFacts(
     val daysSinceLastEvent: Int,         // Int.MAX_VALUE when never
     val lifetimeEvents: Int, val lifetimeCompletions: Int,
     val ageDays: Int, val isNew: Boolean, // isNew == ageDays < 14
-    val focusSecondsInWindow: Long, val focusSessionsInWindow: Int
+    val focusSecondsInWindow: Long, val focusSessionsInWindow: Int,
+    val swapsInWindow: Int,              // this area's swaps, never the window's
+    val dormantDaysBeforeReturn: Int?,   // the gap it returned from, null when it did not
+    val weekEventsSeries: List<Int>,     // oldest first, up to 12
+    val dipPrecedent: Precedent          // has this area been this quiet, this long, before
 )
 
 data class RollupFacts(
@@ -225,6 +229,10 @@ data class HistoryFacts(
     val lifetimeCompletions: Int, val lastWeekCompletions: Int?,
     val weekCompletionsSeries: List<Int>,   // oldest first, up to 12
     val weekQueueSizeSeries: List<Int>, val weekTotalEventsSeries: List<Int>,
+    val weekAreaCountSeries: List<Int>,     // live areas that moved, per bucket
+    val weekFocusStartedSeries: List<Int>,  // sessions STARTED, per bucket
+    val weekFocusCompletedSeries: List<Int>, val weekFocusEndedEarlySeries: List<Int>,
+    val weekWeekendEventsSeries: List<Int>,
     val weekOverWeekDelta: Int?,
     val completionsTrend: Trend, val queueSizeTrend: Trend, val activityTrend: Trend,
     val dominantAreaLastThreeWeeks: List<AreaId?>,   // oldest first, nulls allowed
@@ -233,7 +241,14 @@ data class HistoryFacts(
     val mostRecentBetterWeekKey: String?,   // newest week STRICTLY exceeding this one
     val longestEverActiveDays: Int, val longestEverActiveItemId: ItemId?,
     val personalBestFocusMinutesWeek: Int,
-    val firstEverFlags: Set<FirstEver>      // present only in the window where each first occurred
+    val firstEverFlags: Set<FirstEver>,     // present only in the window where each first occurred
+    val currentQuietRunDays: Int,           // the scoped streak exception, capped at 30
+    val currentSingleAreaRunDays: Int, val currentSingleAreaRunAreaId: AreaId?,
+    val estimatedCompletions: Int,          // the 14b.8 floor of five, and it travels as a FactRef
+    val activeToEstimateRatio: Double?,     // a multiple, never a percentage. Null under the floor
+    val estimateTendency: EstimateTendency,
+    val activityDipPrecedent: Precedent, val focusDipPrecedent: Precedent,
+    val isJustBackFromAbsence: Boolean      // 14b.4. No date, no length, nothing to render
 )
 
 data class AnsweredPulse(val dateKey: String, val family: FamilyKey, val subjectId: String?,
@@ -270,10 +285,49 @@ data class PulseFacts(
 **Phase 5, three readings this section leaves open, resolved and recorded.**
 
 - **`busiestDayKey` on a tie.** 3.1 makes `dominantAreaId` null on a tie and says nothing about this field, so the tie had to go somewhere. It resolves to the **earliest** day, which is the day the peak was first reached. That is not enough on its own: a sentence of the shape `Tuesday carried the week` is false on a three way tie whichever day wins, so the family that names the day carries a floor requiring `busiestDayCount` to be a real share of `totalEvents`, exactly as every share based rule carries an event floor
-- **`focusAbandoned` counts `FOCUS_ENDED_EARLY`.** The event was renamed in the Addendum 01 schema window because the log cannot know a session was abandoned. The field keeps the name 3.1 gives it. **A session with no terminal event is in neither count**, so `focusStarted` may exceed `focusCompleted` plus `focusAbandoned` and no rule may infer the difference
+- **`focusEndedEarly` counts `FOCUS_ENDED_EARLY`, and the field was renamed with the event.** This block said `focusAbandoned` and phase 5 said the field would keep that name. It did not, and the code is right: DECISIONS.md C6 argues that a name in a document a second implementation is built from is an instruction about what the concept means, and the log cannot know a session was abandoned. That argument applies with more force to a field than to an event type, because rules are authored against these names and every rule author reads them. **A session with no terminal event is in neither count**, so `focusStarted` may exceed `focusCompleted` plus `focusEndedEarly` and no rule may infer the difference
 - **Every band is present in `eventsByPartOfDay`, including zeros.** A share is a division, and a missing denominator term produces a set of percentages that do not reach a hundred with nothing on the screen to explain why
 
 `responseLabel` is stored verbatim in the `PULSE_ANSWERED` event so a callback quotes what the user actually saw, not a label reworded in a later app version.
+
+---
+
+**Three facts from `MASTER_BUILD_PROMPT.md` 14b, declared here because 14b names the requirement and leaves the definition to this file.** Each of them exists to stop a sentence rather than to enable one, and each is shaped so that the sentence it stops cannot be assembled rather than merely being caught.
+
+**Estimate calibration: `estimatedCompletions`, `activeToEstimateRatio` and `estimateTendency`.** 14b.8 permits `Things you estimate at an hour tend to take about three` and forbids both `You underestimated by two hours` and `You were off by 140 percent`. Only ratios and tendencies.
+
+- **The window is twelve weeks**, the same seven day buckets every series here uses and the same span 3.7 already calls a pattern rather than an accident. A one week reading over five items is an accident, and a lifetime reading averages how somebody estimated a year ago into how they estimate now, which is the thing that is supposed to be able to change. The consequence is a constraint on the corpus rather than a freedom: a family reading these may not say `this week`.
+- **An item counts when it was completed inside that window, was active when it was completed, and carried an estimate at the moment it became active.** An item finished without ever having been promoted has no actual: there is a moment it was added and no moment it was started, and reading back to the add turns how long something waited into how long it took, which is a distinction `TrailQueries.daysActiveForItem` and `daysSinceItemAdded` already keep.
+- **The prediction is the estimate in force at the promotion, and a revision made after it is ignored.** An estimate changed while the work is under way is not a prediction any more; it is a progress report informed by exactly the thing being measured, and honoring it would move every ratio toward one and quietly flatter the person the fact is about. A revision made before the promotion is a better prediction and is the one used.
+- **The actual is the elapsed time of the item's last active spell**, which is the actual 14b.3 says comes free. A reopened item is measured over the spell that ended in the completion being read, and a completion whose wall clock precedes its own promotion is two devices disagreeing about the time rather than a fast finish, so it is dropped rather than clamped to zero.
+- **The reading is the median of the per item ratios**, never the mean and never the ratio of two totals. One item left active over a holiday moves both of those to a number no week of the person's life resembles, and `tend to` is a median word.
+- **It is a multiple and never a percentage.** A ratio of 2.4 rendered as 240 percent is one literal hundred away from the second forbidden line, and the corpus family is authored against a count slot for that reason.
+- **The floor is five and it travels.** `estimatedCompletions` is reported truthfully whatever it is; under five there is no ratio and the tendency is `INSUFFICIENT`. 14b.8 requires the count itself to reach the validator as a `FactRef` so the number that gated the sentence is re-read rather than trusted.
+- **`CLOSE` is the band in which there is nothing to say**, and it is drawn where the rendering is rather than at a chosen number: a median that would print as `about one` is somebody whose estimates land.
+
+**No quantity of minutes exists anywhere in the fact set, and that is the prohibition rather than a consequence of it.** `TrailQueries.estimateOutcomes` divides the two magnitudes inside its own body and returns a ratio with no unit attached, so `actual - estimate` is not a subtraction any rule, measure or template above it is able to write. A validator catching the number afterward would leave the number computed; this leaves it unformable. **Do not add a field holding an estimate or an elapsed time in minutes**, whatever it is for.
+
+**The ratio is a stay and not an effort, and a family reading it must say so.** Nothing in this app measures time spent working. What the log holds is how long a thing sat active, so a thing estimated at an hour that occupies a day and a half is a true reading of how somebody's estimates map onto their days and a false one of how long the work took. Two quantities, two names, as with `focusStarted` and `focusCompleted`.
+
+**Precedent: `AreaFacts.dipPrecedent`, `HistoryFacts.activityDipPrecedent` and `focusDipPrecedent`.** 14b.9 is a correctness fix and not a politeness one. A fluctuating condition and a decline are the same numbers, and without this the app tells somebody with a cyclical or relapsing condition that they are deteriorating, on a fixed schedule, forever, being technically accurate every time. The question is whether a fall of this depth and this duration has happened to this subject before.
+
+- **A subject's `normal` is the median of the weeks it moved in**, over its whole history, not the median of all its weeks. The all weeks median is zero for anybody quiet more than half the time, and a zero normal makes nothing low, which would pass the gate for precisely the most cyclical people it exists to protect.
+- **Depth is banded, in four steps**: at or above three quarters of normal is steady, below three quarters is low, below half is deep, and nothing at all is its own band because a subject that stops and a subject that halves are different shapes. Banding rather than an exact depth is what makes two falls comparable at all; a continuous measure would make almost no two falls alike and the answer would be `NONE` forever, which is the answer the fact exists to stop the app giving by default.
+- **The current fall is the unbroken stretch of low weeks ending at the newest closed bucket**, its duration that stretch and its depth the deepest band in it. **A precedent is any strictly earlier unbroken stretch that lasted at least as long and reached at least as deep.**
+- **The newest bucket is skipped when its seven days have not all closed.** The Areas banner and the Momentum headline recompute during the day, and a part week is low against any normal, so reading it would put every subject into a fall every Wednesday morning and lengthen every fall by one week, which makes a precedent harder to find rather than easier. The Report and the Pulse both end on a day boundary and are unaffected.
+- **The weeks before a subject's first week with anything in it are dropped.** They are not silences; nothing had happened yet. This is the rule `AreaFacts.weekEventsSeries` already states and `FactAccess.returnsAfterSilence` already applies.
+
+**`Precedent` has four values because there are two ways of not knowing and they must not be folded together.** `NONE` is the permission and `PRESENT` is the veto. `INSUFFICIENT` is neither, and it arrives by two routes: fewer than twelve weeks of the subject's own history, which is 14b.9's own example of a person who has no precedent for anything, and a fall so long that no earlier fall of the same length could have fit behind it. `NOT_IN_A_DIP` is the honest nothing: no fall here to find a precedent for.
+
+**The rhythm branch tests for `PRESENT` and the gate closes on `PRESENT` alone. This paragraph said something else and the phase that built the gate settled it the other way.** It said both branches test for their own value, so that a subject with too little history gets neither sentence, which asks a decline family to require `NONE`. The argument that decided it is `NOT_IN_A_DIP` rather than `INSUFFICIENT`. This fact's notion of low is a week under three quarters of the subject's own normal, and **no decline family asks that question**: `decliningActivity` reads a run of three falling weeks, which can end on a perfectly ordinary week, and `neglectedArea` reads a gap measured in days, which can open inside a week the area was busy at the start of. Requiring `NONE` would silence a true observation every time the two definitions came apart, and a missing sentence is the one defect nothing on the screen reveals. Closing on `INSUFFICIENT` as well would withhold every decline observation from every install between its fourth week, where a series first exists to read, and its twelfth, where a precedent becomes answerable, which is eight weeks of an app that has noticed something and decided not to say it. `FamilyAvailability.CLOSES_THE_GATE` is the set, it holds one value, and it is one word from holding the other reading.
+
+**Only the verdict travels.** There is deliberately no depth, no duration and no date beside it. Those are numbers about somebody's worst weeks, and a fact set carrying them would be one measure away from a sentence counting them out.
+
+**The re-entry quiet week: `HistoryFacts.isJustBackFromAbsence`.** 14b.4 requires every decline, neglect and gap family to be unavailable to selection for seven days from a re-entry date, in the Report, the Momentum headline and the Areas banner, which read the same catalog. All three extract their facts through layer one, so all three read this and cannot disagree about the day the withholding ends. The Pulse's own two day window is older and sits above layer one in `PulseGeneration`, because the Pulse declines to run the engine at all rather than withholding some of its families.
+
+**It is a boolean, and that is 14b.4's prohibition kept by shape.** A returning person must never be greeted by a measurement of their absence, not in days, not in weeks, not as a date. `TrailQueries.lastReEntryOnOrBefore` answers with a value carrying the date of the return and nothing else, and what reaches a rule from it here is one bit less than that: whether the app is inside the quiet week. There is no length to leak and no date to print. **Do not add a field holding either.** It is asked of the last local day the window describes, which is the day the sentence would be said on; asking about the window start would buy a fortnight of withholding where 14b.4 asks for seven days.
+
+---
 
 ### 3.7 CueFacts
 
@@ -356,6 +410,10 @@ Deterministic, in this exact order. Any deviation produces device divergence.
 6. **Rank.** Specificity descending, then priority descending, then `rule.key` ascending. The final key sort removes the last ordering ambiguity and must be present even though it rarely matters
 7. **Take the head.** Empty returns `Silent`
 
+**Step 1b, family availability.** `MASTER_BUILD_PROMPT.md` 14b.4 and 14b.9 each remove a family from selection rather than reorder it, and `Selector` applies both between step 1 and step 2. **It is numbered rather than inserted** for the reason 11.3's own sequence numbers its 2b: the seven steps above are cited by number from three documents and from the tests, and renumbering them would break those citations in silence.
+
+The two gates are 14b.4's week of withholding after a return, which applies to the Report, the Momentum headline and the Areas banner and not to the Pulse, and 14b.9's capacity gate, which applies everywhere. **Neither can be a criterion**, and the reason is arithmetic rather than taste: specificity is `criteria.size`, so a criterion added to `quietWeek` would make `quietWeek` outrank a rule that genuinely required more, and 14b.4's test is true on all but seven days of a person's life, which is the trivially true criterion section 4 forbids. Both are filters, so they commute with steps 2 to 5 and the placement changes no outcome; they run first among them because 14b.4's own word is `unavailable`. **They run inside the filter chain rather than over the qualified list**, so a purpose whose every qualifying family was withheld reports `ALL_QUALIFIED_RULES_FILTERED` and not `NO_RULE_QUALIFIED`: a week the engine chose not to describe is not a week it had nothing to say about, and 5.1's whole argument turns on the simulator being able to tell those apart. `FamilyAvailability` holds both tables and the reasoning for each family in them.
+
 For `REPORT_OBSERVATION`, which needs 2 to 4, take the head then repeat from step 6 excluding any rule sharing a family with an already selected one, **and applying the incompatibility matrix in section 9**, until four are chosen or the list is empty. **Never pad to reach a minimum.**
 
 ### 5.1 Deliberate silence
@@ -415,6 +473,10 @@ Full language in `CORPUS_2_REPORT.md`.
 **Patterns**, at most one, requiring `weeksOfData >= 3`: `shiftingFocus`, `growingQueues`, `improvingThroughput`, `decliningActivity`, `areaGoneQuiet`, `consistentRhythm`, `narrowingFocus`, `broadeningFocus`, `focusHabitForming`, `focusHabitFading`, `reportedVsActual`, `queueEquilibrium`, `weekendShift`, `abandonmentPattern`, `comebackPattern`, `insufficientData`.
 
 **Closings**, produced by layer 6: eight plan-action families plus `trustThePace`, `letItBe`, `noRhythmYet` and `review`.
+
+**One observation family is declared and has no language yet: `familiarDip`.** It is the second branch of 14b.9's capacity gate, which excludes a decline, neglect or fading family when the fall has a precedent and requires that **a different family fire with different language** rather than that the first one be softened. Its three rules are written, one per subject the precedent facts measure, and they are held in `FamiliesAwaitingLanguage` rather than in `ReportRules` because a family declared in `EngineFamilies` with no bench in `CORPUS_2_REPORT.md` fails the parser, and a family with a rule and no bench would qualify, say nothing, and look exactly like a family that never happened to fire. That register is the mirror of `RulesAwaitingFacts` and carries the five steps phase 9 takes to land it, including the constraints the bench is written under.
+
+**It is not in the observation list above until its lines exist**, because that list is what the parser checks the corpus against in both directions.
 
 ### 6.4 The difficulty register
 
@@ -638,6 +700,10 @@ The checks, in order, all mandatory:
 9. **Length.** Report headlines under 8 words. Momentum headlines under 12. Pulse observations under 30. Closing lines under 22
 10. **Register integrity.** A `NEUTRAL_AGENT` variant contains no passive construction with a deleted agent. Checked by pattern against banned forms including `were added`, `was completed`, `have been`
 
+11. **Estimate delta.** No rendered sentence states a difference between an estimate and an actual. `MASTER_BUILD_PROMPT.md` 14b.8 permits `Things you estimate at an hour tend to take about three` and forbids both `You underestimated by two hours` and `You were off by 140 percent`. Two rules: any of the delta forms in `ValidatorVocabulary.ESTIMATE_DELTA_FORMS` anywhere in the sentence, whether or not it says estimate, because the percentage example never does; and a `Percent` slot in a sentence that is about an estimate, because 14b.8 makes the reading a multiple and never a percentage and 2.4 shown as 240 percent is one literal hundred from the second forbidden line
+
+**Check 11 is 14b's and not this section's, and it is appended rather than inserted.** The ten above are cited by number from this file, from `MASTER_BUILD_PROMPT.md` and from the tests, and putting an eleventh in the middle would renumber them silently. It runs last for the same reason the order is data below: a fabricated area name is more fundamental than a sentence shape. **It is a backstop and the prohibition does not rest on it**: `TrailQueries.estimateOutcomes` divides the two magnitudes inside its own body, no quantity of minutes exists anywhere in the fact set, and no measure produces one, so the subtraction is unformable above this layer. 14b.8 asks for the check anyway, for a number arriving some other way, and section 17 lists a test that constructs the forbidden form.
+
 Checks 1 through 4 are the integrity core. **The veto path for each must be reachable in a unit test** that deliberately constructs a violating candidate and asserts the veto. A validator whose failure branch is never executed is a validator nobody has verified.
 
 **Phase 5, three things this list leaves open.**
@@ -843,6 +909,8 @@ Build this in phase 5, before a single corpus sentence is written. In `devtools`
 
 **Process.** A full simulated year, engine run day by day for Pulse and week by week for the Report, plus Momentum on each simulated open.
 
+**Nothing is written on a day the app was not opened, and that was a defect for six phases.** A persona answers two questions, whether it is there and what it did, and only the first was ever conditional: `act` was called on every day of the year regardless. So `sporadic` and `abandoning` wrote `ITEM_ADDED` and `ITEM_COMPLETED` onto days carrying no `APP_OPENED`, **which the real app cannot produce**: ninety six such days across the two of them in a single year, and every measurement below was read through an instrument that could hold them. It is the same class of defect as the persona set that could not finish a backlog and it is fixed the same way, in the instrument rather than in each life: `SimulationPersona.isPresentOn` is the one gate and the simulator, `ReportPersonaTest` and `CapacityGatePersonaTest` all apply it. **The install day is inside the gate**, because `AREA_CREATED` is a screen gesture like any other and an install day nobody opened would put the same impossible event one line earlier. A session that falls on a day nobody was there does not happen and is **not** moved to the next day opened: `roll` is a hash of the day and of nothing else, which is the property the whole persona file rests on, and a session carried forward would make what happens on a day depend on the days before it.
+
 **Output.** Plain text per persona, every invocation annotated:
 
 ```
@@ -873,24 +941,36 @@ Build this in phase 5, before a single corpus sentence is written. In `devtools`
 
 The four enforced now are the ones whose failure would mean something already built is wrong rather than something not yet written: the vocabulary check, the phantom area check, the visible slot syntax check and the non-compliance test. The first three are already vetoed by layer 5, so a dump containing one is evidence that a sentence reached a surface without passing through the validator. The fourth passes trivially today because layer 6 does not exist, and is enforced anyway so that the day layer 6 arrives, this is already watching.
 
-The readings the deferred checks produce are the baseline phase 9 is judged against and the full tables, with the reasoning, are in `DECISIONS.md` and `docs/BUILD_STATE.md`. **Five measurements exist and the fifth is the current one.** Phase 5, the facts phase, the slot bindings phase, the rules pass, and the pass that repaired the persona set, over the same eleven personas and the same simulated year each time.
+The readings the deferred checks produce are the baseline phase 9 is judged against and the full tables, with the reasoning, are in `DECISIONS.md` and `docs/BUILD_STATE.md`. **Six measurements exist and the sixth is the current one.** Phase 5, the facts phase, the slot bindings phase, the rules pass, the pass that repaired the persona set, and the pass that built the two family scope gates of `MASTER_BUILD_PROMPT.md` 14b, over the same eleven personas and the same simulated year each time. The twelfth persona `cyclicalDips` is deliberately outside `SimulationPersona.ALL` and outside every column: every measurement recorded here is quoted against the eleven, and a twelfth would move all of them silently.
 
-| reading | target | phase 5 | facts | bindings | rules pass | current |
-|---|---|---|---|---|---|---|
-| Pulse silence, every persona together | 8 to 25 percent of opened days | 76 percent | 73 percent | 68 percent | 68 percent | **63 percent, 63.9 exact** |
-| Pulse silence, per persona | the same band | 43 to 98 | 42 to 98 | 40 to 97 | 40 to 97 | **37 to 97, none in band** |
-| Pulse families that ever fired | 11 of 11 | 6 of 11 | 7 of 11 | 8 of 11 | 8 of 11 | **11 of 11** |
-| every family the corpus declares fires | 78 of 78 | not measured | 58 of 78 | 60 of 78 | 65 of 78 | **71 of 78** |
-| every stage of every hot family fires | all | 29 hot, one gap | 31 hot, two gaps | 33 hot, two gaps | 35 hot, two gaps | **36 hot, one gap** |
-| no variant repeats inside ninety days | none | 7,384 | 7,430 | 7,445 | 7,376 | **7,418, tightest after 1 day** |
-| layer 5 vetoes across the run | none | not reported | not reported | 107, every one check 1 | 0, and 92 absences on purpose | **0, and 85 absences on purpose** |
-| pattern slots, and their concentration | no family holds a section | not reported | not reported | 416 of 419 filled, 8 families, top three 402 | 401 of 419, 12 families, top three 296 | **399 of 419, 13 families, top three 295** |
+**The sixth measurement is the first run of the repaired instrument, and it is the current column.** The fifth was taken before the presence fix above, so it was read through an instrument that could hold events the app cannot produce. The move it cost is small and it is entirely in the two personas the defect touched: `sporadic` 51 to 65 and `abandoning` 75 to 88, aggregate silence 63 to 65. Every other persona is unchanged to the point.
+
+| reading | target | phase 5 | facts | bindings | rules pass | persona repair | current |
+|---|---|---|---|---|---|---|---|
+| Pulse silence, every persona together | 8 to 25 percent of opened days | 76 percent | 73 percent | 68 percent | 68 percent | 63 percent | **65 percent, 65.7 exact** |
+| Pulse silence, per persona | the same band | 43 to 98 | 42 to 98 | 40 to 97 | 40 to 97 | 37 to 97 | **37 to 97, none in band** |
+| Pulse families that ever fired | 11 of 11 | 6 of 11 | 7 of 11 | 8 of 11 | 8 of 11 | 11 of 11 | **11 of 11** |
+| every family the corpus declares fires | 78 of 78 | not measured | 58 of 78 | 60 of 78 | 65 of 78 | 71 of 78 | **69 of 78** |
+| every stage of every hot family fires | all | 29 hot, one gap | 31 hot, two gaps | 33 hot, two gaps | 35 hot, two gaps | 36 hot, one gap | **36 hot, one gap** |
+| no variant repeats inside ninety days | none | 7,384 | 7,430 | 7,445 | 7,376 | 7,418 | **7,370, tightest after 1 day** |
+| layer 5 vetoes across the run | none | not reported | not reported | 107, every one check 1 | 0, and 92 absences | 0, and 85 absences | **0, and 38 absences on purpose** |
+| pattern slots, and their concentration | no family holds a section | not reported | not reported | 416 of 419, 8 families, top three 402 | 401 of 419, 12 families, top three 296 | 399 of 419, 13 families, top three 295 | **397 of 419, 12 families, top three 298** |
 
 **The fourth measurement was taken through an instrument that could not represent somebody finishing things, and this one is not.** Every persona reached the log through `SimulationPersona.work`, which takes a capture count and a completion count as adjacent parameters, and every call site in all eleven personas passed a completion count no greater than its capture count. Nobody chose that; it is what two adjacent numeric parameters invite. The result was eleven synthetic lives in which `additions >= completions` held on every day and therefore every week, with per area daily completions capped at two, which made `throughput`, `netOutflow` and `intakeVsOutput` stage 3 impossible and starved `burst` and `queueDrain`. A person who clears a backlog on a Sunday is completely ordinary and no persona in this section could do it. `SimulationPersona.clearOut` is the act `work` could not express, a sitting down that finishes and captures nothing whose size comes from the queue rather than from a literal, and four personas have one. **`acceptsEveryPlan` must never have one and does not.**
 
 **Phase 9's job is named by the fifth reading, and the owner named it in advance.** If silence landed near band, phase 9 would be authoring to fix repeats; it did not, so **phase 9 is authoring to fix silence.** Those are different jobs and the difference is what a bench is grown for.
 
-**Silence is 63.9 percent against a ceiling of 25.** The persona repair moved it 4.9 points and no rule and no corpus line changed to get there. The 2,013 silent Pulse days split into 1,099 where a rule qualified and every candidate was filtered, 903 where nothing qualified at all, and 11 with too little data. **A bench deep enough to empty the first column entirely would leave silence at 29.0 percent, with five of the eleven personas in band and six outside**, so bench depth is necessary and provably not sufficient. The owner's standing instruction is that this is reported and not ground at: an app that ships at 30 percent silence is better than one that does not ship.
+**Silence is 65.7 percent against a ceiling of 25, and the fifth measurement's reading of it survives its own instrument being repaired.** The 2,067 silent Pulse days split into 1,161 where a rule qualified and every candidate was filtered, 895 where nothing qualified at all, and 11 with too little data. **A bench deep enough to empty the first column entirely would leave silence at 28.7 percent**, against 29.0 at the fifth measurement, which is the same finding to within a rounding: bench depth is necessary and provably not sufficient. At that floor five of the eleven personas are in band, five are above it and `sporadic` is below at 6 percent, which is the one thing the repaired instrument changed about the shape rather than the size. The owner's standing instruction is that this is reported and not ground at: an app that ships at 30 percent silence is better than one that does not ship.
+
+**Two points of the move are the instrument and none of it is the gates.** The sixth measurement is the first run of the repaired instrument and also the first run carrying the capacity gate and the re-entry withholding, so the two were separated by a control: the same year with `FamilyAvailability.unavailable` returning null throughout. **Its silence table is identical to the sixth measurement in every cell**, which is not a coincidence and did not need measuring twice to be believed: no Pulse family appears in either gate's table, and `RE_ENTRY_PURPOSES` excludes the Pulse outright because 14b.4 gives the Pulse a different and older rule above layer one. So 63 to 65 is the presence fix, entirely, and the gates cost no Pulse sentence at all.
+
+**What the gates do cost is two report families and sixty three absence sentences, and both are the point.** Against that control, `quietWeek` as a headline goes from firing to dark, which is one family of the two the coverage row lost; the other, `abandonmentPattern`, went dark from the presence fix and not from the gate, because `abandoning` no longer writes on the days it is not there. Absences named on purpose fall from 101 to 38: `neglectedArea` and `areaGoneQuiet` are both gated on `AreaFacts.dipPrecedent`, and sixty three of the hundred and one were an area falling quiet in the same way it had fallen quiet before. **A family going dark is a cost here and the coverage row prices it as one**, which is correct and is why the row moved down; what it buys is priced in 14b.9 and not in this table.
+
+**The three acceptance criteria of `MASTER_BUILD_PROMPT.md` 14b were measured over the same year and all three pass.**
+
+- **14b.9, the capacity gate.** `cyclicalDips` receives **zero** decline, neglect or fading observations across fifty two weekly reports. The same year composed a second time with all three precedents forced to `NONE`, which is the report this person would have received before 14b.9 existed, produces **34** of them, in `decliningActivity`, `focusHabitFading`, `hardStretch`, `neglectedArea` and `quietWeek`. All 34 sit on a fall whose precedent reads `PRESENT`, so the silence is the gate and not a ranking, a cooldown, or a family that never qualified
+- **14b.8, the estimate delta.** **Zero** in 13,576 rendered strings across twelve persona years. Not one line states a delta, and not one line mentions an estimate at all, which is the stronger reading: no quantity of minutes exists anywhere above `TrailQueries.estimateOutcomes`, so the subtraction is unformable rather than merely vetoed, and check 11 is a backstop with nothing yet to catch
+- **14b.4, the week after a return.** `longDormantRevival` comes back on day 251 after 195 days away and receives 22 sentences in the seven days that follow, **none** of them a decline, a neglect or a gap. The same seven days with the re-entry half of the gate disabled produce **seven**: `A still fortnight.` on the Momentum headline on four separate days, and a report on day 252 headlined `Work moved again.` carrying `Work had been the quietest area. It was not this week.` and `6 events. All week.` That report is three fifths a measurement of the absence, on the first screen back, which is what 14b.4 exists to prevent
 
 **The conclusion survived its own instrument being repaired, which is the strongest thing that can be said for it.** Family coverage did not: six of eleven, then seven, then eight was never a reading of corpus depth or of rule thresholds, it was a reading of a persona set in which nobody ever finished a backlog, and it is 11 of 11 the first time a life in the set can. Silence was overstated by five points and no more, because it was high for reasons that had almost nothing to do with completions.
 
@@ -898,7 +978,7 @@ The readings the deferred checks produce are the baseline phase 9 is judged agai
 
 **`queueDrainedFrom` is justified on correctness and not on coverage, measured.** A control run of the current engine against the pre-fix persona set is byte for byte identical to the fourth measurement, so the fact changed nothing on its own. A probe of the fixed personas with the fact computed the old way, as the boundary queue, isolates what it does buy: it doubles `queueDrained` from 5 to 11, it is solely responsible for `clearing`, which is dark at 0 under boundary anchoring, and it does not move `pulse.queueDrain` by one firing, because a Pulse window is one day and the queue an afternoon clears already sits at that day's opening boundary. It moves no silence number at all. What it prevents is `drainedByFinishing` degenerating into `completions >= 0` on exactly the shape these personas now produce, a queue built inside the window and emptied inside it.
 
-**The check 1 conflict that the third reading recorded as open is closed.** `neglectedArea`, `areaGoneQuiet` and `areaRevival` were the only families vetoed anywhere in the run, 107 times, every one of them check 1 of section 8. The owner ruled that the check was right and the writing was wrong, and section 8 check 1 is narrowed rather than widened: a rule carrying `ClarityRule.absenceSubject` may name an area with no events in the window, and only when that area has a real lifetime, is not new, and has a measured `daysSinceLastEvent`. A new empty area is still refused by every rule. The fifth reading records no vetoes at all and 85 absences named on purpose, the drop from 92 being that an area somebody clears out is an area with events in it.
+**The check 1 conflict that the third reading recorded as open is closed.** `neglectedArea`, `areaGoneQuiet` and `areaRevival` were the only families vetoed anywhere in the run, 107 times, every one of them check 1 of section 8. The owner ruled that the check was right and the writing was wrong, and section 8 check 1 is narrowed rather than widened: a rule carrying `ClarityRule.absenceSubject` may name an area with no events in the window, and only when that area has a real lifetime, is not new, and has a measured `daysSinceLastEvent`. A new empty area is still refused by every rule. The fifth reading records no vetoes at all and 85 absences named on purpose, the drop from 92 being that an area somebody clears out is an area with events in it. The sixth records 38, and the drop is the capacity gate rather than anything about check 1. **The test that restates section 9 by hand was never given this narrowing and had been failing on it since the day it landed**: `ReportInvariants` refused every one of those sentences while `ReportIntegrity` and `ClarityValidator` both passed them, 358 times over ten thousand generated weeks and 112 across the eleven persona years, and none of them was a phantom area. The four conditions are now written out there too, with their literals rather than the extractor's constants, because a second encoding that reads the first one's numbers is not a second encoding.
 
 ---
 
@@ -942,7 +1022,8 @@ The readings the deferred checks produce are the baseline phase 9 is judged agai
 - **Criterion discrimination.** No criterion passes on more than 90 percent of a large simulated fact corpus
 - **Determinism.** Identical inputs produce identical output across 10,000 generated cases
 - **Cross-device agreement.** Two `FiringHistory` objects rebuilt independently from the same merged log produce identical selections for the same `dateKey`
-- **Veto reachability.** One test per validator check constructing a violating candidate and asserting the veto
+- **Veto reachability.** One test per validator check constructing a violating candidate and asserting the veto, check 11 included: `EstimateDeltaVetoTest` builds both of 14b.8's forbidden lines word for word, the permitted one beside them, and a count measure funneled into a percentage slot
+- **Family availability.** Step 1b removes and never reorders. `FamilyAvailabilityTest` asserts that a fall with a precedent excludes the decline families rather than re-wording them, that `INSUFFICIENT` is neither the permission nor the veto, that the week after a return withholds every decline, neglect and gap family on the three surfaces 14b.4 names and not on the Pulse, and that a report with nothing left to say is shorter rather than padded
 - **Escalation monotonicity.** A continuously true condition never shows a decreasing stage
 - **Composition.** No report violates the incompatibility matrix across 10,000 generated reports
 - **Register.** No `NEUTRAL_AGENT` variant contains a banned passive form. No Momentum line contains a causal construction
@@ -950,6 +1031,9 @@ The readings the deferred checks produce are the baseline phase 9 is judged agai
 - **Repetition.** No variant repeats inside 90 simulated days across every persona
 - **Cue substantiation.** No plan renders with a cue below threshold across 10,000 generated fact sets
 - **Non-compliance.** Per section 12
+- **Estimate shape.** No fact class carries a quantity of minutes, estimated or actual, and the facade hands out a ratio rather than the pair it was computed from, so `MASTER_BUILD_PROMPT.md` 14b.8's forbidden delta is unformable rather than merely caught. Checked by walking the fact classes, so a field added later fails here
+- **Precedent.** A cyclical history answers `PRESENT`, a first fall after a steady history answers `NONE`, and both a short history and a fall with no room behind it answer `INSUFFICIENT` rather than either. The year long persona assertion is `CapacityGatePersonaTest`, listed in `MASTER_BUILD_PROMPT.md` 17, and it composes each week twice: once as the app now speaks and once with every precedent forced to `NONE`, which is the year this person would have had before 14b.9. The control run is the finding, the silence is asserted over **every** week of the year, and a second assertion is what stops the first from being empty: every gated observation the control run produced is checked to sit on a fall whose precedent is `PRESENT`, so a year in which nothing qualified, or in which a ranking or a cooldown did the silencing, fails there rather than passing here
+- **Re-entry.** The quiet week is closed on the seventh day and open on the sixth, measured at the last day the window describes, and the only fact carrying an absence is a boolean
 - **Boundary.** `dateKey` correct across DST spring forward and fall back; the 17:00 reflection switch happens exactly once per day
 
 **Phase 5 built all of these except the ones that need a layer or a corpus that does not exist.** Purity, catalog integrity, criterion discrimination, determinism over ten thousand cases, cross-device agreement, veto reachability for every check, escalation monotonicity, composition, register and non-compliance are unit tests today. Silence floors and repetition are simulator checks, they run, they fail, and each carries the issue that lifts it. **Cue substantiation waits for layer 6**, because nothing renders a cue yet. The 17:00 half of the boundary test waits for phase 6, which owns the generation lifecycle; the `dateKey` half is held by the daylight saving tests phase 3b built.

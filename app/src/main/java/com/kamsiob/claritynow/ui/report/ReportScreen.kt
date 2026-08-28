@@ -39,6 +39,8 @@ import androidx.compose.ui.unit.dp
 import com.kamsiob.claritynow.R
 import com.kamsiob.claritynow.domain.report.ClarityReport
 import com.kamsiob.claritynow.domain.report.ReportSection
+import com.kamsiob.claritynow.ui.components.ScrollEdge
+import com.kamsiob.claritynow.ui.components.scrollEdgeFade
 import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalCalmMode
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
@@ -118,6 +120,20 @@ internal fun ReportScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                // Phase 12b. The page dissolves into the gold night at both ends rather
+                // than being cut off under the clock and behind the tab bar. This is the
+                // surface the fade's implementation was chosen for: it erases the
+                // content's own alpha rather than painting a ground over it, so the two
+                // centers of light in `ReportBackdrop` come through the band unchanged.
+                // A flat `deepBlack` scrim here would have cut a dark bar across the
+                // lower glow, which is the one thing 11.1 asks this surface not to lose.
+                .scrollEdgeFade(
+                    top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() +
+                        ScrollEdge.underTheClock,
+                    bottom = WindowInsets.navigationBars.asPaddingValues()
+                        .calculateBottomPadding() + ClaritySpacing.tabBarInset +
+                        ClaritySpacing.tabBarHeight + ScrollEdge.aboveTheBar,
+                )
                 .verticalScroll(scroll)
                 .semantics { traversalIndex = CONTENT_TRAVERSAL }
                 .padding(contentInsets()),
@@ -216,7 +232,7 @@ private fun ComposedReport(
 
     // 3. Generous space above and below, which is what makes the headline the page rather
     // than the top of it.
-    Spacer(Modifier.height(HEADLINE_SPACE))
+    Spacer(Modifier.height(ClaritySpacing.scaled(HEADLINE_SPACE)))
 
     Box(
         modifier = Modifier
@@ -239,7 +255,7 @@ private fun ComposedReport(
         }
     }
 
-    Spacer(Modifier.height(HEADLINE_SPACE))
+    Spacer(Modifier.height(ClaritySpacing.scaled(HEADLINE_SPACE)))
 
     // 4. The glance layer, with the caption that keeps it from being the sole carrier of a
     // claim. A week whose every total was nought draws neither: seven floor marks under an
@@ -251,7 +267,7 @@ private fun ComposedReport(
             reveal = playing,
             modifier = Modifier.reveal(playing, RIBBON_BLOCK_AT),
         )
-        Spacer(Modifier.height(SECTION_GAP))
+        Spacer(Modifier.height(ClaritySpacing.sectionGap))
     }
 
     // 5.
@@ -266,7 +282,7 @@ private fun ComposedReport(
     var step = 1
 
     report.firstWeekNote?.let { note ->
-        Spacer(Modifier.height(SECTION_GAP))
+        Spacer(Modifier.height(ClaritySpacing.sectionGap))
         Text(
             text = note.text,
             style = type.bodySerif,
@@ -281,7 +297,7 @@ private fun ComposedReport(
 
     // 6. Each a sidehead followed by bodySerif prose, 28dp apart.
     for ((section, lines) in groupedSections(report.observations)) {
-        Spacer(Modifier.height(SECTION_GAP))
+        Spacer(Modifier.height(ClaritySpacing.sectionGap))
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -289,9 +305,9 @@ private fun ComposedReport(
                 .reveal(playing, sectionAt(step), RISE),
         ) {
             ReportSidehead(text = labels.plainText.sideheads.getValue(section))
-            Spacer(Modifier.height(SIDEHEAD_GAP))
+            Spacer(Modifier.height(ClaritySpacing.scaled(SIDEHEAD_GAP)))
             lines.forEachIndexed { index, line ->
-                if (index > 0) Spacer(Modifier.height(PARAGRAPH_GAP))
+                if (index > 0) Spacer(Modifier.height(ClaritySpacing.scaled(PARAGRAPH_GAP)))
                 Text(text = line.rendered, style = type.bodySerif, color = ReportPalette.body)
             }
         }
@@ -314,7 +330,7 @@ private fun ComposedReport(
     //
     // The two are complements and never both present, so the section is drawn once.
     (report.pattern?.rendered ?: report.patternNote?.text)?.let { line ->
-        Spacer(Modifier.height(SECTION_GAP))
+        Spacer(Modifier.height(ClaritySpacing.sectionGap))
         PatternBreak(
             sidehead = labels.plainText.patternSidehead,
             line = line,
@@ -325,7 +341,7 @@ private fun ComposedReport(
 
     // 8. Absent until layer six lands. See ReportClosing.
     page.closing?.let { closing ->
-        Spacer(Modifier.height(CLOSING_SPACE))
+        Spacer(Modifier.height(ClaritySpacing.scaled(CLOSING_SPACE)))
         ClosingLine(
             eyebrow = labels.plainText.closingEyebrow,
             closing = closing,
@@ -338,21 +354,27 @@ private fun ComposedReport(
         step++
     }
 
-    // 9. Both lines in textFaint at caption, and both out of the corpus.
-    Spacer(Modifier.height(CLOSING_SPACE))
+    // 9. Both lines at caption, and both out of the corpus.
+    //
+    // `design-v3.md` 11.1 item 9 wrote them in `textFaint` and 13 states one floor for
+    // Contemplative text; the section is corrected rather than left standing beside the
+    // floor. What keeps a footer a footer is where it sits and how small it is, 6.1's
+    // first two devices, and it goes on being the quietest thing on the page at 55
+    // percent. At 32 it measured 2.637 to one.
+    Spacer(Modifier.height(ClaritySpacing.scaled(CLOSING_SPACE)))
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = ClaritySpacing.screenPadding)
             .reveal(playing, sectionAt(step), RISE),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(FOOTER_GAP),
+        verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(FOOTER_GAP)),
     ) {
         report.generated?.let {
             Text(
                 text = it.text,
                 style = type.caption,
-                color = contemplative.textFaint,
+                color = contemplative.textDim,
                 textAlign = TextAlign.Center,
             )
         }
@@ -360,7 +382,7 @@ private fun ComposedReport(
             Text(
                 text = it.rendered,
                 style = type.caption,
-                color = contemplative.textFaint,
+                color = contemplative.textDim,
                 textAlign = TextAlign.Center,
             )
         }
@@ -403,14 +425,14 @@ private fun ReportNotice(line: String?, detail: String?) {
         label = "reportNotice",
     )
 
-    Spacer(Modifier.height(HEADLINE_SPACE))
+    Spacer(Modifier.height(ClaritySpacing.scaled(HEADLINE_SPACE)))
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = ClaritySpacing.screenPadding)
             .graphicsLayer { alpha = appearance },
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(PARAGRAPH_GAP),
+        verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(PARAGRAPH_GAP)),
     ) {
         line?.let {
             Text(
@@ -527,9 +549,6 @@ private const val CONTROLS_TRAVERSAL = 1f
 
 /** 11.1 item 3. The air above and below the headline. */
 private val HEADLINE_SPACE = 36.dp
-
-/** 11.1 item 6, and `ClaritySpacing.sectionGap`, which is the same 28dp. */
-private val SECTION_GAP = ClaritySpacing.sectionGap
 
 /** 11.1 item 8. Thirty four dp above the closing line, and above the footer with it. */
 private val CLOSING_SPACE = 34.dp

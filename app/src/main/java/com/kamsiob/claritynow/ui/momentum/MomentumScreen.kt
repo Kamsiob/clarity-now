@@ -41,9 +41,13 @@ import com.kamsiob.claritynow.domain.momentum.AreaTile
 import com.kamsiob.claritynow.domain.momentum.MomentumView
 import com.kamsiob.claritynow.domain.momentum.WeekStat
 import com.kamsiob.claritynow.domain.momentum.WeekStatKind
+import com.kamsiob.claritynow.ui.components.ScrollEdge
 import com.kamsiob.claritynow.ui.components.Sidehead
 import com.kamsiob.claritynow.ui.components.TabBarHeight
+import com.kamsiob.claritynow.ui.components.TabBarInset
 import com.kamsiob.claritynow.ui.components.TabularNumber
+import com.kamsiob.claritynow.ui.components.scrollEdgeFade
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.calmAccent
@@ -107,34 +111,45 @@ fun MomentumScreen(view: MomentumView, modifier: Modifier = Modifier) {
     val type = LocalClarityTypography.current
     val scroll = rememberScrollState()
 
+    val statusBar = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val navigationBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(colors.canvas)
+            // Phase 12b. The headline dissolves into the page as it goes under the clock,
+            // and the dot row does the same as it sinks behind the floating pill, rather
+            // than either being cut off at a hard edge. The fade sits outside the scroll
+            // so it stays put while the content moves through it, and outside the
+            // background so there is something for it to reveal. `ScrollEdge.kt`.
+            .scrollEdgeFade(
+                top = statusBar + ScrollEdge.underTheClock,
+                bottom = navigationBar + TabBarInset + TabBarHeight + ScrollEdge.aboveTheBar,
+            )
             .verticalScroll(scroll)
             .padding(
-                start = 20.dp,
-                end = 20.dp,
-                top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 20.dp,
-                bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() +
-                    TabBarHeight + 17.dp + 24.dp,
+                start = ClaritySpacing.screenPadding,
+                end = ClaritySpacing.screenPadding,
+                top = statusBar + 20.dp,
+                bottom = navigationBar + TabBarHeight + TabBarInset + 24.dp,
             ),
     ) {
         // The headline, and nothing in its place when the engine was silent. A fixed
         // sentence standing here would be the second path MASTER_BUILD_PROMPT 11.1 forbids.
         view.headline?.let { headline ->
             Text(text = headline, style = type.readSerif, color = colors.inkPrimary)
-            Spacer(Modifier.height(SECTION_SPACING))
+            Spacer(Modifier.height(ClaritySpacing.scaled(SECTION_SPACING)))
         }
 
         ActivityRow(view.activity)
 
         if (view.tiles.isNotEmpty()) {
-            Spacer(Modifier.height(SECTION_SPACING))
+            Spacer(Modifier.height(ClaritySpacing.scaled(SECTION_SPACING)))
             AreaTiles(view.tiles)
         }
 
-        Spacer(Modifier.height(SECTION_SPACING))
+        Spacer(Modifier.height(ClaritySpacing.scaled(SECTION_SPACING)))
         ThisWeek(view, dimmed = view.isEmpty)
 
         MomentumInsightModules(view.insights)
@@ -197,7 +212,7 @@ private fun ActivityRow(activity: ActivityWindow) {
         }
     }
 
-    Spacer(Modifier.height(10.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
     Text(
         text = stringResource(R.string.momentum_active_days, activity.activeCount, activity.length),
         style = type.caption,
@@ -246,7 +261,7 @@ private val IDLE_DOT = 5.dp
  */
 @Composable
 private fun AreaTiles(tiles: List<AreaTile>) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(12.dp))) {
         tiles.chunked(TILE_COLUMNS).forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -293,7 +308,7 @@ private fun AreaTileCell(tile: AreaTile, modifier: Modifier = Modifier) {
                     },
                 ),
         )
-        Spacer(Modifier.height(7.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(7.dp)))
         Text(
             text = tile.name,
             style = type.caption,
@@ -342,7 +357,7 @@ private fun ThisWeek(view: MomentumView, dimmed: Boolean) {
     val stats = view.week.all
 
     Sidehead(text = stringResource(R.string.momentum_sidehead_this_week))
-    Spacer(Modifier.height(16.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(16.dp)))
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -357,7 +372,7 @@ private fun ThisWeek(view: MomentumView, dimmed: Boolean) {
                     color = if (dimmed || !stat.discovered) colors.inkSecondary else colors.inkPrimary,
                     contentDescription = figure.toString(),
                 )
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(ClaritySpacing.scaled(4.dp)))
                 Text(
                     text = labelOf(stat),
                     style = type.caption,
@@ -371,7 +386,7 @@ private fun ThisWeek(view: MomentumView, dimmed: Boolean) {
 
     stats.filterNot { it.discovered }.forEach { stat ->
         discoveryLineOf(stat)?.let { line ->
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(12.dp)))
             Text(text = line, style = type.caption, color = colors.inkSecondary)
         }
     }
@@ -416,7 +431,7 @@ internal fun markInk(base: Color, value: Int, busiest: Int, floor: Float, ceilin
 /** A spacer of one section, so the modules and the blocks above them share one rhythm. */
 @Composable
 internal fun SectionGap() {
-    Spacer(Modifier.height(SECTION_SPACING))
+    Spacer(Modifier.height(ClaritySpacing.scaled(SECTION_SPACING)))
 }
 
 /** The width the insight graphics are drawn to, so two of them cannot disagree. */

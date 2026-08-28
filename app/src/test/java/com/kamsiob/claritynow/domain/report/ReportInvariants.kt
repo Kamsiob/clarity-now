@@ -1,5 +1,6 @@
 package com.kamsiob.claritynow.domain.report
 
+import com.kamsiob.claritynow.domain.engine.AreaFacts
 import com.kamsiob.claritynow.domain.engine.FactSet
 import com.kamsiob.claritynow.domain.engine.FamilyKey
 import com.kamsiob.claritynow.domain.engine.catalog.Register
@@ -131,11 +132,16 @@ internal object ReportInvariants {
             }
         }
 
-        // 12.3. Nothing is named that the window did not carry.
+        // 12.3. Nothing is named that the window did not carry, and the one narrowing.
         for (line in report.lines) {
             for (areaId in line.candidate.namedAreaIds) {
                 val area = facts.areas[areaId]
-                if (area == null || area.eventsInWindow <= 0) out += "names area $areaId with no events"
+                if (area == null) {
+                    out += "${line.candidate.familyKey} names area $areaId, which the window does not carry"
+                    continue
+                }
+                if (area.eventsInWindow > 0) continue
+                phantomRefusal(line.candidate.familyKey, area)?.let { out += it }
             }
         }
 
@@ -149,8 +155,59 @@ internal object ReportInvariants {
         return out
     }
 
+    /**
+     * Why [family] may not name [area], which had no events in the window, or null when it may.
+     *
+     * **The narrowing of check 1, restated by hand from `MASTER_BUILD_PROMPT.md` 12.3 and
+     * `AbsenceSubject`'s four conditions, for the reason the class comment gives.** A
+     * family whose subject **is** the absence has to name an area with no events in the
+     * week, and `neglectedArea` and `areaGoneQuiet` are the two the catalog allows,
+     * asserted by name in `RuleCatalogTest`. Without this, every one of them read as a
+     * fabricated claim here while `ReportIntegrity` and `ClarityValidator` both passed it,
+     * and the disagreement was the defect: 358 of these over ten thousand generated weeks
+     * and 112 across the eleven persona years, none of them a phantom area.
+     *
+     * **The three remaining conditions are what keep the phantom out, and they are
+     * restated with their literals rather than read from `FactExtractor`.** That is the
+     * whole point of a second encoding: a floor that moved in production would move here
+     * silently if this read the same constant, and the failure that hides is an area
+     * nobody has used being named as though it had been left alone.
+     */
+    private fun phantomRefusal(family: FamilyKey, area: AreaFacts): String? = when {
+        family !in ABSENCE_SUBJECT_FAMILIES ->
+            "$family names area ${area.areaId} with no events, and only " +
+                "$ABSENCE_SUBJECT_FAMILIES may"
+
+        area.lifetimeEvents < ABSENCE_LIFETIME_EVENTS ->
+            "$family names area ${area.areaId}, which has ${area.lifetimeEvents} events in " +
+                "its whole life against the $ABSENCE_LIFETIME_EVENTS an absence needs to be " +
+                "an absence from"
+
+        area.isNew ->
+            "$family names area ${area.areaId}, which is ${area.ageDays} days old, and an " +
+                "area nobody has had time to use is not an area anybody left alone"
+
+        area.daysSinceLastEvent == Int.MAX_VALUE ->
+            "$family names area ${area.areaId}, which has never had an event, so its " +
+                "silence is a sentinel rather than a measured one"
+
+        else -> null
+    }
+
     private fun isParallelNumeric(candidate: Candidate): Boolean =
         candidate.slots.values.count { it.numericValue != null } >= 2
+
+    /**
+     * 12.3's narrowing, as families. `neglectedArea` speaks about seven and fourteen days
+     * of silence and `areaGoneQuiet` about three weeks of it, and both name the area
+     * precisely because it did nothing. `areaRevival` carries the same flag on its rule and
+     * is deliberately absent: its own criteria require the area to have moved again inside
+     * the window, so a revival naming a silent area is a defect this list should catch.
+     */
+    private val ABSENCE_SUBJECT_FAMILIES: Set<FamilyKey> = setOf("neglectedArea", "areaGoneQuiet")
+
+    /** `RollupFacts.neglectedAreaIds`'s own floor, written out rather than imported. */
+    private const val ABSENCE_LIFETIME_EVENTS = 5
 
     private const val MAX_OBSERVATIONS = 4
     private const val MAX_AREA_MENTIONS = 2

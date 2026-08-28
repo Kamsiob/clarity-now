@@ -49,6 +49,8 @@ import com.kamsiob.claritynow.ui.components.ClarityIcon
 import com.kamsiob.claritynow.ui.components.ClarityIcons
 import com.kamsiob.claritynow.ui.components.clarityClickable
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
+import com.kamsiob.claritynow.ui.theme.ClarityTextSize
 import com.kamsiob.claritynow.ui.theme.ClarityTheme
 import com.kamsiob.claritynow.ui.theme.ClarityThemeSetting
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
@@ -116,7 +118,13 @@ class WidgetConfigurationActivity : ComponentActivity() {
                 .collectAsStateWithLifecycle(initialValue = ClarityThemeSetting.SYSTEM)
             val calmMode by ClarityGraph.preferences.calmMode
                 .collectAsStateWithLifecycle(initialValue = null)
-            ClarityTheme(setting = theme, calmMode = calmMode) {
+            // The configuration screen is an app screen and reads the app's text size
+            // like every other one. The widget itself does not: it renders in the
+            // launcher's process, where none of this app's composition locals exist,
+            // and it takes the launcher's own font scale. design-v3.md 12.1.
+            val textSize by ClarityGraph.preferences.textSize
+                .collectAsStateWithLifecycle(initialValue = ClarityTextSize.DEFAULT)
+            ClarityTheme(setting = theme, calmMode = calmMode, textSize = textSize) {
                 CompositionLocalProvider(LocalClarityHaptics provides ClarityGraph.haptics) {
                     ConfigurationScreen(
                         kind = kind,
@@ -182,7 +190,7 @@ private fun ConfigurationScreen(
             .fillMaxSize()
             .background(colors.canvas)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 28.dp),
+            .padding(horizontal = 20.dp, vertical = ClaritySpacing.scaled(28.dp)),
     ) {
         Text(
             text = context.getString(
@@ -195,7 +203,7 @@ private fun ConfigurationScreen(
             style = type.title,
             color = colors.inkPrimary,
         )
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(20.dp)))
 
         if (areas.isEmpty()) {
             Text(
@@ -203,7 +211,7 @@ private fun ConfigurationScreen(
                 style = type.body,
                 color = colors.inkSecondary,
             )
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(24.dp)))
             ClarityButton(
                 label = context.getString(R.string.action_close),
                 onClick = onDismissed,
@@ -242,7 +250,7 @@ private fun ConfigurationScreen(
                     style = type.caption,
                     color = colors.inkSecondary,
                 )
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(ClaritySpacing.scaled(12.dp)))
                 areas.forEach { area ->
                     val checked = chosen.isEmpty() || chosen.contains(area.id)
                     ChoiceRow(
@@ -260,7 +268,7 @@ private fun ConfigurationScreen(
                         },
                     )
                 }
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(ClaritySpacing.scaled(24.dp)))
                 ClarityButton(
                     label = context.getString(R.string.action_done),
                     onClick = {
@@ -305,7 +313,7 @@ private fun ChoiceRow(
             // screen reader, which leaves the check as a sighted only signal.
             // design-v3.md 13.
             .semantics { this.selected = selected }
-            .padding(vertical = 10.dp),
+            .padding(vertical = ClaritySpacing.scaled(10.dp)),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (colorHex != null) {
@@ -325,7 +333,12 @@ private fun ChoiceRow(
                 overflow = TextOverflow.Ellipsis,
             )
             if (explainer != null) {
-                Text(text = explainer, style = type.caption, color = colors.inkTertiary)
+                // design-v3.md 3.1 and 13. The explainer is what tells somebody which
+                // of two similar choices they are about to pin to their home screen,
+                // and it measured 2.337 to one. The row's own rank is already carried
+                // twice, by the `caption` role and by the label above going from
+                // `inkSecondary` to `inkPrimary` when the row is chosen.
+                Text(text = explainer, style = type.caption, color = colors.inkSecondary)
             }
         }
         if (selected) {

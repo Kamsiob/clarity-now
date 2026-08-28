@@ -85,7 +85,7 @@ internal fun FocusChooserScreen(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = ClaritySpacing.screenPadding),
     ) {
-        Spacer(Modifier.height(TITLE_TOP))
+        Spacer(Modifier.height(ClaritySpacing.scaled(TITLE_TOP)))
         Text(
             // design-v3.md section 11 opens every surface with a headline treatment,
             // and the Trail entry there settles the objection that the chip the person
@@ -95,7 +95,7 @@ internal fun FocusChooserScreen(
             style = type.displayTitle,
             color = contemplative.textBright,
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(8.dp)))
         Text(
             // Fixed interface copy and a direct readout of a setting, never an
             // observation. It is here because a tap that silently commits someone to
@@ -123,10 +123,10 @@ internal fun FocusChooserScreen(
                         if (itemId != null) onSelect(option.areaId, itemId)
                     },
                 )
-                Spacer(Modifier.height(ROW_GAP))
+                Spacer(Modifier.height(ClaritySpacing.scaled(ROW_GAP)))
             }
         }
-        Spacer(Modifier.height(BOTTOM_ROOM))
+        Spacer(Modifier.height(ClaritySpacing.scaled(BOTTOM_ROOM)))
     }
 }
 
@@ -174,7 +174,7 @@ private fun FocusAreaRow(
                     Modifier
                 },
             )
-            .padding(vertical = ROW_PADDING),
+            .padding(vertical = ClaritySpacing.scaled(ROW_PADDING)),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -205,7 +205,7 @@ private fun FocusAreaRow(
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(6.dp)))
         Text(
             text = option.activeItemTitle ?: stringResource(R.string.focus_chooser_needs_item),
             style = if (option.selectable) type.itemTitle else type.body,
@@ -241,7 +241,7 @@ private fun FocusChooserEmptyState() {
 
     AnimatedVisibility(visible = shown, enter = fadeIn(entrance)) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(top = 48.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = ClaritySpacing.scaled(48.dp)),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -250,7 +250,7 @@ private fun FocusChooserEmptyState() {
                 color = contemplative.textBright,
                 textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
             Text(
                 text = stringResource(R.string.focus_chooser_empty_body),
                 style = type.body,

@@ -5,6 +5,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.CircleShape
@@ -57,7 +58,8 @@ internal fun FocusPill(
     Box(
         modifier = modifier
             .clarityPressScale(interaction, label = "focusPill")
-            .height(PILL_HEIGHT)
+            // A minimum rather than a height, for the reason `ClarityButton` gives.
+            .heightIn(min = ClaritySpacing.scaled(PILL_HEIGHT))
             .defaultMinSize(minWidth = PILL_MIN_WIDTH)
             .clip(CircleShape)
             .background(accent.copy(alpha = PILL_FILL_ALPHA))

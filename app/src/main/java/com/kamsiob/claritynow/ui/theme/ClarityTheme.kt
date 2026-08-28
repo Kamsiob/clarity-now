@@ -17,6 +17,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -40,6 +41,35 @@ object ClarityElevation {
         ShadowLayer(2.dp, 10.dp, Color.Black.copy(alpha = 0.07f)),
         ShadowLayer(10.dp, 30.dp, Color.Black.copy(alpha = 0.08f)),
     )
+    /**
+     * design-v3.md 6.1's sheet value, **and it has no call site, which phase 12b settled
+     * rather than fixed.**
+     *
+     * A sheet's shadow points up, out of its own top edge, so it can only be drawn by
+     * something outside the sheet. In `ModalBottomSheet` there is nothing outside it that
+     * an app can reach. The caller's `modifier` is the outermost link of a chain that
+     * ends `.draggableAnchors(...).anchoredDraggable(...)` before the `Surface`, and
+     * those place the sheet's content at an offset **inside** a node that stays at the
+     * top of the window, so a shadow attached to the caller's modifier draws at the top
+     * of the screen rather than at the sheet's edge. `SheetState` exposes the offset only
+     * through `requireOffset`, which throws before the anchors exist. The parameter list
+     * carries `shape`, `containerColor`, `contentColor`, `tonalElevation` and
+     * `scrimColor`, and no shadow of any kind. Verified against the shipped
+     * `material3-android` rather than from memory.
+     *
+     * design-v3.md 17.4 says a polish pass never reimplements a working platform
+     * component in order to change how it looks, and that anything unreachable through
+     * theming is raised as a decision instead of done quietly. This is that record, and
+     * it is the second entry of its kind against this component: 16.8 already carries the
+     * one about calm mode.
+     *
+     * **What separates a sheet is the scrim, and it always was.** A `card` at L* 98.6
+     * sits on a ground the 42 percent scrim has taken to roughly L* 56, which is a 42
+     * point step. design-v3.md 6.1 stops at the first device that reads and this reads at
+     * the second, so the shadow was the third device on an element that already had one.
+     * The value is kept because a later Material release may expose a hook, and because
+     * the number is worth more attached to this analysis than in a commit message.
+     */
     val sheet = listOf(
         ShadowLayer((-8).dp, 40.dp, Color.Black.copy(alpha = 0.28f)),
     )
@@ -56,6 +86,14 @@ object ClarityElevation {
  * only so Material 3 components that read from it do not fall back to the default
  * purple; every color the app actually draws comes from [LocalClarityColors].
  *
+ * **[textSize] multiplies the OS font scale rather than replacing it**, and is applied
+ * here by overriding [LocalDensity] rather than by rewriting the type scale, so every sp
+ * in the app moves together and the combined figure is the one `fontScale` reports. The
+ * reasoning, the 200 percent cap and why the platform's own sp curve is preserved are
+ * all in `ClarityTextSize.kt` and design-v3.md 13. `ContemplativeTheme` deliberately
+ * does not repeat any of it: it is always composed inside this theme, so it inherits the
+ * scaled density, and applying the factor a second time would square it.
+ *
  * **[calmMode] is null until the user has touched the switch**, and while it is null
  * calm mode follows the system reduce-motion setting, live, per design-v3.md 16.1. That
  * is why the parameter is nullable rather than defaulting to `false`: a `false` default
@@ -67,6 +105,7 @@ object ClarityElevation {
 fun ClarityTheme(
     setting: ClarityThemeSetting = ClarityThemeSetting.SYSTEM,
     calmMode: Boolean? = null,
+    textSize: ClarityTextSize = ClarityTextSize.DEFAULT,
     content: @Composable () -> Unit,
 ) {
     val systemDark = isSystemInDarkTheme()
@@ -81,6 +120,14 @@ fun ClarityTheme(
         val world = if (dark) ClarityDarkColors else ClarityLightColors
         if (calm) world.calmed() else world
     }
+    // The one place the app's own text size is applied, and the reason it is applied to
+    // the density rather than to the fourteen roles in ClarityTypeScale. Every sp in the
+    // app goes through this, including the ones inside a Material component this project
+    // did not write, and `density.fontScale` then reports the combined figure, so
+    // design-v3.md 5.3's cap on the timer numeral reads the number it is supposed to be
+    // capping with nothing added at the call site. ClarityTextSize.kt carries the rest.
+    val systemDensity = LocalDensity.current
+    val scaledDensity = systemDensity.withTextSize(textSize)
 
     CompositionLocalProvider(
         LocalClarityColors provides colors,
@@ -89,6 +136,9 @@ fun ClarityTheme(
         LocalClarityShapes provides ClarityShapeScale,
         LocalReduceMotion provides reduceMotion,
         LocalCalmMode provides calm,
+        LocalClarityTextSize provides textSize,
+        LocalSystemFontScale provides systemDensity.fontScale,
+        LocalDensity provides scaledDensity,
     ) {
         MaterialTheme(
             colorScheme = materialSchemeFor(colors, dark),

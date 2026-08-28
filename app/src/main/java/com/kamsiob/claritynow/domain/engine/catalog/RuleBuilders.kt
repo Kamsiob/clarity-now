@@ -1,6 +1,7 @@
 package com.kamsiob.claritynow.domain.engine.catalog
 
 import com.kamsiob.claritynow.domain.engine.AreaFacts
+import com.kamsiob.claritynow.domain.engine.EstimateTendency
 import com.kamsiob.claritynow.domain.engine.FactSet
 
 /**
@@ -92,6 +93,53 @@ internal const val SHARE_FLOOR_PREFIX = "floor"
 
 /** Every criterion that reads a share carries this in its id, so the floor test can find it. */
 internal const val SHARE_READING_PREFIX = "share"
+
+/**
+ * The floor of five that `MASTER_BUILD_PROMPT.md` 14b.8 puts under every estimate
+ * observation, built the same way the share floor is built and enforced the same way.
+ *
+ * **Five completed items carrying an estimate, inside the window the sentence describes.**
+ * The window is not this rule's to choose: `HistoryFacts.activeToEstimateRatio` is read
+ * over twelve weekly buckets and this count is read over the same ones, so the floor and
+ * the reading cannot be about different spans.
+ *
+ * **It is doubled on purpose, exactly as the zero guard is.** The fact already refuses to
+ * produce a ratio under the floor, so a rule without this criterion could not render a
+ * multiple anyway. What the criterion buys is the second half of 14b.8's sentence: the
+ * count itself travels as a `FactRef` and the validator re-reads it, per 11.4, so the
+ * number that gated the sentence is proved rather than trusted. A family that qualified on
+ * a null ratio and then said something tendency shaped would satisfy neither half.
+ *
+ * The `estimatedCompletions` measure in `Measures` is the address that ref points at, and
+ * it reports the count truthfully whatever it is rather than refusing under five, because a
+ * measure that refused would make the ref unreadable and check 3 would veto a sentence for
+ * being untraceable when the real objection is the floor.
+ */
+internal fun estimateFloor(minimum: Int = EstimateTendency.MIN_COMPLETIONS): Criterion = window(
+    "$ESTIMATE_FLOOR_PREFIX.$minimum",
+    "at least $minimum completed things in the calibration window carried an estimate, so " +
+        "the tendency describes something real",
+) { it.history.estimatedCompletions >= minimum }
+
+/**
+ * Every estimate floor criterion id starts with this, and [CatalogIntegrity] looks for it.
+ *
+ * It sits under [SHARE_FLOOR_PREFIX] rather than beside it so that a reader grepping for
+ * `floor` finds both, and it is longer than [ESTIMATE_READING_PREFIX] is, so the floor
+ * criterion cannot be mistaken for one of the readings it exists to guard.
+ */
+internal const val ESTIMATE_FLOOR_PREFIX = "$SHARE_FLOOR_PREFIX.estimate"
+
+/**
+ * Every criterion reading an estimate calibration fact carries this in its id.
+ *
+ * The three facts are `estimatedCompletions`, `activeToEstimateRatio` and
+ * `estimateTendency`, and a rule touching any of them is an estimate observation whatever
+ * it calls itself. There is no such rule today: the family is authored in phase 9, per
+ * 14b.8, and this exists so that the day it is written the floor is not a thing somebody
+ * has to remember.
+ */
+internal const val ESTIMATE_READING_PREFIX = "estimate"
 
 /**
  * The queue emptied because its items were finished, and not because they were thrown away.

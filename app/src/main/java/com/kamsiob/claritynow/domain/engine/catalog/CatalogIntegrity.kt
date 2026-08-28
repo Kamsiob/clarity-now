@@ -30,6 +30,7 @@ internal object CatalogIntegrity {
             duplicateKeys(catalog) +
             specificityIsCriteriaSize(catalog) +
             shareRulesCarryAFloor(catalog) +
+            estimateRulesCarryAFloor(catalog.rules) +
             undeclaredSlots(catalog) +
             qualitativeStagesCarryTheirOwnCriteria(catalog) +
             stageRangesAreContiguous(catalog) +
@@ -112,6 +113,33 @@ internal object CatalogIntegrity {
             val hasFloor = rule.criteria.any { it.id.startsWith(SHARE_FLOOR_PREFIX) }
             if (!readsShare || hasFloor) null
             else Finding("share based rule with no event floor", rule.key)
+        }
+
+    /**
+     * Every rule that reads an estimate calibration fact carries the floor of five.
+     * `MASTER_BUILD_PROMPT.md` 14b.8.
+     *
+     * The same shape as [shareRulesCarryAFloor] and for a related reason. A share over one
+     * event is a hundred percent; a tendency over two items is one person's Tuesday. Both
+     * are correct arithmetic and a false claim about somebody, and both are prevented by
+     * requiring the rule to say out loud how much it is reading.
+     *
+     * **It has no subjects today and that is the point.** The estimate observation family
+     * is authored in phase 9, per 14b.8, and this check is what makes the floor arrive with
+     * the first rule rather than after somebody notices. A check with nothing to find is
+     * cheaper than the conversation about why a family fired on four items.
+     *
+     * It takes the rules rather than the catalog, unlike its siblings, for the reason
+     * `StreakExceptionAudit` takes a rule list: a check whose only subjects are in the
+     * future has to be provable against a rule a test hands it, or the check ships without
+     * anybody having seen it fire.
+     */
+    fun estimateRulesCarryAFloor(rules: List<ClarityRule>): List<Finding> =
+        rules.mapNotNull { rule ->
+            val readsEstimate = rule.criteria.any { it.id.startsWith(ESTIMATE_READING_PREFIX) }
+            val hasFloor = rule.criteria.any { it.id.startsWith(ESTIMATE_FLOOR_PREFIX) }
+            if (!readsEstimate || hasFloor) null
+            else Finding("estimate rule with no floor of five", rule.key)
         }
 
     /** Every slot marker the corpus uses has a declared production source. */

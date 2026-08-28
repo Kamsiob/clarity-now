@@ -12,6 +12,7 @@ import com.kamsiob.claritynow.data.repo.FocusRestore
 import com.kamsiob.claritynow.data.repo.focusEndingIsSilent
 import com.kamsiob.claritynow.domain.replay.ClarityState
 import com.kamsiob.claritynow.domain.replay.FocusSessionState
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -196,24 +197,35 @@ class FocusViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(SUBSCRIPTION_GRACE), FocusPhase.Loading)
 
-    init {
-        viewModelScope.launch {
-            repository.load()
-            // Every entry into this surface asks the repository what to do about a
-            // session, which is what makes a killed process land back on the ring with
-            // the right time left and a session that ran out while the app was away
-            // land on the completion screen. MASTER_BUILD_PROMPT section 10.
-            val restored = repository.restoreFocus()
-            val resolved = (restored as? FocusRestore.Completed)?.let { done ->
-                repository.state.value.completionModel(
-                    session = done.session,
-                    actualSeconds = done.session.actualSeconds ?: done.session.plannedSeconds,
-                    announce = false,
-                )
-            }
-            local.update { it.copy(loading = false, completion = resolved) }
+    /**
+     * The entry read: load the log, then ask the repository what to do about a session.
+     *
+     * **Held as a [Job] rather than run from an `init` block, because one thing outside
+     * this class has to be able to wait for it.** A session asked for by name, by the
+     * `First Step` widget, arrives at [startOnItem] on the frame this surface is
+     * composed, and `ClarityRepository.startFocus` refuses while the log is unloaded. A
+     * start that did not wait would therefore work on a warm start, where the log is
+     * already read, and be silently dropped on a cold one, leaving the person on the
+     * chooser. It is the classic version of that bug and this is where it is prevented.
+     */
+    private val entered: Job = viewModelScope.launch {
+        repository.load()
+        // Every entry into this surface asks the repository what to do about a
+        // session, which is what makes a killed process land back on the ring with
+        // the right time left and a session that ran out while the app was away
+        // land on the completion screen. MASTER_BUILD_PROMPT section 10.
+        val restored = repository.restoreFocus()
+        val resolved = (restored as? FocusRestore.Completed)?.let { done ->
+            repository.state.value.completionModel(
+                session = done.session,
+                actualSeconds = done.session.actualSeconds ?: done.session.plannedSeconds,
+                announce = false,
+            )
         }
+        local.update { it.copy(loading = false, completion = resolved) }
+    }
 
+    init {
         // Natural completion, while somebody is watching the ring. The repository
         // refuses a second terminal event for the same session, so this racing with
         // the notification side or with another restore is safe: whoever arrives first
@@ -235,6 +247,38 @@ class FocusViewModel(
         viewModelScope.launch {
             val minutes = preferences.focusDurationMinutes.first()
             local.update { it.copy(completion = null) }
+            repository.startFocus(areaId, itemId, minutes * SECONDS_PER_MINUTE)
+        }
+    }
+
+    /**
+     * Starts a session on one item named from outside, which is the `First Step`
+     * widget's whole promise. MASTER_BUILD_PROMPT 13.3 and Addendum 01 6b.
+     *
+     * **It decides nothing about whether the session may start.** Whether one is already
+     * running, whether [itemId] is still the active item of its area and whether the
+     * duration is a duration are `canStartFocus`, applied inside the repository under
+     * the one lock, exactly as they are for the chooser. A widget draws a snapshot that
+     * is a few seconds old at best, so a refusal here is an ordinary outcome rather than
+     * an error: the surface is already showing, and it shows the chooser, which is what
+     * the same widget sends for itself when it has no item to name.
+     *
+     * **The area comes from the log rather than from the intent.** The `First Step`
+     * intent carries one, and it is deliberately not read, for the reason `MainActivity`
+     * has always given about the session id on a notification: an item belongs to
+     * exactly one area, the log says which, and a second copy taken from a snapshot can
+     * only ever be a staler opinion about a fact with one answer.
+     */
+    fun startOnItem(itemId: String) {
+        viewModelScope.launch {
+            entered.join()
+            // A session that ran out while the app was away is owed its completion
+            // screen once, and the entry read above has already resolved it. [phase]
+            // shows a completion ahead of a running session, so starting over the top of
+            // one would run a new session behind a screen about a different one.
+            if (local.value.completion != null) return@launch
+            val areaId = repository.state.value.items[itemId]?.areaId ?: return@launch
+            val minutes = preferences.focusDurationMinutes.first()
             repository.startFocus(areaId, itemId, minutes * SECONDS_PER_MINUTE)
         }
     }

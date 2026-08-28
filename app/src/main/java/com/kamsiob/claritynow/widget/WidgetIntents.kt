@@ -30,6 +30,22 @@ import com.kamsiob.claritynow.notifications.FocusIntents
  * and touches this app's home screen is almost never asking to go somewhere else, and
  * an app that took them to a queue would have interrupted the one activity it exists to
  * protect.
+ *
+ * ## Where the other side of it lives, and why the predicates are not it
+ *
+ * `ui/nav/ExternalRequest.kt` holds the one routing table, and `MainActivity` calls it
+ * from `onCreate` and from `onNewIntent` with the action and the two extras below. It is
+ * written against those three values rather than against an `Intent` because this module
+ * has no Robolectric: an `Intent` built in a unit test answers null to everything, so a
+ * routing decision phrased as a chain of predicates over an `Intent` cannot be exercised
+ * by a single test on this machine. Phase 12 shipped five of these actions with a
+ * contract and no receiver and nothing went red.
+ *
+ * **The predicates below are still the readable statement of what each action means**,
+ * for anything that holds an `Intent` and needs to ask, and they and the table name the
+ * same constants, so a rename is a red build on both sides. They are in the same
+ * position as `FocusIntents.sessionIdIn`, which `MainActivity` has always declined to
+ * read for a stated reason: present, correct, and not the path.
  */
 object WidgetIntents {
 
@@ -78,9 +94,9 @@ object WidgetIntents {
     /**
      * True when [intent] is a widget asking for capture into the inbox.
      *
-     * Whoever owns `MainActivity` calls this from `onCreate` and from `onNewIntent`,
-     * exactly as it already calls [FocusIntents.opensFocusSession], and opens the add
-     * sheet with no area. There is no second way for a widget to reach a screen.
+     * The receiving side opens the add sheet with no area, which is
+     * `AreasTarget.Capture` in `ui/areas/AreasRoute.kt`. There is no second way for a
+     * widget to reach a screen.
      */
     fun opensUnfiledCapture(intent: Intent?): Boolean = intent?.action == ACTION_CAPTURE_UNFILED
 

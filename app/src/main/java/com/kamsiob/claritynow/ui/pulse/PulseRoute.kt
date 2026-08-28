@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kamsiob.claritynow.di.ClarityViewModelFactory
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.ContemplativeTheme
 import com.kamsiob.claritynow.ui.theme.LocalCalmMode
 import com.kamsiob.claritynow.ui.theme.LocalContemplativeColors
@@ -168,7 +169,7 @@ private fun PulseSheet(
 private fun PulseSheetHandle(modifier: Modifier = Modifier) {
     val contemplative = LocalContemplativeColors.current
     Box(
-        modifier = modifier.fillMaxWidth().padding(vertical = 12.dp),
+        modifier = modifier.fillMaxWidth().padding(vertical = ClaritySpacing.scaled(12.dp)),
         contentAlignment = Alignment.Center,
     ) {
         Box(

@@ -66,21 +66,24 @@ worse than either of them**, and the way to edit these is to replace the whole b
 | 3. Trail | done | closed |
 | 3b. Executive function retrofit | done | closed |
 | 3c. Design foundations, the polish pass | done | closed |
-| 4. Focus sessions | built, awaiting the device check | #2 |
-| 5. Engine skeleton and simulator | built, awaiting the closing build and install | #3 |
-| 6. Pulse | built, awaiting the device check and one integration gap | #4 |
-| 7. Momentum | built, awaiting the device check | #5 |
-| 8. Snapshots and the Report | built, awaiting the device check and one write | #6 |
-| Facts and rules, the facts phase | built, awaiting the closing build | no issue, owner approved |
-| Slot bindings, and the third simulator reading | built, awaiting the closing build | no issue, owner approved |
-| The rules pass, and the fourth simulator reading | built, awaiting the closing build | no issue, owner approved |
-| 9. Corpus | not started. The fourth reading settles which job it is: **authoring to fix silence**, not repeats | #7 |
+| 4. Focus sessions | done, device checked | closed |
+| 5. Engine skeleton and simulator | done | closed |
+| 6. Pulse | done, device checked. The reminder route is closed | closed |
+| 7. Momentum | done, device checked | closed |
+| 8. Snapshots and the Report | done, device checked | closed |
+| Facts and rules, the facts phase | done | no issue, owner approved |
+| Slot bindings, and the third simulator reading | done | no issue, owner approved |
+| The rules pass, and the fourth simulator reading | done | no issue, owner approved |
+| The persona repair, and the fifth simulator reading | done | no issue, owner approved |
+| The executive function engine gaps, 14b.3, 14b.4, 14b.8, 14b.9 | in progress | #27, #42, #43, #45 |
+| 9. Corpus | not started. The fifth reading settles which job it is: **authoring to fix silence**, and says in advance that authoring alone cannot reach the band | #7, #44 |
 | 9b. Guidance, layer six | not started | #8 |
-| 10. First run | built, awaiting four modifiers and the device check | #9 |
+| 10. First run | built, all five tutorial targets landed, awaiting the device check | #9 |
 | 11. Settings, About, data | built, awaiting the device check | #10 |
-| 12. Widgets and notifications | built, awaiting the device check and one route | #11 |
-| 12b. Design surfaces, the polish pass | not started | #54 |
-| 13. Ship | not started | #12 |
+| 12. Widgets and notifications | built, all six routes landed, awaiting the device check and the preview captures | #11 |
+| 12b. Design surfaces, the polish pass | built, awaiting the device check | #54 |
+| 12c. The re-entry screen | not started. 14b.4 left it without a phase; this run assigned it one | #56 |
+| 13. Ship | in progress. Store listing, the About disclaimer and the baseline profile generator are in | #12 |
 
 ---
 
@@ -1012,6 +1015,484 @@ of them measuring against a new denominator.
 
 ---
 
+## The executive function engine gaps delivered
+
+The four items `MASTER_BUILD_PROMPT.md` 14b assigned to phase 8 and phase 8 did not
+carry, plus the sixth measurement. Issues #27, #42, #43 and #45.
+
+Section 17 said of three of these that the checklist line was **vacuously true and must
+not be read as met**, which is the most useful sentence anyone wrote in that document:
+there was no estimate fact, so nothing for a veto to refuse; no precedent fact, so no
+gate; and no re-entry criterion, so a person coming back after a fortnight could be told
+about the gap by the first report they opened.
+
+All three are now real checks and all three pass.
+
+### The estimate delta is unformable rather than forbidden, 14b.8
+
+**The rule was going to be a validator check. It is also a shape.** `TrailQueries`
+divides the two magnitudes inside its own body and returns a ratio. **No quantity of
+minutes, estimated or actual, exists anywhere above that line or anywhere in the fact
+set**, so `actual - estimate` is not a subtraction a future rule author can write in one
+step or in any number of them. Two reflection tests hold that shape rather than trusting
+it: one walks every fact class and asserts the only estimate named fields are a count, a
+multiple and a band, and the other asserts nothing public on the facade hands out an
+estimate.
+
+The ratio is **a multiple and never a percentage**, because a ratio of 2.4 rendered as
+240 percent is one literal hundred away from `You were off by 140 percent`.
+
+**Check 11 in the validator** is the belt to that suspenders, appended rather than
+inserted so the ten checks three documents cite by number keep their numbers.
+
+Eight choices are recorded at the fact. The two worth repeating here: **an estimate
+changed after the item became active is ignored**, because a revision made mid work is a
+progress report informed by the very thing being measured and honoring it moves every
+ratio toward one and flatters the person; and the statistic is a **median rather than a
+mean**, because one item left running over a holiday moves a mean to a number no week of
+anybody's life resembles, and "tend to" is a median word.
+
+**A naming warning for phase 9, recorded at the fact: it is a stay, not an effort.**
+Nothing in this app measures time spent working. A thing estimated at an hour that
+occupies a day and a half is a true reading of how estimates map onto days and a false
+one of how long the work took.
+
+**Measured: zero estimate deltas in 13,576 rendered strings across twelve persona
+years**, and zero sentences mentioning an estimate at all, because the family that will
+say one is phase 9's.
+
+### A dip with a precedent is a rhythm, 14b.9
+
+This is the correctness fix, not politeness. Without it the app tells somebody with a
+cyclical or relapsing condition that they are deteriorating, on a fixed schedule,
+forever, and it is technically accurate every time while the claim the sequence makes is
+false.
+
+**A subject's normal is the median of the weeks it moved in, not of all its weeks.** The
+all weeks median is zero for anybody quiet more than half the time, which would have
+passed the gate for exactly the most cyclical people. Depth is four bands; the current
+fall is the unbroken stretch of low weeks ending at the newest closed bucket; a
+precedent is any strictly earlier stretch at least as long and at least as deep.
+
+**The fact distinguishes no precedent from not enough history to say**, and the gate
+closes on `PRESENT` alone. That overrode a sentence in two specification documents, and
+the argument is in `DECISIONS.md`: the fact's notion of low is a week under three
+quarters of normal, and **no decline family asks that question**, so requiring the
+absence of a precedent would have silenced a true observation every time the two
+definitions came apart, invisibly.
+
+**A gate rather than a rewording**, which 14b.9 requires: it is a filter at step 1b of
+selection and not a criterion, because specificity is the criterion count and a
+criterion would make the gated families **outrank** rules that require more.
+
+**The persona is a life rather than a waveform.** The first attempt was three weeks on,
+three weeks off, all year, in which every fall is a precedent for every other by
+construction and the test proves nothing. It is now fifty three weeks of capacity
+written out one at a time: twelve episodes, one to three weeks long, arriving after gaps
+of two to six good weeks, bottoming anywhere from thirteen events in a week down to one,
+recoveries of different heights, and the working days inside each week moving by hash so
+no episode starts on the same day of a month.
+
+**Measured: zero decline, neglect and fading observations across 52 weekly reports.**
+The same year with the precedents forced to `NONE` produces **34**, and all 34 sit on a
+fall whose precedent reads `PRESENT`, which is the assertion that stops the first one
+being vacuous.
+
+### A returning person is not told about the gap, 14b.4
+
+A boolean, true on the return day and the six days after, asked of the last day the
+window describes. **A boolean carries neither the length of the absence nor its date, so
+14b.4's prohibition holds by shape** rather than by anybody remembering it.
+
+**Measured**: the revival persona returns on day 251 after 195 days away and receives 22
+sentences in the seven days after, none of them a decline, a neglect or a gap. **With
+the suppression disabled it receives seven**: `A still fortnight.` on the Momentum
+headline on four separate days, and a report headlined `Work moved again.` carrying
+`Work had been the quietest area. It was not this week.` and `6 events. All week.`
+
+That is what this item was for, and it is worth reading twice. Every one of those seven
+is true, every one passes the integrity layer, and every one of them is a measurement of
+an absence read back to somebody on the day they came back.
+
+### The instrument, again: the app wrote events on days it was never opened
+
+`ClaritySimulator` called each persona's act unconditionally, including on days the
+persona did not open the app, **so two personas wrote item events on days with no
+`APP_OPENED`, which the real app cannot produce.** Measured rather than estimated: 52 of
+`sporadic`'s 116 closed days and 44 of `abandoning`'s 212 did, ninety six impossible days
+in a single run of two lives.
+
+**The install day is inside the gate, and that is the half that is easy to miss.** Setup
+writes `AREA_CREATED`, which is a screen gesture like any other, so an install day the
+persona happened not to open would put the same impossible event one line earlier.
+
+**A clearing session that lands on a closed day is skipped and never deferred.**
+Deferring makes a day depend on the days before it, which breaks the hash of the day
+property the whole persona file rests on and which is why a seeded generator was refused
+in phase 5.
+
+### Two tests that had never agreed with the code, one of them red at HEAD
+
+**`ReportInvariants` had been failing since the check 1 narrowing landed, and it was
+committed red.** It restates section 9 by hand, deliberately, and it was never given the
+one narrowing the absence subject flag carries, so it refused every `neglectedArea` and
+`areaGoneQuiet` sentence while both the integrity layer and the validator passed them:
+358 violations over ten thousand generated weeks and 112 across the persona years. The
+four conditions are now restated there **with their literals rather than by reading the
+extractor's constants**, because a second encoding that reads the first one's numbers is
+not a second encoding.
+
+**A gate cannot only remove, at the level of a page.** One headline and four observation
+slots out of everything that qualified means removing a candidate frees a place, and
+sixteen lines took those places. The claim belongs to the selector, where it is exactly
+true: step 1b is a filter, so every gated ranking is a subsequence of the ungated one,
+across 260 rankings compared. That version fails if either gate is ever made a criterion,
+which is the mistake the gate argues against at length.
+
+### The sixth measurement
+
+| reading | fifth | sixth |
+|---|---|---|
+| Pulse silence, all personas | 63 percent | **65.7 percent** |
+| per persona | 37 to 97, none in band | **37 to 97, none in band** |
+| every family the corpus declares | 71 of 78 | **69 of 78** |
+| variant repeats inside ninety days | 7,418 | **7,370** |
+| layer 5 vetoes | 0, 85 absences on purpose | **0, 38 absences on purpose** |
+| pattern slots | 399 of 419, 13 families | **397 of 419, 12 families** |
+
+2,067 silent days of 3,424 opened, split **1,161 filtered, 895 nothing qualified, 11 too
+little data**. The twelfth persona is kept out of every aggregate so the six recorded
+columns stay comparable.
+
+**Which half is the instrument, measured rather than argued.** A control ran the same
+year with the gates disabled entirely, and **its silence table is identical to the sixth
+measurement in every cell**. So the two point rise is the presence fix and the gates cost
+no Pulse sentence at all. That was predictable from the tables, because no Pulse family
+is in either gate, and a prediction is not evidence. What the gates did cost is visible
+elsewhere: `quietWeek` goes dark on the headline, and absences named on purpose fall from
+101 to 38.
+
+### The reading, and it is the same reading as last time
+
+**A bench deep enough to empty the filtered column entirely leaves silence at 28.7
+percent against a ceiling of 25**, against 29.0 at the fifth measurement: the same
+finding to within a rounding, through a repaired instrument. At that floor five of eleven
+personas are in band, five above, and one below.
+
+**Authoring cannot reach the band. Bench depth is necessary and provably not
+sufficient**, and phase 9 is still authoring to fix silence rather than repeats. Per the
+owner's standing instruction this is reported and not ground at: an app that ships at 30
+percent silence is better than one that does not ship.
+
+### What is deliberately not in this pass
+
+- **No corpus line was written.** The estimate family and the rhythm family are declared
+  with rules and no language, held in a register that is the mirror of the one holding
+  rules that await facts. Phase 9 writes them, and the register carries the five step
+  handoff
+- **The re-entry screen itself**, which is phase 12c and issue #56
+
+---
+
+## The accessibility pass delivered
+
+Issue #51, Addendum 01 item 8f, and `design-v3.md` 13. Two halves: an adjustable text
+size control, and turning contrast from something judged into something computed.
+
+**8f is a spending decision as much as a feature.** Adjustable size and real contrast are
+the two things with strong evidence behind them, they help every condition Addendum 01
+was written for, and they help people with none of them. **No dyslexia friendly typeface
+was added**, per 8f, and the two bundled families stay Newsreader and Hanken Grotesk.
+
+### The size control multiplies the phone's setting, and stops at 2.0 combined
+
+Five steps, Android's own font size ladder, applied to `LocalDensity` in exactly one
+place. `ContemplativeTheme` deliberately does not apply it, because it is always nested
+inside `ClarityTheme` and a second application would square the factor. A test pins that.
+
+**Multiplying rather than overriding**, because overriding fails the person the feature
+exists for on their first screen: somebody at OS 200 percent has already said they cannot
+read 100 percent, and an overriding app opens at 100 percent silently. The default step is
+exactly 1.0, so a person who never opens the row gets their phone's figure untouched.
+
+**The 2.0 cap is a measurement rather than a round number.** Every clipping analysis in
+this project is written against the 200 percent condition: section 13 states it, 5.3 caps
+the timer numeral at 1.3x of it, and the tab bar's own note measures the floating pill at
+roughly 290dp of the 314dp available. A control able to exceed 2.0 would invalidate all
+three at once on a device nobody has run. The cost is stated rather than hidden: a phone
+already at 200 percent has no headroom, so the steps above default change nothing, they
+stay tappable because 10.16 forbids the disabled control question, and one line says the
+phone's own setting is what is deciding.
+
+**The control is a list and not a slider**, which is the section 15 choice. A slider is
+continuous for a quantity that is discrete on this platform and a ladder in 5.3; a preview
+paragraph is a specimen in a fixed box, which is the one thing that cannot show the half
+that matters, that spacing moved. Settings is already real content, so the screen is the
+preview: sideheads, row titles, captions, a paragraph, switches and a card all re-lay out
+on the tap.
+
+**And every option label is set at the current size, never at its own.** The tempting
+version shows the ladder at a glance, and it renders the two smallest rows below the size
+a person has already told the app they cannot read, which makes the affordance for a size
+control fail the need the size control serves.
+
+### Spacing scales with the text, across 261 call sites
+
+A size control that grows type inside fixed boxes makes an interface less legible rather
+than more, which is the risk issue #51 names. Three rules govern it. **Never below 1.0**,
+because section 13 calls section 6's numbers minimums, which means every dimension is
+identical to before this change on a default phone and is what made a sweep this wide
+safe. **Linear above 1.0**, so the rhythm is preserved rather than tightened. **No
+horizontal counterpart**, because width is the axis a phone runs out of and a margin that
+grew would take room from the measure it serves.
+
+Four things deliberately do not scale, each with the reason on the token: the 48dp touch
+minimum, which is a fingertip; the 7dp area dot, which 3.4 makes identity; the sheet
+handle, which is a grip; and the tab bar's height and inset.
+
+**Four genuine clipping sites were found and fixed**, all fixed `height()` boxes around
+unbounded `bodyStrong` labels that would have cut a wrapped second line with nothing to
+see it happen: the button, the support block, the focus pill and the tab item.
+
+**The timer numeral's cap was quietly wrong and is now right.** It capped the phone's
+font scale and knew nothing about the app's, so it would have let 2.0 times the largest
+app step through. It also constructed a plain `Density`, which discards Android 14's non
+linear scaling curve at exactly the largest size in the app; it now preserves it. That is
+the same reason the theme wraps `LocalDensity` rather than replacing it, and without it
+5.3's 40sp Report headline would render at 80sp where the platform intended about 64.
+
+### Contrast is now a computed number over 10,107 pairs
+
+Phase 3 shipped a 4.40:1 failure on a screen that looked completely correct, and it was
+found by computing the number rather than by looking. The audit enumerates rather than
+samples: four worlds, all 48 area colors, every wash depth 3.1, 3.2, 3.4 and 12.1 permit
+at every whole percent, calm mode on and off.
+
+**It is total by construction, in two ways that matter more than the count.** Tokens come
+from reflection over the declared fields of the theme objects, so adding a color to the
+theme fails a test until somebody says what it is for; that mechanism immediately turned
+up five tokens nobody had classified. And grounds come from the range the design states
+rather than from the value the app currently ships, so a later nudge inside a range the
+design already permits cannot introduce a failure the audit has not already seen.
+
+**It found 236 pairs under floor in 33 distinct shapes, and all 236 are fixed.** They are
+recorded here because the sizes matter and because this is what the app looked like right
+up until the audit existed, without anything looking wrong. The Swap swipe label drew the
+raw area accent as 10.5sp type and measured **1.03:1** in the dark world, failing on 28 of
+48 colors and on 43 of 48 in light. `actionBlue` could not carry text in the light world
+at any rank, at five call sites including the undo snackbar action. `positiveGreen` failed
+as both label and completion check. The dark FAB put white on blue at 2.63.
+
+### What the fix turned out to be, four times over
+
+**`actionBlue` was one color carrying two jobs it could not both hold.** As a fill it has
+to be dark enough for a label; as text it has to be dark enough for the ladder. In the
+light world both wants point the same way, so one value serves both and it moved to
+`#004BAE`. In the dark world no value does either job: text needs a lightness above one
+threshold and white needs it below a lower one. So **the word white leaves the design and
+a filled action inverts its label to `card`**, which is the inversion 10.8 already used
+for the destructive button and the selected chip. The binding constraint on the light
+value turned out to be the Swap face, because a token has to be legible on its own tint.
+
+**`positiveGreen` split into a fill and an ink.** The fill has to stay a light mint,
+because section 11 calls the Trail's ground a mint and 10.7 puts a label on a 13 percent
+button, and the foreground has to be dark. One value cannot do both, and that was checked
+rather than assumed. `positiveInk` is new, it retires a hardcoded green, and
+`positiveGreen` now carries no foreground anywhere, which a source gate proves rather than
+a floor.
+
+**The Swap face was the wrong shape, and the evidence is a measurement.** 3.4's remedy for
+this exact problem elsewhere is to derive a readable variant of the area accent. Applied
+to this ground it would move **44 of 48 colors, a median of 34 percent toward black and
+five of them past half**. A color blended past half no longer identifies anything, so the
+mechanism does not belong here. The face takes the token its own ground is tinted from,
+matching Complete and Delete, and identity stays where 3.4 puts it: on the card being
+swiped, 8dp away.
+
+**The wash contradiction was closed by narrowing rather than by re-solving.** 3.1 and 3.2
+permitted a wash one point deeper than 3.4 solves the area label against, which was a
+trapdoor under a token that looked safe to nudge rather than a live defect. Narrowing the
+stated range moves no shipped pixel; re-solving would have moved every area label in the
+app. The two functions that computed the two ranges are now one, so the trapdoor is
+structurally closed rather than numerically avoided, and the test asserts that one point
+deeper still fails, so the narrowing stays load bearing.
+
+**And it found two things a floor could not have.** `inkTertiary` and Contemplative's
+`textFaint` clear no floor this design states, and 3.1 already says `inkTertiary` carries
+no text anywhere in this app. A contrast test cannot notice a screen that starts drawing
+one, which is exactly how they spread: the phase 3 test proved that no **Trail** text took
+`inkTertiary`, and proved only that. A source scan found **30 `inkTertiary` foregrounds in
+11 files and 15 `textFaint` foregrounds in 12**, with four inactive control uses excused by
+name under WCAG 1.4.3 and matched on the conditional rather than a line number, so the
+exemption survives the file moving.
+
+**The WCAG large text exemption was declined**, which is the section 15 choice on this
+one. Taking 3:1 for large text is the common answer and it would put the 21sp item title,
+the 40sp display hero and the 64sp timer numeral below the audit's reach for free. It is
+refused for a reason specific to this app rather than for taste: this pass adds an in app
+size control on top of the OS font scale, so every size moves by a factor the audit cannot
+know, and a floor that depends on a size is a floor that changes when somebody drags a
+slider. One floor, 4.5, for all text, and 3.0 for a shape rather than for a large word.
+
+### The tightest margins, which are what a future token change breaks first
+
+**Text.** 4.535, 4.538 and 4.546, all the area label on its own in session card. Margins
+of thirty five to forty six thousandths. That variant solves to just above floor by
+construction, so any move to the light `card` token, to the wash depth, or to the 48 area
+colors lands here first.
+
+**Graphic.** 3.133, the onboarding back chevron, with the Report's 50 percent gold mark
+behind it at 3.162. The Pulse quiet day mark used to hold this place at 3.003, three
+thousandths of margin, under a source comment saying it measured 3.0 to one against
+`deepBlack`. That comment was correct and the mark still failed, because the dawn ground
+is lighter than `deepBlack` and the same mark measured 2.969 there. **That one number is
+the whole thesis of issue #51**: a contrast figure is only true against the ground it was
+measured on, and an app has more grounds than anybody enumerates by hand. It is now 55
+percent rather than 50, and measures 3.277 on the worst of its three grounds.
+
+---
+
+## Phase 12b delivered
+
+The surfaces half of the polish pass, issue #54. `design-v3.md` 6.1, 10.19, 11, 14 and 15.
+
+Phase 3c did the foundations, deliberately scoped to tokens and type because those are
+inherited free by screens that did not exist yet. **Everything it deferred needed more
+than two screens on the table to judge**, including all three Contemplative worlds, which
+is what the deferral was waiting for. Those exist now, so this is the pass that could
+finally be run.
+
+- **The scroll edge fade**, `ui/components/ScrollEdge.kt`, on all four tab screens and on
+  every pushed screen. Before it, content passed hard edged under the clock and behind the
+  floating pill, and a grep for `verticalGradient`, `fadingEdge`, `blur(` or `overscroll`
+  across `ui/` returned nothing at all
+- **The Trail's event circle removed**, the glyph grown 14dp to 18dp inside the same 23dp
+  slot so no text moves
+- **A rule for the tab bar's labels**, with a measurement behind it instead of an
+  inherited default
+- **What a text field looks like**, `design-v3.md` 10.19, which section 10 never said
+- **Section 14's motion sentence narrowed** rather than satisfied
+- **`design-v3.md` 3.1 and 3.2 corrected**, which was four phases overdue and unasked
+
+### The fade erases rather than paints, and that is the whole design
+
+The obvious implementation is a ground colored rectangle faded to transparent. It is
+wrong on three surfaces here: the Report's ground is two centers of gold light, the
+Pulse's shifts with the time of day, and Focus is a radial gradient, so a flat scrim
+would cut a dark band across a gradient at exactly the edge the treatment exists to
+soften. Instead the content goes into an offscreen layer and the fade is drawn with
+`BlendMode.DstOut`, removing the content's own alpha and revealing what is genuinely
+behind it. That also removes the ground color parameter from every call site.
+
+**The blur is refused, and the refusal is a test rather than a sentence.** 15.1 lists
+"glassmorphism used as decoration rather than to solve a layering problem", and content
+passing under a floating bar is a real layering problem that deserves a real answer; the
+fade is the honest one. `ScrollEdgeTest` now fails the build on `.blur(`, `BlurEffect`,
+`RenderEffect` or `BlurMaskFilter` anywhere in `ui/`.
+
+### The sheet shadow is refused with evidence, and it costs nothing
+
+`ClarityElevation.sheet` is declared in 6.1 and has zero call sites, which read as an
+oversight. It is not reachable through theming, and the phase proved that rather than
+asserting it: `ModalBottomSheet` in the shipped `material3-android` takes no shadow
+parameter of any kind, and the caller's `modifier` attaches to a node that stays at the
+top of the window while the content is placed at an offset inside it, so a shadow drawn
+there would land at the top of the screen.
+
+**And 6.1 says stop at the first device that reads.** A sheet sits on a 42 percent scrim,
+which is a roughly 42 point lightness step under a surface at L\* 98.6. It reads at
+device two, so the shadow was always the third device on an element that already had one.
+The token is kept with the analysis attached in case a later Material release grows a
+hook.
+
+### The Trail's circle: a container that could hold no information
+
+It was tinted by area, so on a one area app every circle was the same disc and the icon
+column carried nothing the sentence did not. Section 11 said "the event color" and
+defined it nowhere, which made it an open choice under 15.
+
+**A per event palette is unavailable by construction**, and that is a proof rather than a
+preference: 3.1 scopes `positiveGreen`, `warnAmber` and `deleteMuted` to one job each, and
+3.4 permits an area accent in four forms of which the only one a 23dp shape may take is a
+5 to 14 percent wash. Eight moods at 12 percent over the canvas are not distinguishable at
+a glance, so the disc could not carry identity either.
+
+So the container goes. **It also resolves a contradiction**: a glyph in a tonal circle
+beside one sentence is a stock Material list row, and section 14 forbids those on primary
+screens. Area identity stays where 3.4 puts it, on the 7dp dot on the filter chips, and
+the mint completion wash is now the only colored surface in the list rather than one
+colored thing in a column of faint discs.
+
+### The tab labels: a measurement, not a default
+
+The bar is the only element in the app with a width it cannot grow out of. Icons do not
+scale with `fontScale` and labels do, and a 360dp phone leaves the bar 314dp. At 200
+percent, one label plus four icons is roughly 290dp of that and four labels roughly 570dp.
+Section 13 requires 200 percent without clipping, so labels-always either clips a
+destination name, which is the failure the rule would exist to prevent, or grows the one
+piece of chrome on every screen and takes four screens' content padding with it.
+
+**So the shipped behavior stays and stops being an inherited default.** 10.15's "no hidden
+navigation" is a different claim and is satisfied: all four are always on screen, in fixed
+order, and each announces its name to TalkBack. The new rule is a constraint on section 7:
+**a destination whose glyph cannot be recognized on its own does not get an unlabeled
+state**, and `arrow_outward` fails it, which is recorded in the mapping table in 7.2.
+
+**A defect fell out of it.** The tab item was `.height(46.dp)`, under section 13's 48dp
+minimum, and is now `ClaritySpacing.minTouchTarget`.
+
+### The text field is a well, and two hairlines left the app
+
+10.19 is new. The obvious answers are what shipped, an underlined field with a colored
+focus rule, or Material's outlined and filled fields. Walking 6.1 in the order 6.1 gives
+reaches neither: whitespace genuinely fails, because an empty field with no target is not
+a target, and device two does not fail. So the field steps **down** a rank to `raise` on a
+`card` sheet, and the hairline goes, because 6.1 puts a hairline fourth and only if all
+three above have genuinely failed. Those were the third and fourth hairlines in the whole
+app.
+
+Focus takes the well one rank further down to `canvas`, which is the same device speaking
+louder rather than a second device arriving, and the caret is the second signal. Two
+pre-existing misses were fixed on the way: a placeholder at `inkTertiary` measures 2.40:1
+against section 13's floor, and the field was 28dp tall against a 48dp minimum.
+
+### Nothing moves at rest, and section 14 is narrowed rather than satisfied
+
+Section 14 ended "nothing that is still. An app that never moves is an app that feels
+broken", and today nothing moves at rest, so that sentence was false. **Every conventional
+fix is on the tell list or beside it**, and 15.3 refuses the pulse, breathe, glow loop and
+the ambient shimmer by name. None of them says anything about the person's data either.
+
+**But the sentence was not simply false. Four things already move at rest and all four are
+time**: the focus arc and numeral, an in session card's countdown, the focus glow's
+breath, and the Pulse's ground shifting through the day. Section 14 now says that, and
+adds the amendment: **a screen with no time on it does not invent motion to prove it is
+alive.** A recorded absence is better than a tell.
+
+### The correction nobody asked for, and it had been wrong for four phases
+
+`design-v3.md` 3.1 and 3.2 are the authority for every color in the app. Phase 3c moved
+six tokens in the code and recorded the reasoning in `ClarityColors.kt`, in its commit
+message and in two tests, **and never updated the two tables in the document that is the
+authority for them.** The file that wins on every visual question said `card` was
+`#FFFFFF` while the app drew `#FCFBF9`, and `canvas`, `raise`, dark `card`, dark `raise`
+and `inkSecondary` were all wrong too. Every phase after 3c read a table that lied.
+
+### What is deliberately not in this phase
+
+- **The Pulse room takes no fade.** It is a bounded sheet with its own padding rather than
+  a surface passing under the status bar, and its ground is the time of day gradient
+- **10.6's filing chooser is untouched.** It was outside this pass and its implementation
+  is in a file another agent was editing, and writing a specification rule for work in
+  somebody else's file is how document and code drift starts
+- **15.1 was not re-swept and deliberately not re-dated.** A tell list is a record of what
+  the industry currently produces and cannot be re-derived from inside this repository.
+  Every entry of 15.1 and 15.3 was checked one at a time against everything this phase
+  built, and nothing built appears on the list or is refused by it, which is a narrower
+  claim than a sweep and is the one that can honestly be made. `HANDOFF.md` carries it
+
+---
+
 ## Phase 12 delivered
 
 Widgets, the launcher surfaces and the permission question, issue #11.
@@ -1101,14 +1582,46 @@ like every other control in the app.
   or a screen, and a labeled control in the shade is already a deliberate tap
 - **`SETTING_CHANGED` for the tile**, because nothing on the tile is a setting
 
-### The one thing that stops this phase closing, and it is not on the phone
+### The one thing that stopped this phase closing, and it is now built
 
-**`MainActivity` routes one intent.** The Pulse reminder, four of the six widget taps and
-two of the three shortcuts send actions nothing routes, so they open the app rather than a
-surface. The predicates all exist, in `WidgetIntents` and `PulseIntents`, written as
-contracts by the phases that could not reach that Activity. It is one call each in
-`onCreate` and `onNewIntent`, it is recorded in the open questions above, and until it
-lands most of this phase deep links only as far as the app.
+**`MainActivity` routed one intent.** The Pulse reminder, four of the six widget taps and
+two of the three shortcuts sent actions nothing routed, so they opened the app rather than
+a surface. The predicates all existed, in `WidgetIntents` and `PulseIntents`, written as
+contracts by the phases that could not reach that Activity.
+
+**A follow up closed all six**, and it was more than the call each in `onCreate` and
+`onNewIntent` this section predicted.
+
+`ui/nav/ExternalRequest.kt` holds one value, a serial plus a destination, one sealed
+destination with six cases, and one pure table from an action string to a destination.
+`MainActivity` notes a request from both entry points and the shell dispatches it in a
+`LaunchedEffect`, which fires on first composition too, so a cold start and a warm start
+behave identically. That was the risk worth designing for: the Activity is `singleTask`,
+so half of these arrive at each entry point, and a route that works from one is the
+classic version of this bug.
+
+**Two of the six needed real plumbing rather than a branch.** `AreasRoute` takes a request
+and waits on the projection before opening a sheet, because a sheet opened against a log
+that has not finished loading dismisses itself. `FocusViewModel.startOnItem` joins the log
+load and the session restore before it writes, because without the join it works warm and
+is silently refused cold, which is the failure that would have shipped.
+
+**Three decisions worth reading.** The table is keyed on the action string rather than on
+the `Intent` predicates: there is no Robolectric here and `isReturnDefaultValues` makes a
+built `Intent` answer null, so the predicate form is untestable, while the table names the
+same constants and a rename is still a red build. The predicates are kept and documented
+as deliberately uncalled. The running session override is not re-implemented in the shell,
+because `WidgetIntents.tap` applies it against the snapshot before the `PendingIntent`
+exists and a shell copy would need a projection that is empty on a cold start, so it would
+answer differently cold than warm. And the serial is compared for difference rather than
+for order, because the shell's counter restarts at zero after process death while the
+saved mark comes back at three, and a greater-than would swallow the first request of
+every new process.
+
+**The test is the part that lasts.** It scans all three intent source files for every
+`ACTION_` constant and requires each to be routed or listed as broadcast only. A seventh
+action added later fails on the commit that adds it, rather than in a widget picker six
+months on, which is how this gap happened the first time.
 
 ### What the device check still has to find
 

@@ -57,6 +57,7 @@ import com.kamsiob.claritynow.R
 import com.kamsiob.claritynow.ui.components.clarityClickable
 import com.kamsiob.claritynow.ui.theme.CALM_TUTORIAL_PULSE_OPACITY
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityShapes
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.LocalContemplativeColors
@@ -284,7 +285,10 @@ internal fun TutorialOverlay(
                     onClickLabel = stringResource(R.string.tutorial_skip),
                     onClick = onSkip,
                 )
-                .padding(horizontal = SKIP_TOUCH_INSET, vertical = SKIP_TOUCH_VERTICAL),
+                .padding(
+                    horizontal = SKIP_TOUCH_INSET,
+                    vertical = ClaritySpacing.scaled(SKIP_TOUCH_VERTICAL,
+                )),
         )
     }
 }
@@ -319,33 +323,38 @@ private fun TutorialTooltip(
             .fillMaxWidth()
             .clip(shapes.card)
             .background(contemplative.surfaceRaised)
-            .padding(horizontal = 20.dp, vertical = 18.dp),
+            .padding(horizontal = 20.dp, vertical = ClaritySpacing.scaled(18.dp)),
     ) {
         Text(
             text = stringResource(step.titleRes),
             style = type.bodyStrong,
             color = contemplative.textBright,
         )
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(6.dp)))
         Text(
             text = stringResource(step.bodyRes),
             style = type.body,
             color = contemplative.textDim,
         )
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
+            // Both take `textDim`, design-v3.md 13's 55 percent floor. `Step 2 of 5`
+            // is how far in somebody is and the other line is how to go on, so this
+            // row is the two things the card is for after its own sentence. At 32
+            // percent they measured 2.709 to one on `surfaceRaised`. The rank under
+            // the body above is the `caption` role, 5.3.
             Text(
                 text = stringResource(R.string.tutorial_step_indicator, stepNumber, stepCount),
                 style = type.caption,
-                color = contemplative.textFaint,
+                color = contemplative.textDim,
             )
             Text(
                 text = stringResource(R.string.tutorial_advance),
                 style = type.caption,
-                color = contemplative.textFaint,
+                color = contemplative.textDim,
             )
         }
     }

@@ -87,7 +87,7 @@ fun InboxSheet(
                     )
                 }
             }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
         }
     }
 }
@@ -139,7 +139,11 @@ private fun InboxRow(item: ItemState, onOpen: () -> Unit, onMove: () -> Unit) {
                 Text(
                     text = firstStep,
                     style = type.caption,
-                    color = colors.inkTertiary,
+                    // design-v3.md 3.1 and 13. The first step is the way in, 10.17,
+                    // and `inkTertiary` measures 2.402 to one on this sheet against a
+                    // floor of 4.5. `caption` against the title's `body` is what keeps
+                    // it a rank below, which is a size and not a color.
+                    color = colors.inkSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -186,7 +190,10 @@ private fun InboxEmptyState() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = ClaritySpacing.screenPadding, vertical = 24.dp),
+            .padding(
+                horizontal = ClaritySpacing.screenPadding,
+                vertical = ClaritySpacing.scaled(24.dp,
+            )),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
@@ -195,7 +202,7 @@ private fun InboxEmptyState() {
             color = colors.inkPrimary,
             textAlign = TextAlign.Center,
         )
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
         Text(
             text = stringResource(R.string.inbox_empty_body),
             style = type.body,
@@ -248,7 +255,7 @@ fun FileItemSheet(
                 color = colors.inkPrimary,
                 modifier = Modifier.padding(horizontal = ClaritySpacing.screenPadding),
             )
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
 
             if (areas.isEmpty()) {
                 NoAreasYet(onCreateArea = onCreateArea)
@@ -256,7 +263,7 @@ fun FileItemSheet(
                 areas.forEach { area ->
                     FileTargetRow(area = area, onClick = { onChoose(area) })
                 }
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
                 Column(modifier = Modifier.padding(horizontal = ClaritySpacing.screenPadding)) {
                     ClarityButton(
                         label = stringResource(R.string.action_never_mind),
@@ -278,7 +285,10 @@ private fun FileTargetRow(area: AreaCardModel, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clarityClickable(onClickLabel = area.name, onClick = onClick)
-            .padding(horizontal = ClaritySpacing.screenPadding, vertical = 12.dp),
+            .padding(
+                horizontal = ClaritySpacing.screenPadding,
+                vertical = ClaritySpacing.scaled(12.dp,
+            )),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start,
     ) {
@@ -295,7 +305,9 @@ private fun FileTargetRow(area: AreaCardModel, onClick: () -> Unit) {
                     if (area.isIdle) R.string.file_lands_active else R.string.file_lands_queue,
                 ),
                 style = type.caption,
-                color = colors.inkTertiary,
+                // This line is the whole reason the row is worth reading: it says
+                // where the item goes if you tap. design-v3.md 3.1 and 13.
+                color = colors.inkSecondary,
             )
         }
     }
@@ -313,7 +325,10 @@ private fun NoAreasYet(onCreateArea: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = ClaritySpacing.screenPadding, vertical = 12.dp),
+            .padding(
+                horizontal = ClaritySpacing.screenPadding,
+                vertical = ClaritySpacing.scaled(12.dp,
+            )),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
@@ -322,7 +337,7 @@ private fun NoAreasYet(onCreateArea: () -> Unit) {
             color = colors.inkSecondary,
             textAlign = TextAlign.Center,
         )
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(20.dp)))
         ClarityButton(
             label = stringResource(R.string.areas_empty_action),
             onClick = onCreateArea,

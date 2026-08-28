@@ -68,7 +68,10 @@ import com.kamsiob.claritynow.ui.components.ClarityIcons
 import com.kamsiob.claritynow.ui.components.SwipeActions
 import com.kamsiob.claritynow.ui.components.SwipeCoordinator
 import com.kamsiob.claritynow.ui.components.SwipeableRow
+import com.kamsiob.claritynow.ui.components.ScrollEdge
 import com.kamsiob.claritynow.ui.components.TabBarHeight
+import com.kamsiob.claritynow.ui.components.TabBarInset
+import com.kamsiob.claritynow.ui.components.scrollEdgeFade
 import com.kamsiob.claritynow.ui.components.clarityClickable
 import com.kamsiob.claritynow.ui.components.clarityPressScale
 import com.kamsiob.claritynow.ui.components.rememberReorderState
@@ -77,11 +80,11 @@ import com.kamsiob.claritynow.ui.components.reorderableItem
 import com.kamsiob.claritynow.ui.momentum.AreasBanner
 import com.kamsiob.claritynow.ui.settings.SettingsSurface
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.clarityEntrance
 import com.kamsiob.claritynow.ui.theme.clarityMotion
-import com.kamsiob.claritynow.ui.theme.parseAreaColor
 import com.kamsiob.claritynow.ui.tutorial.TutorialStep
 import com.kamsiob.claritynow.ui.tutorial.tutorialTarget
 
@@ -166,19 +169,38 @@ fun AreasScreen(
             // A tap anywhere while a row is open closes it, and is spent doing so.
             .clarityClickable(enabled = swipe.hasOpenRow, haptic = null) { swipe.close() },
     ) {
+        // Read once, because both the content padding and the phase 12b scroll edge
+        // fade are measured from them. design-v3.md 6.1.
+        val statusBar = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+        val navigationBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                // Cards no longer pass hard edged under the clock or behind the floating
+                // pill: they dissolve into the page at both ends. See `ScrollEdge.kt`
+                // for why this erases rather than paints, and for why it is a fade and
+                // not the blur design-v3.md 15.3 refuses.
+                //
+                // The fade sits on the list and not on the Box, so the FAB, which is a
+                // sibling rather than a child, keeps its full weight. A FAB that faded
+                // into the ground it floats above would be the one control on this
+                // screen that is hardest to see and the one that most has to be seen.
+                .scrollEdgeFade(
+                    top = statusBar + ScrollEdge.underTheClock,
+                    bottom = navigationBar + TabBarInset + TabBarHeight +
+                        ScrollEdge.aboveTheBar,
+                ),
             contentPadding = PaddingValues(
                 start = 20.dp,
                 end = 20.dp,
                 // The list scrolls under the status bar rather than stopping at it,
                 // so the first card passes behind the clock instead of clipping.
-                top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 8.dp,
-                bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() +
-                    TabBarHeight + 17.dp + 76.dp,
+                top = statusBar + 8.dp,
+                bottom = navigationBar + TabBarHeight + TabBarInset + 76.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(11.dp),
+            verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(11.dp)),
         ) {
             // design-v3.md 8.2 item 4 and 8.4. The screen arrives as one sequence, the
             // title first and the cards behind it, on the first open of this tab per
@@ -325,7 +347,6 @@ private fun AreaRow(
         key = area.id,
         coordinator = swipe,
         actions = actions,
-        accent = parseAreaColor(area.colorHex),
         shape = shape,
     ) {
         // design-v3.md 8.2 item 2 gives a card the same 0.97 press as a button, and
@@ -430,7 +451,7 @@ private fun AreasHeader(
         //
         // It draws nothing at all when the engine has said nothing, so the header keeps its
         // existing height on a week no family describes.
-        AreasBanner(modifier = Modifier.padding(top = 14.dp))
+        AreasBanner(modifier = Modifier.padding(top = ClaritySpacing.scaled(14.dp)))
     }
 }
 
@@ -505,7 +526,7 @@ private fun AreasChipRow(
         modifier = Modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
-            .padding(top = 4.dp),
+            .padding(top = ClaritySpacing.scaled(4.dp)),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -586,7 +607,7 @@ private fun ConflictCard(conflict: ConflictCardModel, onDismiss: () -> Unit) {
                     style = type.body,
                     color = colors.inkPrimary,
                 )
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(ClaritySpacing.scaled(12.dp)))
                 Text(
                     text = stringResource(R.string.conflict_dismiss),
                     style = type.bodyStrong,
@@ -624,7 +645,7 @@ private fun AreasEmptyState(onCreate: () -> Unit) {
 
     AnimatedVisibility(visible = shown, enter = fadeIn(entrance)) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(top = 60.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = ClaritySpacing.scaled(60.dp)),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -633,7 +654,7 @@ private fun AreasEmptyState(onCreate: () -> Unit) {
                 color = colors.inkPrimary,
                 textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
             Text(
                 text = stringResource(R.string.areas_empty_body),
                 style = type.body,
@@ -641,7 +662,7 @@ private fun AreasEmptyState(onCreate: () -> Unit) {
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 24.dp),
             )
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(24.dp)))
             ClarityButton(
                 label = stringResource(R.string.areas_empty_action),
                 onClick = onCreate,

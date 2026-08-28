@@ -109,7 +109,10 @@ internal fun OnboardingPrimaryButton(
             text = label,
             style = type.bodyStrong,
             color = if (enabled) contemplative.textBright else contemplative.textFaint,
-            modifier = Modifier.padding(horizontal = 28.dp, vertical = 13.dp),
+            modifier = Modifier.padding(
+                horizontal = 28.dp,
+                vertical = ClaritySpacing.scaled(13.dp,
+            )),
         )
     }
 }
@@ -151,10 +154,10 @@ internal fun OnboardingChoicePanel(
                 onClickLabel = title,
                 onClick = onClick,
             )
-            .padding(horizontal = 20.dp, vertical = 18.dp),
+            .padding(horizontal = 20.dp, vertical = ClaritySpacing.scaled(18.dp)),
     ) {
         Text(text = title, style = type.title, color = contemplative.textBright)
-        Spacer(Modifier.height(5.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(5.dp)))
         Text(text = detail, style = type.body, color = contemplative.textDim)
     }
 }
@@ -298,7 +301,10 @@ internal fun OnboardingMiniCard(
             ClarityIcon(
                 icon = ClarityIcons.close,
                 contentDescription = removeLabel,
-                tint = contemplative.textFaint,
+                // The only way to undo an area added by mistake. A control's glyph,
+                // so design-v3.md 13's 3.0 floor is the least it clears, and 32
+                // percent misses it at 2.680 on the beat's ground.
+                tint = contemplative.textDim,
                 modifier = Modifier.size(18.dp),
             )
         }
@@ -355,7 +361,11 @@ internal fun OnboardingField(
                         Text(
                             text = placeholder,
                             style = type.body,
-                            color = contemplative.textFaint,
+                            // The Contemplative twin of design-v3.md 10.19, and the
+                            // same answer: what says "not filled in" is that the text
+                            // vanishes on the first keystroke, not that it was too
+                            // faint to read. 32 percent measured 2.680 to one here.
+                            color = contemplative.textDim,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -365,7 +375,7 @@ internal fun OnboardingField(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp)
+                .padding(top = ClaritySpacing.scaled(8.dp))
                 .defaultMinSize(minHeight = 28.dp)
                 .then(
                     if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier,
@@ -374,7 +384,7 @@ internal fun OnboardingField(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 6.dp)
+                .padding(top = ClaritySpacing.scaled(6.dp))
                 .height(1.dp)
                 .clip(RoundedCornerShape(1.dp))
                 .background(rule),

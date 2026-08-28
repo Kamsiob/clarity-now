@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
@@ -21,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 
@@ -32,6 +34,14 @@ import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
  * exception in the whole design is the color picker's live preview, which renders
  * an actual miniature area card because showing the person their card is the entire
  * purpose of that element.
+ *
+ * **There is no sheet shadow, and that is settled rather than missing.** design-v3.md
+ * 6.1 states one, `y -8dp blur 40dp black 28 percent`, and it has never had a call site.
+ * A sheet's shadow points up out of its own top edge, which only something outside the
+ * sheet can draw, and `ModalBottomSheet` exposes nothing outside it that an app can
+ * reach. The full analysis is on `ClarityElevation.sheet`, and the short version is that
+ * the 42 percent scrim is already a 42 point step of lightness under this surface, so
+ * 6.1's own "stop as soon as it reads" stopped at device two.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,7 +63,8 @@ fun ClaritySheet(
         // `card`, and it stays `card`. design-v3.md 3.1 names this token "cards and
         // sheets", and the phase 3c ladder puts content at the top: a sheet is where a
         // person reads and types, not chrome. `raise` is for a surface drawn *inside* a
-        // sheet that has to separate from it, and there is no such surface yet.
+        // sheet that has to separate from it, and phase 12b gave it its first one: a
+        // text field's well steps down to `raise` against this ground, 10.19.
         containerColor = colors.card,
         contentColor = colors.inkPrimary,
         scrimColor = Color.Black.copy(alpha = 0.42f),
@@ -63,7 +74,9 @@ fun ClaritySheet(
     ) {
         // Without this the keyboard covers the lower half of a sheet and the
         // primary action sits underneath it, unreachable.
-        Column(modifier = Modifier.imePadding().padding(top = 18.dp)) {
+        Column(
+            modifier = Modifier.imePadding().padding(top = ClaritySpacing.sheetContentTop),
+        ) {
             if (title != null) {
                 Text(
                     text = title,
@@ -71,11 +84,11 @@ fun ClaritySheet(
                     color = colors.inkPrimary,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 0.dp),
                 )
-                Box(Modifier.size(1.dp, 14.dp))
+                Box(Modifier.height(ClaritySpacing.scaled(14.dp)))
             }
             content()
             Box(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
-            Box(Modifier.size(1.dp, 12.dp))
+            Box(Modifier.height(ClaritySpacing.scaled(12.dp)))
         }
     }
 }
@@ -84,7 +97,7 @@ fun ClaritySheet(
 private fun SheetHandle() {
     val colors = LocalClarityColors.current
     Box(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = ClaritySpacing.scaled(12.dp)),
         contentAlignment = Alignment.Center,
     ) {
         Box(

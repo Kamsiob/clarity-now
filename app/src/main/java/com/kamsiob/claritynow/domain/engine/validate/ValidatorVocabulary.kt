@@ -60,6 +60,55 @@ internal object ValidatorVocabulary {
     )
 
     /**
+     * A sentence that mentions somebody's estimate at all. `MASTER_BUILD_PROMPT.md` 14b.8.
+     *
+     * Half of check 11. The other half is [ESTIMATE_DELTA_FORMS], which vetoes on its own;
+     * this one only decides whether the shape rule applies, because a percentage is
+     * perfectly ordinary in a sentence that has nothing to do with a prediction.
+     */
+    val ESTIMATE_MENTION: Regex = Regex("""\bestimat(e|es|ed|ing|ion)\b""", RegexOption.IGNORE_CASE)
+
+    /**
+     * The sentence forms that state a difference between what somebody predicted and what
+     * happened. `MASTER_BUILD_PROMPT.md` 14b.8, Addendum 01 7a.
+     *
+     * **Only ratios and tendencies.** 14b.8 permits `Things you estimate at an hour tend to
+     * take about three` and forbids both `You underestimated by two hours` and `You were
+     * off by 140 percent`. The difference is not politeness and it is not tone. A ratio
+     * describes how this person's estimates map onto their days, which is useful and which
+     * they can do something with. A delta is a score against a target they set themselves,
+     * and time blindness is the reason the estimate was wrong in the first place, so the
+     * delta measures the symptom and reports it as a mistake.
+     *
+     * **Every form here is a whole delta and none of them needs the word `estimate`
+     * nearby.** `You were off by 140 percent` is the second forbidden line and it never
+     * says estimate at all, so a check that required the word would miss the example the
+     * section names. `underestimated` and `overestimated` are deltas whatever else the
+     * sentence says, and the four longer forms carry the thing they are a difference from
+     * inside the pattern: `than you estimated` rather than `than you`, which appears three
+     * times in the approved corpus and is fine, and `behind your estimate` rather than
+     * `behind`, whose spatial sense 11.3 protects.
+     *
+     * **Written against a rendered sentence rather than against a template**, because 7.7
+     * assembles a line from a frame and a clause bench at runtime and neither half has to
+     * contain a whole form for the sentence to.
+     */
+    val ESTIMATE_DELTA_FORMS: List<Pair<Regex, String>> = listOf(
+        Regex("""\b(under|over)\s?estimat(e|es|ed|ing|ion)\b""", RegexOption.IGNORE_CASE)
+            to "an under or over estimate, which is a difference by definition",
+        Regex("""\b(off|out|over|under|short|wrong)\s+by\b""", RegexOption.IGNORE_CASE)
+            to "a margin phrase, which states a difference",
+        Regex("""\bthan\s+(you|they)\s+(estimat|expect|think|thought|predict|plan)""", RegexOption.IGNORE_CASE)
+            to "a comparison against what the person predicted",
+        Regex("""\b(behind|past|beyond|against)\s+(your|the|its|their)\s+estimat""", RegexOption.IGNORE_CASE)
+            to "a reading of the estimate as a target that was passed",
+        Regex("""\bestimate\s+(was|is)\s+(out|off|wrong|short|long|low|high)\b""", RegexOption.IGNORE_CASE)
+            to "a verdict on the estimate",
+        Regex("""\b(missed|blew|blown|exceeded|overran|overrun)\s+(your|the|its|their)\s+estimat""", RegexOption.IGNORE_CASE)
+            to "an estimate treated as a deadline that was missed",
+    )
+
+    /**
      * Phrases that assign blame, chase, or congratulate. 11.3.
      *
      * Congratulation is on this list for the same reason blame is. `Well done` claims the

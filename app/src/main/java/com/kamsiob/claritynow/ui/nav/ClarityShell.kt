@@ -44,7 +44,9 @@ import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kamsiob.claritynow.R
 import com.kamsiob.claritynow.di.ClarityViewModelFactory
+import com.kamsiob.claritynow.ui.areas.AreasRequest
 import com.kamsiob.claritynow.ui.areas.AreasRoute
+import com.kamsiob.claritynow.ui.areas.AreasTarget
 import com.kamsiob.claritynow.ui.areas.AreasViewModel
 import com.kamsiob.claritynow.ui.components.ClarityTabBar
 import com.kamsiob.claritynow.ui.components.TAB_AREAS
@@ -53,9 +55,11 @@ import com.kamsiob.claritynow.ui.components.TAB_REPORT
 import com.kamsiob.claritynow.ui.components.TAB_TRAIL
 import com.kamsiob.claritynow.ui.components.rememberClarityTabs
 import com.kamsiob.claritynow.ui.focus.FocusRoute
+import com.kamsiob.claritynow.ui.focus.FocusStart
 import com.kamsiob.claritynow.ui.momentum.MomentumRoute
 import com.kamsiob.claritynow.ui.pulse.PulseRoute
 import com.kamsiob.claritynow.ui.report.ReportRoute
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.TabEntrance
@@ -88,11 +92,30 @@ import com.kamsiob.claritynow.ui.tutorial.tutorialTarget
  * Which of them is showing is [FocusEntry], and every rule about back living in a
  * value rather than in this function is deliberate: see that file.
  *
- * [focusRequest] is a counter that goes up each time something outside the composition
- * asks for the Focus surface, which today means a notification MainActivity received.
- * A counter rather than a boolean because a request is a moment and not a state: a
- * boolean would have to be cleared by whoever handled it, and the frame in which it
- * had not been cleared yet is the frame that re-opens a surface somebody just left.
+ * ## What a tap outside the app does, MASTER_BUILD_PROMPT 13.3, 13.4 and 13.5
+ *
+ * [request] is every widget, shortcut, notification and tile tap this app can receive,
+ * carrying a serial that only goes up and the destination that was last asked for. A
+ * serial rather than a boolean because a request is a moment and not a state: a boolean
+ * would have to be cleared by whoever handled it, and the frame in which it had not been
+ * cleared yet is the frame that re-opens a surface somebody just left. `ExternalRequest`
+ * carries the whole of that reasoning.
+ *
+ * **This function is where a destination becomes a change to this screen, and it is the
+ * only place that happens.** Six destinations, four kinds of landing: the Focus surface
+ * and the Pulse are values on this function's own state, Momentum is a tab, and the two
+ * that reach the Areas tab are handed down to `AreasRoute` as an `AreasRequest` because
+ * both of them are a sheet that file owns.
+ *
+ * **The running session override is deliberately not re-implemented here.** 13.3 and
+ * `design-v3.md` 12.1: while a session is running, any widget tap goes to the focus
+ * screen, and `WidgetIntents.tap` already applies that on the widget's side, against the
+ * snapshot, before a `PendingIntent` is ever built. A second copy of the rule here would
+ * have to read the projection, which is empty for the first frames of a cold start, so
+ * it would answer differently on a cold start than on a warm one, which is the thing it
+ * would exist to prevent. What holds in both starts without a rule is structural: a
+ * running session opens the Focus surface through [FocusEntry.sessionSeen] below, and
+ * that surface covers the tabs and the tab bar for as long as it is showing.
  *
  * ## The tutorial, MASTER_BUILD_PROMPT 13.2
  *
@@ -111,7 +134,7 @@ import com.kamsiob.claritynow.ui.tutorial.tutorialTarget
  */
 @Composable
 fun ClarityShell(
-    focusRequest: Long,
+    request: ExternalRequest,
     tutorialQueued: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -142,6 +165,14 @@ fun ClarityShell(
     // no Pulse row for the same reason: answering one is a moment, not a place.
     var pulseOpen by rememberSaveable { mutableStateOf(false) }
 
+    // The item the `First Step` widget asked for a session on, or null. Cargo for a
+    // surface that is about to open rather than a request for one to open, which is why
+    // this is the one value here that is cleared: the surface reads it on entry, and
+    // leaving the surface is the moment it stops being true. Clearing it late could only
+    // ever drop a session start, never put a surface back on screen, which is the failure
+    // the serial exists to prevent everywhere else.
+    var focusStart by remember { mutableStateOf<FocusStart?>(null) }
+
     // design-v3.md 8.2 entry 24 puts the tab crossfade at 180ms, one of the two places
     // in the document that names a duration rather than a spring. The nearest token,
     // motion.easeOut, is the 350ms entrance curve: nearly twice as long, and an
@@ -162,11 +193,52 @@ fun ClarityShell(
         trailLabel = stringResource(R.string.tab_trail),
     )
 
-    // A notification, or an app shortcut later, asking for the session. It arrives as a
-    // value rather than as a call because MainActivity has no composition to call into
-    // when the intent lands during a cold start.
-    LaunchedEffect(focusRequest) {
-        if (focusRequest > 0L) focusEntry = focusEntry.requested()
+    // A widget, a shortcut, a notification or the tile. It arrives as a value rather
+    // than as a call because MainActivity has no composition to call into when the
+    // intent lands during a cold start, and it is read here on the first composition and
+    // again on every later request, so the cold start and the warm start run the same
+    // line. Keyed on the whole value: the serial only goes up, so an equal request is
+    // the same request and a recomposition is not one.
+    LaunchedEffect(request) {
+        when (val destination = request.destination) {
+            // Nothing has been asked. A launcher tap, and the tap on a widget with
+            // nothing to show, both land here and the app opens where it was.
+            null -> Unit
+
+            ExternalDestination.FocusSurface -> focusEntry = focusEntry.requested()
+
+            ExternalDestination.Pulse -> pulseOpen = true
+
+            ExternalDestination.Momentum -> selected = TAB_MOMENTUM
+
+            // The tab, here. The sheet over it belongs to AreasRoute and reaches it as
+            // the request below, because AreaSheet is that file's own type and a shell
+            // that could name one would be a second place that decides what Areas shows.
+            ExternalDestination.UnfiledCapture,
+            is ExternalDestination.Area,
+            -> selected = TAB_AREAS
+
+            is ExternalDestination.FocusOnItem -> {
+                focusStart = FocusStart(request.serial, destination.itemId)
+                focusEntry = focusEntry.requested()
+            }
+        }
+    }
+
+    // The two destinations that are a sheet on the Areas tab, handed down whole. Null
+    // for the other four, so a request for Momentum cannot be mistaken for a stale
+    // request for an area: the serial that reaches AreasRoute is only ever a serial it
+    // is meant to act on.
+    val areasRequest = remember(request) {
+        when (val destination = request.destination) {
+            is ExternalDestination.Area ->
+                AreasRequest(request.serial, AreasTarget.Detail(destination.areaId))
+
+            ExternalDestination.UnfiledCapture ->
+                AreasRequest(request.serial, AreasTarget.Capture)
+
+            else -> null
+        }
     }
 
     // The session itself, which opens the surface on a relaunch and offers a finished
@@ -228,6 +300,7 @@ fun ClarityShell(
                         when (tab) {
                             TAB_AREAS -> AreasRoute(
                                 viewModel = areasViewModel,
+                                request = areasRequest,
                                 onOpenFocus = { focusEntry = focusEntry.requested() },
                                 onOpenPulse = { pulseOpen = true },
                             )
@@ -270,7 +343,10 @@ fun ClarityShell(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
-                    .padding(bottom = 17.dp)
+                    // design-v3.md 10.4's inset, and it holds at every text size for the
+                    // reason `ClaritySpacing.tabBarHeight` gives: this is chrome floating off
+                    // an edge, not a gap between two lines of type.
+                    .padding(bottom = ClaritySpacing.tabBarInset)
                     // The tutorial's fifth step. The modifier goes after the padding so the
                     // rectangle reported is the bar itself rather than the bar plus the inset
                     // it floats above. MASTER_BUILD_PROMPT 13.2.
@@ -308,7 +384,15 @@ fun ClarityShell(
                         // design-v3.md 10.15. The session keeps running, the ongoing
                         // notification stays in the shade, and the Areas card keeps its
                         // countdown; all this records is that the person went elsewhere.
-                        onExit = { focusEntry = focusEntry.left(focusPresence?.sessionId) },
+                        //
+                        // It clears the pending start with it, so that returning through
+                        // the Focus chip is the chooser rather than a second session on
+                        // an item a widget named some time ago.
+                        onExit = {
+                            focusEntry = focusEntry.left(focusPresence?.sessionId)
+                            focusStart = null
+                        },
+                        startOn = focusStart,
                     )
                 }
             }
@@ -415,7 +499,10 @@ private fun UnderConstruction() {
         Text(
             text = stringResource(R.string.under_construction),
             style = type.body,
-            color = colors.inkTertiary,
+            // The only text on the screen, so there is no rank for a quieter ink to
+            // occupy. design-v3.md 3.1: `inkTertiary` carries no text anywhere in this
+            // app, and it measures 2.337 to one on the canvas.
+            color = colors.inkSecondary,
             textAlign = TextAlign.Center,
         )
     }

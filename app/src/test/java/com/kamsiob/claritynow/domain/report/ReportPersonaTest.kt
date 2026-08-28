@@ -41,7 +41,9 @@ import org.junit.Test
  *
  * Simulated opens are not written. `APP_OPENED` is never user activity, per the phase 3b
  * decision, so it changes no fact this test reads, and skipping it keeps a year of eleven
- * personas inside a unit test's budget.
+ * personas inside a unit test's budget. **Whether the app was opened still decides whether
+ * anything happens**, through `SimulationPersona.isPresentOn`: the marker is what is
+ * skipped here, never the presence it records.
  */
 class ReportPersonaTest {
 
@@ -65,8 +67,12 @@ class ReportPersonaTest {
                 persona.key,
             )
             for (day in 0 until ClaritySimulator.DAYS_IN_YEAR) {
-                if (day == persona.installDay) persona.setUp(log)
-                persona.act(log, day)
+                // A day nobody was there is a day nothing is written, per
+                // `SimulationPersona.isPresentOn`, which is also where the areas are created.
+                if (persona.isPresentOn(day)) {
+                    if (day == persona.installDay) persona.setUp(log)
+                    persona.act(log, day)
+                }
                 if (day < DAYS_PER_WEEK || day % DAYS_PER_WEEK != 0) continue
 
                 weeks++

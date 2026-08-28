@@ -28,6 +28,7 @@ import com.kamsiob.claritynow.domain.momentum.FocusPattern
 import com.kamsiob.claritynow.domain.momentum.IdleArea
 import com.kamsiob.claritynow.domain.momentum.MomentumInsights
 import com.kamsiob.claritynow.ui.components.Sidehead
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 
@@ -94,8 +95,8 @@ fun MomentumInsightModules(insights: MomentumInsights) {
 @Composable
 private fun AreaBalanceModule(shares: List<AreaShare>) {
     Sidehead(text = stringResource(R.string.momentum_sidehead_area_balance))
-    Spacer(Modifier.height(14.dp))
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
+    Column(verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(12.dp))) {
         shares.forEach { share ->
             InsightRow(
                 colorHex = share.colorHex,
@@ -122,7 +123,7 @@ private fun CompletionPaceModule(pace: CompletionPace) {
     val description = stringResource(R.string.cd_momentum_pace, pace.weeks.size)
 
     Sidehead(text = stringResource(R.string.momentum_sidehead_completion_pace))
-    Spacer(Modifier.height(14.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
     Canvas(
         modifier = Modifier
             .fillMaxWidth()
@@ -153,7 +154,7 @@ private fun CompletionPaceModule(pace: CompletionPace) {
             drawCircle(color = colors.inkPrimary, radius = stroke * 1.6f, center = newest)
         }
     }
-    Spacer(Modifier.height(10.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
     Text(
         text = stringResource(R.string.momentum_pace_busiest, pace.busiestWeek),
         style = type.caption,
@@ -179,7 +180,7 @@ private fun FocusPatternModule(pattern: FocusPattern) {
     val description = stringResource(R.string.cd_momentum_focus_strip, pattern.days.size)
 
     Sidehead(text = stringResource(R.string.momentum_sidehead_focus_patterns))
-    Spacer(Modifier.height(14.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
     Canvas(
         modifier = Modifier
             .fillMaxWidth()
@@ -204,7 +205,7 @@ private fun FocusPatternModule(pattern: FocusPattern) {
             )
         }
     }
-    Spacer(Modifier.height(10.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
     Text(text = focusMinutesLine(pattern.minutes), style = type.caption, color = colors.inkSecondary)
 }
 
@@ -227,8 +228,8 @@ private fun FocusPatternModule(pattern: FocusPattern) {
 @Composable
 private fun IdleAreasModule(areas: List<IdleArea>) {
     Sidehead(text = stringResource(R.string.momentum_sidehead_quiet_areas))
-    Spacer(Modifier.height(14.dp))
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
+    Column(verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(12.dp))) {
         areas.forEach { area ->
             InsightRow(
                 colorHex = area.colorHex,

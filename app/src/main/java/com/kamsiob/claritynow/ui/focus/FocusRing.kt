@@ -34,7 +34,6 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.kamsiob.claritynow.R
 import com.kamsiob.claritynow.data.repo.FocusCountdown
@@ -42,12 +41,14 @@ import com.kamsiob.claritynow.ui.components.ClarityIcon
 import com.kamsiob.claritynow.ui.components.ClarityIcons
 import com.kamsiob.claritynow.ui.components.TabularNumber
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.FocusPalette
 import com.kamsiob.claritynow.ui.theme.LocalCalmMode
 import com.kamsiob.claritynow.ui.theme.LocalClarityHaptics
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.LocalContemplativeColors
 import com.kamsiob.claritynow.ui.theme.calmed
+import com.kamsiob.claritynow.ui.theme.cappedFontScale
 import com.kamsiob.claritynow.ui.theme.clarityMotion
 import kotlin.math.cos
 import kotlin.math.sin
@@ -156,14 +157,19 @@ internal fun FocusDial(
             // design-v3.md 5.3 and 13: the timer numeral caps at 1.3x the font scale.
             // The ring does not grow with the text, so a numeral that kept scaling
             // would eventually be wider than the shape that has to contain it.
+            //
+            // **The cap is against the combined scale, phone times app setting, and it
+            // is met with nothing added here.** `ClarityTheme` applies the in app text
+            // size to `LocalDensity`, so `fontScale` below is already the product; a cap
+            // written against the phone's figure alone would have let 200 percent times
+            // Largest through at 2.0 and put a 128sp numeral inside a 244dp ring.
+            //
+            // `cappedFontScale` replaced a plain `Density(density, 1.3f)` for the reason
+            // `ClarityTextSize.kt` gives: that constructor discards the platform's non
+            // linear sp curve, and this is the largest size in the app, which is exactly
+            // where the curve is doing the most work.
             val density = LocalDensity.current
-            val capped = remember(density) {
-                if (density.fontScale <= NUMERAL_MAX_FONT_SCALE) {
-                    density
-                } else {
-                    Density(density.density, NUMERAL_MAX_FONT_SCALE)
-                }
-            }
+            val capped = remember(density) { density.cappedFontScale(NUMERAL_MAX_FONT_SCALE) }
             CompositionLocalProvider(LocalDensity provides capped) {
                 // Hanken Grotesk ships no tnum feature, so the digits are laid out in
                 // slots of the widest digit rather than trusted to the file.
@@ -173,7 +179,7 @@ internal fun FocusDial(
                     color = contemplative.textBright,
                 )
             }
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(2.dp)))
             Text(
                 // design-v3.md 10.18: at the mark the word becomes `5 minutes left` and
                 // stays. It is a landmark that was already on the track rather than an
@@ -184,7 +190,15 @@ internal fun FocusDial(
                     stringResource(R.string.focus_remaining)
                 },
                 style = type.label,
-                color = contemplative.textFaint,
+                // `textDim`. design-v3.md 11 listed this word as `textFaint` among the
+                // six elements of the Focus surface, and 13 says Contemplative text
+                // stays at or above 55 percent opacity where it is meant to be read.
+                // The section is corrected rather than left standing beside the floor:
+                // 32 percent measures 2.554 to one at the center of the indigo
+                // gradient and 55 measures 4.659, and at the mark this line changes to
+                // `5 minutes left`, which is a thing the surface says rather than a
+                // decoration under the numeral.
+                color = contemplative.textDim,
             )
         }
     }

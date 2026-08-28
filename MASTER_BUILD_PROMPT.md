@@ -265,6 +265,16 @@ the log wins whenever the two disagree. What they add is the one fact in a sessi
 is about a phone rather than about a person, since a merged log can legitimately carry
 one running session per device. See 10 and 14b.5.
 
+**`textSize` joined in the accessibility pass for Addendum 01 8f, issue #51.** It stores
+one of five named steps and defaults to `DEFAULT`, which is a real default rather than a
+placeholder: the setting **multiplies** the OS font scale rather than replacing it, so
+`DEFAULT` already means "whatever this phone asks for" and there is no absent third state
+to resolve the way `calmMode` has one. It is a fact about a screen and not about a person,
+so no corpus line, no observation and no engine layer reads it, and two devices holding
+the same log compute the same sentence while rendering it at different sizes. `design-v3.md`
+13.2 owns the behavior, the 200 percent cap on the combined scale and the spacing rule that
+comes with it.
+
 **Nothing the Logic Engine reads may live in DataStore.** Variation history, escalation state, personal records, first-ever flags and plan history all derive from the log so two devices compute the same answer. This is a hard rule and it will not fail loudly if you get it wrong.
 
 ### 5.5 Write path
@@ -630,7 +640,7 @@ The calm daily mirror. **It observes and never interprets.** It must never say b
 
 **Pending, phase 9.** One of the four changes from Addendum 01 that reach this screen: every section that needs history says plainly what it needs and roughly when it becomes useful, rather than showing a zero (14b.10). The section is omitted rather than drawn empty today, which is that item's `never an empty chart`; the sentence that replaces it is a corpus line by 11.1 and the edge state benches do not carry one yet.
 
-**Owed, and unassigned. Three Addendum 01 items build order 19 gave phase 8 and phase 8 did not carry**, all three of them engine work rather than screen work. For a full week after a return from a long absence, every decline, neglect and gap family is unavailable to selection (14b.4). A dip that has a precedent in the user's own history is a rhythm and not a decline, and the two speak differently (14b.9). Estimate observations may state a ratio or a tendency and may never state a delta (14b.8). **None of the three has a fact behind it in `domain.engine.facts` today**, so each is a fact, a criterion and a test rather than a screen change, and `docs/BUILD_STATE.md` carries them as open.
+**Carried, after phase 8 did not. Three Addendum 01 items build order 19 gave phase 8**, all three of them engine work rather than screen work. For a full week after a return from a long absence, every decline, neglect and gap family is unavailable to selection (14b.4). A dip that has a precedent in the user's own history is a rhythm and not a decline, and the two speak differently (14b.9). Estimate observations may state a ratio or a tendency and may never state a delta (14b.8). **All three now have a fact behind them in `domain.engine.facts`, a gate or a veto reading it, and a test**, and what remains of all three is language: the estimate observation family and the `familiarDip` bench are phase 9's.
 
 **Controls.** History (past reports by week), regenerate (spinner on the headline block, near instant), copy (plain text to the clipboard). The copy control is the app's only integration surface with anything else. **Built, phase 8**, and **the spinner is a shimmer**, because `design-v3.md` 8.2 item 22 says placeholder shimmer and never a spinner and the authority order gives the look to that document. It is on the headline block and nothing else, and the rest of the page does not move.
 
@@ -640,7 +650,7 @@ The calm daily mirror. **It observes and never interprets.** It must never say b
 
 ### 13.1 Onboarding
 
-Four beats, runs once, replayable from Settings. Entirely Contemplative. A persistent nav overlay: back chevron (hidden on beat 1) at 35 percent white, an 80dp progress line filling by beat, and `Jump in` at 30 percent white, always visible. Tap or swipe left advances, swipe right goes back.
+Four beats, runs once, replayable from Settings. Entirely Contemplative. A persistent nav overlay: back chevron (hidden on beat 1) at 35 percent white, an 80dp progress line filling by beat, and `Jump in` in `textDim`, always visible. **It was 30 percent white**, which the phase 13 contrast audit measured at 2.643 to one against `design-v3.md` 13's floor of 4.5, and `design-v3.md` wins on anything visual. The back chevron stays at 35 percent, where it measures 3.133 against the 3.0 a graphic carries. Tap or swipe left advances, swipe right goes back.
 
 **Beat 1, See It Work.** About 9 seconds, auto advances. Four colored demo cards enter with staggered three-part entrances. The top card's item strikes through and completes; the next queued title slides up and takes its place. One sentence: `One thing at a time. The next one is ready when you are.` **This beat must land the whole model in five seconds.**
 
@@ -715,16 +725,33 @@ no key, no family, no stage, no fact reference. **No widget reads a corpus and n
 calls the engine**, which is 11.1's one path, and the accepted plan line the deferred One
 Thing widget will need is carried whole rather than as the four keys it was built from.
 
-**Two things it owes**, both named where they belong rather than dropped. **No widget has
-a preview image**, so the picker shows the loading layout: `design-v3.md` 12.1 requires
-one generated from the real widget, a hand written preview layout is exactly the mockup
-that rule forbids, and each resource file says so at the place the attribute would go.
-And **`MainActivity` routes only `ACTION_OPEN_FOCUS`**, so the taps that open an area,
-capture, Momentum or a session on one item reach the app and land on whatever tab it was
-left on. Every one of them is a predicate that already exists, in `WidgetIntents` and in
-`PulseIntents`, called from `onCreate` and `onNewIntent` beside the one call that is
-there. It is the same gap phase 6 left behind for the Pulse reminder, it is now six
-surfaces wide, and `docs/BUILD_STATE.md` carries it.
+**One thing it owes.** **No widget has a preview image**, so the picker shows the
+loading layout: `design-v3.md` 12.1 requires one generated from the real widget, a hand
+written preview layout is exactly the mockup that rule forbids, and each resource file
+says so at the place the attribute would go. It is a device capture and it is in
+`HANDOFF.md`.
+
+**The routing gap it also owed is closed.** All six actions land on their surface:
+`ui/nav/ExternalRequest.kt` holds one pure table from an action string to a destination,
+`MainActivity` notes a request from both `onCreate` and `onNewIntent`, and the shell
+dispatches it in a `LaunchedEffect` that also fires on first composition, so a cold start
+and a warm start behave identically. That was the failure mode worth designing against:
+half of these arrive at one entry point and half at the other, and a route that works
+from one is the classic version of this bug.
+
+Two of the six needed real plumbing rather than a branch. Opening one area's sheet by id
+waits on the projection, because a sheet opened against a log that has not finished
+loading dismisses itself. Starting a session on one item joins the log load and the
+session restore before it writes, because without the join it works warm and is silently
+refused cold. The serial that makes a repeated tap a new request is compared for
+difference rather than for order, since the shell's counter restarts at zero after
+process death while the saved mark comes back at three, and a greater-than would swallow
+the first request of every new process.
+
+**The gap phase 6 left behind for the Pulse reminder is closed with them.** A test scans
+all three intent source files for every `ACTION_` constant and requires each to be routed
+or listed as broadcast only, so a seventh action added later fails on the commit that
+adds it rather than in a picker six months on.
 
 ### 13.4 Notifications
 
@@ -962,7 +989,7 @@ This audience leaves and comes back. A fortnight of nothing is not a failure of 
 - **It does not count anything.** Not what waits, not what was completed before, not how many areas went idle
 - **It does not ask where the user has been**, in any wording, including a warm one
 - **Pulse generates nothing for the first two days back.** The engine returns Silent for those two date keys and writes no `PULSE_GENERATED`, so the days are IDLE, the chip shows no dot and no reminder is posted. These suppressed days sit outside the Pulse silence floor in section 17, in both the numerator and the denominator, because the floor measures how often the engine chose not to speak and this is not a choice it made
-- **The Report suppresses every decline, neglect and gap observation for a full week back.** For seven days from the re-entry date every rule in those families is unavailable to selection and the next ranked candidate is taken instead. The report is shorter when nothing else qualifies, because 11.4 forbids padding a section to reach a minimum. The same suppression applies to the Momentum headline and the Areas banner, which read from the same catalog
+- **The Report suppresses every decline, neglect and gap observation for a full week back.** For seven days from the re-entry date every rule in those families is unavailable to selection and the next ranked candidate is taken instead. **Built.** `HistoryFacts.isJustBackFromAbsence` is true on the day of the return and for the six days after it, asked of the last day the window describes, and it is a boolean precisely so that it carries neither the date nor the length. `FamilyAvailability.WITHHELD_ON_RE_ENTRY` is the set of families and the reason for each, applied at step 1b of selection, on the Report, the Momentum headline and the Areas banner, which read from the same catalog. The report is shorter when nothing else qualifies, because 11.4 forbids padding a section to reach a minimum, and `FamilyAvailabilityTest` asserts a week where the one qualifying observation was a reading of the absence and the section came out empty. **Measured over the simulated year, sixth measurement.** `longDormantRevival` returns on day 251 after 195 days away and receives 22 sentences in the seven days that follow, none of them a decline, a neglect or a gap. The same seven days with this withholding disabled produce seven: `A still fortnight.` on the Momentum headline on four separate days, and a report headlined `Work moved again.` carrying `Work had been the quietest area. It was not this week.` and `6 events. All week.` **The set is not only the decline and neglect families**, and the half a reader will not expect is the gap families: `mo.come.01` is `Back after {ageDays}` and `ob.rev.l01` is `{areaName} moved again after {ageDays} of nothing`, both warm, both true, and both stating the length of the absence in days on the first screen back. **It is not applied to the Pulse**, which has the older and stronger rule two bullets up: it declines to run the engine at all for two days rather than withholding some of its families
 - **It never appears alongside the tutorial, a conflict card, or anything else that wants the first moment.** It is the first screen and it is alone. A conflict card from 6.3 waits behind it rather than being dropped, because a conflict is never silent
 
 **A returning user must never be greeted by a measurement of their absence.** If a sentence, a number, a dot row or an empty chart on the first screen back can be read as a report on how long they were gone, it is wrong, whatever else is true about it.
@@ -1031,7 +1058,9 @@ Because everything is local, **the user's data has exactly one copy unless they 
 
 ### 14b.8 Estimates are calibration, never error
 
-**Pending. The facts and the veto in phase 8, the language in phase 9.** From Addendum 01 7a.
+**The facts, the veto and the floor are built and the year is clean. The observation family and its language are phase 9.** From Addendum 01 7a. **Measured, sixth measurement:** zero estimate deltas in 13,576 rendered strings across twelve persona years, and zero sentences mentioning an estimate at all.
+
+**What the facts phase landed, and the shape it chose.** `HistoryFacts` carries `estimatedCompletions`, `activeToEstimateRatio` and `estimateTendency`, defined in `CLARITY_LOGIC_ENGINE.md` 3.1 with the window, the sample and the four decisions the definition rests on. The ratio is a **multiple and never a percentage**, because a ratio of 2.4 rendered as 240 percent is one literal hundred away from the second forbidden line below. **No quantity of minutes exists anywhere in the fact set**: `TrailQueries.estimateOutcomes` divides the two magnitudes inside its own body and returns the quotient, so the delta this section bans is unformable above that line rather than caught after the fact. The veto below is still required and is still worth having, as the backstop for a number arriving some other way.
 
 **Hard rule, enforced in the validator: no rendered sentence may state a delta between an estimate and an actual.**
 
@@ -1045,11 +1074,15 @@ Only ratios and tendencies. The difference is not politeness and it is not tone.
 
 **Floor.** No estimate observation may fire until **at least five completed items carry an estimate inside the window the sentence describes**, and the count travels as a `FactRef` so the validator re-reads it, per 11.4.
 
-**A new observation family** is authored in phase 9 with the rest of the corpus, and **a veto test constructs the forbidden form and proves it cannot render**, which is the same shape as the Report integrity vetoes in 12.3 and is listed in section 17.
+**What the veto phase landed.** The veto is **check 11** in `ClarityValidator`, appended rather than inserted so the ten checks section 8 numbers keep the numbers three documents cite them by. It has two rules: a delta form anywhere in the sentence, whether or not the sentence says estimate, because the second forbidden line above never does; and a `Percent` slot in a sentence that is about an estimate, because the reading is a multiple and never a percentage. `EstimateDeltaVetoTest` builds both forbidden lines word for word and the permitted one beside them, so a veto in that file means something. The floor is `RuleBuilders.estimateFloor`, enforced the way the share floor is enforced, by `CatalogIntegrity.estimateRulesCarryAFloor` over any rule whose criteria read an estimate fact, and the count reaches the validator through the `estimatedCompletions` measure. **Both estimate measures are counts and neither is a percent**, and there is deliberately no measure for a quantity of minutes.
+
+**A new observation family** is authored in phase 9 with the rest of the corpus. Nothing reads the estimate facts today, so the floor check and the veto both have no subjects yet, which is what a backstop should look like.
 
 ### 14b.9 Capacity aware decline detection
 
-**Pending, phase 8.** From Addendum 01 7b.
+**The fact, the gate, both branches' rules and the persona test are built, and the acceptance criterion passes. The second branch's language is phase 9.** From Addendum 01 7b. **Measured, sixth measurement:** `cyclicalDips` receives zero decline, neglect or fading observations across fifty two weekly reports, against 34 in the same year composed with every precedent forced to `NONE`, and all 34 sit on a fall whose precedent reads `PRESENT`.
+
+**What the facts phase landed.** `AreaFacts.dipPrecedent`, `HistoryFacts.activityDipPrecedent` and `HistoryFacts.focusDipPrecedent`, defined in `CLARITY_LOGIC_ENGINE.md` 3.1 along with what makes a fall comparable in depth and in duration. `Precedent` has four values and the two that matter to a gate are not opposites: `NONE` is the permission and `PRESENT` is the veto, and `INSUFFICIENT` is neither, so **both branches test for their own value** and a person with too short a history gets neither sentence.
 
 **This is a correctness fix, not politeness.**
 
@@ -1058,6 +1091,14 @@ A fluctuating condition looks identical to decline in the data. Both are a fall 
 **The rule.** Before any decline, neglect or fading family may fire, the engine asks whether this shape has occurred before in this user's history for this subject. If a comparable dip has happened before, **it is a rhythm, not a decline**, and a different family fires with different language.
 
 This needs a new fact, rules for both branches, and tests for both. The fact's definition, what makes a dip comparable in depth and in duration, belongs in `CLARITY_LOGIC_ENGINE.md` with the other fact definitions; what this document requires is that the fact exist, that it gate those families rather than merely re-word them, and that the gate be reachable in a test.
+
+**What the gate landed as.** `FamilyAvailability.PRECEDENT_GATED` at step 1b of selection, which removes the family from the ranking rather than re-realizing it, so the next ranked candidate is taken and nothing is re-worded. It is not a criterion, because specificity is `criteria.size` and a criterion would make the gated families outrank rules that genuinely require more. **A family is gated only where a precedent fact measures the same quantity its claim is about**, which is the mapping the facts phase declared: the activity precedent answers for `decliningActivity`, `quietWeek` and `hardStretch`, the focus precedent for `focusHabitFading`, and the area precedent for `neglectedArea` and `areaGoneQuiet`. `narrowingFocus` is the family that tests the discipline and is deliberately left out: it is a decline by any reading and its claim is about how many areas moved, which no precedent fact measures.
+
+**The gate closes on `PRESENT` alone, and that is one reading of the sentence above rather than a transcription of it.** Read strictly, `NONE` being the permission asks a decline family to require `NONE`, which would also close the gate on `NOT_IN_A_DIP`. That value means only that the newest closed week is not under three quarters of the subject's normal, which is not a question any decline family asks, so requiring `NONE` would silence a true observation every time the two definitions came apart. `CLARITY_LOGIC_ENGINE.md` 3.1 carries the full argument and `FamilyAvailability.CLOSES_THE_GATE` is the one line that changes it.
+
+**The second branch is `familiarDip`**, declared with its three rules in `FamiliesAwaitingLanguage` and held out of the catalog until phase 9 authors its bench, because a family declared with no lines fails the corpus parser and a family with a rule and no lines would qualify, say nothing, and look like a family that never fired. **It is withheld for the week after a return as well**, per 14b.4, because a sentence about a familiar stretch of low weeks said on the first report back is the absence measured in a kinder vocabulary.
+
+**What the persona landed as, and the qualification an earlier version of it needed.** `SimulationPersona.CYCLICAL` is a life and deliberately not a waveform: twelve episodes across the year, one to three weeks long, arriving after gaps of two to six good weeks, bottoming out anywhere from thirteen events in a week down to one, with recoveries of different heights and the working days inside each week moving. A clean period would have passed the test and proved nothing, because the precedent fact would have been matching on a shape no person produces. **The assertion is the sentence below with nothing added to it: no decline, neglect or fading observation in any of the fifty two weekly reports.** The first version of this persona could not hold that and section 17 was amended to scope the claim to the second half of the year; the amendment is withdrawn, because the reason it could not be held was the persona rather than the fact. `Precedent`'s low is a week under three quarters of normal, which is a much wider bar than any decline family's, so a person can be squarely inside a fall and reach nothing that can be said out loud. This person's first eleven weeks are made of exactly those weeks, including a three week stretch, and by the twelfth, which is where a precedent first becomes answerable, every length and depth the rest of the year holds has already been seen once. `CapacityGatePersonaTest` asserts the two halves separately: that no gated family speaks, and that every gated observation the control run produced sits on a fall whose precedent is `PRESENT`, so no week of the silence came from a ranking, a cooldown or a family that simply did not qualify.
 
 **The test that proves it** is a persona whose activity is cyclical across a simulated year, who must receive no decline, neglect or fading observation at all, because every dip they have has a precedent. It is listed in section 17 beside the non-compliance test in 9b, which it resembles: both assert that a whole year of output contains no sentence of a given kind.
 
@@ -1090,12 +1131,20 @@ This needs a new fact, rules for both branches, and tests for both. The fact's d
 
 **Calm mode and the entrance rule are built, phase 3b. The transition warning key is built, phase 4. Both Settings rows are built, phase 11**, `Calm mode` under Appearance and `Five minute warning` under Focus.
 
-Two per-device keys join the list in 5.4, and neither is engine state, so neither violates the rule that nothing the engine reads may live in DataStore.
+Three per-device keys join the list in 5.4, and none of them is engine state, so none of them violates the rule that nothing the engine reads may live in DataStore.
 
 | key | default | phase | row |
 |---|---|---|---|
 | `calmMode` | follow the OS reduce motion setting | key 3b, row 11 | Appearance |
 | `transitionWarningEnabled` | false | key 4, row 11 | Focus |
+| `textSize` | `DEFAULT`, which multiplies the OS font scale by 1.0 | issue #51 | Appearance |
+
+**Text size** is the third key and the one that needed a decision rather than a default.
+It multiplies the OS font scale rather than overriding it, the combined result is capped
+at 200 percent, and the spacing grid opens with the text and never closes below section
+6's numbers. `design-v3.md` 13.2 carries all three with the reasoning, including what the
+cap costs a person whose phone is already at 200 percent and what the app says to them
+instead of moving a selection that changes nothing.
 
 **Calm mode** is a Settings toggle in addition to and independent of the OS reduce motion setting, which `design-v3.md` 8.3 already honors. It reduces motion to crossfades, reduces the saturation of washes and accents, disables the staggered list entrance and the breathing glow, and **applies to the widgets and the Live Update as well as to the app**. `design-v3.md` owns every value it changes. It is what makes Material 3 Expressive safe for this audience rather than overwhelming: **ship the expressive direction and the exit.**
 
@@ -1309,10 +1358,10 @@ Phrasing of this shape: `Built for people who find long lists paralyzing. Design
 - Simulator: a full year dumps without a crash and without a repeated variant inside 90 days
 
 **Executive function support, per 14b. Each becomes live when its phase lands**
-- **No rendered sentence states a delta between an estimate and an actual.** A veto test constructs the forbidden form and asserts it cannot render. **Build order 19 gave this to phase 8 and phase 8 did not carry it, so this line is still vacuously true and must not be read as met**: there is no estimate fact in `domain.engine.facts`, no rule reads one, and no corpus line states one, so there is nothing yet for a veto to refuse. It becomes a real check on the day the facts land
-- No estimate observation fires below five completed items carrying an estimate inside the window the sentence describes. **Also unbuilt, and for the same reason as the line above.** The floor and the fact it is a floor on are one piece of work
-- **A persona whose activity is cyclical across a simulated year receives no decline, neglect or fading observation**, because every dip they have has a precedent. **Build order 19 gave this to phase 8 and phase 8 did not carry it.** Phase 8 runs eleven personas through a simulated year of reports and asserts every composition rule over the result, so the harness this check needs exists; what does not exist is the precedent fact, the criterion that reads it, and the cyclical persona itself
-- **A re-entry persona receives no Pulse for two days and no decline, neglect or gap observation for a week**, and no surface states the length of the gap, counts anything, or asks where they were. **The first clause is true as of phase 6** and `PulseGenerationTest` holds it in both directions, the two days silent and the third day speaking again. **The week of Report suppression was given to phase 8 and phase 8 did not carry it**, so the second clause is unbuilt and unassigned: no fact records a return, no Report family is excluded by one, and a person coming back after a fortnight can be told about the gap by the first report they open. **The third clause is vacuously true and must not be read as met**: there is no re-entry surface to state anything, per 14b.4, and this line becomes a real check on the day that screen is built
+- **No rendered sentence states a delta between an estimate and an actual.** A veto test constructs the forbidden form and asserts it cannot render. **Closed.** It is check 11 in `ClarityValidator`, and `EstimateDeltaVetoTest` builds both of 14b.8's forbidden lines word for word, the permitted line beside them so a veto means something, four other ways of saying the same difference, and a count measure funneled into a percentage slot. **It is a backstop rather than the prohibition**: no quantity of minutes exists anywhere in the fact set and no measure produces one, so the subtraction is unformable above layer 5. No corpus line states an estimate yet, so the check currently refuses only what a test hands it, which is the honest version of a backstop
+- No estimate observation fires below five completed items carrying an estimate inside the window the sentence describes. **Closed as a mechanism and awaiting its first subject.** `RuleBuilders.estimateFloor` is the criterion, `CatalogIntegrity.estimateRulesCarryAFloor` fails the build on any rule that reads an estimate fact without it, and the count reaches the validator through the `estimatedCompletions` measure so 11.4's re-read holds. The first rule to read the facts is phase 9's
+- **A persona whose activity is cyclical across a simulated year receives no decline, neglect or fading observation**, because every dip they have has a precedent. **Closed, on the unqualified sentence.** `CapacityGatePersonaTest` runs a twelfth persona through a simulated year of weekly reports and composes each week twice: once as the app now speaks and once with every precedent forced to `NONE`, which is the year this person would have had before 14b.9. The control run is the finding, and the assertion covers every week. A second assertion is what makes the first one mean anything: **every gated observation the control run produced sits on a fall whose precedent is `PRESENT`**, so the silence is the gate's doing and never a ranking, a cooldown or a family that did not qualify. **An earlier version of this persona could not hold the claim before its twelfth week and this line was amended to scope it to the second half of the year; the amendment is withdrawn.** The cause was the persona and not the fact: `Precedent`'s low is a week under three quarters of normal and no decline family asks that question, so a first season can be full of real falls and empty of anything sayable, which is what this one is. The twelfth persona is deliberately outside `SimulationPersona.ALL`, because that list is section 12's eleven and every measurement this project has recorded is quoted against it
+- **A re-entry persona receives no Pulse for two days and no decline, neglect or gap observation for a week**, and no surface states the length of the gap, counts anything, or asks where they were. **The first clause is true as of phase 6** and `PulseGenerationTest` holds it in both directions, the two days silent and the third day speaking again. **The second clause is now true too.** `FamilyAvailability.WITHHELD_ON_RE_ENTRY` removes thirteen families from selection on the Report, the Momentum headline and the Areas banner for seven days from the return, and `FamilyAvailabilityTest` asserts that none of them survives, that what replaced them already qualified, and that a week with nothing left to say produces a shorter report rather than a padded one. The set includes the families that name the gap a return came back from, `comeback` and `areaRevival` among them, which is where `Back after two weeks` would otherwise have appeared on the first screen back. **The third clause is vacuously true and must not be read as met**: there is no re-entry surface to state anything, per 14b.4, and this line becomes a real check on the day that screen is built
 - **The word `abandoned` reaches nothing a person can see**, including the Trail and every accessibility label. The naming decision in 5.2 is settled and the type is `FOCUS_ENDED_EARLY`, so it is absent from the export file too. Phase 4 built the Focus surface and every string on it, and `EndedEarlyRenameTest` holds the line
 - Export and import round trip, encrypted and unencrypted, to byte identical state, and a corruption suite refuses cleanly and leaves the database unchanged. **Closed, phase 11.** `BackupRoundTripTest` round trips both file kinds, asserts the header carries the schema version, the date, both counts and a checksum, asserts the export rebuilt from event zero before it wrote, and asserts that a write which fails records no export date. `BackupRefusalTest` carries the six required corruption cases and eight more, including an edited count proved to be covered by the checksum, a duplicated record, a record with no identity, a later event schema version and a wrong password, and every one of them asserts the store was never touched. Both run on a plain JVM against `ClarityBackupStore`, which is the interface that lets a unit test watch for a write that must not happen
 - **The scrypt implementation matches the vectors published for it.** `ScryptVectorsTest` asserts `salsa20Core8`, `blockMix`, `roMix`, both PBKDF2-HMAC-SHA256 vectors and the full scrypt vector from RFC 7914 sections 8 through 12, and asserts that the parameters this build actually ships are one of the verified rows. A KDF whose intermediate steps cannot be checked against published vectors is a KDF nobody can check, which is why those three functions are public. **New in phase 11**, and it exists because 14b.7's KDF was written out here rather than taken from a dependency
@@ -1415,9 +1464,9 @@ It ended up larger than the 40 rules the phase asked for and smaller than the co
 
 **Three things it owes**, all named where they belong rather than dropped. `REPORT_GENERATED` is not written, which is 11.3 step 9 and one method on `ClarityRepository`; until it lands the cadence in 12.3 always answers due, the firing history never learns what the Report said, and the History page is empty. The past report headline is not on the payload, so a row on that page leads with its week and its ribbon; re-realizing the variant would be a second path to a sentence. And of the debug menu and export path that call `rebuildCacheFromLog`, **phase 11 built the export path and did not build the menu**, so the correctness check now runs on every export and the method itself still has no caller.
 
-**The three Addendum 01 items this entry assigned it did not land**, and all three are engine work rather than screen work: capacity aware decline detection and its cyclical persona test (14b.9), the estimate calibration facts, their floor and the delta veto (14b.8), and the week long suppression after a return (14b.4). None has a fact behind it in `domain.engine.facts` today, so each is a fact, a criterion and a test. **They are recorded as open in `docs/BUILD_STATE.md` and on issue #6 rather than quietly moved to phase 9**, because two of the three are refusals rather than additions and a refusal that nobody is holding is a refusal that ships as its opposite.
+**The three Addendum 01 items this entry assigned it did not land with phase 8 and landed afterward, in two passes of their own**, and all three are engine work rather than screen work: capacity aware decline detection and its cyclical persona test (14b.9), the estimate calibration facts, their floor and the delta veto (14b.8), and the week long suppression after a return (14b.4). The first pass built the three facts in `domain.engine.facts`; the second built the criteria, the gate, the veto and the tests that read them. **They were recorded as open in `docs/BUILD_STATE.md` and on issue #6 rather than quietly moved to phase 9**, because two of the three are refusals rather than additions and a refusal that nobody is holding is a refusal that ships as its opposite. What is left of them is language, and that is phase 9's.
 
-**Phase 9. Corpus.** Grow toward the sizing targets in batches of forty, one family at a time, judged against simulator output, presented for approval. **Plus Addendum 01:** the tone pass, meaning the widened `unflattering` enumeration, the missing `NEUTRAL_AGENT` variants, the softened `pt.gone` flagship and the `hardStretch` family, plus the estimate observation family in ratio and tendency form only (14b.8, 14b.10).
+**Phase 9. Corpus.** Grow toward the sizing targets in batches of forty, one family at a time, judged against simulator output, presented for approval. **Plus Addendum 01:** the tone pass, meaning the widened `unflattering` enumeration, the missing `NEUTRAL_AGENT` variants, the softened `pt.gone` flagship and the `hardStretch` family, plus the estimate observation family in ratio and tendency form only (14b.8, 14b.10). **Two benches are owed to families whose rules already exist**: the estimate family, whose rules are phase 9's to write against the floor and the two count measures already declared, and `familiarDip`, whose three rules are written and waiting in `FamiliesAwaitingLanguage` with the five steps that land it and the constraints its lines are written under (14b.9).
 
 **Phase 9b. Guidance.** Cue fact extraction with confidence thresholds. Layer 6 and its composition rules. Plan events, the nominal offer frame, first-person storage on accept, the explicit decline. Non-evaluative follow-through by priority boost. **The non-compliance test written before the follow-through code, not after.**
 
@@ -1444,7 +1493,7 @@ It ended up larger than the 40 rules the phase asked for and smaller than the co
 
 **Its notification half was already built and this phase confirmed rather than added.** The three channels and the contextual `POST_NOTIFICATIONS` request landed in phases 4, 6 and 11, and the Live Update was built whole in phase 4, promoted style, both actions, silent fallback and all. The extension this list expected of 14b.6 turned out to be nothing: what phase 12 added is a third caller of the same `End` path, the tile, rather than anything new on the notification itself.
 
-**Three things it owes**, all named where they belong rather than dropped. **No widget has a preview image**, because `design-v3.md` 12.1 wants one generated from the real widget and a hand written preview layout is the mockup that rule forbids. **`MainActivity` routes only `ACTION_OPEN_FOCUS`**, so four of the six widget taps and two of the three shortcuts open the app rather than a surface; the predicates exist and the calls do not. And **the two optional widgets, This Week and One Thing, were not built**, which 13.3 permits: the snapshot carries a slot for each so that building them later is a composer change and not a schema change.
+**Two things it owes**, both named where they belong rather than dropped. **No widget has a preview image**, because `design-v3.md` 12.1 wants one generated from the real widget and a hand written preview layout is the mockup that rule forbids; it is a device capture and `HANDOFF.md` carries it. And **the two optional widgets, This Week and One Thing, were not built**, which 13.3 permits: the snapshot carries a slot for each so that building them later is a composer change and not a schema change. **The routing gap it also owed is closed**, in the follow up 13.3 now describes: all six actions land on their surface, cold and warm alike, and a test fails the build if a seventh is ever added without one.
 
 **What it settled that had been open since phase 2.** Section 18's permission rule was checked against the merged manifest for both variants rather than reasoned about, found to be describing an app that was never built, and rewritten to state the seven permissions that are actually there and why each one stays. The network half of that promise is unchanged and still gated on every build.
 

@@ -226,26 +226,31 @@ internal object PulseRules {
     /**
      * `throughput`, over net flow. Stage 3's second branch reads the completions series.
      *
-     * **This family never qualified once across eleven simulated years and the window is
-     * not why.** The diagnosis worth ruling out first was that a weekly shape had been
-     * assigned to a one day surface, and the corpus refuses it: nine of the thirty five
-     * statements say `yesterday` outright, `More came out than went in yesterday` and
-     * `Your queues shrank by {n} yesterday` among them, and the family is dated in its own
-     * voice at stages 1 and 2. There is nowhere for it to move either. A Pulse bench
-     * carries questions and response pairs and a Report bench carries leads and
-     * extensions, so a purpose is not a field that can be edited across volumes, and the
-     * weekly reading of this shape is already authored twice, as `netOutflow` in
-     * `CORPUS_2_REPORT.md` 1.2 and as `intakeVsOutput` in 2.2.
+     * **This family was dark for four measurements and it is not dark now. It fires 35
+     * times across a simulated year, and nothing in this rule changed.** The diagnosis
+     * worth ruling out first was that a weekly shape had been assigned to a one day
+     * surface, and the corpus refuses it: nine of the thirty five statements say
+     * `yesterday` outright, `More came out than went in yesterday` and `Your queues shrank
+     * by {n} yesterday` among them, and the family is dated in its own voice at stages 1
+     * and 2. There is nowhere for it to move either. A Pulse bench carries questions and
+     * response pairs and a Report bench carries leads and extensions, so a purpose is not a
+     * field that can be edited across volumes, and the weekly reading of this shape is
+     * already authored twice, as `netOutflow` in `CORPUS_2_REPORT.md` 1.2 and as
+     * `intakeVsOutput` in 2.2.
      *
-     * **What is actually true is that `netFlow >= 1` held zero times in 3,148 one day
-     * windows, and that is a property of the eleven personas rather than of this rule.**
-     * Every persona reaches the log through `SimulationPersona.work`, and every call site
-     * of it passes `completions` no greater than `captures`. The single exception,
-     * `QueueHoarder`'s completion only call, runs on a day that also captures. So
-     * `additions >= completions` on every simulated day, and therefore on every simulated
-     * week, which is the same reason `netOutflow` and `intakeVsOutput` stage 3 are dark.
-     * No life the simulator models finishes more than it writes down, and nearly every
-     * real backlog day does.
+     * **What was true was that `netFlow >= 1` held zero times in 3,148 one day windows,
+     * and it was a property of the eleven personas rather than of this rule.** Every
+     * persona reached the log through `SimulationPersona.work`, and every call site of it
+     * passed `completions` no greater than `captures`, so `additions >= completions` held
+     * on every simulated day and therefore on every simulated week. No life the simulator
+     * modeled finished more than it wrote down, and nearly every real backlog day does.
+     *
+     * **`SimulationPersona.clearOut` is the fix and the fifth measurement is the proof.**
+     * Four personas gained a sitting down that finishes and captures nothing, sized by what
+     * had piled up rather than by a literal, and this family went from 0 to 35. The two
+     * families that shared the cause moved with it: `report.headline.netOutflow` went from
+     * 0 to 1 and `intakeVsOutput` reached stage 3 for the first time. DECISIONS.md, the
+     * persona defect and the fifth measurement.
      *
      * **The thresholds are corpus stage headers and are not this file's to move.** `net of
      * one to two`, `net of three to five` and `net of six or more` are parsed out of
@@ -435,18 +440,20 @@ internal object PulseRules {
      * rather than a week's. A Report rule reading the same field would be reading a week
      * and would need a different fact.
      *
-     * **This family never qualified once across eleven simulated years, and the window is
-     * the one thing about it that is beyond doubt.** 6.1 says `in one day`, the corpus
-     * section heading says `Three or more completions in one area in one day`, and eight
-     * of the seventeen statements date themselves: `all in one day`, `in a single day`,
-     * `one area, one day`, `yesterday`. Nothing here reads weekly and nothing here moves.
+     * **This family was dark for four measurements and it fires 12 times now, on the same
+     * rule.** The window was never the question. 6.1 says `in one day`, the corpus section
+     * heading says `Three or more completions in one area in one day`, and eight of the
+     * seventeen statements date themselves: `all in one day`, `in a single day`, `one
+     * area, one day`, `yesterday`. Nothing here reads weekly and nothing here moved.
      *
-     * **The reason it is dark is the persona set.** No persona completes more than two
-     * things in one area on one day. `FastCompleter` captures `1 + roll(2)` and completes
-     * exactly what it captured, `Sporadic` peaks at two, and `BalancedAcrossFour` spreads
-     * its two calls across two different areas. So the criterion held zero times in 3,148
-     * windows while the areas cleared the event floor 2,171 times. Three completions in
-     * one area in one day is an ordinary Saturday and no simulated life has one.
+     * **The reason it was dark was the persona set, and the diagnosis was exact.** No
+     * persona completed more than two things in one area on one day: `FastCompleter`
+     * captured `1 + roll(2)` and completed exactly what it captured, `Sporadic` peaked at
+     * two, and `BalancedAcrossFour` spread its two calls across two different areas. So
+     * the criterion held zero times in 3,148 windows while the areas cleared the event
+     * floor 2,171 times. Three completions in one area in one day is an ordinary Saturday
+     * and no simulated life had one. `SimulationPersona.clearOut` gave four of them one,
+     * and the fifth measurement reads 12.
      *
      * **The three and the five are corpus stage headers**, parsed by [StageRangeTest], so
      * there is no threshold here to retarget even if that were the right instrument.

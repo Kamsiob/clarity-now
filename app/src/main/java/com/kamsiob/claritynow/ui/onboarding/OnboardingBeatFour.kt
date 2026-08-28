@@ -134,7 +134,7 @@ private fun ColumnScope.Philosophy() {
         color = contemplative.textBright,
         textAlign = TextAlign.Center,
     )
-    Spacer(Modifier.height(18.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(18.dp)))
     Text(
         text = stringResource(R.string.onboarding_depth_philosophy_two),
         style = type.readSerif,
@@ -168,7 +168,7 @@ private fun ColumnScope.PulseMoment() {
             .fillMaxWidth()
             .clip(shapes.card)
             .background(contemplative.surfaceRaised)
-            .padding(horizontal = 22.dp, vertical = 26.dp),
+            .padding(horizontal = 22.dp, vertical = ClaritySpacing.scaled(26.dp)),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
@@ -177,9 +177,9 @@ private fun ColumnScope.PulseMoment() {
             color = contemplative.textBright,
             textAlign = TextAlign.Center,
         )
-        Spacer(Modifier.height(22.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(22.dp)))
         SamplePill(label = stringResource(R.string.onboarding_depth_pulse_option_one), accent = accent)
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
         SamplePill(label = stringResource(R.string.onboarding_depth_pulse_option_two), accent = accent)
     }
     Caption(stringResource(R.string.onboarding_depth_pulse_caption))
@@ -202,7 +202,10 @@ private fun SamplePill(label: String, accent: Color) {
             text = label,
             style = type.bodyStrong,
             color = contemplative.textBright,
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 13.dp),
+            modifier = Modifier.padding(
+                horizontal = 24.dp,
+                vertical = ClaritySpacing.scaled(13.dp,
+            )),
         )
     }
 }
@@ -284,14 +287,14 @@ private fun ColumnScope.ReportMoment(onFinish: () -> Unit) {
         color = gold.copy(alpha = 0.75f),
         textAlign = TextAlign.Center,
     )
-    Spacer(Modifier.height(14.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
     Text(
         text = stringResource(R.string.onboarding_depth_report_headline),
         style = type.displayTitle,
         color = ReportPalette.body,
         textAlign = TextAlign.Center,
     )
-    Spacer(Modifier.height(18.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(18.dp)))
     // design-v3.md 3.3: a Report rule is a horizontal gradient fading to transparent at
     // both ends, never a solid line.
     Box(
@@ -306,7 +309,7 @@ private fun ColumnScope.ReportMoment(onFinish: () -> Unit) {
     )
     Caption(stringResource(R.string.onboarding_depth_report_caption))
 
-    Spacer(Modifier.height(40.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(40.dp)))
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.graphicsLayer { alpha = closing.value },
@@ -317,7 +320,7 @@ private fun ColumnScope.ReportMoment(onFinish: () -> Unit) {
             color = contemplative.textDim,
             textAlign = TextAlign.Center,
         )
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(24.dp)))
         OnboardingPrimaryButton(
             label = stringResource(R.string.onboarding_start),
             onClick = onFinish,
@@ -330,7 +333,7 @@ private fun ColumnScope.ReportMoment(onFinish: () -> Unit) {
 private fun ColumnScope.Caption(text: String) {
     val contemplative = LocalContemplativeColors.current
     val type = LocalClarityTypography.current
-    Spacer(Modifier.height(26.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(26.dp)))
     Text(
         text = text,
         style = type.body,

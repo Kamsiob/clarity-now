@@ -76,14 +76,14 @@ internal fun FocusCompleteScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             FocusBloom()
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(28.dp)))
             Text(
                 text = stringResource(R.string.focus_complete_title),
                 style = type.readSerif,
                 color = contemplative.textBright,
                 textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
             Text(
                 text = completion.itemTitle,
                 style = type.itemTitle.copy(
@@ -97,16 +97,16 @@ internal fun FocusCompleteScreen(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.widthIn(max = COMPLETE_TITLE_MEASURE),
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(12.dp)))
             DurationAndArea(completion)
-            Spacer(Modifier.height(36.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(36.dp)))
             if (completion.canCompleteItem) {
                 FocusPill(
                     label = stringResource(R.string.focus_complete_mark_item),
                     onClick = onMarkItemComplete,
                     haptic = ClarityHapticEvent.COMPLETE,
                 )
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(ClaritySpacing.scaled(6.dp)))
             }
             FocusTextAction(
                 label = stringResource(R.string.action_done),

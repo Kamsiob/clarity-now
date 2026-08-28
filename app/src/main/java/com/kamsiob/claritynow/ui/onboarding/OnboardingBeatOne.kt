@@ -112,7 +112,7 @@ internal fun OnboardingBeatOne(onAdvance: () -> Unit, modifier: Modifier = Modif
             if (index != cards.lastIndex) Spacer(Modifier.height(ClaritySpacing.cardGap))
         }
 
-        Spacer(Modifier.height(38.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(38.dp)))
 
         Text(
             text = stringResource(R.string.onboarding_beat_one_line),
@@ -188,7 +188,10 @@ private fun DemoCard(card: OnboardingDemoCard, index: Int, promoted: Boolean) {
             .clip(shapes.card)
             .background(contemplative.surfaceRaised)
             .background(accent.calmed(calm).copy(alpha = wash))
-            .padding(horizontal = ClaritySpacing.cardPaddingHorizontal, vertical = 15.dp),
+            .padding(
+                horizontal = ClaritySpacing.cardPaddingHorizontal,
+                vertical = ClaritySpacing.scaled(15.dp,
+            )),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -210,7 +213,7 @@ private fun DemoCard(card: OnboardingDemoCard, index: Int, promoted: Boolean) {
                 color = areaLabelColor(accent, ClarityDarkColors),
             )
         }
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(6.dp)))
         Box(
             modifier = Modifier
                 .fillMaxWidth()

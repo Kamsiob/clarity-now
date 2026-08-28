@@ -47,6 +47,24 @@ Two of those changes contradict something v3 had settled, and neither is resolve
 
 **v3.2** records what phase 3b, the executive function retrofit, actually built, and it is the first revision since v3.1 in which anything Addendum 01 added is real. Calm mode, section 16, is built and audited: 16.6 states what it does to every animation in 8.2, 16.7 what it does to every token in section 3 with a number against each, and 16.8 what it does to every component shipped in phases 1, 2 and 3. The entrance rule in 8.4 is built and is now stated once rather than repeated beside items 4 and 14. Two things came out of the audit that were not calm mode's: the area label's contrast was being verified against the wrong ground and was failing at 3.83 to one on an in-session card, 16.7, and the platform bottom sheet cannot honor calm mode at all, 16.8. Both are recorded rather than quietly fixed or quietly left.
 
+**v3.3** records **phase 12b, the surfaces half of the polish pass.** Phase 3c took tokens and type, because those are inherited free by screens that do not exist yet; this half took the choices that could not be judged with two screens on the table, and it ran after the three Contemplative worlds the deferral was waiting for were built. Content stops passing hard edged under the status bar and behind the floating tab bar, 6.1. Section 10 gains a field entry it never had, 10.19, and a field stops being four stacked underlined rules. 10.4 states the tab label rule instead of inheriting a platform default. Section 11 says what the Trail's icon column carries, which turned out to be a proof that it could not carry a color at all. And section 14's "nothing that is still" is narrowed to what is true: the only thing this app moves on its own is time.
+
+**Two of these are recorded refusals rather than changes, and that is an outcome the phase was designed to allow.** 6.1's sheet shadow has no call site and cannot get one through the platform sheet, so 6.1 now says so and says what carries the separation instead. And nothing new moves at rest, because every conventional way to make section 14's sentence true is on 15.1 or beside it, and none of them says anything about a person's data.
+
+**One question this revision does not answer.** 10.6's "no cards inside sheets, structure comes from sideheads" was written for the area detail sheet, and applied to the filing chooser it produces rows with no affordance at all. That is still open, the answer is still not a card, per 15.3, and it belongs to whoever next touches 10.6.
+
+| # | v3.3 change | where |
+|---|---|---|
+| SE1 | scroll edges fade at both ends, and the blur is refused and tested | 6.1, 15.3 |
+| SH1 | the sheet shadow is unreachable through the platform component, and the scrim already separates | 6.1, 15.3 |
+| TL1 | one tab label of four, stated with the measurement behind it | 10.4 |
+| TF1 | a field is a sidehead and a well | 10.19 |
+| TR1 | the Trail's icon column is a glyph, and there is no event color | 11 |
+| RM1 | the only thing that moves at rest is time | 14 |
+| TK1 | 3.1 and 3.2 carry the values phase 3c shipped | 3.1, 3.2 |
+
+**3.1 and 3.2 were stale for four phases and that is worth naming.** Phase 3c moved six tokens in the code and recorded the reasoning in `ClarityColors.kt`, in three commits and in two tests, and did not update the two tables in this document that are the authority for them. So the file that wins on every visual question said `card` was `#FFFFFF` while the app drew `#FCFBF9`, and every later phase read a table that was wrong. The values now match the code, and the reasoning that lived only in Kotlin lives here too.
+
 **Sections 16 and 17 are appended rather than inserted**, because section numbers in this document are cited by the master prompt, by the engine document and by comments in the code, and renumbering would silently break every one of them.
 
 ---
@@ -86,39 +104,84 @@ In calm mode the dimming is a crossfade and the atmosphere is flatter, but the t
 ## 3. Color Tokens
 
 ### 3.1 Daylight, light
+
+**These three neutrals are a ladder, not three greys.** Ground, then the rank below
+content, then content. The order and the size of each step are held by
+`SurfaceLadderTest` rather than by this table, because a table says what the values are
+and only the relationships decide whether a person can see a card.
+
 | token | value | use |
 |---|---|---|
-| canvas | `#F1F1F6` | page background |
-| card | `#FFFFFF` | cards and sheets |
-| raise | `#FAFAFC` | the 3 percent lightness step used *instead of* a border |
+| canvas | `#E6E6EC` | page background, and a focused field's well |
+| card | `#FCFBF9` | cards and sheets |
+| raise | `#F4F3F0` | the 3 percent lightness step used *instead of* a border. The floating tab bar, an unselected chip, a text field's well |
 | cardWash | area accent, 5 to 7 percent | pooled toward a corner chosen by hashing the area id |
-| cardWashActive | area accent, 12 to 14 percent | in-session state |
+| cardWashActive | area accent, 12 to 13 percent | in-session state |
 | inkPrimary | `#17171C` | |
-| inkSecondary | `#17171C` at 60 percent | |
-| inkTertiary | `#17171C` at 38 percent | |
+| inkSecondary | `#17171C` at 64 percent | |
+| inkTertiary | `#17171C` at 38 percent | never on text. See below |
 | hairline | `#17171C` at 8 percent | row separators only, never on a card that also has a shadow |
-| actionBlue | `#2D7FF9` | FAB, active tab, primary buttons |
-| positiveGreen | `#22C55E` | completion only |
+| actionBlue | `#004BAE` | FAB, active tab, primary buttons, every text button's label, and the Swap swipe face and its label |
+| positiveGreen | `#22C55E` | completion only, and **a fill only**: the 13 percent positive button, the Trail's 8 percent mint, the 18 percent Complete swipe face |
+| positiveInk | `#03652B` | every green foreground: the completion check, the positive button's label, the Complete swipe face's icon and label |
 | warnAmber | `#F59E0B` | the Pulse ready dot, nothing else |
 | parchment | `#EFEEE2` | weekly banner |
-| deleteMuted | `#8A5A5A` | the delete swipe action only. Never a saturated red |
+| deleteMuted | `#724444` | the delete swipe action only. Never a saturated red |
+
+**Four of these values moved in phase 3c and this table is where they are recorded.**
+`canvas` went from `#F1F1F6` and `card` from `#FFFFFF`, which resolved the contradiction
+sections 1 and 14 had with this one: both say backgrounds are never pure white, this
+table said `#FFFFFF`, and the build had followed the one rather than the two. Card
+against canvas went from 1.126:1 to 1.202:1 and the ladder's span from 4.73 to 7.19 L*.
+`raise` went from `#FAFAFC`, which sat 1.7 L* under the card and would have been
+invisible even if anything had drawn it. `inkSecondary` went from 60 percent because it
+had to: on the new canvas 60 percent measures 4.33:1 against section 13's floor of 4.5,
+and 64 percent measures 4.88. Changing a background is not a background change; it is a
+change to every ratio measured against it.
+
+**Three of the function colors moved in the phase 13 contrast audit and one is new, and this table is where that is recorded.** The audit measures every pair the app can put on a screen rather than the pairs somebody listed, and it found three tokens being asked for a job their value could not do. Each replacement is a value chosen against a measurement, on the old token's own OKLab hue.
+
+- **`actionBlue` `#2D7FF9` to `#004BAE`.** One color was carrying two jobs it could not both hold: as a fill it has to be dark enough for a label to sit on it, and white measured **3.81:1** on the old value; as text it has to be dark enough to read on the ladder, and it measured **3.06:1** on the canvas at five call sites from the tertiary button to the undo snackbar. Both wants point the same way, so one value serves both. The ladder now reads 6.45, 7.23 and 7.76 and the selected tab's label on its own 10 percent pill reads 6.14. The value is pinned by the hardest of its grounds, which is 10.3.1's Swap face: that face is this same token at 12 percent deepening to 16.8, so the token has to be legible on its own tint, and that is what takes it past `#0058C8` to `#004BAE`.
+- **`deleteMuted` `#8A5A5A` to `#724444`, and to `#B98685` in dark, 3.2.** One value in both worlds is only possible for a token nothing reads, and this one carries the Delete action's glyph and label on a face tinted from itself. It measured 3.66:1 on its own face in light and 2.94:1 on the dark card.
+- **`positiveInk` is new, and it is the reason `positiveGreen` did not move.** The completion color is a fill in three places and every one of them has to stay light enough for what sits on it: section 11 calls the Trail's completed ground a mint, which a forest green at 8 percent is not. As a foreground the same value measured 1.83:1 on the canvas and 1.68:1 as the positive button's own label. The two wants are opposite, so this table states two tokens rather than one compromise. **`positiveGreen` now carries no foreground anywhere in this app**, which a source gate holds rather than a floor, the same way `inkTertiary` is held below.
+- **A filled action surface inverts its label to `card`**, 10.5 and 10.7, which is the inversion 10.8 already used for the destructive button and the selected chip. In the dark world there is no blue that is both light enough to read on `#0E0E13` and dark enough to hold white, so one rule replaces the word white in both worlds.
+
+**`inkTertiary` carries no text anywhere in this app.** It measures 2.40:1 on the card
+and 2.37:1 on the canvas, which is section 15.1's "dark mode with low contrast body
+text" in its light mode form. **Four sections record the correction and each one is
+where it happened**: 10.3 on the string this document calls the most important one on
+the screen, 10.19 on a field's placeholder, 10.9 on the mood name in the color picker,
+and 10.11 on a settings row's trailing value, caption and chevron. It survives as an
+opacity for shapes that are not read, and the test of that is section 13's own rule
+rather than the word shape: the idle mark in Momentum's rhythm row and in the Rhythm
+widget is drawn **smaller** as well as fainter, so the two states differ in form and
+opacity is never the only signal. **A floor cannot hold this sentence and a source scan
+does**, `FaintInkTest`, because a contrast test measures the pairs it is handed and has
+no way to notice a screen that has quietly started drawing a token.
 
 ### 3.2 Daylight, dark
 | token | value |
 |---|---|
 | canvas | `#0E0E13` |
-| card | `#191921` (lifted, no shadow) |
-| raise | `#15151C` |
+| card | `#1D1D25` (lifted, no shadow) |
+| raise | `#18181F` |
 | cardWash | area accent, 7 to 9 percent |
-| cardWashActive | area accent, 15 to 17 percent |
+| cardWashActive | area accent, 15 to 16 percent |
 | inkPrimary | `#F0EEF1` |
 | inkSecondary | `#F0EEF1` at 62 percent |
 | inkTertiary | `#F0EEF1` at 38 percent |
 | hairline | white at 9 percent |
 | actionBlue | `#4DA3FF` |
+| positiveGreen | `#22C55E`, a fill only, as in 3.1 |
+| positiveInk | `#22C55E` |
+| deleteMuted | `#B98685` |
 | parchment | `#211F16` |
 
-Area label text in dark mode uses a lightened accent (blend 30 percent white) to clear 4.5:1 against `#191921`. Dots and washes use the true accent.
+Area label text in dark mode uses a lightened accent (blend 30 percent white) to clear 4.5:1 against the card it actually sits on, which is the card carrying that area's own wash rather than the bare token. Dots and washes use the true accent.
+
+**`actionBlue` is deliberately held at `#4DA3FF` while the light world's moved, and `deleteMuted` and `positiveInk` are stated here because they differ from 3.1.** An action color has to be legible on the ladder of its own world and the two ladders run in opposite directions, so light needs a dark blue and dark needs a light one. What the dark world cannot then do is put white on that blue: white measured **2.63:1** on the primary button's label and on the FAB's glyph, and no value is both light enough to read on `#0E0E13` and dark enough to hold white. The label inverts to `card` instead, 10.7, which reads 6.38:1 here. `positiveInk` holds `positiveGreen`'s own value in this world, because a mint light enough to tint a near black surface is already light enough to be read on one, at 8.45:1 on the canvas; the pair exists so that the light world's difference between a fill and a foreground is visible in the token set rather than hidden in a branch at a call site.
+
+**`card` and `raise` moved in phase 3c on dark's own measurement rather than by analogy**, from `#191921` and `#15151C`. Dark has the same shape of problem as light and one aggravating factor: 6.1 gives it no shadows, so the lightness ladder is not one of its separation devices, it is the only one. **`canvas` is deliberately held.** Dark's depth had to be bought upward, which is the reverse of the statistically common answer of taking a dark theme toward pure black for OLED: section 14 bans pure black outright, and the Contemplative `deepBlack` is only 0.97 L* below this canvas, so a darker Daylight ground would collapse the two worlds' floors and take the room dimming out of entering Focus. Section 15.
 
 ### 3.3 Contemplative
 | token | value |
@@ -127,8 +190,17 @@ Area label text in dark mode uses a lightened accent (blend 30 percent white) to
 | surfaceRaised | `#14141C` |
 | textBright | `#F3F1EC` |
 | textDim | `#F3F1EC` at 55 percent |
-| textFaint | `#F3F1EC` at 32 percent |
+| textFaint | `#F3F1EC` at 32 percent, never on text. The Contemplative twin of 3.1's `inkTertiary` |
 | specks | 8 to 14 dots, 1 to 2dp, white at 3 to 6 percent, fixed seed per surface so they never re-randomize |
+
+**`textFaint` carries no text anywhere in this app either, and section 11 is where that
+was corrected.** It measures 2.64:1 on `deepBlack` against section 13's floor of 4.5,
+and 13's own sentence puts the line at 55 percent: Contemplative text stays at or above
+55 percent opacity where it is meant to be read. Section 11 named it for the word
+`remaining` on the Focus surface, and 11.1 for the Report's controls, its day initials,
+its decline and its footer; all five now read `textDim`, at 5.70 on the same ground. It
+is held to shapes by the same source scan that holds `inkTertiary`, `FaintInkTest`, and
+for the same reason.
 
 **Focus, indigo. Built, phase 4.** Radial gradient `#262A5E` center through `#191C42` to `#10122B` at the edges over deepBlack. Ring track white at 16 percent. Progress stroke `#8BA4FF`. Tip a filled circle in `#B9C8FF` with a soft blur.
 
@@ -138,7 +210,7 @@ The gradient's center sits at 0.5 across and **0.42 down**, above the middle, be
 
 **Report, gold editorial.** Accent gold `#D4B16A`. Body text `#EDE9DF`. Rules are horizontal gradients fading to transparent at both ends, never solid lines. A radial gold glow at 6 to 8 percent sits behind the headline block, and a second, fainter one behind the closing line, so the page has two centers of light.
 
-**Onboarding.** Warm black with a per beat glow: beat 1 actionBlue, beat 2 twilight violet, beat 4 cycles amber, blue, gold.
+**Onboarding.** Warm black with a per beat glow: beat 1 azure `#2D7FF9`, beat 2 twilight violet, beat 4 cycles amber, blue, gold. Beat 1's glow was written as "actionBlue" and is now written as its value, because the phase 13 audit took `actionBlue` to `#004BAE` and a glow at 9 percent behind a beat is atmosphere rather than the action color: it is the same hue, and it did not follow the token down because a Contemplative surface with a dimmer center of light is not calmer, it is a darker rectangle.
 
 Every accent and gradient in this table passes through the calm mode transform in 16.2. The gradients keep their geometry and lose their intensity, because a Contemplative surface with no center of light is not calmer, it is a black rectangle.
 
@@ -155,7 +227,9 @@ All 48 available to everyone. No locked subset.
 - **Stone** `#A68B6B` `#78716C` `#57534E` `#7F8C8D` `#95A5A6` `#9CA3AF`
 - **Slate** `#0D9488` `#64748B` `#475569` `#6B7280` `#334155` `#1E293B`
 
-Color appears only as: a 7dp dot, a 5 to 14 percent wash, a 60 percent tile in Momentum, and the area label text. **Never as a stripe, bar, edge, border or filled block.**
+Color appears only as: a 7dp dot, a wash between 3 and 16 percent, a 60 percent tile in Momentum, and the area label text. **Never as a stripe, bar, edge, border or filled block.** The wash range is the span of every depth 3.1, 3.2 and 12.1 permit, from a widget's 3 percent tint to a dark in-session card's 16; it read "5 to 14 percent" until the phase 13 audit, which covered neither end.
+
+**The four forms are a closed list and phase 13 is where that was tested.** 10.3.1 asked the Swap swipe action to draw its 22dp glyph and its 10.5sp label in the area's accent, which is a fifth form, and it failed design-v3.md 13's floor on 43 of the 48 colors in light and 28 in dark, worst at 1.03:1. The remedy this section names, darkening the label variant, does not reach that ground: on a card the variant sits on a 13 percent wash of its own hue, so a small blend keeps it recognizable, while a swipe face is a fixed blue and 44 of the 48 would have to move, a median of 34 percent toward black and five of them by more than half. A color blended past half is no longer the color it identifies. The face gave up the accent instead, 10.3.1, and identity stays where this section puts it: the card being swiped carries the dot and the area's name eight dp away.
 
 Area label text uses the accent at full strength, 13sp semibold. **Verify 4.5:1 against the card as drawn, which is the card carrying that area's own wash at the deepest opacity the design permits, 13 percent in light and 16 in dark. Not against the bare `card` token.** If a color fails in light mode, darken the label variant only by blending 25 percent black; in dark mode lighten it by blending 30 percent white. Never adjust the dot or wash to compensate.
 
@@ -163,9 +237,9 @@ The distinction in that first sentence is not pedantry. Verifying against the ba
 
 **Default assignment.** New areas walk the mood groups in order **starting at Berry**, taking the first color of each that is not one of this document's own function colors, so the first four are distinct from each other and from every colored control on the screen without the user choosing. The first eight are `#D946EF`, `#EF4444`, `#16A34A`, `#CA8A04`, `#A68B6B`, `#0D9488`, `#18BFFF`, `#6366F1`, and the walk then wraps into each mood's next color.
 
-**Four colors are never assigned automatically, and all four remain choosable.** `#2D7FF9` and `#4DA3FF` are `actionBlue` in light and dark, `#22C55E` is `positiveGreen` and `#F59E0B` is `warnAmber`. Each is byte identical to a token in 3.1 or 3.2, so an area carrying one puts identity and function at the same pixel value, and an identity indistinguishable from a status is not an identity. This is **not** a locked subset: the sentence at the top of this section still holds, the picker still offers all 48, and what changed is only what the app hands out on its own. A color someone chooses is their decision; a color the app assigns is the app's, and the app should not make this one.
+**Four colors are never assigned automatically, and all four remain choosable.** `#4DA3FF` is `actionBlue` in dark, `#22C55E` is `positiveGreen` and `#F59E0B` is `warnAmber`, byte for byte, so an area carrying one puts identity and function at the same pixel value, and an identity indistinguishable from a status is not an identity. **`#2D7FF9` is the fourth, and phase 13 changed why rather than whether:** it was `actionBlue` in light until that audit took the light token to `#004BAE`, which is the same OKLab hue at a lower lightness. An area drawn in it sits beside a FAB and a primary button that are that color brightened, which is the collision this list exists to prevent, so it stays out of the walk on its hue rather than on its bytes. Byte identity was never the point; it was the evidence. This is **not** a locked subset: the sentence at the top of this section still holds, the picker still offers all 48, and what changed is only what the app hands out on its own. A color someone chooses is their decision; a color the app assigns is the app's, and the app should not make this one.
 
-**Recorded under section 15, because the walk's start was an open choice made badly.** The shipped walk began at Ocean and gave the first area `#2D7FF9`, so on the first run screen, where the only two colored elements are one area and one FAB, they were the same color. It also gave area five `#22C55E`, the completion color, which the fix above catches and a change of starting point alone could not: the walk reaches both inside the first eight areas from every start. On the choice of Berry: this section asks the walk for distinctness, and the shipped start delivered `#2D7FF9` at hue 216 next to `#6366F1` at 239, a 23 degree step and two blues in a row. Berry's first four are 292, 0, 142 and 41, whose narrowest step is 68 degrees, the widest that any of the eight possible starts produces. The obvious move, one step along the list to Twilight, is the worst available on both counts: `#6366F1` is 23 degrees from `actionBlue`, and it walks toward the family 15.1 names twice. Earth and Stone sit further from `actionBlue` than Berry but put two muted yellows 8 degrees apart in the first four, which trades this defect for the one this sentence is about.
+**Recorded under section 15, because the walk's start was an open choice made badly.** The shipped walk began at Ocean and gave the first area `#2D7FF9`, so on the first run screen, where the only two colored elements are one area and one FAB, they were the same color. It also gave area five `#22C55E`, the completion color, which the fix above catches and a change of starting point alone could not: the walk reaches both inside the first eight areas from every start. On the choice of Berry: this section asks the walk for distinctness, and the shipped start delivered `#2D7FF9` at hue 216 next to `#6366F1` at 239, a 23 degree step and two blues in a row. Berry's first four are 292, 0, 142 and 41, whose narrowest step is 68 degrees, the widest that any of the eight possible starts produces. The obvious move, one step along the list to Twilight, is the worst available on both counts: `#6366F1` is 25 degrees from `actionBlue`, which sits at hue 214 since phase 13, and it walks toward the family 15.1 names twice. Earth and Stone sit further from `actionBlue` than Berry but put two muted yellows 8 degrees apart in the first four, which trades this defect for the one this sentence is about.
 
 **Calm mode leaves identity alone.** The 7dp dot and the area label text keep their accent at full strength, because they are how an area is recognized and they are the two places a contrast ratio was verified. Washes, tiles and every atmospheric use of the accent desaturate. The transform, and the list of what is excluded by name, are in 16.2.
 
@@ -296,8 +370,14 @@ Never a hairline and a shadow on the same element. Never a border on a card that
 - Light mode card: `y 1dp blur 3dp black 4%` plus `y 6dp blur 20dp black 5%`. One device expressed as a paired shadow, not two devices
 - Tab bar: `y 2dp blur 10dp black 7%` plus `y 10dp blur 30dp black 8%`
 - FAB: `y 5dp blur 16dp actionBlue 40%`
-- Sheets: `y -8dp blur 40dp black 28%`
+- Sheets: `y -8dp blur 40dp black 28%`, **which is not drawn.** See below
 - Dark and Contemplative worlds: elevation is **lightness only**. No shadows at all
+
+**The sheet value has never had a call site, and phase 12b settled that rather than fixing it.** A sheet's shadow points up out of its own top edge, so only something outside the sheet can draw it, and the platform `ModalBottomSheet` in 17.3 exposes nothing outside it that an app can reach: its parameter list carries a shape, a container color, a content color, a tonal elevation and a scrim color and no shadow of any kind, and the caller's own modifier attaches to a node that stays at the top of the window while the sheet's content is placed at an offset inside it. 17.4 says a polish pass raises an unreachable idea as a decision rather than reimplementing a working component, and this is the second entry of that kind against this component; 16.8 carries the first.
+
+**It costs nothing, and the reason is this section's own rule.** A sheet sits on a 42 percent scrim, which takes the ground under it from the canvas to roughly L* 56 while the sheet is at L* 98.6. That is a 42 point step, and this section says to stop at the first device that reads. It reads at step 2. The shadow would have been the third device on an element that already had one, which is the thing the first line of this section forbids.
+
+**Scroll edges.** Content that scrolls under the status bar or behind the floating tab bar in 10.4 fades out rather than ending at a hard edge: fully gone at the screen edge, fully present 12dp past the status bar and 16dp above the tab bar's top edge. The fade removes the content's own opacity rather than painting the ground over it, so it is correct over the Contemplative gradients as well as over a flat canvas, and it takes no color. **It is not a second separation device on the tab bar**, and the reason is structural rather than an argument: it belongs to the scrolling surface, not to the bar, and the bar still carries exactly one device, elevation in the light world and a lightness step in the dark one. **The obvious answer here is a translucent blur and it is refused**, by 15.1's "glassmorphism used as decoration rather than to solve a layering problem" and by 15.3, which writes out this exact case. A fade is also the truer of the two: behind the tab bar there is a page, and a page is what a reader should see less and less of. Built in phase 12b.
 
 **Spacing.** 4dp base grid. Screen padding 20dp. Card padding 18dp horizontal, 17dp vertical. Vertical rhythm between cards 11dp. Section spacing 28dp. Sheet content top padding after the handle 18dp.
 
@@ -323,9 +403,58 @@ Where no symbol carries the right meaning, one is drawn: the same style, the sam
 
 ### 7.2 The mapping table
 
-**Pending, issue #23**, the standing platform first rule rather than phase 3b, whose table does not carry it. Every icon the app ships, in one table: the name this app calls it, the Material Symbols name it comes from, and where it is used. Anything drawn by hand is marked custom and carries one line saying which symbol was considered and why it did not fit.
+**Built, phase 13.** Every icon the app ships, read out of `ClarityIcons.kt` and `res/drawable/` rather than from memory. The name this app calls it, the resource, the Material Symbols name it comes from, and where it is used.
 
-The list in section 7 above covers the icons this design system names. The table must cover the icons the app actually ships, which is the larger set, and it is written by reading `ClarityIcons.kt` rather than from memory.
+**Forty one glyphs, and forty of them are Material Symbols Rounded at weight 500, Apache License 2.0.** Each drawable carries that provenance in a comment at the top of the file, so the claim is checkable one file at a time rather than only here. The one exception is the mark, which is not an icon.
+
+| this app calls it | resource | Material Symbols | used in |
+|---|---|---|---|
+| `areas` / `areasFilled` | `ic_home` / `ic_home_filled` | `home` | the tab bar, the Trail's area events |
+| `momentum` / `momentumFilled` | `ic_arrow_outward` / `ic_arrow_outward_filled` | `arrow_outward` | the tab bar |
+| `report` / `reportFilled` | `ic_article` / `ic_article_filled` | `article` | the tab bar, the Trail's report events |
+| `trail` / `trailFilled` | `ic_history` / `ic_history_filled` | `history` | the tab bar, the Report's history page |
+| `add` | `ic_add` | `add` | the FAB, add sheets, the Trail's add events |
+| `focus` | `ic_play_arrow` | `play_arrow` | the focus chip, Settings |
+| `pulse` | `ic_graphic_eq` | `graphic_eq` | the Pulse chip, Settings, the Trail |
+| `settings` | `ic_settings` | `settings` | the Areas header, the Trail |
+| `archive` | `ic_inventory_2` | `inventory_2` | area archive, the Trail |
+| `unarchive` | `ic_unarchive` | `unarchive` | the Trail's restore events |
+| `completed` | `ic_check_circle` | `check_circle` | completion rows, the Trail |
+| `promoted` | `ic_arrow_circle_up` | `arrow_circle_up` | the Trail's promotion events |
+| `focusEvent` | `ic_timer` | `timer` | the Trail's session events, Settings |
+| `regenerate` | `ic_refresh` | `refresh` | the Report, Settings, the Trail |
+| `copy` | `ic_content_copy` | `content_copy` | the Report |
+| `export` | `ic_file_download` | `file_download` | Settings |
+| `importData` | `ic_file_upload` | `file_upload` | Settings |
+| `erase` and `deleteSwipe` | `ic_delete_outline` | see the note below | Settings, the swipe action |
+| `privacy` | `ic_shield` | `shield` | Settings |
+| `licenses` | `ic_menu_book` | `menu_book` | Settings |
+| `feedback` | `ic_mail` | `mail` | About |
+| `support` | `ic_favorite` | `favorite` | About |
+| `reorder` | `ic_drag_handle` | `drag_handle` | the Trail |
+| `swap` | `ic_swap_vert` | `swap_vert` | the swap action, the Trail |
+| `check` | `ic_check` | `check` | everywhere a choice is confirmed, and the widgets |
+| `close` | `ic_close` | `close` | onboarding |
+| `chevron` | `ic_chevron_right` | `chevron_right` | rows that push a screen |
+| `back` | `ic_arrow_back` | `arrow_back` | every pushed screen |
+| `expand` | `ic_expand_more` | `expand_more` | the queue disclosure, the Trail |
+| `edit` | `ic_edit` | `edit` | the Trail's edit events |
+| `editArea` | `ic_tune` | `tune` | area edit, Settings |
+| `moveToFront` | `ic_vertical_align_top` | `vertical_align_top` | the queue overflow |
+| `reminders` | `ic_notifications` | `notifications` | Settings |
+| `appearance` | `ic_palette` | `palette` | the Trail's color events |
+| `time` | `ic_schedule` | `schedule` | Settings, the Trail |
+| `openExternal` | `ic_open_in_new` | `open_in_new` | About's Elsewhere rows |
+| `overflow` | `ic_more_vert` | `more_vert` | **nothing. See below** |
+| `mark` | `ic_mark` | **custom, and not an icon** | About, Settings |
+
+**Three things this table found, which is what a mapping table is for.**
+
+**`ic_delete_outline` is the one resource whose name is not its symbol's name.** Material Symbols Rounded has no `delete_outline`; its glyph for this meaning is `delete`, and `delete_outline` is the name the older Material Icons set used. The file records itself as Material Symbols Rounded weight 500 like every other, so the resource almost certainly carries the right glyph under a legacy name. **Rename it when something else is being done to that file**, not on its own: it is referenced from two `ClarityIcons` entries and nothing else, and a rename for tidiness is a commit whose only effect is churn.
+
+**`overflow` is declared and used by nothing.** It is `more_vert`, which is the glyph a kebab menu hangs from, and this app does not have one: 10.7 gives the queue row a long press and an expanding disclosure instead. Left in place rather than deleted, because it is one line and the row above records why it is empty, which is more useful than its absence.
+
+**`arrow_outward` is the weakest glyph in the set, and 12b's tab rule is what surfaced it.** An unlabeled tab has to be decodable on its own and an arrow pointing out of a box is not a word anyone reads as Momentum. It is recorded here rather than fixed, because a replacement is a new drawable rather than a token and nothing among the forty already committed fits the meaning. The two candidates worth a look are `trending_up`, which is the obvious answer and reads as a chart going up, which is the growth framing section 1 rejects, and `landscape`, which does not. **The mark is the only asset in this app drawn by hand**, and section 4.1 covers it. No Material Symbol was considered for it, because a logo is not an icon.
 
 ---
 
@@ -470,13 +599,15 @@ Three actions across two directions. **Delete is never reachable by a full swipe
 
 | gesture | behavior |
 |---|---|
-| swipe right past **25 percent** | reveals **Complete**, positiveGreen at 18 percent background, check icon and label in `#15803D`, 66dp action width |
+| swipe right past **25 percent** | reveals **Complete**, positiveGreen at 18 percent background, check icon and label in `positiveInk`, 66dp action width |
 | swipe right past **55 percent** | commits Complete. One haptic tick at the threshold |
-| swipe left past **25 percent** | reveals **Swap** then **Delete**, side by side, 66dp each. Swap on actionBlue at 12 percent with the area color; Delete on deleteMuted at 13 percent |
+| swipe left past **25 percent** | reveals **Swap** then **Delete**, side by side, 66dp each. Swap on actionBlue at 12 percent, its glyph and label in actionBlue; Delete on deleteMuted at 13 percent, its glyph and label in deleteMuted |
 | swipe left past **55 percent** | commits **Swap** only |
 | tap Delete on the revealed row | commits delete, with the 5 second undo snackbar |
 
 **Rationale.** Destructive actions must not be committed by momentum. A full left swipe commits the safe action, and delete requires deliberate contact with a specific target.
+
+**Every face carries its own token as ink, and the phase 13 audit is why two of those lines changed.** A face is its action's color at 12 to 18 percent over the page, deepening by 40 percent past the commit threshold, and the glyph and the 10.5sp label on it are that same color at full strength, so **a swipe face is the one ground in the app where a token has to be legible on its own tint**. Measured, it was the weakest reading in the app: Swap at 1.03:1, Complete at 3.40 and Delete at 2.93 in dark, against section 13's floor of 4.5. Complete's ink was written here as the literal `#15803D`, and a hex in a component section is a value nothing re-measures when a ground moves, which is the same defect 10.3 records against the card's `#FFFFFF`; it is `positiveInk` in 3.1 now and reads 4.91. Delete's token became one value per world, 3.1 and 3.2, and reads 4.93 and 4.88. **Swap gave up the area color**, which failed on 43 of the 48 in light: 3.4 permits an area accent in four forms and an action label is not one of them, and the reasoning is recorded there. Its glyph and label take `actionBlue`, which reads 4.95 and 5.74 and is the color its own face is tinted from.
 
 **State gating.**
 - An **idle area** offers neither Complete nor Swap. A left swipe reveals Delete only, and that deletes the **area**, with a typed confirmation rather than an undo
@@ -502,10 +633,18 @@ Three actions across two directions. **Delete is never reachable by a full swipe
 - **Scroll wins over swipe.** A gesture whose initial direction is predominantly vertical is a scroll and never becomes a swipe, even if it curves
 
 ### 10.4 Floating tab bar
-A 61dp tall pill inset 17dp from the edges and bottom, card colored, elevation only. Four items. The active item sits in an inner pill with actionBlue at 10 percent, filled icon and label in actionBlue. Inactive at inkSecondary. The inner pill slides with springStandard.
+A 61dp tall pill inset 17dp from the edges and bottom, at the `raise` rank of 3.1's ladder, elevation only. Four items, each a 48dp target. The active item sits in an inner pill with actionBlue at 10 percent, filled icon and label in actionBlue. Inactive at inkSecondary. The inner pill slides with springStandard.
+
+**An inactive tab is its glyph alone, and one label of four is the rule rather than an accident.** v3 was silent here, so phase 2 took the platform default, which is the move 15.3 names by itself: "adopting a Material 3 Expressive default because it is the default". Section 15 requires the choice to be made and recorded, and it is made the same way it was found: by measurement.
+
+**This bar is the only element in the app with a width it cannot grow out of.** Icons do not scale with the system font scale and labels do, and a 360dp phone leaves this bar 314dp between its 17dp insets and its own padding. At 200 percent text, which section 13 requires without clipping, one label and four icons come to roughly 290dp of that and four labels come to roughly 570dp, which is nearly twice the room there is. Labels on every tab therefore either clip a destination name, which is exactly the failure the rule would exist to prevent, or make the one piece of chrome present on every screen grow past 90dp and take four screens' content padding with it. Neither is a trade this audience benefits from.
+
+**10.15's "no hidden navigation" is satisfied and is a different claim.** All four destinations are on screen at all times, in a fixed order, at a full touch target, with nothing behind a drawer or a gesture. Every one of them announces its name to TalkBack whether or not it is drawn, so the label is never absent for the reader least able to guess at a glyph.
+
+**The rule that makes an unlabeled state legitimate is a constraint on section 7, not on this section: a destination whose glyph cannot be recognized on its own does not get an unlabeled state.** Where that fails, the glyph is what changes. It fails today for Momentum's `arrow_outward`, which is an arrow and not a subject, and that is recorded against 7.2's mapping table rather than patched here, because a replacement is a new drawable and not a token.
 
 ### 10.5 FAB
-48dp circle in actionBlue, white add icon, above the tab bar at the trailing edge.
+48dp circle in actionBlue with the add glyph in `card`, above the tab bar at the trailing edge. The glyph was white and measured 2.63:1 on the dark `actionBlue`, section 13; a filled action surface inverts its label to `card` in both worlds, 10.7, which is the inversion 10.8 already used for the destructive button.
 
 ### 10.6 Sheets
 All secondary flows are bottom sheets over a 42 percent scrim. 28dp top radius, handle, springGentle entrance. **No cards inside sheets.** Structure comes from sideheads.
@@ -513,21 +652,25 @@ All secondary flows are bottom sheets over a 42 percent scrim. 28dp top radius, 
 **One exception, and only one.** The color picker's live preview in 10.9 renders an actual miniature area card, because the entire purpose of that element is to show the user what their card will look like. It is a rendering of a component, not a container wrapping content, and the distinction is what the rule is protecting against. No other sheet may contain a card, and the exception may not be extended by analogy.
 
 ### 10.7 Buttons
-- **Primary:** actionBlue fill, white bodyStrong, 50dp, 12dp radius, no border
-- **Positive:** positiveGreen at 13 percent, green label, no border
+- **Primary:** actionBlue fill, `card` bodyStrong, 50dp, 12dp radius, no border
+- **Positive:** positiveGreen at 13 percent, `positiveInk` label, no border
 - **Secondary:** ink at 5 percent fill, inkPrimary label, no border
 - **Tertiary:** text only in actionBlue
 - **Destructive:** inert grey until its condition is met, then ink filled. Never red
 - **Contemplative primary:** the surface accent at 14 percent with a bright label, or a translucent white pill at 9 percent
+
+**Two of those label colors were white and green and the phase 13 audit moved both.** White on the primary's fill measured 3.81:1 in light and 2.63 in dark, and no blue is both light enough to be read on the dark ladder and dark enough to hold white, so the label inverts to `card` in both worlds rather than the light world keeping a word the dark world cannot use. A `positiveGreen` label on its own 13 percent `positiveGreen` fill measured 1.68:1: the fill has to stay a light mint for what sits on it and a label on it has to be dark, which is the split 3.1 records as two tokens.
 
 ### 10.8 Chips and filters
 Pill chips in a horizontally scrolling row. `All` is a solid ink pill with inverted text when selected. Area chips carry their color dot. Unselected chips are card colored with soft elevation, no border.
 
 ### 10.9 The area color picker, two stages
 
-**Stage one, the mood strip.** A horizontally scrolling row of eight mood pills. Each pill is a 46dp wide, 26dp tall band at 8dp radius, divided into six equal vertical slivers showing that mood's six colors. **Discrete slivers, never a gradient.** The mood name sits beneath at 10sp in inkTertiary, becoming inkPrimary at weight 700 when selected. The selected pill gains a 2dp ring in inkPrimary at a 1.5dp offset.
+**Stage one, the mood strip.** A horizontally scrolling row of eight mood pills. Each pill is a 46dp wide, 26dp tall band at 8dp radius, divided into six equal vertical slivers showing that mood's six colors. **Discrete slivers, never a gradient.** The mood name sits beneath at 10sp in inkSecondary, becoming inkPrimary at weight 700 when selected. The selected pill gains a 2dp ring in inkPrimary at a 1.5dp offset.
 
-**Stage two, the swatches.** The six colors of the selected mood in a three by two grid, each a square at 16dp radius with 12dp gaps. The selected swatch scales to 1.06, gains a 2.5dp ring in the swatch color at 50 percent offset by 3dp, and shows a white check at 20dp.
+**The mood name said inkTertiary until the phase 13 contrast audit, and this is the third time this document has contradicted 3.1 on the same point.** 10.3 was the first and 10.19 the second, and it resolves the way both of those did: 3.1 says inkTertiary carries no text anywhere in this app, 13 states one floor of 4.5:1, and the name measured **2.40:1** on the sheet it is drawn on. **13 wins, because a floor is a floor.** Nothing is lost, because the weight step from 400 to 700 in the sentence above is what says which mood is selected, and it says it whether or not the other seven names are also below the line at which a person can read them. The same audit corrected the live preview card in this section's stage two, where the idle line now takes 10.3's own answer, weight 500 in inkSecondary, rather than a second one: the preview is an actual miniature area card and had been the one place where color alone told the idle state from a filled one.
+
+**Stage two, the swatches.** The six colors of the selected mood in a three by two grid, each a square at 16dp radius with 12dp gaps. The selected swatch scales to 1.06, gains a 2.5dp ring in the swatch color at 50 percent offset by 3dp, and shows a check at 20dp in whichever of white or ink reads on that swatch. **A white check fails on 17 of the 48**, worst at 1.67:1 against section 13's floor of 3.0 for a graphic: a swatch is the accent at full strength, the only place in the app where an area color is a large solid field, so half the palette is too light to hold white and the other half too dark to hold ink. The worst of the 48 then measures 4.23:1. A drop shadow or an outline on the check is refused by 6.1, which gives an element one separation device, and choosing the ink per color is the mechanism 3.4 already uses for the area label. Nobody sees the two inks at once: this grid has one selected swatch.
 
 **Above both, the live preview.** An actual miniature area card in the currently selected color, updating instantly on every tap, including the wash. This is the premium moment of the app and it is the one place worth spending animation budget on a crossfade.
 
@@ -552,7 +695,9 @@ Below the row, one caption line: `Focus, Pulse and Report are always dark by des
 **The angle is read as it is written on paper**, counterclockwise from the positive x axis, so 103 degrees leans thirteen degrees off vertical. Screen coordinates grow downward and the implementation negates the y component at the point of drawing rather than in the caller, because an angle in a design document is not a quantity in a canvas.
 
 ### 10.11 Settings rows
-**No card containers.** Rows sit directly on the canvas separated by hairlines, grouped under sideheads. Each row carries a 26dp rounded-square icon badge tinted at 11 to 14 percent of a per-group color, a title at 15sp semibold, a trailing value at caption inkTertiary, and a chevron where it navigates.
+**No card containers.** Rows sit directly on the canvas separated by hairlines, grouped under sideheads. Each row carries a 26dp rounded-square icon badge tinted at 11 to 14 percent of a per-group color, a title at 15sp semibold, a trailing value at caption inkSecondary, an optional caption under the title in the same ink, and a chevron where it navigates, also in inkSecondary.
+
+**All three said inkTertiary until the phase 13 contrast audit, and this is the fourth time after 10.3, 10.19 and 10.9.** These rows sit directly on the canvas, where inkTertiary measures **2.34:1** against 13's floor of 4.5 for text and 3.0 for a graphic that carries meaning, and the trailing value is the current state of the setting, which is the one thing on the row somebody came to read. A chevron that says a row navigates is not an ornament either. What keeps all three a rank under the title is 5.3's caption role against 15sp semibold and the trailing position, which is 6.1's first separation device rather than a second one.
 
 **Built, phase 11**, as `ui/settings/SettingsComponents.kt`. The tint is 12.5 percent, the midpoint of the range, so that neither end of it is a rounding accident. The hairline is the row's **one** separation device per 6.1, which is also the reason the group is not a card: a card would be a second one, and the last row in a group is passed its divider explicitly rather than deriving it, because a hairline under the last row is a rule under the group instead of between two rows.
 
@@ -680,13 +825,34 @@ The obvious answer is to turn the ring amber or red at five minutes. It is rejec
 
 **The exception, stated rather than left to be discovered.** Every visible part of this section is built: the control, the mark, the tick brightening, the word changing, the point on the Live Update track, the silent notification, and an extension re-arming the moment exactly once. **The haptic is not**, because `ClarityHaptics` does not carry a `transitionWarn` event yet, and the signal the notifications layer publishes for the in app case has nothing collecting it. The switch that turns any of this on is a Settings row and Settings is phase 11, so on the built app the whole feature is off and reachable only by writing the preference by hand.
 
+### 10.19 Text fields
+
+**Appended in phase 12b, because section 10 had no field entry at all.** It covered buttons at 10.7, chips at 10.8, settings rows at 10.11 and sideheads at 10.12 and never a field, so phase 2 filled the silence with four stacked underlined fields carrying a hairline that warmed to actionBlue on focus. That is the most common form treatment in existence, which section 15 makes a reason on its own, and it also reached past the rule that should have decided it: 6.1 puts a hairline **fourth** among separation devices, "only if all three above have genuinely failed", and those four rules were the third and fourth hairlines in the whole app.
+
+**A field is a sidehead and a well.**
+
+- The **label** is a sidehead, 10.12, in inkSecondary, 6dp above the well. A label over a filled shape needs less air than a label over a line, because the shape's own edge already says where the field begins
+- The **well** is the rank below the surface the field sits on, which for every field in this app means `raise` on a `card` sheet. Twelve dp radius, the `button` radius in section 6. Fourteen dp of horizontal padding, which is that radius plus two so the first glyph clears the corner rather than sitting inside its curve, and 12dp vertical. Minimum height 48dp, section 13
+- **No rule, no border, no box.** The well is the one separation device and 6.1 permits exactly one
+- **Focus takes the well one rank further down**, to `canvas`, on the crossfade spec. The caret is the second signal, in actionBlue, which 16.2 excludes from the calm mode transform because it is function rather than atmosphere
+- The **placeholder** is inkSecondary, and only where 10.17 asks for one. It is an example, never an instruction
+- **Text is `body`**, 5.3, in inkPrimary
+
+**Why down and not up.** A field is a place content is put into, so it reads as a recess rather than as a tile floating on the sheet. 3.1 defines `raise` as "the 3 percent lightness step used *instead of* a border", which is the sentence this whole component rests on. A field placed directly on `canvas` would be a step **up** and would read as a raised tile; the fix then is the ground under it and not the value here, and there is no such call site.
+
+**The placeholder's color is a floor rather than a preference.** It was inkTertiary, which measures 2.40:1 on a light card against section 13's 4.5:1. This is the same contradiction 10.3 resolved for `Add your first item` and it is resolved the same way. What says "not filled in" is that the text vanishes on the first keystroke, not that it was too faint to read.
+
+**The obvious focus signal is a two dp accent rule or an accent border.** Both are a second separation device on an element that already carries one, and both are the treatment every form on every phone already has. Depth speaks louder instead of a new device speaking at all. Section 15.
+
 ---
 
 ## 11. Surface Art Direction
 
+**`textFaint` named a text color in five places in this section and it names none now.** 3.3 puts the token at 32 percent and 13 says Contemplative text stays at or above 55 percent opacity where it is meant to be read, so the two statements could not both stand. At 32 percent it measures **2.64:1** on `deepBlack`, 2.55 at the center of the Focus gradient and 2.71 on `surfaceRaised`, against 13's floor of 4.5 for text and 3.0 for a graphic that carries meaning. **13 wins, because a floor is a floor**, which is the same resolution 10.3, 10.9, 10.11 and 10.19 each reached against 3.1's `inkTertiary` in the Daylight world. The word `remaining` below, and the Report's controls, day initials, decline and footer in 11.1, all take `textDim`, which measures 5.70 on the same ground. `textFaint` keeps the job 3.3 gives it, an opacity for shapes that are not read, and the phase 13 audit holds it there with a source scan rather than with a number, because a floor cannot notice a screen that quietly starts drawing a token. **What ranks these elements is 5.3's scale, their weight and the space around them**, which is what ranked them all along; the color was saying it a second time and below the line at which it could be read.
+
 **Areas.** The Daylight home. Five areas fill the screen comfortably. Must pass a three second test: what is active everywhere, at a glance.
 
-**Focus. Built, phase 4.** The indigo night. **Six elements only:** area label with dot, item title in bold sans at 26sp, the 240dp ring with the timer numeral, the word `remaining` in textFaint, the End session pill, and `Add 10 minutes` beneath it as a tertiary control, 10.18. Nothing else, ever.
+**Focus. Built, phase 4.** The indigo night. **Six elements only:** area label with dot, item title in bold sans at 26sp, the 240dp ring with the timer numeral, the word `remaining` in textDim, the End session pill, and `Add 10 minutes` beneath it as a tertiary control, 10.18. Nothing else, ever.
 
 **The ring's own numbers, which v3 left open and phase 4 had to choose.** The diameter is 240dp and was always stated; the stroke is **6dp** and the tip is a **10dp** filled circle with the 15dp falloff in 3.3. The obvious answer is a heavy ring, twelve to sixteen dp, which is what an activity ring looks like and what 15.1 warns about under a ring closing toward a daily target. This one is deliberately thin with the weight spent on the tip instead: a fine line of light with a bright point traveling it reads as time passing rather than as a target filling. Section 15, and logged in `DECISIONS.md`.
 
@@ -710,16 +876,16 @@ The obvious answer is to turn the ring amber or red at five minutes. It is rejec
 
 **Four treatments and no more than four**, because this is read 52 times a year and anything clever becomes exhausting by the tenth reading.
 
-1. **Controls**, faint, top right. History, regenerate, copy.
+1. **Controls** in textDim, top right. History, regenerate, copy. A control's glyph, so 13's 3.0 floor is the least it clears.
 2. **Eyebrow.** `Clarity Report · Week of July 13` in caption at textDim, centered. One line.
 3. **The headline** in displayHero, centered, generous space above and below.
-4. **The week ribbon.** The glance layer. Seven vertical marks, one per day, 5dp wide at 2dp radius, height and opacity scaled to that day's activity against the week's busiest. Gold. Day initials beneath at 8sp textFaint. Below it one caption line reading the three headline numbers.
+4. **The week ribbon.** The glance layer. Seven vertical marks, one per day, 5dp wide at 2dp radius, height and opacity scaled to that day's activity against the week's busiest. Gold. Day initials beneath at 8sp textDim. Below it one caption line reading the three headline numbers.
    **Constraints.** No axes, no gridlines, no values on the marks, no card around it, no gradient. The only non-text element in the entire report. It repeats at 60 percent scale in the past reports list and nowhere else.
 5. **A gold rule**, full width, fading at both ends.
 6. **Sections.** Each a sidehead followed by bodySerif prose, 28dp apart. Sentence-case labels: `Your week, honestly`, `What you said`, `Focus`.
 7. **The pattern break.** The `Pattern` section only. Bleeds to full screen width, sits on gold at 4.5 percent, inset 30dp horizontally so its measure is visibly narrower, set in Newsreader at opsz 28 rather than 17, bounded top and bottom by full-bleed gold rules. **The one deliberate grid break.**
-8. **The closing line.** 34dp of space above. Centered. A caption eyebrow reading `One thing`. The line in closingLine, **roman, never italic**, at textBright. Beneath it two options: an accept pill in gold at 14 percent reading `I'll do that`, and a decline in text only at textFaint reading `Not this week`. Both optional, both costless, neither ever mentioned again.
-9. **Footer.** `Generated on your device`, then the basis line, both in textFaint at caption.
+8. **The closing line.** 34dp of space above. Centered. A caption eyebrow reading `One thing`. The line in closingLine, **roman, never italic**, at textBright. Beneath it two options: an accept pill in gold at 14 percent reading `I'll do that`, and a decline in text only at textDim reading `Not this week`. Both optional, both costless, neither ever mentioned again. **What makes declining costless is that one option is a pill and one is not**, which is a difference in form; it was a difference in opacity as well until phase 13, and an option nobody can read is hidden rather than costless.
+9. **Footer.** `Generated on your device`, then the basis line, both in textDim at caption. A footer is quiet because of where it sits and how small it is, 6.1's first two devices, and it goes on being the quietest thing on the page.
 
 The background gradient extends under the status bar to the very top edge.
 
@@ -753,7 +919,17 @@ The background gradient extends under the status bar to the very top edge.
 
 **An inactive dot is smaller as well as fainter**, which is section 13's rule that color is never the only signal, answered the same way the Pulse rhythm row answers it. Nothing on the screen relates one dot to the next: there is no run length in the row, none in the value behind it, and section 14's instruction that a gap is rendered as a lighter dot with nothing said about it anywhere is kept by there being nothing that could say it.
 
-**Trail.** Daylight. **A screen title reading `Trail` in displayTitle, left aligned on the same measure as the day headers**, with no glyph beside it. Day headers as bodyStrong with an inline count and a hairline to the trailing edge. Events as icon plus text rows, the icon a 23dp circle tinted with the event color. Completed events get a mint wash card at positiveGreen 8 percent.
+**Trail.** Daylight. **A screen title reading `Trail` in displayTitle, left aligned on the same measure as the day headers**, with no glyph beside it. Day headers as bodyStrong with an inline count and a hairline to the trailing edge. Events as **a glyph and a sentence**, the glyph 18dp in inkSecondary inside a 23dp column, standing on the page and carrying no color of its own. Completed events get a mint wash at positiveGreen 8 percent over `card`, on the same 20dp measure as everything else on the screen. Everything on this screen sits on that one measure: the title, the day headers, the sentences and the mint.
+
+**The circle is gone, and phase 12b settled that as an open choice rather than dropping it.** v3 said "a 23dp circle tinted with the event color" and this document defines no event colors anywhere, so phase 3 resolved the phrase to the area's own accent at 12 percent. Two things were wrong with that and only the second closes the question.
+
+The first is redundancy. On a single area app every circle is the same disc, and the icon column carried nothing the sentence beside it did not.
+
+The second is that **no color could have carried it, and that is a proof rather than a preference.** A per event palette is unavailable by construction: 3.1 scopes `positiveGreen` to completion, `warnAmber` to the Pulse ready dot and `deleteMuted` to the delete swipe, one job each, and 3.4 permits an area accent in four forms only, of which the one a 23dp shape may take is a 5 to 14 percent wash. Eight moods at 12 percent over the canvas are not distinguishable from one another at a glance, so the disc could not carry identity either. A container that can hold no information is a container, and section 14 has a name for a glyph in a tonal circle beside a single sentence: a stock Material list row. So the container went and the glyph grew from 14dp to 18dp to hold the column on its own.
+
+**Two things this buys, and one it gives up.** The mint is now the only colored surface in the list rather than one colored thing in a column of faint discs, so a completion reads at a glance for the first time. And section 14's "no stock Material list rows on primary screens" stops being contradicted by this section, which is the contradiction the design audit found. What it gives up is area color on an unfiltered Trail, and the answer to that is where 3.4 already puts identity: the 7dp dot on the filter chips above, at the true accent, on the control whose whole purpose is scoping the screen to one area.
+
+**The mint's breathing room is vertical, 12dp against an ordinary row's 10dp.** Horizontal room would have to come from either pushing the block back outside the measure, which is where it was, or pushing a completed row's sentence 12dp in from every other row's, which is the same defect with the sign flipped.
 
 **The title is an addition, and it reverses a decision phase 3 took deliberately.** v3 gave the Trail day headers and rows and stopped, and phase 3 read that as intentional and reasoned it through: the tab bar already says Trail, so a heading reading Trail repeats a word the user can see at the bottom of the same screen. That reasoning is sound and it is outweighed. Every other surface in this section opens with a headline treatment, so the Trail was the one screen in this document that began with its content, and the design audit priced what that cost: the built Trail contained no serif glyph at all, and Newsreader had five call sites across the whole app of which four were empty states, which had quietly made the signature typeface mean "there is nothing here". The same absence had a second effect the audit named separately, that with no title the loudest element on the Trail was the selected `All` filter chip, so a filter outranked everything it filtered. One serif line fixes both. The title takes the same treatment as the Areas title in 10.1, because two screens that open the same way are one app.
 
@@ -987,8 +1163,8 @@ shade opens is worse than no number at all.
 
 **Where the accessibility investment goes. Addendum 01 8f.**
 
-- **Size.** The system font scale to 200 percent is the floor, not the ceiling. An in-app text size control offers the same steps on top of it, for the person who needs larger text in the one app they read prose in rather than everywhere. The combined result is capped so that no surface exceeds the 200 percent condition already required above. **Pending, issue #51.** It is not phase 3b work: 8f is not in that phase's table, and a text size control needs the Settings screen, which arrives in phase 11
-- **Spacing.** The 4dp grid, the 28dp section spacing and the 11dp card rhythm in section 6 are minimums, not targets to compress when a screen gets busy. Generous spacing is an accessibility feature here and not only a taste: a dense screen is a screen this audience cannot scan
+- **Size.** The system font scale to 200 percent is the floor, not the ceiling. An in-app text size control offers the same steps on top of it, for the person who needs larger text in the one app they read prose in rather than everywhere. The combined result is capped so that no surface exceeds the 200 percent condition already required above. **Built, issue #51. It multiplies rather than overrides, and 13.2 records why.**
+- **Spacing.** The 4dp grid, the 28dp section spacing and the 11dp card rhythm in section 6 are minimums, not targets to compress when a screen gets busy. Generous spacing is an accessibility feature here and not only a taste: a dense screen is a screen this audience cannot scan. **They are also minimums in the other direction: every vertical gap in the app opens with the text size and never closes below its specified value.** 13.2
 - **Contrast**, as above, in every theme
 - **No dyslexia-friendly typeface.** The evidence for specialized dyslexia typefaces is thin, and the same effort spent on size, spacing and contrast has evidence behind it and helps more people. This is a deliberate refusal, recorded here so a later session does not mistake it for an oversight and add one. Addendum 01 8f
 
@@ -1002,6 +1178,30 @@ Two rules that belong in this document rather than in a corpus, because they gov
 
 **The event type was renamed to `FOCUS_ENDED_EARLY`.** No user visible string contained the word, but a raw type name is readable in an unencrypted export and appears in `docs/EVENT_FORMAT.md`, which the future Linux desktop app is built against. The name teaches the next implementer what the concept means, so it had to be the right one. Decided by the owner, recorded as C6 in `DECISIONS.md`.
 
+### 13.2 The text size control: it multiplies, and the combined result stops at 200 percent
+
+**The decision.** The app's own text size setting is a **multiplier on the OS font scale**, not a replacement for it. `Default` is exactly 1.0, so a person who never opens the row gets precisely what their phone asked for, at every phone setting.
+
+**Why, and what was given up.** Overriding is the tidier product. It gives one dial that means one thing, and it respects nothing. Somebody who has set the phone to 200 percent has already said, once, that they cannot read text at 100 percent; an app that overrides opens at 100 percent for them, silently, until they find a setting they have no reason to look for. That is a first-launch accessibility regression traded for a cleaner explanation, and there is no version of it worth taking. What multiplying costs is the ability to say what any one step *means* without knowing the phone: `Large` is 1.15 times whatever the phone is doing, so the same word is a different size on two devices. That cost is paid in one sentence under the control rather than in a screen somebody cannot read.
+
+**The steps are the platform's own:** 0.85, 1.0, 1.15, 1.3, 1.5. Android's font size control uses exactly these, which is what "the same steps on top of it" above has always meant. A bespoke ladder would have been a second vocabulary for a quantity the phone already names, and `Large` in this app would have been a different size from `Large` in Android settings.
+
+**The cap is 200 percent combined, and it is a measurement rather than a round number.** Every clipping analysis in this document is written against the 200 percent condition: this section states it, 5.3 caps the timer numeral at 1.3x of it, and 10.4's floating bar is sized by a measurement that concludes one label plus four icons comes to roughly 290dp of the 314dp there is. A control able to exceed 200 percent would invalidate all three at once, on a device nobody has run yet. So the app's steps spend the headroom below the cap and stop.
+
+**What that costs, stated rather than hidden.** A phone at 200 percent has no headroom left, so the steps above `Default` change nothing for that person. The rows stay tappable, because a choice stored now is true again the moment the phone's setting comes down and because 10.16's rule about disabled controls applies; one line appears under the control saying the phone's own setting is what is deciding. The `Small` step is why the control is not inert for them.
+
+**Two platform steps are deliberately not offered.** 1.8 and 2.0 exist in Android's own control and not in this one. Through this control they would be clamped by the cap in almost every case where the phone is not at 100 percent, so they would be two more rows that usually do nothing. They stay reachable at the phone's setting, which is where a person who needs them has already been.
+
+**Spacing scales with the text, and only on one axis.** A size control that grows the type inside boxes that stay put makes a screen less legible rather than more, which is the failure Addendum 01 8f names and issue #51 repeats. So every vertical gap, every vertical padding and every minimum row height in the app is read through `ClaritySpacing.scaled`, which multiplies by the combined text scale. Three rules govern it:
+
+- **It never goes below 1.0.** The numbers in section 6 are minimums, so a smaller text setting makes the text smaller and leaves the air exactly where section 6 put it. Every dimension in the app is therefore identical to what it was before this control existed whenever the combined scale is at or under 100 percent, which is the default on a default phone
+- **It is linear above 1.0.** A line box at twice the size next to a gap at twice the size is the same page read larger. Damping the gaps would tighten the rhythm exactly where 8f wants it opened
+- **Horizontal insets do not scale at all.** `screenPadding` and `cardPaddingHorizontal` hold their specified value at every text size. Width is the one axis a phone has no more of, and a margin that grew would take the room from the measure it exists to serve, which is where clipping starts. The measure gets longer instead
+
+**What does not scale, and why.** The 48dp touch minimum, because it is a statement about a fingertip and anything that grows with the text passes it on its own. The 7dp area dot, because 3.4 makes it identity rather than rhythm. The sheet handle, because it is a grip. The floating tab bar's 61dp and its 17dp inset, because the bar's contents are a 24dp glyph that does not scale and one label whose trimmed box reaches about 31dp at the cap, both of which clear the 48dp item inside it with room over; a bar that grew would take the reserved bottom padding of four screens with it.
+
+**The control is five named steps and the screen it sits on is the preview.** Recorded under section 15: the statistically common answer is a slider with a live preview paragraph, and it loses three ways. A slider is a continuous control for a quantity that is discrete on this platform and a ladder in 5.3. A preview paragraph is a specimen in a fixed box, which is the one thing that cannot show the half of this feature that matters, that the spacing moved. And Settings is already real content at real sizes, so the tap re-lays out sideheads, row titles, captions, a paragraph, switches and a card while the person is looking at them. **Every option label is set at the current size and never at its own**, because a `Small` row set in Small is a row the person who needs this control cannot read.
+
 ---
 
 ## 14. What This Design Never Does
@@ -1013,6 +1213,12 @@ Added by Addendum 01: **no red dot and no numeric badge on any surface**, includ
 **Two reasons for the streak rule, not one.** The first has always been that shame mechanics are the opposite of what this app is for. The second is specific and stronger: for people whose capacity fluctuates, **streak loss is a documented abandonment trigger.** A streak is a promise the app makes on the user's behalf and then breaks for them, on a day that was already going badly, and the app then displays the broken promise until they delete it. Addendum 01 9c. The consequences are concrete and testable: the Rhythm widget shows fourteen dots and no run length, 12.2; Momentum's dot row never says how many in a row; and a gap is rendered as a lighter dot with nothing said about it anywhere.
 
 And nothing that is still. An app that never moves is an app that feels broken, and that holds in calm mode too, 16.4.
+
+**Phase 12b narrowed that sentence, because as written it was false and every conventional way of making it true was a tell.** The question it was asked to settle was whether anything in this app moves at rest, and the honest answer is that four things do and none of them is decoration.
+
+**The only thing this app moves on its own is time.** A session's arc depletes and its numeral rolls, 8.2 item 7. An in session card counts down, 10.3. The focus glow breathes, item 8. The Pulse's ground shifts through the day, 3.3, on a timescale a person feels rather than watches. Everything else responds the instant it is touched: a press scales, a swipe tracks the finger, a promotion runs, a snackbar's line depletes, a tab pill travels. **A screen with no time on it does not invent motion to prove it is alive.**
+
+That is a refusal and it is recorded as one. Every conventional way to put motion on a still Daylight screen is on 15.1 or beside it, and 15.3 refuses the pulse, the breathe, the glow loop and the ambient shimmer by name. The alternative to an honest silence is a decoration that says nothing about the person's data, and section 1's first rule is that this app never decorates data. **A recorded absence is worth more here than a tell**, and the sentence this paragraph amends was written before there were surfaces to test it against.
 
 ---
 
@@ -1064,6 +1270,8 @@ The last four entries arrive from Addendum 01 rather than from the August 2026 s
 
 The verification checklist includes an anti-slop pass against the dated list above. **Update the list before each release** rather than trusting the version in this file.
 
+**A sweep needs the outside world, and that is a real precondition rather than a formality.** 15.1 is a record of what the industry currently produces, so it cannot be re-derived from inside this repository or from a model's memory of the year before it was written. Phase 12b could not perform one, and it deliberately did not re-date the list rather than stamping a date on a sweep that did not happen. **The sweep is owed before the release**, and until it happens 15.1 is August 2026 and should be read as such. Nothing phase 12b built appears on it and nothing phase 12b built is refused by 15.3, which was checked entry by entry; that is a narrower claim than a fresh sweep and it is the one that can honestly be made.
+
 ### 15.3 The refusals, and the entry that refuses each
 
 **This section exists for the session that reads a design audit and reaches for the nearest premium looking thing.** It was written in phase 3c out of the audit issue #53 commissioned, and every line of it is a fix somebody would reasonably propose for a problem this app actually has, paired with the sentence in this document that already forbids it. A prohibition nobody can find is a prohibition that gets rediscovered the expensive way.
@@ -1074,16 +1282,18 @@ Each entry names the fix first, because that is the form it will arrive in, and 
 
 - **A colored left edge, accent stripe or bar on the area card, to give it identity.** 15.1, "a colored 3 to 4px border or stripe on one side of a card". Section 14, "no colored stripe, bar or edge treatment on any element, ever". 3.4, "never as a stripe, bar, edge, border or filled block". Three separate prohibitions, and the first of them is this document's stated single most recognizable machine generated tell
 - **A hairline border on the card so it reads against the canvas.** 6.1, "never a hairline and a shadow on the same element", and 15.1 lists the pair. A light mode card already carries a shadow, so a border on it is forbidden by construction. When a card does not read, the answer is the ground under it, which is what 3.1 changed in phase 3c
-- **A blurred or translucent tab bar, header or sheet.** 15.1, "glassmorphism used as decoration rather than to solve a layering problem", and separately "glassmorphism combined with a neon glow". Content passing under a floating bar is a real layering problem and it does deserve an answer; a fade to the ground color is the permitted form of one, and reaching for the blur because it looks more modern is exactly the move the entry describes
+- **A blurred or translucent tab bar, header or sheet.** 15.1, "glassmorphism used as decoration rather than to solve a layering problem", and separately "glassmorphism combined with a neon glow". Content passing under a floating bar is a real layering problem and it does deserve an answer; a fade to the ground color is the permitted form of one, and reaching for the blur because it looks more modern is exactly the move the entry describes. **The fade is built, 6.1, phase 12b**, and the refusal is a test rather than a sentence: nothing in `ui/` may reach for a blur
 - **A gradient on a screen title, on the timer numeral, or on any large figure.** 15.1, "a gradient applied to a large number for impact"
 - **Swapping Newsreader or Hanken Grotesk for a family that looks more premium.** 15.1 names three of the likely replacements outright: "Inter as the interface typeface", "Instrument Serif, particularly paired with Inter", "Space Grotesk paired with a display serif". The two families in 5.1 and 5.2 were never the problem. Through phase 3b the problem was that seven of the nine sans roles carried no tracking value at all and the serif appeared on one screen in one word, and 5.3 settled both without touching a family
 - **Serif italic on day headers, sideheads or eyebrows.** 15.1, "serif italics used as an accent device". Section 14, "no serif italic as a section-level accent". 5.1 permits italic only for genuine emphasis inside a sentence
 - **All caps sideheads, to give a sheet or a screen some structure.** 15.1, "all-caps section labels". Section 14 repeats it and 5.3 sets sidehead in sentence case and says so in bold. The structure a section label needs is bought with tracking instead, which is what sidehead's value in 5.3 is for and why it sits deliberately above `label` at the same size
 - **A card inside the filing chooser sheet, to give its rows an affordance.** Section 14, "no cards inside cards, and no cards inside sheets except the color picker preview in 10.9", repeated in 10.6, which adds that the exception may not be extended by analogy. The v2 mock does exactly this and the mock is wrong, as is its 30dp filter chip, which fails the 48dp touch minimum in section 13
-- **A filled green disc with a white check on the Trail's completed row.** 3.4, "never as a stripe, bar, edge, border or filled block". Section 14, "no confetti and no celebration of any kind". Another v2 mock leftover, and it is not the answer to the open question about what the event circle carries
+- **A filled green disc with a white check on the Trail's completed row.** 3.4, "never as a stripe, bar, edge, border or filled block". Section 14, "no confetti and no celebration of any kind". Another v2 mock leftover, and it was never the answer to the question about what the event circle carries, which phase 12b closed by removing the circle. Section 11
 - **Any indigo to purple or blue to purple treatment, including on the Focus surface when it arrives.** 15.1 names the family three times: "lavender or indigo-to-purple gradients", "a blue to purple gradient, the single loudest tell of 2026", "a purple to cyan gradient". Section 14 adds "no default Material purple". 3.3's Focus gradient runs indigo into darker indigo over black and it stays on that side of the line
-- **A pulse, a breathe, a glow loop or an ambient shimmer, to satisfy section 14's "nothing that is still".** The problem is real and it is open: nothing on either built screen moves at rest, which makes that sentence false today. Every conventional answer to it is on 15.1 or adjacent to it, and 8.2's ambient entries belong to phases that are not built. It is an owner decision rather than a patch, it is carried by the surface half of the polish pass, and inventing an answer quietly is how a tell gets in
+- **A pulse, a breathe, a glow loop or an ambient shimmer, to satisfy section 14's "nothing that is still".** **Settled in phase 12b and the answer is no.** Every conventional answer is on 15.1 or adjacent to it, and none of them says anything about the person's data, which section 1's first rule forbids. Section 14 is narrowed instead: the only thing this app moves on its own is time, four surfaces do it, and a screen with no time on it does not invent motion to prove it is alive. A recorded absence is worth more than a tell
 - **A count badge or a red dot on the inbox chip.** Section 14 as amended by Addendum 01, "no red dot and no numeric badge on any surface", naming the unfiled inbox count. 15.1, "a red numeric badge as the primary signal that something is waiting". 10.16 already says what to do instead, which is that the count is the label
+- **A semantic palette for the Trail's event glyphs: green completions, amber Pulses, red deletes.** 3.1 scopes `positiveGreen` to completion, `warnAmber` to the Pulse ready dot and `deleteMuted` to the delete swipe, one job each, so a second use of any of them is a color that means two things. 3.4 permits an area accent in four forms and none of them is a per event hue. Section 11 records what the icon column carries instead, which is a glyph and nothing else
+- **An accent rule, an accent border or a two dp underline on a focused text field.** 6.1, "every element carries exactly one separation device", and the well is already it. 10.19 takes the well one rank deeper instead, which is the same device speaking louder rather than a second one arriving. This is also the most common form treatment in existence and section 15 makes that a reason by itself
 - **Reimplementing the bottom sheet, the text field, the snackbar or the tab bar in order to change how it looks.** 17.4, and 17.2's "not a reason: preferring the look of something drawn by hand". The six components in 17.3 are settled and are not reopened
 - **Adopting a Material 3 Expressive default because it is the default.** Section 15 itself. The floating tab bar's selected label only behavior arrived at the platform default with no recorded reason, which is how a screen built faithfully to this document came to read as a stock navigation bar
 - **Trying to make the cards pop.** Through phase 3b there was nowhere for them to pop to, because `card` was pure white and the light world had no headroom above it, so every hour spent lifting the card further was an hour not spent on the ground under it. That is the shape of the mistake and not only one instance of it: when an element does not separate, measure whether the ground it sits on has any room left before reaching for the element
@@ -1128,7 +1338,7 @@ The obvious answer here is a three-state control, On, Off, Follow system, matchi
 
 The color half is one transform, applied in one place. **Chroma is multiplied by 0.6 in a perceptual color space, holding lightness.** Blending toward grey is the obvious implementation and is rejected: it darkens light colors and lightens dark ones, which moves every contrast ratio that section 13 has already verified per area color. Holding lightness means calm mode cannot break a measurement that passed. Section 15.
 
-**Two uses of the area accent and four tokens are excluded by name.** The 7dp area dot and the area label text, because they are how an area is recognized and they are the two places the contrast was measured. actionBlue, positiveGreen, warnAmber and deleteMuted, because 3.1 scopes each of those to exactly one job: they are function, not atmosphere, and a desaturated action color is a less legible action color.
+**Two uses of the area accent and five tokens are excluded by name.** The 7dp area dot and the area label text, because they are how an area is recognized and they are the two places the contrast was measured. actionBlue, positiveGreen, positiveInk, warnAmber and deleteMuted, because 3.1 scopes each of those to exactly one job: they are function, not atmosphere, and a desaturated action color is a less legible action color. `positiveInk` joins the list with the token, phase 13, on the same sentence: it is the foreground half of the completion color and a foreground is the last thing a transform should be allowed to take saturation from.
 
 Everything else that takes an area accent or a surface accent takes it through the transform. At 5 to 7 percent the difference is barely visible, and that is fine: the rule is uniform, so there is no list of elements to keep in sync and nothing drifts back to full saturation later.
 
@@ -1141,7 +1351,7 @@ Everything else that takes an area accent or a surface accent takes it through t
 | the undo snackbar's depleting line, item 20 | depletes over 5 seconds | still depletes. It is the only readout of a window that is closing, and that is information, not decoration |
 | the focus arc, 11.3 | depletes at 1Hz | still depletes, for the same reason |
 | cardWash | 5 to 7 percent light, 7 to 9 dark | transformed, and pinned to the low end of its range |
-| cardWashActive | 12 to 14 percent light, 15 to 17 dark | transformed, and pinned to the low end: 12 light, 15 dark |
+| cardWashActive | 12 to 13 percent light, 15 to 16 dark | transformed, and pinned to the low end: 12 light, 15 dark |
 | the 7dp dot, the area label | full accent | **unchanged**, and the label variant is computed from a ground that does not move with the switch, so it is the same color either way |
 | Momentum's 60 percent area tile | full accent at 60 percent | transformed. This is where the transform is most visible in the Daylight world |
 | Contemplative radial gradients, 3.3 | three-stop radial per surface | transformed, geometry held. A surface with no center of light is not calmer, it is a black rectangle |
@@ -1152,6 +1362,8 @@ Everything else that takes an area accent or a surface accent takes it through t
 | the Pulse pill fill, item 10 | amber fills from the tap point | crossfade |
 | widget tints, 12.1 | 3 to 5 percent light, 5 to 7 dark | transformed, 16.3 |
 | the Live Update track, 11.4 | area color where the platform allows it | transformed. Still depletes |
+| the scroll edge fade, 6.1 | fades content out at both edges | **unchanged.** It carries no color and no motion of its own |
+| a text field's well, 10.19 | `raise`, deepening to `canvas` on focus | **unchanged.** Three neutral tokens and one excluded accent, the caret |
 | canvas, card, raise, ink, hairline, parchment | as 3.1 and 3.2 | **unchanged.** Calm mode is not a theme |
 
 ### 16.3 It reaches the widgets and the Live Update
@@ -1236,6 +1448,7 @@ Eight of the twenty eight now belong to surfaces that phases 6 and later build, 
 | hairline | unchanged | 0 |
 | actionBlue | **excluded by name**, 16.2 | 0 |
 | positiveGreen | **excluded by name** | 0 |
+| positiveInk | **excluded by name** | 0 |
 | warnAmber | **excluded by name** | 0 |
 | parchment | unchanged | 0 |
 | deleteMuted | **excluded by name** | 0 |
@@ -1267,7 +1480,7 @@ Eight of the twenty eight now belong to surfaces that phases 6 and later build, 
 | the wash, 5 to 14 percent | transformed, through the one application point | chroma x 0.6 |
 | Momentum's 60 percent tile | transformed | chroma x 0.6 |
 | the Trail event circle, 12 percent | transformed | chroma x 0.6 |
-| the Swap swipe action's face | transformed | chroma x 0.6 |
+| the Swap swipe action's face | **no longer takes an accent at all**, phase 13. Its glyph and label are `actionBlue`, which 16.2 excludes, and its ground is that token at 12 percent. 3.4 and 10.3.1 carry why | 0 |
 | the color picker's 48 swatches and its selection ring | **not transformed** | 0 |
 
 The swatches are the one place where an area accent is neither atmosphere nor identity: it is a **choice**, and a person picking a color has to see the color they are picking. A desaturated grid would have someone choose one accent and receive another the moment they turned the switch off. The live preview card beside the grid does take the transform, because it is a miniature of the real card and is showing what the card will look like. Recorded per section 15.
@@ -1302,14 +1515,15 @@ Every component built in phases 1, 2 and 3, named, with what calm mode does to i
 | `Sidehead` | **unchanged.** No motion, no accent |
 | `TabularNumber` | **unchanged.** No motion, no accent |
 | `MorphShape` and `morphingPressShape` | the press morph **does not run** and the resting shape is returned. Already true under 8.3 |
-| `ClarityTextField` | **unchanged.** The rule warms to actionBlue, which is excluded; the color change runs on the crossfade spec |
+| `ClarityTextField` | **unchanged.** Phase 12b replaced the rule with a well at `raise` deepening to `canvas`, and 16.2's last table row holds all three of those tokens unchanged, because calm mode is not a theme. The color change runs on the crossfade spec |
+| `scrollEdgeFade` | **unchanged.** It removes opacity rather than adding color, so there is no accent in it to transform and nothing that moves on its own. A scroll edge is a layering device, 6.1, not atmosphere |
 | `clarityClickable` and `clarityCombinedClickable` | **unchanged.** Presses still respond, 16.4 |
 | `clarityFocusRing` | **unchanged.** actionBlue, and it appears on the crossfade spec. A keyboard focus ring is not something an accessibility setting should be able to remove |
 | `opticalGlyphNudge` | **unchanged.** A fixed offset, not an animation |
 | `ReorderState` and `reorderableItem` | **unchanged.** No animation and no color; the drag follows the finger the way a swipe does |
 | `clarityShadow` and `ClarityCard` | **unchanged.** Elevation is a separation device, 6.1, not atmosphere |
 | `washBrush` and `Modifier.areaWash` | **the transform's one application point.** Every wash in the app arrives here |
-| `SwipeableRow` | the Swap face's accent is transformed. The three action backgrounds are excluded tokens. The card still tracks the finger and the commit is instant, item 21 |
+| `SwipeableRow` | **unchanged since phase 13.** All three faces are now an excluded token as a ground and the same token, or `positiveInk`, as the ink on it, so nothing on a swipe face takes the transform. The card still tracks the finger and the commit is instant, item 21 |
 | `UndoSnackbar` | the rise and fall become a fade with no travel. The depleting line still depletes, item 20 |
 
 **Phase 4 added five drawn things that are not in `ui/components/`**, because they belong to one surface and nothing else may use them. They are audited here so that 16.5 still holds. The **backdrop** keeps its geometry and loses its chroma, and its specks drop to the low end of both ranges, 16.7; the breathing glow holds at 0.92 and the repeating animation is never started, item 8. The **ring** still depletes, item 7, and loses the falloff behind its tip, 16.7. The **completion bloom** becomes the check appearing with no collapse and no expanding circle, item 9. The **Contemplative pill and text action** take the ring's progress color through the same transform and are otherwise unchanged, their press scale running on the crossfade spec like every other press. The **chooser rows** carry no color but the 7dp area dot, which is excluded by name, 16.2.

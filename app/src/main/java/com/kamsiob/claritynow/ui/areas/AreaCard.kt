@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import com.kamsiob.claritynow.R
@@ -114,7 +115,7 @@ fun AreaCardContent(
     Column(
         modifier = modifier
             .areaWash(accent, wash.value, area.id)
-            .padding(horizontal = 18.dp, vertical = 17.dp),
+            .padding(horizontal = 18.dp, vertical = ClaritySpacing.scaled(17.dp)),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -131,7 +132,7 @@ fun AreaCardContent(
             )
         }
 
-        Box(modifier = Modifier.fillMaxWidth().padding(top = 7.dp)) {
+        Box(modifier = Modifier.fillMaxWidth().padding(top = ClaritySpacing.scaled(7.dp))) {
             val cue = playing
             if (cue != null) {
                 Text(
@@ -229,7 +230,7 @@ private fun FirstStepLine(area: AreaCardModel) {
         overflow = TextOverflow.Ellipsis,
         // Tighter than the 6dp above the status line, because this line belongs to
         // the title above it and the status line belongs to the card as a whole.
-        modifier = Modifier.padding(top = 5.dp),
+        modifier = Modifier.padding(top = ClaritySpacing.scaled(5.dp)),
     )
 }
 
@@ -250,7 +251,7 @@ private fun StatusLine(area: AreaCardModel, accent: Color) {
         minutes != null -> Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start,
-            modifier = Modifier.padding(top = 6.dp),
+            modifier = Modifier.padding(top = ClaritySpacing.scaled(6.dp)),
         ) {
             ClarityIcon(
                 icon = ClarityIcons.focus,
@@ -289,7 +290,7 @@ private fun StatusLine(area: AreaCardModel, accent: Color) {
             // this row, so there was no contradiction to resolve, only section 13 to
             // obey. It reads quieter than the title anyway, by 9sp of size.
             color = colors.inkSecondary,
-            modifier = Modifier.padding(top = 6.dp),
+            modifier = Modifier.padding(top = ClaritySpacing.scaled(6.dp)),
         )
 
         // An ordinary active area shows nothing, because there is nothing to add.

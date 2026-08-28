@@ -240,9 +240,16 @@ class CalmModeTest {
             // exclusions come through this function.
             "ui/theme/AreaPalette.kt" to 1,
             // The 7dp dot and the label, both excluded by name; the wash, through
-            // Modifier.areaWash; the swipe accent, transformed in SwipeableRow.
+            // Modifier.areaWash.
             "ui/areas/AreaCard.kt" to 1,
-            "ui/areas/AreasScreen.kt" to 1,
+            // **`ui/areas/AreasScreen.kt` was here and is not any more.** It read the
+            // area's color to hand it to `SwipeableRow`, which drew the Swap face's
+            // 22dp glyph and 10.5sp label in it, transformed. The phase 13 contrast
+            // audit measured that pair at 1.029 to one in dark and 1.127 in light and
+            // took the accent off the face: 3.4 permits an area color in four forms and
+            // an action label is not one of them, and the card being swiped already
+            // carries the dot and the area's name. One fewer place is the best outcome
+            // this census can have.
             // The 9dp identity dot in the detail sheet header. Excluded.
             "ui/areas/AreaSheets.kt" to 1,
             // The area dot on each row of the filing chooser. Identity, so excluded:
@@ -252,20 +259,27 @@ class CalmModeTest {
             // The live preview's wash and label, plus the swatches and the selection
             // ring, which show the true color because that is what is being chosen.
             "ui/areas/ColorPicker.kt" to 4,
-            // The filter chip's dot, excluded; the event circle's 12 percent tint,
-            // transformed.
-            "ui/trail/TrailScreen.kt" to 2,
+            // The filter chip's dot, and it is the only one left. **Phase 12b removed
+            // the event circle's 12 percent tint**, which was the file's atmospheric
+            // use, when it settled what the circle carried: an area accent at wash
+            // strength could not carry identity and this document defines no event
+            // color, so the disc went and the glyph stands on the page. design-v3.md 11.
+            "ui/trail/TrailScreen.kt" to 1,
             // Onboarding. The preview card's accent is atmosphere and takes the
             // transform; the 7dp dot beside the name is identity and never does. Both
             // files already read LocalCalmMode at the site, which is where the split
             // is actually made.
             "ui/onboarding/OnboardingBeatOne.kt" to 1,
             "ui/onboarding/OnboardingControls.kt" to 2,
-            // The mood strip's slivers and the swatch a person taps. **Not
-            // transformed**, on the precedent phase 3c set for the color picker: a
-            // swatch is a choice, and showing a desaturated version of a color while
-            // someone is choosing that color would be showing them the wrong answer.
-            "ui/onboarding/OnboardingColorRows.kt" to 2,
+            // The mood strip's slivers, the swatch a person taps, and the swatch the
+            // check is measured against. **Not transformed**, on the precedent phase 3c
+            // set for the color picker: a swatch is a choice, and showing a desaturated
+            // version of a color while someone is choosing that color would be showing
+            // them the wrong answer. The third use is the phase 13 check color: the
+            // check reads the true accent because it is drawn on the true accent, and a
+            // check chosen against a transformed swatch would be the wrong ink on the
+            // swatch as drawn.
+            "ui/onboarding/OnboardingColorRows.kt" to 3,
             // The appearance picker's miniature dots. Identity, and its own KDoc says
             // so: a miniature of a dot is a picture of the same thing.
             "ui/settings/AppearancePicker.kt" to 1,

@@ -87,9 +87,22 @@ internal object AreaWidgetType {
         fontFamily = FontFamily.Serif,
     )
 
-    /** The count, the prompt and the notices. `caption` in 5.3. */
+    /**
+     * The count, the prompt and the notices. `caption` in 5.3.
+     *
+     * **`inkSecondary`, and a widget is the place to be most careful about this.** A
+     * launcher draws a widget on a wallpaper this app cannot see, so the one thing that
+     * makes a number here measurable is that every widget paints its own opaque ground
+     * first, `WidgetTheme.surface` or [areaSurface]. That ground is the `card` token or
+     * `card` under a 3 to 5 percent area tint, 12.1, which is inside the range the
+     * contrast audit already measures `inkSecondary` across. At `inkTertiary` this line
+     * measured 2.402 to one there, against design-v3.md 13's floor of 4.5, and the
+     * launcher's own day and night switch meant it was that faint in one theme or the
+     * other on every home screen. What keeps it a rank under [serif] and [rowName] is
+     * 12sp against 17 and 15, and under [areaLabel] the weight, not the color.
+     */
     val caption = TextStyle(
-        color = WidgetTheme.inkTertiary,
+        color = WidgetTheme.inkSecondary,
         fontSize = 12.sp,
         fontWeight = FontWeight.Normal,
     )

@@ -139,13 +139,13 @@ private fun ColumnScope.Fork(onJustStart: () -> Unit, onPickAreas: () -> Unit) {
         style = type.readSerif,
         color = contemplative.textBright,
     )
-    Spacer(Modifier.height(30.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(30.dp)))
     OnboardingChoicePanel(
         title = stringResource(R.string.onboarding_just_start_title),
         detail = stringResource(R.string.onboarding_just_start_detail),
         onClick = onJustStart,
     )
-    Spacer(Modifier.height(14.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
     OnboardingChoicePanel(
         title = stringResource(R.string.onboarding_pick_areas_title),
         detail = stringResource(R.string.onboarding_pick_areas_detail),
@@ -167,13 +167,13 @@ private fun ColumnScope.JustStart(
         style = type.readSerif,
         color = contemplative.textBright,
     )
-    Spacer(Modifier.height(10.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
     Text(
         text = stringResource(R.string.onboarding_just_start_note),
         style = type.body,
         color = contemplative.textDim,
     )
-    Spacer(Modifier.height(30.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(30.dp)))
     OnboardingField(
         value = title,
         onValueChange = { onTitleChange(it.take(MAX_TITLE)) },
@@ -182,7 +182,7 @@ private fun ColumnScope.JustStart(
         imeAction = ImeAction.Done,
         onImeAction = onContinue,
     )
-    Spacer(Modifier.height(34.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(34.dp)))
     OnboardingPrimaryButton(
         label = stringResource(R.string.onboarding_continue),
         onClick = onContinue,
@@ -210,19 +210,19 @@ private fun ColumnScope.PickAreas(
         style = type.readSerif,
         color = contemplative.textBright,
     )
-    Spacer(Modifier.height(10.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
     Text(
         text = stringResource(R.string.onboarding_areas_detail),
         style = type.body,
         color = contemplative.textDim,
     )
-    Spacer(Modifier.height(22.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(22.dp)))
 
     // Two to a row rather than a wrapping flow, so every suggestion is the same width and
     // none of them reads as the recommended one because its label happens to be longer.
     suggestions.chunked(2).forEach { pair ->
         Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+            modifier = Modifier.fillMaxWidth().padding(bottom = ClaritySpacing.scaled(10.dp)),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             pair.forEach { label ->
@@ -241,7 +241,7 @@ private fun ColumnScope.PickAreas(
         }
     }
 
-    Spacer(Modifier.height(12.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(12.dp)))
     OnboardingField(
         value = custom,
         onValueChange = { custom = it.take(MAX_AREA_NAME) },
@@ -255,7 +255,7 @@ private fun ColumnScope.PickAreas(
     )
 
     if (state.selections.isNotEmpty()) {
-        Spacer(Modifier.height(26.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(26.dp)))
         state.selections.forEach { area ->
             OnboardingMiniCard(
                 name = area.name,
@@ -264,26 +264,26 @@ private fun ColumnScope.PickAreas(
                 onClick = { onFocus(area.name) },
                 onRemove = { onRemove(area.name) },
                 removeLabel = stringResource(R.string.cd_onboarding_remove_area, area.name),
-                modifier = Modifier.padding(bottom = 8.dp),
+                modifier = Modifier.padding(bottom = ClaritySpacing.scaled(8.dp)),
             )
             if (state.focused == area.name) {
                 OnboardingColorRows(
                     selectedHex = area.colorHex,
                     onPick = { onRecolor(area.name, it) },
-                    modifier = Modifier.padding(bottom = 14.dp),
+                    modifier = Modifier.padding(bottom = ClaritySpacing.scaled(14.dp)),
                 )
             }
         }
     }
 
-    Spacer(Modifier.height(28.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(28.dp)))
     OnboardingPrimaryButton(
         label = stringResource(R.string.onboarding_continue),
         onClick = onContinue,
         enabled = state.canAdvance,
         modifier = Modifier.align(Alignment.CenterHorizontally),
     )
-    Spacer(Modifier.height(12.dp))
+    Spacer(Modifier.height(ClaritySpacing.scaled(12.dp)))
 }
 
 /** The six starter suggestions named in MASTER_BUILD_PROMPT 13.1. */

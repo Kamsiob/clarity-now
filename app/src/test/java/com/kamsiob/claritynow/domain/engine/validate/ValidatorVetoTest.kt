@@ -60,9 +60,9 @@ class ValidatorVetoTest {
     }
 
     @Test
-    fun `all ten checks are declared, in the order section 8 numbers them`() {
+    fun `all eleven checks are declared, in the order section 8 numbers them`() {
         assertEquals(ValidationCheck.entries.toList(), validator.checkOrder)
-        assertEquals((1..10).toList(), ValidationCheck.entries.map { it.number })
+        assertEquals((1..11).toList(), ValidationCheck.entries.map { it.number })
     }
 
     // Check 1, area existence.

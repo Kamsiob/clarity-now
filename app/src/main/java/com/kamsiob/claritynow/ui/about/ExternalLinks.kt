@@ -21,6 +21,7 @@ import androidx.core.net.toUri
 import com.kamsiob.claritynow.ui.components.ClarityIcon
 import com.kamsiob.claritynow.ui.components.clarityClickable
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 
@@ -92,7 +93,7 @@ internal fun ElsewhereRow(
                 onClickLabel = label,
                 onClick = onClick,
             )
-            .padding(vertical = 8.dp),
+            .padding(vertical = ClaritySpacing.scaled(8.dp)),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ClarityIcon(
@@ -109,6 +110,12 @@ internal fun ElsewhereRow(
             modifier = Modifier.weight(1f),
         )
         Spacer(Modifier.width(12.dp))
-        Text(text = destination, style = type.caption, color = colors.inkTertiary)
+        // MASTER_BUILD_PROMPT 14.5 says "the destination trailing in caption
+        // inkTertiary" and design-v3.md 3.1 says `inkTertiary` carries no text
+        // anywhere in this app. design-v3.md wins on anything visual, CLAUDE.md's
+        // authority order, and 13 states one floor: this measured 2.337 to one on the
+        // canvas. The destination is the only thing on the row that says where a tap
+        // is about to send somebody out of the app, so it is not an ornament.
+        Text(text = destination, style = type.caption, color = colors.inkSecondary)
     }
 }

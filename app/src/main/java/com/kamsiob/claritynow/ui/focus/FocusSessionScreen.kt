@@ -96,7 +96,7 @@ internal fun FocusSessionScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             AreaLabel(name = session.areaName, colorHex = session.colorHex)
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
             Text(
                 // design-v3.md section 11 gives this its own size, 26sp, which is not a
                 // role in 5.3. The weight is `itemTitle`'s, because that is what bold
@@ -114,13 +114,13 @@ internal fun FocusSessionScreen(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.widthIn(max = TITLE_MEASURE),
             )
-            Spacer(Modifier.height(36.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(36.dp)))
             FocusDial(
                 countdown = countdown,
                 plannedSecondsFallback = session.plannedSeconds,
                 transitionWarningEnabled = transitionWarningEnabled,
             )
-            Spacer(Modifier.height(36.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(36.dp)))
             FocusPill(
                 label = stringResource(R.string.focus_end_session),
                 onClick = {
@@ -132,7 +132,7 @@ internal fun FocusSessionScreen(
                     if (focusEndingIsSilent(elapsed)) onEnd(elapsed) else confirming = true
                 },
             )
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(6.dp)))
             FocusTextAction(
                 // design-v3.md 10.18: no confirmation, no toast, no acknowledgment
                 // beyond the ring itself. Repeatable, and there is no limit, because a

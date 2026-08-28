@@ -43,6 +43,7 @@ import com.kamsiob.claritynow.ui.theme.ClarityColors
 import com.kamsiob.claritynow.ui.theme.ClarityDarkColors
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
 import com.kamsiob.claritynow.ui.theme.ClarityLightColors
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.ClarityThemeSetting
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityShapes
@@ -191,14 +192,17 @@ private fun AppearanceTile(
                         ClarityIcon(
                             icon = ClarityIcons.check,
                             contentDescription = null,
-                            tint = Color.White,
+                            // The inversion every filled actionBlue surface takes,
+                            // design-v3.md 10.7 and 3.1. White measured 2.63 to one on
+                            // the dark actionBlue against the 3.0 graphic floor.
+                            tint = colors.card,
                             modifier = Modifier.size(9.dp),
                         )
                     }
                 }
             },
         )
-        Spacer(Modifier.height(7.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(7.dp)))
         Text(
             text = label,
             style = type.caption.copy(

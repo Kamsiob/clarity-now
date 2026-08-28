@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -34,6 +35,7 @@ import com.kamsiob.claritynow.ui.components.ClarityIcons
 import com.kamsiob.claritynow.ui.components.clarityClickable
 import com.kamsiob.claritynow.ui.components.clarityFocusRing
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityShapes
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
@@ -96,7 +98,7 @@ internal fun SupportBlock(modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .clip(shapes.card)
             .background(gradient)
-            .padding(horizontal = 18.dp, vertical = 18.dp),
+            .padding(horizontal = 18.dp, vertical = ClaritySpacing.scaled(18.dp)),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             ClarityIcon(
@@ -112,13 +114,13 @@ internal fun SupportBlock(modifier: Modifier = Modifier) {
                 color = colors.inkPrimary,
             )
         }
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
         Text(
             text = stringResource(R.string.support_body),
             style = type.bodySerif,
             color = colors.inkSecondary,
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(16.dp)))
         SupportButton(
             label = stringResource(R.string.support_button),
             onClick = { openExternalLink(context, ClarityLinks.SUPPORT) },
@@ -152,7 +154,10 @@ private fun SupportButton(label: String, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .scale(scale)
-            .height(50.dp)
+            // A minimum rather than a height, for the reason `ClarityButton` gives: the
+            // label is `bodyStrong` with no `maxLines`, so a fixed box cuts the second
+            // line off at a large text size and nothing reports it.
+            .heightIn(min = ClaritySpacing.scaled(SUPPORT_BUTTON_HEIGHT))
             .clip(shapes.button)
             .background(SupportAccent)
             .clarityFocusRing(interaction, shapes.button)
@@ -183,3 +188,6 @@ private fun SupportButton(label: String, onClick: () -> Unit) {
  * rather than seen.
  */
 private const val GRADIENT_WARMTH = 0.08f
+
+/** design-v3.md 10.7's button height, as a minimum. */
+private val SUPPORT_BUTTON_HEIGHT = 50.dp

@@ -1092,6 +1092,109 @@ class TrailQueries(
             },
         )
 
+    /**
+     * Every completion in the window that had a prediction behind it, as ratios.
+     * MASTER_BUILD_PROMPT 14b.8, Addendum 01 7a.
+     *
+     * One entry per item completed inside the window that was active when it was
+     * completed and carried an estimate when it became active. The count of the list
+     * is the floor 14b.8 sets at five, and it is a count rather than a length nobody
+     * can see: layer one carries it as a fact and the validator re-reads it.
+     *
+     * **The two magnitudes are divided here and are not returned.** Read
+     * [EstimateOutcome] for why that is the shape rather than a convenience. Nothing
+     * above this line receives a number of minutes, estimated or actual, so the delta
+     * 14b.8 forbids cannot be formed by anything downstream, in one subtraction or in
+     * any number of them.
+     *
+     * **The prediction is the estimate in force when the item became active**, and a
+     * revision made afterward is ignored. An estimate changed while the work is under
+     * way is not a prediction any more; it is a progress report, informed by exactly
+     * the thing the calibration is trying to measure. Honoring it would move every
+     * ratio toward one and the fact would quietly flatter the person it is about. A
+     * revision made **before** the promotion is a better prediction and is the one
+     * used, which is why this reads the estimate at the promotion rather than the
+     * estimate on ITEM_ADDED.
+     *
+     * **The actual is the elapsed time of the item's last active spell**, from the
+     * ITEM_PROMOTED that started it to the ITEM_COMPLETED that ended it, which is the
+     * same spell `ItemCompleted.activeDurationDays` reports and the same one
+     * `activeSinceForItem` answers about. An item completed without ever having been
+     * promoted has no spell and is absent: there is a moment it was added and no
+     * moment it was started, and how long something waited is not how long it took.
+     * That is the distinction [daysActiveForItem] and [daysSinceItemAdded] already
+     * keep apart, and folding it here would make the ratio mean two things.
+     *
+     * Elapsed time is a difference of two wall clocks in milliseconds, which is the
+     * one place in this class that is correct: a duration inside a day is not a
+     * calendar question, and a daylight saving shift inside a spell really did add or
+     * remove an hour of the person's life. A completion whose wall clock precedes its
+     * own promotion is two devices disagreeing about the time rather than a fast
+     * finish, and it is **dropped rather than clamped**, because a clamp would enter
+     * the sample as a ratio of zero and read as somebody who beat every estimate.
+     *
+     * The item's own events are read in total order rather than by wall clock, so a
+     * merged log resolves the promotion and the estimate the same way on both
+     * devices. Ordered oldest completion first, by the log's own order.
+     */
+    fun estimateOutcomes(startMillis: Long, endMillis: Long): List<EstimateOutcome> {
+        val outcomes = ArrayList<EstimateOutcome>()
+        for (event in eventsIn(startMillis, endMillis)) {
+            val payload = event.payload
+            if (payload !is ItemCompleted) continue
+            val history = byEntity[payload.itemId] ?: continue
+            val completedAt = history.indexOfFirst { it.id == event.id }
+            if (completedAt < 0) continue
+            val promotedAt = promotionBehind(history, completedAt) ?: continue
+            val estimate = estimateInForceAt(history, promotedAt) ?: continue
+            val elapsed = event.wallClock - history[promotedAt].wallClock
+            if (elapsed < 0) continue
+            outcomes += EstimateOutcome(
+                itemId = payload.itemId,
+                activeToEstimate = (elapsed / MILLIS_PER_MINUTE) / estimate,
+            )
+        }
+        return outcomes
+    }
+
+    /**
+     * The index of the promotion that began the spell ending at [completedAt].
+     *
+     * Walked backwards through the item's own events and stopped by an earlier
+     * completion, so an item finished, reopened and finished again is measured over
+     * its second spell rather than over both of them and the gap between. Null when
+     * the item was never promoted, which is an item that was never active.
+     */
+    private fun promotionBehind(history: List<ClarityEvent>, completedAt: Int): Int? {
+        for (index in completedAt - 1 downTo 0) {
+            when (history[index].payload) {
+                is ItemPromoted -> return index
+                is ItemCompleted -> return null
+                else -> Unit
+            }
+        }
+        return null
+    }
+
+    /**
+     * The estimate the item carried immediately before [promotedAt], or null.
+     *
+     * Null covers three shapes that are one shape to this function: the item was
+     * captured without an estimate and never given one, the estimate it was given was
+     * cleared again, or the only estimate it has was set after it became active.
+     * Nothing predicted anything in any of them, so there is nothing to calibrate.
+     */
+    private fun estimateInForceAt(history: List<ClarityEvent>, promotedAt: Int): Double? {
+        for (index in promotedAt - 1 downTo 0) {
+            when (val payload = history[index].payload) {
+                is ItemEstimated -> return payload.newEstimateMinutes?.takeIf { it > 0 }?.toDouble()
+                is ItemAdded -> return payload.estimateMinutes?.takeIf { it > 0 }?.toDouble()
+                else -> Unit
+            }
+        }
+        return null
+    }
+
     // The engine's own record of what it has already said ---------------------
     //
     // CLARITY_LOGIC_ENGINE.md 7.6: "FiringHistory is derived entirely from
@@ -1267,4 +1370,18 @@ class TrailQueries(
         ChronoUnit.DAYS.between(localDateOf(fromMillis), localDateOf(toMillis))
             .toInt()
             .coerceAtLeast(0)
+
+    private companion object {
+
+        /**
+         * The one duration in this class measured in milliseconds rather than in
+         * calendar days.
+         *
+         * [estimateOutcomes] compares a span of a few minutes or a few days against a
+         * number of minutes somebody typed, and a calendar has nothing to say about
+         * either. Every other duration here is whole local days and is counted between
+         * dates for the reason the class note gives.
+         */
+        const val MILLIS_PER_MINUTE = 60_000.0
+    }
 }

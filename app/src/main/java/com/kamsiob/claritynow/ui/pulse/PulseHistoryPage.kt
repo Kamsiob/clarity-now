@@ -96,7 +96,7 @@ internal fun PulseHistoryPage(
                         color = contemplative.textBright,
                         textAlign = TextAlign.Center,
                     )
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(ClaritySpacing.scaled(8.dp)))
                     Text(
                         text = stringResource(R.string.pulse_history_empty_body),
                         style = type.body,
@@ -144,7 +144,7 @@ private fun PulseHistoryHeader(onBack: () -> Unit, modifier: Modifier = Modifier
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 4.dp),
+            .padding(horizontal = 12.dp, vertical = ClaritySpacing.scaled(4.dp)),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -196,20 +196,23 @@ private fun PulseHistoryRow(entry: PulsePastEntry, modifier: Modifier = Modifier
         Text(
             text = entry.date?.let { DATE_FORMAT.format(it) } ?: entry.dateKey,
             style = type.caption,
-            color = contemplative.textFaint,
+            // The date is what tells one past Pulse from another, and whitespace is
+            // already this row's separation device, 6.1. design-v3.md 13: 32 percent
+            // measures 2.637 to one on `deepBlack` against a floor of 4.5.
+            color = contemplative.textDim,
         )
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(6.dp)))
         Text(
             text = entry.observation,
             style = type.bodySerif,
             color = contemplative.textBright,
         )
         entry.question?.let { question ->
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(4.dp)))
             Text(text = question, style = type.body, color = contemplative.textDim)
         }
         entry.answerLabel?.let { label ->
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
             Text(text = label, style = type.bodyStrong, color = accent)
         }
     }

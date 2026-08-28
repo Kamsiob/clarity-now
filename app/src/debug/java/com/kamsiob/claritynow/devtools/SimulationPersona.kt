@@ -12,6 +12,12 @@ import com.kamsiob.claritynow.domain.engine.StableHash
  * into a scold, and its dump is the evidence for the non-compliance check in
  * [SimulationChecks].
  *
+ * **There is a twelfth and it is deliberately outside [ALL].** [SimulationPersona.CYCLICAL]
+ * is asked for by `MASTER_BUILD_PROMPT.md` 14b.9 rather than by section 12, and it is the
+ * proof of a gate rather than a measurement. Every number this project has recorded is
+ * quoted against the eleven, so a twelfth inside that list would move all of them. Its own
+ * declaration carries the argument.
+ *
  * ## Determinism, without a random number generator
  *
  * A persona decides what happens on a day with [roll], which is `StableHash` of the
@@ -37,6 +43,16 @@ import com.kamsiob.claritynow.domain.engine.StableHash
  * nothing, whose size comes from what had piled up rather than from a literal. Four
  * personas have one, each shaped to that life. **The one that must never have one is
  * `acceptsEveryPlan`,** whose whole value is that it never completes.
+ *
+ * ## Nothing happens on a day nobody was there
+ *
+ * A persona used to be asked whether it opened the app and then asked what it did, and the
+ * second question was asked every day regardless of the answer to the first. Two lives
+ * wrote captures and completions onto days carrying no `APP_OPENED`, **which the real app
+ * cannot produce.** [isPresentOn] is the one gate now, it covers the install day as well
+ * as the ordinary ones, and every driver of a persona applies it: the simulator,
+ * `ReportPersonaTest` and `CapacityGatePersonaTest`. Read that method for the whole
+ * argument. Nothing in an [act] needs to repeat the test.
  *
  * ## What a persona is not
  *
@@ -71,10 +87,55 @@ abstract class SimulationPersona(
      */
     open val installDay: Int = 0
 
-    /** Whether the app is opened on this local day. A day not opened generates no Pulse. */
-    open fun opensOn(day: Int): Boolean = day >= installDay
+    /**
+     * Whether the app is opened on this local day, as this life decides it.
+     *
+     * **Never called by a driver.** [isPresentOn] is the gate, it calls this, and the two
+     * are separate so that the install day and the days before it are answered in one
+     * place rather than in eleven overrides that each forget a different half.
+     */
+    open fun opensOn(day: Int): Boolean = true
 
-    /** What the person did on this local day, written into [log]. */
+    /**
+     * Whether this person is there on this local day at all. **The one gate every driver
+     * of a persona applies before writing anything into the log.**
+     *
+     * ## Why this is not just [opensOn]
+     *
+     * A persona used to be asked whether it opened the app and then asked what it did, and
+     * the second question was asked on every day of the year regardless of the answer to
+     * the first. So `sporadic` and `abandoning` wrote `ITEM_ADDED` and `ITEM_COMPLETED` on
+     * days carrying no `APP_OPENED`, **which the real app cannot produce**: nothing is
+     * captured, promoted, completed or focused on except through a screen, and the shell
+     * writes the open marker on the first foreground of the day. Every measurement this
+     * project has recorded was read through an instrument that could do that.
+     *
+     * It is the same class of defect as the persona set that could not finish a backlog,
+     * and it is fixed the same way, in the instrument rather than in each life: a driver
+     * that has to remember to ask two questions in the right order is a driver that will
+     * one day ask one.
+     *
+     * ## The install day is always present, and that is the second half of the fix
+     *
+     * [setUp] writes `AREA_CREATED`, which is a screen gesture like any other, so an
+     * install day the persona happened not to open would put the same impossible event one
+     * line earlier than the ones this method exists to stop. **Setting the app up is an app
+     * session**, so the install day answers true whatever [opensOn] says about it, and a
+     * persona whose own plan had nothing for that day simply does nothing after the areas
+     * exist. That is what installing an app and not adding anything looks like.
+     */
+    fun isPresentOn(day: Int): Boolean = when {
+        day < installDay -> false
+        day == installDay -> true
+        else -> opensOn(day)
+    }
+
+    /**
+     * What the person did on this local day, written into [log].
+     *
+     * **Called only on a day [isPresentOn] answers true for**, so nothing here needs to
+     * repeat that test and nothing here may write an event the app could not have written.
+     */
     abstract fun act(log: SimulatorLog, day: Int)
 
     /**
@@ -236,6 +297,22 @@ abstract class SimulationPersona(
             "Patch the bike tire",
         )
 
+        /**
+         * The twelfth persona, and it is deliberately **not** in [ALL].
+         * `MASTER_BUILD_PROMPT.md` 14b.9.
+         *
+         * [ALL] is section 12's enumeration and every measurement this project has ever
+         * recorded is quoted against those eleven years: five silence readings, five
+         * family coverage readings, the variant repeat baseline phase 9 is judged by, and
+         * the pattern section's concentration. A twelfth life in that list would move
+         * every one of those numbers, and a reader comparing the sixth measurement against
+         * the fifth would be comparing two different instruments without being told.
+         *
+         * This persona is not a measurement. It is the proof of a gate, asked for by
+         * 14b.9 and listed in section 17, and it belongs to the test that reads it.
+         */
+        val CYCLICAL: SimulationPersona = CyclicalDips
+
         /** Every persona section 12 names, in the order it names them. */
         val ALL: List<SimulationPersona> = listOf(
             HeavySingleArea,
@@ -333,6 +410,16 @@ private object BalancedAcrossFour : SimulationPersona(
  * arrives; output is rare and expensive, an afternoon where the list is dealt with. How
  * much the afternoon gets through is whatever had accumulated, which is why [clearOut]
  * reads the queue rather than taking a number from here.
+ *
+ * **A session that falls on a day this person is not there does not happen, and is not
+ * moved.** This life opens the app on 249 days of the 365 and its session roll comes up 50
+ * times; 11 of those land on a day it is not there, so it has 39 clearing afternoons rather
+ * than 50 once [isPresentOn] is applied. The eleven that went are afternoons somebody spent
+ * on their list without opening the app, which the log has no way to hold. Deferring one to
+ * the next day opened was the alternative and it was rejected: [roll] is a hash of the day
+ * and of nothing else, which is the property this whole file rests on and the reason a
+ * seeded generator was refused, and a pending session carried forward would make what
+ * happens on a day depend on the days before it.
  */
 private object Sporadic : SimulationPersona(
     key = "sporadic",
@@ -495,7 +582,6 @@ private object BrandNew : SimulationPersona(
     override val areas = listOf(SimulatedArea("work", "Work"))
 
     override fun act(log: SimulatorLog, day: Int) {
-        if (day < installDay) return
         if (day == installDay) {
             log.createArea(day, FIRST_AREA_HOUR, "home", "Home", "#3E8E6E")
         }
@@ -534,7 +620,6 @@ private object LongDormantRevival : SimulationPersona(
     override fun opensOn(day: Int): Boolean = day !in DORMANT
 
     override fun act(log: SimulatorLog, day: Int) {
-        if (day in DORMANT) return
         if (day in RETURN_CLEARING) {
             clearOut(log, day, "work", upTo = CLEARED_PER_EVENING)
             return
@@ -684,4 +769,315 @@ private object AcceptsEveryPlanCompletesNone : SimulationPersona(
     private const val DAYS_PER_WEEK = 7
     private const val PLEDGE_DAY = 1
     private const val PLEDGE_HOUR = 10
+}
+
+/**
+ * A life that runs in cycles of its own, none of them the same size.
+ * `MASTER_BUILD_PROMPT.md` 14b.9, Addendum 01 7b.
+ *
+ * ## Why this one exists
+ *
+ * A fluctuating condition and a decline are the same numbers. Both are a fall in
+ * completions, a rise in idle days, an area going quiet. Without the capacity gate the app
+ * tells this person that they are deteriorating **on a fixed schedule, forever, and it is
+ * technically accurate every single time**: every individual report passes every integrity
+ * rule, and the claim the sequence makes across the year is still false, because the shape
+ * being read is a cycle and the app has read half of one.
+ *
+ * So this is the one persona whose value is what the engine does **not** say about it.
+ * `CapacityGatePersonaTest` composes its year twice and the control run is the finding.
+ *
+ * ## It is a life and deliberately not a waveform
+ *
+ * A clean period would pass the test and prove nothing, because the precedent fact would
+ * be matching on a shape no person produces. **The bad stretches here vary in depth, vary
+ * in length, and start on no fixed day of any month**, the good stretches between them are
+ * of different sizes, and no two are the same height. [YEAR] is fifty three weeks of
+ * capacity written out one at a time for that reason: the irregularity is the thing being
+ * modeled, and a generator with a period in it would have hidden the very defect this
+ * persona exists to catch.
+ *
+ * What is not left to chance is the **band** each bad week falls in. `Precedent` compares
+ * two falls by depth band rather than by exact depth, and every low week in this year is
+ * under half of this person's normal, which is the band that makes them comparable at all.
+ * A year of dips scattered across two bands would be a year in which half of them are
+ * precedents for nothing, which is a different persona and a fair one to build later.
+ *
+ * ## Why the whole year is silent, which is not the same as the gate closing all year
+ *
+ * 14b.9 asks for a year with **no** decline, neglect or fading observation in it, and the
+ * app cannot know a fall is familiar until it has seen its like. Both are true here, and
+ * the reason is that the two definitions of a bad week are not the same width:
+ *
+ * - **`Precedent`'s low is a week under three quarters of normal.** No decline family asks
+ *   that question. `quietWeek` needs a week holding fewer events than it has days,
+ *   `decliningActivity` needs three weeks falling strictly, `neglectedArea` needs seven
+ *   days of silence in an area with a real history behind it
+ * - So a week can be squarely inside a fall by the fact's reckoning and reach no family's
+ *   bar at all. **The first eleven weeks here are made of exactly those weeks**: three bad
+ *   stretches, one of them three weeks long, none of them steep enough or quiet enough or
+ *   long enough for anything to be said about, and no two of them adjacent in a way that
+ *   makes three weeks fall in a row
+ *
+ * By the twelfth week, which is `Precedent.MIN_HISTORY_WEEKS` and the first week the fact
+ * answers at all, this person has a fall of every length and depth the rest of the year
+ * contains. Everything after it is familiar, and everything before it was beneath notice.
+ *
+ * **The household list carries the same story and needs it more.** `home` is created on the
+ * first day and not opened until the fourth week, because the first fortnight goes entirely
+ * on work, which is ordinary and is also the only window in which an area can be silent
+ * without `neglectedArea` being entitled to say so: under five lifetime events and under a
+ * fortnight old, both of that family's own guards are shut. That fortnight is what every
+ * later quiet stretch of `home` is measured against, and it is why none of them runs longer
+ * than the two weeks it holds.
+ */
+private object CyclicalDips : SimulationPersona(
+    key = "cyclicalDips",
+    title = "Cyclical, and never twice the same",
+    why = "A fluctuating condition reads as a decline in the data. Proves the capacity " +
+        "gate in 14b.9 removes the decline families rather than re-wording them.",
+) {
+
+    override val areas = listOf(
+        SimulatedArea("work", "Work"),
+        SimulatedArea("home", "Home"),
+    )
+
+    override fun opensOn(day: Int): Boolean = day % DAYS_PER_WEEK in shapeOf(day / DAYS_PER_WEEK).present
+
+    override fun act(log: SimulatorLog, day: Int) {
+        val shape = shapeOf(day / DAYS_PER_WEEK)
+        val dayOfWeek = day % DAYS_PER_WEEK
+        // The install day reaches here whether or not this person had anything planned for
+        // it, per `isPresentOn`. Setting the app up and adding nothing that day is a real
+        // first day and the areas exist either way.
+        if (dayOfWeek !in shape.present) return
+        work(
+            log,
+            day,
+            "work",
+            captures = 1,
+            completions = if (dayOfWeek in shape.finishing) 1 else 0,
+            focusMinutes = if (dayOfWeek in shape.sittings) SITTING_MINUTES else 0,
+        )
+        if (dayOfWeek in shape.household) work(log, day, "home", captures = 1, completions = 1)
+        // The last day of a good week is when the list that piled up gets worked through.
+        // `clearOut` takes its size from what is waiting, per the note on that method.
+        if (shape.clearsUpTo > 0 && dayOfWeek == shape.lastPresentDay) {
+            clearOut(log, day, "work", shape.clearsUpTo)
+        }
+    }
+
+    /**
+     * How much of a week this person has, and what they spend it on.
+     *
+     * The weekly event count each of these produces is stated because it is the quantity
+     * every fact in 14b.9 is computed from, and a reader changing one of these numbers is
+     * changing where a week falls against `Precedent`'s bands. Normal across this year is
+     * about twenty four events a week, so **everything from [TAPER] down is a low week and
+     * everything from [EBB] down is a deep one**, and `quietWeek` reaches the ones under
+     * seven.
+     */
+    private enum class Capacity(
+        val presentDays: Int,
+        val finishingDays: Int,
+        val sittings: Int,
+        val householdDays: Int,
+        val clearsUpTo: Int,
+        /** Whether the week's size moves. False for the low weeks, whose depth is the point. */
+        val varies: Boolean = true,
+    ) {
+
+        /** About 32 to 39 events. Everything gets done and the list gets cleared. */
+        PEAK(presentDays = 6, finishingDays = 4, sittings = 3, householdDays = 2, clearsUpTo = 4),
+
+        /** About 25 to 29, and not one of them in the house. The first three weeks. */
+        HEADS_DOWN(presentDays = 7, finishingDays = 5, sittings = 2, householdDays = 0, clearsUpTo = 2),
+
+        /** About 28 to 33. A good week without the clear out being a big one. */
+        FULL(presentDays = 6, finishingDays = 4, sittings = 2, householdDays = 2, clearsUpTo = 2),
+
+        /** About 24 to 25. The ordinary week this person's normal is made of. */
+        STEADY(presentDays = 6, finishingDays = 4, sittings = 2, householdDays = 2, clearsUpTo = 0),
+
+        /** About 21 to 22. A quieter ordinary week, still nowhere near low. */
+        PLAIN(presentDays = 5, finishingDays = 3, sittings = 2, householdDays = 2, clearsUpTo = 0),
+
+        /** 13. Under three quarters of normal and over half of it: low, and not deep. */
+        TAPER(
+            presentDays = 4, finishingDays = 2, sittings = 1, householdDays = 1,
+            clearsUpTo = 0, varies = false,
+        ),
+
+        /** 8. Deep, and still well clear of the bar `quietWeek` sets. */
+        EBB(
+            presentDays = 5, finishingDays = 0, sittings = 0, householdDays = 1,
+            clearsUpTo = 0, varies = false,
+        ),
+
+        /** 7. The same, one lower. Things get written down and none of them get done. */
+        LULL(
+            presentDays = 4, finishingDays = 0, sittings = 0, householdDays = 1,
+            clearsUpTo = 0, varies = false,
+        ),
+
+        /** 4. Quiet by `quietWeek`'s reckoning, and the house does not get looked at. */
+        SPARSE(
+            presentDays = 4, finishingDays = 0, sittings = 0, householdDays = 0,
+            clearsUpTo = 0, varies = false,
+        ),
+
+        /** 2. Two days in the whole week, one thought written down on each. */
+        FLAT(
+            presentDays = 2, finishingDays = 0, sittings = 0, householdDays = 0,
+            clearsUpTo = 0, varies = false,
+        ),
+
+        /** 1. One day, one thing. Never nothing: a week with nothing in it is its own band. */
+        STILL(
+            presentDays = 1, finishingDays = 0, sittings = 0, householdDays = 0,
+            clearsUpTo = 0, varies = false,
+        ),
+    }
+
+    /** Which days of one week are which. Built once per week and read on each of its days. */
+    private class WeekShape(
+        val present: Set<Int>,
+        val finishing: Set<Int>,
+        val sittings: Set<Int>,
+        val household: Set<Int>,
+        val clearsUpTo: Int,
+        val lastPresentDay: Int,
+    )
+
+    /**
+     * Fifty three weeks of capacity, written out rather than generated.
+     *
+     * Read it as a sequence of twelve episodes. **Two of them fall inside the first eleven
+     * weeks**, where nothing the app has can be said out loud: one bad week on its own, and
+     * three weeks later a stretch of three. Those two are what the whole rest of the year
+     * is compared against, and they are the reason a fall of any length this year holds has
+     * a twin behind it.
+     *
+     * The rest run for one, two or three weeks, arrive after gaps of two to six good weeks,
+     * and bottom out anywhere between thirteen events in the week and one. No two recoveries
+     * are the same height either: a stretch is followed by a peak in one place and by an
+     * ordinary week in another.
+     *
+     * **What is deliberately regular, and what it costs.** An episode begins on a week
+     * boundary, because a seven day bucket anchored on the window end is the grain every
+     * fact in `CLARITY_LOGIC_ENGINE.md` 3.1 is computed at, and an episode that straddled
+     * one would reach the precedent walk as two short falls where the person had one long
+     * one. That is a real shape and a real risk, and it belongs to a persona of its own
+     * rather than to this one: the reading it would test is whether a fall is recognized
+     * when it is out of phase with the grid, which is a question about the fact and not
+     * about the gate. What does move inside a week is which days the person is there, so
+     * two weeks of the same capacity are the same size and never the same week.
+     */
+    private val YEAR: List<Capacity> = listOf(
+        // The first three weeks go entirely on work. The household list is created and not
+        // opened, which is the only fortnight in which an area may be silent without
+        // `neglectedArea` being entitled to say so, and is what its later quiet stretches
+        // are measured against.
+        Capacity.HEADS_DOWN, Capacity.HEADS_DOWN, Capacity.HEADS_DOWN,
+        // A strong week, then one bad week on its own, then back.
+        Capacity.PEAK, Capacity.EBB, Capacity.STEADY,
+        // Three weeks under, the longest stretch of the year, and the shallowest.
+        Capacity.PEAK, Capacity.LULL, Capacity.EBB, Capacity.EBB, Capacity.FULL,
+        // Week eleven. From here a precedent is answerable and every fall has one behind it.
+        Capacity.PEAK, Capacity.STEADY, Capacity.SPARSE, Capacity.FULL,
+        Capacity.PLAIN, Capacity.FULL,
+        // The first one with a slope into it rather than a step.
+        Capacity.TAPER, Capacity.FLAT, Capacity.STEADY, Capacity.PEAK,
+        Capacity.PLAIN, Capacity.EBB, Capacity.STEADY, Capacity.FULL,
+        // Three weeks, and this time each one lower than the last.
+        Capacity.LULL, Capacity.SPARSE, Capacity.FLAT, Capacity.PLAIN,
+        Capacity.PEAK, Capacity.STEADY,
+        Capacity.TAPER, Capacity.FULL,
+        // The deepest single week in the year, and it comes out of a good one.
+        Capacity.STILL, Capacity.PLAIN, Capacity.PEAK,
+        // A fortnight, flat rather than falling.
+        Capacity.EBB, Capacity.EBB, Capacity.STEADY, Capacity.FULL,
+        Capacity.PLAIN, Capacity.SPARSE, Capacity.PEAK, Capacity.STEADY,
+        // The last long one, and the recovery from it is the smallest of the year.
+        Capacity.TAPER, Capacity.FLAT, Capacity.SPARSE, Capacity.FULL,
+        Capacity.PLAIN, Capacity.PEAK, Capacity.LULL, Capacity.STEADY, Capacity.PLAIN,
+    )
+
+    /**
+     * Every week's shape, built once.
+     *
+     * A shape is read on each of the seven days of its week and again by [opensOn] for
+     * each of them, so building it per call would be fourteen sorts a day for a year. It
+     * is a pure function of [YEAR] and of [key], so holding it changes no answer.
+     */
+    private val shapes: List<WeekShape> by lazy { YEAR.indices.map { buildShape(it) } }
+
+    /** A run longer than [YEAR] holds ends the way the year ended rather than repeating it. */
+    private fun shapeOf(week: Int): WeekShape = shapes[week.coerceAtMost(shapes.lastIndex)]
+
+    /**
+     * Which days of [week] this person is there, finishes something, sits down to focus,
+     * and does something in the house.
+     *
+     * **The days move, and that is the half of the brief a level table cannot carry.** A
+     * capacity says how much of a week there is; where in the week it falls is a hash of
+     * the week, so no episode starts on the same weekday and none lands on the same day of
+     * a month. Two weeks of the same capacity are the same size and are not the same week.
+     */
+    private fun buildShape(week: Int): WeekShape {
+        val capacity = YEAR[week]
+        val stretch = StableHash.bucket("$key|w$week|stretch", STRETCH_OUTCOMES)
+        val presentCount = if (capacity.varies && stretch == STRETCH_A_DAY) {
+            (capacity.presentDays + 1).coerceAtMost(DAYS_PER_WEEK)
+        } else {
+            capacity.presentDays
+        }
+        val finishingCount = if (capacity.varies && stretch == STRETCH_A_FINISH) {
+            capacity.finishingDays + 1
+        } else {
+            capacity.finishingDays
+        }
+        val present = pick(week, "present", (0 until DAYS_PER_WEEK).toList(), presentCount)
+        val finishing = pick(week, "finishing", present, finishingCount)
+        val unfinished = present.filterNot { it in finishing }
+        return WeekShape(
+            present = present.toSet(),
+            finishing = finishing.toSet(),
+            // A sitting goes on a day nothing is finished, because `work` runs the session
+            // after the completions and a completion that empties the queue leaves the area
+            // with nothing active for a session to be about.
+            sittings = pick(week, "sitting", unfinished, capacity.sittings).toSet(),
+            household = pick(week, "household", present, capacity.householdDays).toSet(),
+            clearsUpTo = if (capacity.clearsUpTo == 0) {
+                0
+            } else {
+                capacity.clearsUpTo + StableHash.bucket("$key|w$week|clear", CLEAR_SPREAD)
+            },
+            lastPresentDay = present.lastOrNull() ?: -1,
+        )
+    }
+
+    /** The [count] days of [pool] this week gives to [label], in calendar order. */
+    private fun pick(week: Int, label: String, pool: List<Int>, count: Int): List<Int> =
+        pool.sortedBy { StableHash.spread("$key|w$week|$label$it") }
+            .take(count.coerceAtMost(pool.size))
+            .sorted()
+
+    private const val DAYS_PER_WEEK = 7
+
+    /** One sitting, the same length whatever the week, so the count is what varies. */
+    private const val SITTING_MINUTES = 30
+
+    /**
+     * A week of a given capacity is one of three sizes: itself, itself with a day in it,
+     * or itself with one more thing finished. One roll, three outcomes, so no two weeks of
+     * the same capacity read as a repeat of each other in the dump.
+     */
+    private const val STRETCH_OUTCOMES = 3
+    private const val STRETCH_A_DAY = 0
+    private const val STRETCH_A_FINISH = 2
+
+    /** How much a clearing evening varies. Three sizes, none of them a threshold. */
+    private const val CLEAR_SPREAD = 3
 }

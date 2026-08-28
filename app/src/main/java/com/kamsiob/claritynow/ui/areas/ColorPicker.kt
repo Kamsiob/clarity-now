@@ -34,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,11 +48,13 @@ import com.kamsiob.claritynow.ui.components.clarityClickable
 import com.kamsiob.claritynow.ui.theme.AreaMood
 import com.kamsiob.claritynow.ui.theme.AreaPalette
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.areaLabelColor
 import com.kamsiob.claritynow.ui.theme.clarityMotion
 import com.kamsiob.claritynow.ui.theme.parseAreaColor
+import com.kamsiob.claritynow.ui.theme.swatchCheckColor
 import kotlinx.coroutines.delay
 
 /**
@@ -82,7 +83,7 @@ fun AreaColorPicker(
             text = stringResource(R.string.sidehead_preview),
             modifier = Modifier.padding(horizontal = 20.dp),
         )
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(12.dp)))
         ColorPreviewCard(
             areaName = areaName,
             hex = selectedHex,
@@ -90,12 +91,12 @@ fun AreaColorPicker(
             modifier = Modifier.padding(horizontal = 20.dp),
         )
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(24.dp)))
         Sidehead(
             text = stringResource(R.string.sidehead_mood),
             modifier = Modifier.padding(horizontal = 20.dp),
         )
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(12.dp)))
         MoodStrip(
             selected = mood,
             // The previously selected color is kept when it belongs to the newly
@@ -104,19 +105,19 @@ fun AreaColorPicker(
             onSelect = { picked -> mood = picked },
         )
 
-        Spacer(Modifier.height(22.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(22.dp)))
         Sidehead(
             text = stringResource(R.string.sidehead_color),
             modifier = Modifier.padding(horizontal = 20.dp),
         )
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(12.dp)))
         SwatchGrid(
             mood = mood,
             selectedHex = selectedHex,
             onSelect = onSelect,
             modifier = Modifier.padding(horizontal = 20.dp),
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(ClaritySpacing.scaled(8.dp)))
     }
 }
 
@@ -144,7 +145,7 @@ private fun ColorPreviewCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .areaWash(currentAccent, colors.cardWashAlpha, current)
-                    .padding(horizontal = 18.dp, vertical = 17.dp),
+                    .padding(horizontal = 18.dp, vertical = ClaritySpacing.scaled(17.dp)),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
@@ -160,11 +161,23 @@ private fun ColorPreviewCard(
                         modifier = Modifier.padding(start = 8.dp),
                     )
                 }
+                // The idle line, drawn exactly as `AreaCard.kt` draws it, because the
+                // sentence above this function says this is an actual miniature area
+                // card. design-v3.md 10.3 already settled this string: the weight
+                // drops from 650 to 500 and the color stays on a rank a person can
+                // read. `inkTertiary` measures 2.402 to one on this card against
+                // section 13's floor of 4.5, and here it was the **only** thing
+                // telling the idle state from a real title, so the distinction moves
+                // onto the weight rather than being dropped.
                 Text(
                     text = itemTitle ?: stringResource(R.string.area_idle_title),
-                    style = type.itemTitle,
-                    color = if (itemTitle == null) colors.inkTertiary else colors.inkPrimary,
-                    modifier = Modifier.padding(top = 7.dp),
+                    style = if (itemTitle == null) {
+                        type.itemTitle.copy(fontWeight = FontWeight(500))
+                    } else {
+                        type.itemTitle
+                    },
+                    color = if (itemTitle == null) colors.inkSecondary else colors.inkPrimary,
+                    modifier = Modifier.padding(top = ClaritySpacing.scaled(7.dp)),
                 )
             }
         }
@@ -236,12 +249,18 @@ private fun MoodStrip(selected: AreaMood, onSelect: (AreaMood) -> Unit) {
                         }
                     }
                 }
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(ClaritySpacing.scaled(6.dp)))
                 Text(
                     text = mood.name,
                     fontSize = 10.sp,
                     fontWeight = if (isSelected) FontWeight(700) else FontWeight(400),
-                    color = if (isSelected) colors.inkPrimary else colors.inkTertiary,
+                    // `inkSecondary` rather than the `inkTertiary` design-v3.md 10.9
+                    // named, which measures 2.402 to one on this sheet against section
+                    // 13's floor of 4.5. Nothing is lost: the weight above is what
+                    // says which mood is selected, and it says it at 700 against 400
+                    // whether or not the unselected names are also too faint to read.
+                    // 10.9 is corrected rather than left standing beside 3.1.
+                    color = if (isSelected) colors.inkPrimary else colors.inkSecondary,
                     style = LocalClarityTypography.current.caption.copy(fontSize = 10.sp),
                 )
             }
@@ -268,7 +287,10 @@ private fun SwatchGrid(
         }
     }
 
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(12.dp)),
+    ) {
         mood.colors.chunked(3).forEachIndexed { rowIndex, row ->
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 row.forEachIndexed { columnIndex, hex ->
@@ -333,7 +355,10 @@ private fun Swatch(hex: String, selected: Boolean, onClick: () -> Unit) {
             ClarityIcon(
                 icon = ClarityIcons.check,
                 contentDescription = null,
-                tint = Color.White,
+                // design-v3.md 10.9 asked for a white check and it fails on 17 of the 48
+                // swatches, worst at 1.67 to one. swatchCheckColor picks the ink that
+                // reads on this swatch; the worst of the 48 is then 4.23.
+                tint = swatchCheckColor(accent),
                 modifier = Modifier.size(20.dp),
             )
         }

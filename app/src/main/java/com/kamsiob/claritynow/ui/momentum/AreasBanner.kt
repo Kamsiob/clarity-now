@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kamsiob.claritynow.di.ClarityViewModelFactory
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.clarityMotion
@@ -84,11 +85,11 @@ fun AreasBanner(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(BANNER_RADIUS))
                     .background(colors.parchment)
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                    .padding(horizontal = 16.dp, vertical = ClaritySpacing.scaled(14.dp)),
             ) {
                 Text(text = current.sentence, style = type.bodyStrong, color = colors.inkPrimary)
                 current.caption?.let { caption ->
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(ClaritySpacing.scaled(4.dp)))
                     Text(text = caption, style = type.caption, color = colors.inkSecondary)
                 }
             }

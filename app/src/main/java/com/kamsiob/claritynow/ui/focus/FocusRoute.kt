@@ -7,6 +7,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -55,10 +56,21 @@ import com.kamsiob.claritynow.ui.theme.clarityMotion
  * through from whatever the app resolved: passing the already resolved flag back into
  * `resolveCalmMode` returns the same answer, so this surface is calm exactly when the
  * rest of the app is and never decides on its own.
+ *
+ * **[startOn] is the `First Step` widget, and it arrives here rather than acting on its
+ * own.** `MASTER_BUILD_PROMPT.md` 13.3: that widget's tap starts a session on the item
+ * it is showing. It is delivered as a value into this surface for two reasons that are
+ * really one. The write path in this app is `ClarityRepository`, so a widget that
+ * appended `FOCUS_STARTED` from a broadcast receiver would put somebody in a running
+ * session with nothing on screen saying so; and this surface calls `restoreFocus` on
+ * every entry, so a start that ran before that call would be refused by an unloaded
+ * repository on a cold start and accepted on a warm one. [FocusViewModel.startOnItem]
+ * waits for the entry read for exactly that reason.
  */
 @Composable
 fun FocusRoute(
     onExit: () -> Unit,
+    startOn: FocusStart?,
     modifier: Modifier = Modifier,
     viewModel: FocusViewModel = viewModel(factory = ClarityViewModelFactory),
 ) {
@@ -72,6 +84,15 @@ fun FocusRoute(
     val countdown = remember(countdownState) { { countdownState.value } }
 
     LaunchedEffect(phase) { if (phase is FocusPhase.Dismissed) onExit() }
+
+    // Keyed on the whole request rather than on `Unit`, so that a second tap on the
+    // `First Step` widget while this surface is already showing is a second request. The
+    // serial is what makes two taps on the same item two values; the ViewModel is what
+    // makes the second one harmless, since the repository refuses a session while one is
+    // running rather than starting a second.
+    LaunchedEffect(startOn) {
+        if (startOn != null) viewModel.startOnItem(startOn.itemId)
+    }
 
     // Back, from every phase. It leaves the surface and writes nothing.
     BackHandler { viewModel.leave() }
@@ -154,6 +175,17 @@ fun FocusRoute(
 private fun FocusNotificationPermission(countdown: () -> FocusCountdown?) {
     NotificationPermissionOnFocusStart(countdown())
 }
+
+/**
+ * A session the `First Step` widget has asked for, on the item it was showing.
+ *
+ * [serial] is the shell's request counter and it is here so that two taps are two
+ * values. Without it, tapping the same widget twice would be one request that the
+ * surface had already acted on, and the second tap would do nothing at all on a warm
+ * start while doing the right thing on a cold one.
+ */
+@Immutable
+data class FocusStart(val serial: Long, val itemId: String)
 
 /** design-v3.md 8.2 item 6. What the incoming surface scales from. */
 private const val DIM_FROM = 0.97f

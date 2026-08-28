@@ -5,10 +5,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,6 +22,37 @@ import com.kamsiob.claritynow.ui.components.TabBarHeight
 import com.kamsiob.claritynow.ui.components.UndoRequest
 import com.kamsiob.claritynow.ui.components.UndoSnackbar
 import com.kamsiob.claritynow.ui.theme.AreaPalette
+import kotlinx.coroutines.flow.first
+
+/**
+ * What something outside the composition has asked this tab to open.
+ *
+ * Two of the six destinations in `ui/nav/ExternalRequest.kt` land on this screen: a
+ * `Next Up` or `All Areas` tap, which opens one area's detail sheet, and a `Quick
+ * Capture` tap or the matching app shortcut, which opens the add sheet with no area.
+ * `design-v3.md` 12.2 and `MASTER_BUILD_PROMPT.md` 13.3.
+ *
+ * **[serial] is carried down rather than a flag, and this route remembers the last one
+ * it acted on rather than clearing anything.** The shell holds one number that only goes
+ * up; this tab holds the one it has already answered. Both directions matter and the
+ * ordinary flag fails one of them: a flag cleared by whoever acted on it re-opens a
+ * sheet in the frame before it is cleared, and a flag that is never cleared re-opens it
+ * every time this tab is composed, which is every switch back from Momentum. A number
+ * compared against a number does neither.
+ */
+@Immutable
+data class AreasRequest(val serial: Long, val target: AreasTarget)
+
+/** The two things a tap outside the app can ask this screen for. */
+@Immutable
+sealed interface AreasTarget {
+
+    /** One area, opened. */
+    data class Detail(val areaId: String) : AreasTarget
+
+    /** Capture into the unfiled inbox, with no area to choose. Addendum 01 4a. */
+    data object Capture : AreasTarget
+}
 
 /**
  * Which secondary surface is open. Everything here is a bottom sheet.
@@ -66,10 +99,17 @@ private sealed interface AreaSheet {
  * opens nothing, which is the exact thing phase 2 refused to do when it left this chip
  * out rather than putting an inert one in the header. Leaving it required means the
  * app does not build until the chip has somewhere to go.
+ *
+ * **[request] is a widget or a shortcut, and it has no default for the same reason.**
+ * `MASTER_BUILD_PROMPT.md` 13.3 has a `Next Up` tap open that area and a `Quick Capture`
+ * tap open the inbox, and both of those are a sheet in this file. A default of null here
+ * would compile at the one call site there is and ship six widgets that open the app at
+ * whatever tab it was left on, which is precisely the state phase 12 left behind.
  */
 @Composable
 fun AreasRoute(
     viewModel: AreasViewModel,
+    request: AreasRequest?,
     onOpenFocus: () -> Unit,
     onOpenPulse: () -> Unit,
     modifier: Modifier = Modifier,
@@ -78,10 +118,55 @@ fun AreasRoute(
     val queueChoiceFor by viewModel.queueChoiceFor.collectAsStateWithLifecycle()
     var sheet by remember { mutableStateOf<AreaSheet?>(null) }
     var undo by remember { mutableStateOf<UndoRequest?>(null) }
-    val scope = rememberCoroutineScope()
+
+    // The [AreasRequest.serial] this tab has already acted on.
+    //
+    // **Saveable, and that is load bearing rather than tidy.** A tab's content leaves
+    // composition when another tab is selected, so a plain `remember` would come back at
+    // zero and the next switch back from Momentum would re-open a sheet nobody asked for
+    // a second time.
+    //
+    // **And compared for difference rather than for order**, which the saving is what
+    // makes necessary. The two numbers come back from different places after a process
+    // death: this one is restored from the saved state, while the shell's serial starts
+    // again at zero in the new process and the redelivered intent makes it one. A
+    // greater than test would read that first request as old and swallow it, which is a
+    // cold start behaving differently from a warm one. Inside one process the serial
+    // only goes up, so there the two tests are the same test.
+    var handledRequest by rememberSaveable { mutableStateOf(0L) }
 
     val undoMessage = stringResource(R.string.undo_item_deleted)
     val undoAction = stringResource(R.string.action_undo)
+
+    // A widget or a shortcut, arriving as a value rather than as a call because
+    // MainActivity has no composition to call into during a cold start.
+    LaunchedEffect(request) {
+        val asked = request ?: return@LaunchedEffect
+        if (asked.serial == handledRequest) return@LaunchedEffect
+        // Recorded before the work rather than after it, so that leaving this tab while
+        // the wait below is still running drops the request instead of queueing it up
+        // to fire on the way back.
+        handledRequest = asked.serial
+        sheet = when (val target = asked.target) {
+            // **Capture waits for nothing**, and that is the whole reason this branch is
+            // separate. MASTER_BUILD_PROMPT 14b.1: every step between the thought and
+            // the record is somewhere the thought is lost, and a capture sheet held back
+            // until the log had finished loading would be a step. It needs no area, so
+            // there is nothing about the projection for it to be right or wrong about.
+            AreasTarget.Capture -> AreaSheet.AddItem(areaId = null)
+
+            // **An area does wait, and a cold start is the only reason it has to.** The
+            // detail sheet dismisses itself when its area is not in the state, which is
+            // how an area deleted under an open sheet is handled; on a cold start that
+            // same rule would fire against a projection that is merely empty so far, and
+            // the widget tap would land on the Areas list. A warm start would open the
+            // sheet. This is the seam where those two stop agreeing.
+            is AreasTarget.Detail -> {
+                viewModel.uiState.first { !it.loading }
+                AreaSheet.Detail(target.areaId)
+            }
+        }
+    }
 
     Box(modifier = modifier.fillMaxSize()) {
         AreasScreen(

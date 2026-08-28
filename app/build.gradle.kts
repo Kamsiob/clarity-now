@@ -41,8 +41,14 @@ plugins {
 // 0.8.0: phases 7 and 8, Momentum and the Report. All four tabs now render, and all
 // three Contemplative worlds exist: the indigo Focus night, the amber Pulse night and
 // the gold Report.
+// 0.9.0: phases 10, 11, 12, 12b, the routing pass, the accessibility pass and the four
+// executive function items 14b assigned to phase 8. A minor bump rather than a patch
+// because the app can now do three things it could not: adjust its own text size,
+// reach a surface from a widget or a shortcut, and withhold a decline observation
+// from somebody whose dip has a precedent. Not a major bump because 1.0 is the
+// release, and phase 9 has not written a line of it yet.
 val versionMajor = 0
-val versionMinor = 8
+val versionMinor = 9
 val versionPatch = 0
 
 // The application id and the one suffix that changes it, written once.

@@ -42,6 +42,7 @@ import com.kamsiob.claritynow.ui.components.ClaritySheet
 import com.kamsiob.claritynow.ui.components.ClarityTextField
 import com.kamsiob.claritynow.ui.components.clarityClickable
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
+import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import java.time.Instant
@@ -102,7 +103,7 @@ internal fun DailyReflectionSheet(onDismiss: () -> Unit) {
                 .heightIn(max = SHEET_SCROLL_MAX)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = SHEET_PADDING),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(14.dp)),
         ) {
             listOf(
                 R.string.settings_reflection_body_1,
@@ -129,9 +130,10 @@ internal fun SessionLengthSheet(
     ClaritySheet(onDismiss = onDismiss, title = stringResource(R.string.settings_session_length_title)) {
         Column(modifier = Modifier.fillMaxWidth().selectableGroup()) {
             ClarityPreferences.FOCUS_DURATION_OPTIONS.forEach { minutes ->
-                ChoiceRow(
+                SettingsChoiceRow(
                     label = stringResource(R.string.settings_session_length_value, minutes),
                     selected = minutes == selected,
+                    horizontalInset = SHEET_PADDING,
                     onClick = {
                         onSelect(minutes)
                         onDismiss()
@@ -166,9 +168,10 @@ internal fun ReminderHourSheet(
                 .selectableGroup(),
         ) {
             (0..23).forEach { hour ->
-                ChoiceRow(
+                SettingsChoiceRow(
                     label = formatHour(hour),
                     selected = hour == selected,
+                    horizontalInset = SHEET_PADDING,
                     onClick = {
                         onSelect(hour)
                         onDismiss()
@@ -211,7 +214,7 @@ internal fun EraseSheet(
                 .heightIn(max = SHEET_SCROLL_MAX)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = SHEET_PADDING),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(14.dp)),
         ) {
             Text(
                 text = stringResource(R.string.settings_erase_title),
@@ -231,14 +234,19 @@ internal fun EraseSheet(
             Text(
                 text = stringResource(R.string.settings_erase_nudge),
                 style = type.body,
-                color = colors.inkTertiary,
+                // "If you want to keep any of it, export it first" is the one line on
+                // this sheet that can still save somebody's data, and it was the
+                // faintest thing on it at 2.402 to one. design-v3.md 3.1 and 13. It
+                // stays a rank below the two serif paragraphs above by being sans,
+                // which is a change of voice rather than of legibility.
+                color = colors.inkSecondary,
             )
             ClarityTextField(
                 value = typed,
                 onValueChange = { typed = it },
                 label = stringResource(R.string.settings_erase_prompt),
             )
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(2.dp)))
             ClarityButton(
                 label = stringResource(R.string.settings_erase_confirm),
                 onClick = onErase,
@@ -288,7 +296,7 @@ internal fun ExportSheet(
                 .heightIn(max = SHEET_SCROLL_MAX)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = SHEET_PADDING),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(14.dp)),
         ) {
             ClarityTextField(
                 value = password,
@@ -304,7 +312,7 @@ internal fun ExportSheet(
                 style = type.bodySerif,
                 color = colors.inkSecondary,
             )
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(2.dp)))
             ClarityButton(
                 label = stringResource(R.string.settings_export_choose),
                 onClick = { onExport(password.takeIf { it.isNotEmpty() }?.toCharArray()) },
@@ -341,7 +349,7 @@ internal fun ImportPasswordSheet(
                 .heightIn(max = SHEET_SCROLL_MAX)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = SHEET_PADDING),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(14.dp)),
         ) {
             Text(
                 text = importRefusalText(refusal),
@@ -353,7 +361,7 @@ internal fun ImportPasswordSheet(
                 onValueChange = { password = it },
                 label = stringResource(R.string.settings_import_password_label),
             )
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(2.dp)))
             ClarityButton(
                 label = stringResource(R.string.settings_import_password_open),
                 onClick = { onOpen(password.toCharArray()) },
@@ -419,7 +427,7 @@ internal fun ImportSheet(
                 .heightIn(max = SHEET_SCROLL_MAX)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = SHEET_PADDING),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(14.dp)),
         ) {
             Text(
                 text = stringResource(
@@ -428,7 +436,9 @@ internal fun ImportSheet(
                     formatDate(opened.header.createdAt, zone),
                 ),
                 style = type.caption,
-                color = colors.inkTertiary,
+                // A count of events and a date, read straight off the file that is
+                // about to be imported. design-v3.md 3.1 and 13.
+                color = colors.inkSecondary,
             )
             SettingsSegmentedChoice(
                 options = listOf(
@@ -453,7 +463,7 @@ internal fun ImportSheet(
                     label = stringResource(R.string.settings_import_confirm_prompt),
                 )
             }
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(2.dp)))
             ClarityButton(
                 label = stringResource(R.string.settings_import),
                 onClick = { onConfirm(mode) },
@@ -495,7 +505,7 @@ internal fun PrivacySheet(onDismiss: () -> Unit) {
                 .heightIn(max = SHEET_SCROLL_MAX)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = SHEET_PADDING),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+            verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(18.dp)),
         ) {
             Text(
                 text = stringResource(R.string.privacy_heading),
@@ -515,7 +525,7 @@ internal fun PrivacySheet(onDismiss: () -> Unit) {
                 R.string.privacy_lead_6 to R.string.privacy_body_6,
                 R.string.privacy_lead_7 to R.string.privacy_body_7,
             ).forEach { (lead, body) ->
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(4.dp))) {
                     Text(
                         text = stringResource(lead),
                         style = type.bodyStrong,
@@ -564,7 +574,7 @@ internal fun LicensesSheet(onDismiss: () -> Unit) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .defaultMinSize(minHeight = 52.dp)
-                        .padding(vertical = 10.dp),
+                        .padding(vertical = ClaritySpacing.scaled(10.dp)),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
@@ -577,7 +587,10 @@ internal fun LicensesSheet(onDismiss: () -> Unit) {
                     Text(
                         text = stringResource(terms),
                         style = type.caption,
-                        color = colors.inkTertiary,
+                        // The license a library ships under. A licenses screen whose
+                        // license names cannot be read is the one screen where that
+                        // matters most. design-v3.md 3.1 and 13.
+                        color = colors.inkSecondary,
                     )
                 }
             }
@@ -585,42 +598,3 @@ internal fun LicensesSheet(onDismiss: () -> Unit) {
     }
 }
 
-/** One row of a choice list: a label, and a check when it is the current answer. */
-@Composable
-private fun ChoiceRow(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    val colors = LocalClarityColors.current
-    val type = LocalClarityTypography.current
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .defaultMinSize(minHeight = 52.dp)
-            .clarityClickable(
-                haptic = ClarityHapticEvent.SELECT,
-                role = Role.RadioButton,
-                onClickLabel = label,
-                onClick = onClick,
-            )
-            .semantics { this.selected = selected }
-            .padding(horizontal = SHEET_PADDING, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = label,
-            style = type.body,
-            color = if (selected) colors.inkPrimary else colors.inkSecondary,
-            modifier = Modifier.weight(1f),
-        )
-        if (selected) {
-            ClarityIcon(
-                icon = ClarityIcons.check,
-                contentDescription = null,
-                tint = colors.actionBlue,
-                modifier = Modifier.size(18.dp),
-            )
-        }
-    }
-}

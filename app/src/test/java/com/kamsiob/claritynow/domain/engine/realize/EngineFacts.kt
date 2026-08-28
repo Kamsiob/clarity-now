@@ -6,11 +6,13 @@ import com.kamsiob.claritynow.domain.engine.AreaFacts
 import com.kamsiob.claritynow.domain.engine.AreaId
 import com.kamsiob.claritynow.domain.engine.CompletedItem
 import com.kamsiob.claritynow.domain.engine.CueFacts
+import com.kamsiob.claritynow.domain.engine.EstimateTendency
 import com.kamsiob.claritynow.domain.engine.FactSet
 import com.kamsiob.claritynow.domain.engine.FirstEver
 import com.kamsiob.claritynow.domain.engine.HistoryFacts
 import com.kamsiob.claritynow.domain.engine.ItemFacts
 import com.kamsiob.claritynow.domain.engine.PartOfDay
+import com.kamsiob.claritynow.domain.engine.Precedent
 import com.kamsiob.claritynow.domain.engine.PulseFacts
 import com.kamsiob.claritynow.domain.engine.RollupFacts
 import com.kamsiob.claritynow.domain.engine.Trend
@@ -118,6 +120,7 @@ internal object EngineFacts {
         swapsInWindow: Int = 0,
         dormantDaysBeforeReturn: Int? = null,
         weekEventsSeries: List<Int> = emptyList(),
+        dipPrecedent: Precedent = Precedent.INSUFFICIENT,
     ) = AreaFacts(
         areaId = areaId,
         nameSnapshot = name,
@@ -144,6 +147,7 @@ internal object EngineFacts {
         focusSecondsInWindow = focusMinutes * SECONDS_PER_MINUTE,
         focusSessionsInWindow = focusSessions,
         weekEventsSeries = weekEventsSeries,
+        dipPrecedent = dipPrecedent,
     )
 
     private const val NEW_AREA_DAYS = 14
@@ -217,6 +221,11 @@ internal object EngineFacts {
         currentQuietRunDays: Int = 0,
         currentSingleAreaRunDays: Int = 0,
         currentSingleAreaRunAreaId: AreaId? = null,
+        estimatedCompletions: Int = 0,
+        activeToEstimateRatio: Double? = null,
+        activityDipPrecedent: Precedent = Precedent.INSUFFICIENT,
+        focusDipPrecedent: Precedent = Precedent.INSUFFICIENT,
+        isJustBackFromAbsence: Boolean = false,
     ) = HistoryFacts(
         daysSinceInstall = daysSinceInstall,
         weeksOfData = daysSinceInstall / DAYS_PER_WEEK,
@@ -247,6 +256,12 @@ internal object EngineFacts {
         currentQuietRunDays = currentQuietRunDays,
         currentSingleAreaRunDays = currentSingleAreaRunDays,
         currentSingleAreaRunAreaId = currentSingleAreaRunAreaId,
+        estimatedCompletions = estimatedCompletions,
+        activeToEstimateRatio = activeToEstimateRatio,
+        estimateTendency = EstimateTendency.of(activeToEstimateRatio),
+        activityDipPrecedent = activityDipPrecedent,
+        focusDipPrecedent = focusDipPrecedent,
+        isJustBackFromAbsence = isJustBackFromAbsence,
     )
 
     private const val DAYS_PER_WEEK = 7

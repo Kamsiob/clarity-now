@@ -107,10 +107,13 @@ internal fun PatternBreak(sidehead: String, line: String, modifier: Modifier = M
             modifier = Modifier
                 .fillMaxWidth()
                 .background(gold.copy(alpha = GROUND_ALPHA))
-                .padding(horizontal = PATTERN_INSET, vertical = PATTERN_VERTICAL),
+                .padding(
+                    horizontal = PATTERN_INSET,
+                    vertical = ClaritySpacing.scaled(PATTERN_VERTICAL,
+                )),
         ) {
             Text(text = sidehead, style = type.sidehead, color = gold)
-            Spacer(Modifier.height(SIDEHEAD_GAP))
+            Spacer(Modifier.height(ClaritySpacing.scaled(SIDEHEAD_GAP)))
             Text(
                 text = line,
                 style = type.bodySerif.copy(fontFamily = PatternSerif),
@@ -226,7 +229,7 @@ internal fun ClosingLine(
             color = contemplative.textDim,
             textAlign = TextAlign.Center,
         )
-        Spacer(Modifier.height(EYEBROW_GAP))
+        Spacer(Modifier.height(ClaritySpacing.scaled(EYEBROW_GAP)))
         Text(
             text = closing.line,
             style = type.closingLine,
@@ -235,10 +238,10 @@ internal fun ClosingLine(
         )
 
         if (closing.offersPlan) {
-            Spacer(Modifier.height(ANSWER_GAP))
+            Spacer(Modifier.height(ClaritySpacing.scaled(ANSWER_GAP)))
             AcceptPill(accepted = closing.accepted, onAccept = onAccept)
             if (!closing.accepted) {
-                Spacer(Modifier.height(DECLINE_GAP))
+                Spacer(Modifier.height(ClaritySpacing.scaled(DECLINE_GAP)))
                 Decline(onDecline = onDecline)
             }
         }
@@ -275,7 +278,10 @@ private fun AcceptPill(accepted: Boolean, onAccept: () -> Unit) {
             style = type.bodyStrong,
             color = if (accepted) contemplative.textDim else contemplative.textBright,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = PILL_PADDING, vertical = PILL_PADDING_VERTICAL),
+            modifier = Modifier.padding(
+                horizontal = PILL_PADDING,
+                vertical = ClaritySpacing.scaled(PILL_PADDING_VERTICAL,
+            )),
         )
     }
 }
@@ -303,7 +309,13 @@ private fun Decline(onDecline: () -> Unit) {
         Text(
             text = label,
             style = type.body,
-            color = contemplative.textFaint,
+            // design-v3.md 11.1 item 8 said `textFaint` here and that section is
+            // corrected: this is the label of a control a person taps, at 2.637 to one
+            // against 13's floor of 4.5. **What makes declining costless is that it is
+            // text only against an accept pill in gold**, which is the whole of item
+            // 8's asymmetry and is structural rather than a matter of opacity. A
+            // decline nobody can read is not costless, it is hidden.
+            color = contemplative.textDim,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = PILL_PADDING),
         )

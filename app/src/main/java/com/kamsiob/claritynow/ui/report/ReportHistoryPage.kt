@@ -106,7 +106,7 @@ internal fun ReportHistoryPage(
                         .fillMaxWidth()
                         .padding(horizontal = ClaritySpacing.screenPadding),
                 )
-                Spacer(Modifier.height(TITLE_GAP))
+                Spacer(Modifier.height(ClaritySpacing.scaled(TITLE_GAP)))
             }
 
             if (reports.isEmpty() && !loading) {
@@ -115,7 +115,7 @@ internal fun ReportHistoryPage(
 
             items(items = reports, key = { it.weekStartKey }) { report ->
                 PastReportRow(report)
-                Spacer(Modifier.height(ROW_GAP))
+                Spacer(Modifier.height(ClaritySpacing.scaled(ROW_GAP)))
             }
         }
 
@@ -139,7 +139,7 @@ private fun PastReportRow(report: PastReport, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = ClaritySpacing.screenPadding),
-        verticalArrangement = Arrangement.spacedBy(ROW_ELEMENT_GAP),
+        verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(ROW_ELEMENT_GAP)),
     ) {
         Text(
             text = report.weekStart?.let { weekOf(it) } ?: report.weekStartKey,
@@ -179,9 +179,12 @@ private fun HistoryEmptyState() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = ClaritySpacing.screenPadding, vertical = EMPTY_SPACE),
+            .padding(
+                horizontal = ClaritySpacing.screenPadding,
+                vertical = ClaritySpacing.scaled(EMPTY_SPACE,
+            )),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(ROW_ELEMENT_GAP),
+        verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(ROW_ELEMENT_GAP)),
     ) {
         Text(
             text = stringResource(R.string.report_history_empty_title),
@@ -225,7 +228,9 @@ private fun BackControl(onBack: () -> Unit, modifier: Modifier = Modifier) {
         ClarityIcon(
             icon = ClarityIcons.back,
             contentDescription = null,
-            tint = contemplative.textFaint,
+            // The only way back off this page, and a control's glyph clears
+            // design-v3.md 13's 3.0 floor at the least. 32 percent measures 2.637.
+            tint = contemplative.textDim,
             modifier = Modifier.size(GLYPH_SIZE),
         )
     }

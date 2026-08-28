@@ -52,11 +52,25 @@ import com.kamsiob.claritynow.ui.theme.clarityMotion
  *
  * ## Why the silent mark is drawn the way it is
  *
- * Faint is the specification, and faint has a floor: at half strength the mark measures
- * 3.0 to one against `deepBlack`, which is the ratio design-v3.md 16.7 holds a graphic
- * to. Below that it stops being quiet and starts being absent, and an absent mark would
- * make a fortnight of silence look like a broken row rather than like a calm one. It is
- * also drawn smaller, so the three states differ in form as well as in opacity and
+ * Faint is the specification, and faint has a floor: design-v3.md 16.7 and WCAG 1.4.11
+ * hold a graphic at 3.0 to one. Below that it stops being quiet and starts being absent,
+ * and an absent mark would make a fortnight of silence look like a broken row rather
+ * than a calm one.
+ *
+ * **The floor is measured against the ground this row is actually drawn on, and the
+ * phase 13 audit is where that was corrected.** At half strength the mark measures 3.003
+ * against `deepBlack`, which is the Pulse surface at midday and only at midday: 3.3 blends
+ * a whisper of `#2B2340` into the top of that surface from 05 to 11, and on the dawn
+ * ground the same mark measures **2.969**. A ground that shifts through the day is a
+ * ground the floor has to be met on at every hour of it. At 55 percent the three grounds
+ * read 3.373, 3.277 and 3.345, and the calm variant of the accent reads 3.434 on the
+ * midday ground 16.7 holds it to all day.
+ *
+ * **55 percent is the number design-v3.md 13 already states** for Contemplative text
+ * meant to be read, and it is the value `textDim` carries in 3.3. This mark is not text
+ * and takes the graphic floor rather than that one, and taking the same step as the quiet
+ * text on the same surface rather than a step of its own is the point. It is also drawn
+ * smaller, so the three states differ in form as well as in opacity and
  * design-v3.md 13's "color is never the only signal" holds without relying on the reader
  * seeing amber at all.
  *
@@ -141,8 +155,11 @@ private val MARK_RADIUS = 5.dp
 private val RING_STROKE = 1.5.dp
 private val QUIET_RADIUS = 3.dp
 
-/** Half strength, which measures 3.0 to one against `deepBlack`. See the note above. */
-private const val QUIET_ALPHA = 0.5f
+/**
+ * design-v3.md 13's 55 percent, which measures 3.277 to one on the dawn ground, the
+ * weakest of the three the Pulse surface can be. See the note above.
+ */
+private const val QUIET_ALPHA = 0.55f
 
 /** design-v3.md 8.2 item 11. */
 private const val STAGGER_MILLIS = 30

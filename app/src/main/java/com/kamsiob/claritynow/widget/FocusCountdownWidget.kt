@@ -199,7 +199,12 @@ private fun FocusArc(minutes: Int, fractionRemaining: Float, edge: Dp, calm: Boo
                     // The session screen's own word, so the two surfaces say the same
                     // thing rather than nearly the same thing. design-v3.md 10.18.
                     text = context.getString(R.string.focus_remaining),
-                    style = WidgetTheme.caption.copy(color = FocusWidgetPalette.textFaint),
+                    // `textDim`, matching the session screen this widget is a window
+                    // into. `design-v3.md` 11 wrote this word as `textFaint` on both
+                    // surfaces and 13 states one floor for Contemplative text; the
+                    // section is corrected rather than left standing beside the floor.
+                    // 32 percent measures 2.674 to one on the indigo ground here.
+                    style = WidgetTheme.caption.copy(color = FocusWidgetPalette.textDim),
                     maxLines = 1,
                 )
             }

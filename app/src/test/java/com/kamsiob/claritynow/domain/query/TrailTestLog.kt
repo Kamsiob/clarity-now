@@ -111,7 +111,9 @@ internal fun TrailTestLog.item(
     title: String,
     orderKey: String = "a0",
     areaName: String = "Work",
-): ClarityEvent = add(wallClock, ItemAdded(itemId, areaId, title, null, orderKey, areaName))
+    estimateMinutes: Int? = null,
+): ClarityEvent =
+    add(wallClock, ItemAdded(itemId, areaId, title, null, orderKey, areaName, estimateMinutes))
 
 /**
  * A promotion, and the swap that shares its shape. Passing [demotedItemId] is the

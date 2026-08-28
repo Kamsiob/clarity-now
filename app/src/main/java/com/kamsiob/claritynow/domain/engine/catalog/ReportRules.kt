@@ -256,6 +256,7 @@ internal object ReportRules {
         )),
         /**
          * `clearing`, dark for 451 report windows, and the reason was not in this rule.
+         * **It fires twice now, and the drain fact is measurably the whole of why.**
          *
          * It reads `RollupFacts.queueDrainedAreaIds`, which was anchored to the two window
          * boundaries, so a queue built and finished inside the week was invisible to it.
@@ -265,6 +266,15 @@ internal object ReportRules {
          * account of the fact and why a criterion could not approximate it. Nothing about a
          * headline is weekly in the wrong way here: 1.13's eight lines are a week's pull
          * quote and the window they are read over is the week.
+         *
+         * **The attribution is measured rather than argued.** The drain fact and the
+         * persona fix landed together, so the fifth measurement ran the year three times to
+         * separate them: with the fact and the old personas this headline reads 0, with the
+         * fixed personas and the boundary anchored fact it still reads 0, and with both it
+         * reads 2. It is the only family in the run for which the fact alone is responsible,
+         * and the two headlines it bought displaced exactly two others, one `comeback` and
+         * the last surviving `risingActivity`. DECISIONS.md, the persona defect and the
+         * fifth measurement.
          *
          * **Two numbers in this rule come from outside 1.13 and both are deliberate.**
          * The corpus trigger is `one or more areas fully drained` and names no figure at

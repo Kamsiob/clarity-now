@@ -162,6 +162,23 @@ data class AreaFacts(
      * leading zeros here that are not silences: nothing had happened yet.
      */
     val weekEventsSeries: List<Int>,
+    /**
+     * Whether this area has been as quiet as it is now, for as long, before.
+     * MASTER_BUILD_PROMPT 14b.9.
+     *
+     * Read over this area's own weekly events, back to its first week with anything
+     * in it, on the definition in [Precedent]. `neglectedArea` and `areaGoneQuiet`
+     * are the two families 14b.9 names that take an area as their subject, and both
+     * of them are true of an area a person picks up every second month and false as a
+     * claim about that person. This is the fact that tells the two apart.
+     *
+     * **The leading empty weeks are not silences and are not read as any.** An area
+     * created three weeks ago has zeros in every bucket before it existed, exactly as
+     * [weekEventsSeries] says, and counting them would give a new area a history of
+     * falls it was never in. The walk starts at the area's first week with an event,
+     * which is the same rule `returnsAfterSilence` uses on the series beside it.
+     */
+    val dipPrecedent: Precedent,
 )
 
 /**

@@ -29,7 +29,9 @@ import androidx.compose.ui.unit.dp
 import com.kamsiob.claritynow.R
 import com.kamsiob.claritynow.ui.components.ClarityIcon
 import com.kamsiob.claritynow.ui.components.ClarityIcons
+import com.kamsiob.claritynow.ui.components.ScrollEdge
 import com.kamsiob.claritynow.ui.components.TabBarHeight
+import com.kamsiob.claritynow.ui.components.scrollEdgeFade
 import com.kamsiob.claritynow.ui.components.clarityClickable
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
 import com.kamsiob.claritynow.ui.theme.ClaritySpacing
@@ -71,6 +73,14 @@ internal fun PushedScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                // Phase 12b. Before `verticalScroll` rather than after, so the layer
+                // covers the viewport and the scrolling content draws inside it. See
+                // `ScrollEdge.kt`.
+                .scrollEdgeFade(
+                    top = topInset + ScrollEdge.underTheClock,
+                    bottom = bottomInset + ClaritySpacing.tabBarInset + TabBarHeight +
+                        ScrollEdge.aboveTheBar,
+                )
                 .verticalScroll(rememberScrollState())
                 .padding(
                     start = ClaritySpacing.screenPadding,
@@ -103,14 +113,14 @@ internal fun PushedScreen(
                     modifier = Modifier.size(BACK_GLYPH),
                 )
             }
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(6.dp)))
             Text(
                 text = title,
                 style = type.displayTitle,
                 color = colors.inkPrimary,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Spacer(Modifier.height(22.dp))
+            Spacer(Modifier.height(ClaritySpacing.scaled(22.dp)))
             content()
         }
     }
