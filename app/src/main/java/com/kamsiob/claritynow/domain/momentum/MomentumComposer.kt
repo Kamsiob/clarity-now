@@ -275,10 +275,10 @@ internal class MomentumComposer(
      * system for exactly this reason. The engine's own share rules all carry an event
      * floor; this is the same floor expressed as a count of areas.
      */
-    private fun areaBalanceOf(facts: FactSet): List<AreaShare>? {
+    private fun areaBalanceOf(facts: FactSet): AreaBalance? {
         val withEvents = facts.areas.values.filter { it.eventsInWindow > 0 }
         if (withEvents.size < MIN_AREAS_FOR_BALANCE) return null
-        return withEvents
+        val shares = withEvents
             .sortedWith(compareByDescending<AreaFacts> { it.eventsInWindow }.thenBy { it.nameSnapshot })
             .map { area ->
                 AreaShare(
@@ -292,6 +292,9 @@ internal class MomentumComposer(
                     percent = (area.shareOfEvents * 100).roundToInt(),
                 )
             }
+        // The denominator travels with the shares, because they do not sum to a hundred
+        // and a person reading two rows will add them. AreaBalance says why.
+        return AreaBalance(shares = shares, total = facts.window.totalEvents)
     }
 
     /**

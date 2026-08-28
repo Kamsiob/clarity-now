@@ -22,6 +22,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.kamsiob.claritynow.R
+import com.kamsiob.claritynow.domain.momentum.AreaBalance
 import com.kamsiob.claritynow.domain.momentum.AreaShare
 import com.kamsiob.claritynow.domain.momentum.CompletionPace
 import com.kamsiob.claritynow.domain.momentum.FocusPattern
@@ -60,9 +61,9 @@ import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 fun MomentumInsightModules(insights: MomentumInsights) {
     if (!insights.any) return
 
-    insights.areaBalance?.let { shares ->
+    insights.areaBalance?.let { balance ->
         SectionGap()
-        AreaBalanceModule(shares)
+        AreaBalanceModule(balance)
     }
     insights.completionPace?.let { pace ->
         SectionGap()
@@ -91,13 +92,33 @@ fun MomentumInsightModules(insights: MomentumInsights) {
  * The percentage reads `78 percent` rather than `78%`, which is `CLARITY_LOGIC_ENGINE.md`
  * 7.2's rule for a number in a sentence, applied here so the app renders a percentage one
  * way rather than two.
+ *
+ * **The caption beneath names the denominator, and it is not decoration.** The shares do
+ * not sum to a hundred: `AreaFacts.shareOfEvents` divides by every user activity event in
+ * the fortnight, and answering a Pulse, changing a setting or writing into the unfiled
+ * inbox belongs to no area. A device check found two areas reading 64 and 21 percent with
+ * nothing on the screen accounting for the other fifteen points, and a person reading two
+ * rows adds them.
+ *
+ * **The denominator was not changed to make the column sum**, which is the obvious fix.
+ * The headline above this module can state the same percentage about the same area through
+ * the engine's `areaShare` measure, and 11.4 gives one fact exactly one number, so a module
+ * dividing by a different total would disagree with the sentence above it. The caption is
+ * a legend for a readout rather than an observation, so it lives in `strings.xml` under
+ * 11.2 and does not go through the engine.
+ *
+ * It is the same job the sparkline's caption and the ribbon's caption already do: give the
+ * figure above it a scale.
  */
 @Composable
-private fun AreaBalanceModule(shares: List<AreaShare>) {
+private fun AreaBalanceModule(balance: AreaBalance) {
+    val colors = LocalClarityColors.current
+    val type = LocalClarityTypography.current
+
     Sidehead(text = stringResource(R.string.momentum_sidehead_area_balance))
     Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
     Column(verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(12.dp))) {
-        shares.forEach { share ->
+        balance.shares.forEach { share ->
             InsightRow(
                 colorHex = share.colorHex,
                 name = share.name,
@@ -105,6 +126,12 @@ private fun AreaBalanceModule(shares: List<AreaShare>) {
             )
         }
     }
+    Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
+    Text(
+        text = stringResource(R.string.momentum_area_balance_basis, balance.total),
+        style = type.caption,
+        color = colors.inkSecondary,
+    )
 }
 
 /**

@@ -10,6 +10,7 @@ import com.kamsiob.claritynow.domain.engine.catalog.ClarityCatalog
 import com.kamsiob.claritynow.domain.engine.catalog.CorpusFixture
 import com.kamsiob.claritynow.domain.query.TEST_ZONE
 import com.kamsiob.claritynow.domain.query.TrailQueries
+import com.kamsiob.claritynow.data.event.PulseAnswered
 import com.kamsiob.claritynow.domain.query.TrailTestLog
 import com.kamsiob.claritynow.domain.query.area
 import com.kamsiob.claritynow.domain.query.at
@@ -83,6 +84,25 @@ internal class MomentumFixture(catalog: ClarityCatalog? = CorpusFixture.catalog)
         val sessionId = "session-$day"
         log.add(at(day, 14, 0), FocusStarted(sessionId, areaId, "$areaId-item", seconds))
         log.add(at(day, 14, minutes.coerceAtMost(59)), FocusCompleted(sessionId, seconds))
+        return this
+    }
+
+    /**
+     * One Pulse answered at 07:00 on [day], inside the window a view at noon reads.
+     *
+     * **User activity that belongs to no area**, which is
+     * what makes the area balance percentages fail to sum to a hundred.
+     */
+    fun answerPulse(day: Int): MomentumFixture {
+        log.add(
+            at(day, 7, 0),
+            PulseAnswered(
+                pulseId = "pulse-$day",
+                responseKey = "r.yes",
+                responseLabel = "Still on it",
+                responseIsPositive = true,
+            ),
+        )
         return this
     }
 

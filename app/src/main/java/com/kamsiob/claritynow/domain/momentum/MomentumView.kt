@@ -148,7 +148,7 @@ data class WeekStats(val completed: WeekStat, val focused: WeekStat, val added: 
  * could read something into that is not there.
  */
 data class MomentumInsights(
-    val areaBalance: List<AreaShare>?,
+    val areaBalance: AreaBalance?,
     val completionPace: CompletionPace?,
     val focusPattern: FocusPattern?,
     val idleAreas: List<IdleArea>?,
@@ -156,6 +156,28 @@ data class MomentumInsights(
     val any: Boolean
         get() = areaBalance != null || completionPace != null || focusPattern != null || idleAreas != null
 }
+
+/**
+ * Every area's share of the fortnight, and the total those shares are shares of.
+ *
+ * **The total is carried because the shares do not sum to a hundred and a reader will
+ * add them.** `AreaFacts.shareOfEvents` divides an area's events by every user activity
+ * event in the window, and some of those belong to no area at all: answering a Pulse,
+ * changing a setting, writing something into the unfiled inbox before it is filed. On a
+ * fortnight holding thirteen events with two of them area-less, two areas read 64 and 21
+ * percent, and the fifteen points between that and a hundred are real and unexplained.
+ *
+ * **The denominator is not changed to make the column sum**, which is the obvious fix and
+ * the wrong one. The Momentum headline can say the same percentage about the same area
+ * through the engine's `areaShare` measure, and `MASTER_BUILD_PROMPT.md` 11.4 allows one
+ * fact exactly one number. A module that quietly divided by a different total would
+ * disagree with the sentence above it, which is a worse defect than the one it fixed and
+ * a much harder one to notice.
+ *
+ * So the number stays and the screen says what it is a share of. [total] is
+ * `HistoryFacts.totalEvents`, the same count the Report's week ribbon reads out.
+ */
+data class AreaBalance(val shares: List<AreaShare>, val total: Int)
 
 /**
  * One area's share of the fortnight, as a whole percentage.

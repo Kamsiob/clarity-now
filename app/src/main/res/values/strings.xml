@@ -462,6 +462,11 @@
         so the app renders a percentage one way rather than two.
     -->
     <string name="momentum_percent">%1$d percent</string>
+    <!-- The denominator the area shares are shares of. They do not sum to a hundred,
+         because answering a Pulse, changing a setting or capturing into the unfiled
+         inbox belongs to no area. A legend for a readout, not an observation, so it
+         belongs here under 11.2 rather than in a corpus. -->
+    <string name="momentum_area_balance_basis">Of %1$d events in the fortnight.</string>
     <string name="momentum_pace_busiest">Busiest week, %1$d completed</string>
     <plurals name="momentum_focus_minutes">
         <item quantity="one">%d minute in the last seven days</item>

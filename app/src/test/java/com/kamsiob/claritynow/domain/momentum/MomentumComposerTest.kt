@@ -222,9 +222,48 @@ class MomentumComposerTest {
 
         val balance = twoAreas.view(day = 20).insights.areaBalance
         assertNotNull("two areas with events is a balance", balance)
-        val events = balance.orEmpty().map { it.events }
+        val events = balance?.shares.orEmpty().map { it.events }
         assertEquals(2, events.size)
         assertEquals("busiest first", events.sortedDescending(), events)
+
+        // The shares are shares of every user activity event in the window, not of the
+        // events that belong to an area, so the column does not sum to a hundred. The
+        // denominator travels with them for exactly that reason, and it can only be at
+        // least as large as what the areas hold between them.
+        val total = balance?.total ?: 0
+        assertTrue(
+            "the denominator is every user activity event in the fortnight, so it is at " +
+                "least the sum of what the areas hold",
+            total >= events.sum(),
+        )
+    }
+
+    @Test
+    fun `the area balance denominator counts activity that belongs to no area`() {
+        val fixture = MomentumFixture().seedTwoAreas()
+        (14..20).forEach { fixture.capture(it) }
+        fixture.completeOne(19, areaId = MomentumFixture.HOME, areaName = "Home")
+        fixture.answerPulse(20)
+
+        val balance = fixture.view(day = 20).insights.areaBalance
+        assertNotNull("two areas with events is a balance", balance)
+        val areaEvents = balance?.shares.orEmpty().sumOf { it.events }
+
+        // This is the defect a device check found: two areas reading 64 and 21 percent
+        // with nothing on the screen accounting for the other fifteen points. Answering a
+        // Pulse is something a person did and it belongs to no area, so it is in the
+        // denominator and in no numerator. The screen states the denominator rather than
+        // changing it, because the headline above can say the same percentage about the
+        // same area and 11.4 gives one fact exactly one number.
+        assertTrue(
+            "a Pulse answer is user activity with no area, so it widens the denominator " +
+                "without widening any share",
+            (balance?.total ?: 0) > areaEvents,
+        )
+        assertTrue(
+            "and the shares therefore do not sum to a hundred",
+            balance?.shares.orEmpty().sumOf { it.percent } < 100,
+        )
     }
 
     @Test
