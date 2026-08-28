@@ -76,13 +76,14 @@ worse than either of them**, and the way to edit these is to replace the whole b
 | The rules pass, and the fourth simulator reading | done | no issue, owner approved |
 | The persona repair, and the fifth simulator reading | done | no issue, owner approved |
 | The executive function engine gaps, 14b.3, 14b.4, 14b.8, 14b.9 | in progress | #27, #42, #43, #45 |
-| 9. Corpus | not started. The fifth reading settles which job it is: **authoring to fix silence**, and says in advance that authoring alone cannot reach the band | #7, #44 |
+| 9. Corpus | done. 3,230 lines. It halved repeats, moved silence by zero, and named why | closed |
 | 9b. Guidance, layer six | not started | #8 |
 | 10. First run | built, all five tutorial targets landed, awaiting the device check | #9 |
 | 11. Settings, About, data | built, awaiting the device check | #10 |
 | 12. Widgets and notifications | built, all six routes landed, awaiting the device check and the preview captures | #11 |
 | 12b. Design surfaces, the polish pass | built, awaiting the device check | #54 |
 | 12c. The re-entry screen | built, awaiting the device check | #56 |
+| The archive view, and the reach pass | built | #15 closed |
 | 13. Ship | in progress. Store listing, the About disclaimer and the baseline profile generator are in | #12 |
 
 ---
@@ -1409,6 +1410,126 @@ is lighter than `deepBlack` and the same mark measured 2.969 there. **That one n
 the whole thesis of issue #51**: a contrast figure is only true against the ground it was
 measured on, and an app has more grounds than anybody enumerates by hand. It is now 55
 percent rather than 50, and measures 3.277 on the worst of its three grounds.
+
+---
+
+## Phase 9 delivered
+
+The corpus, issue #7, plus the tone pass in #44 and the honest first weeks in #45.
+`CLARITY_LOGIC_ENGINE.md` 11.1 and 11.2.
+
+**3,230 new lines.** Volume 1 goes 620 to 1,775, volume 2 goes 737 to 2,200, volume 3 goes
+146 to 758. Every family firing forty times a year or more is now at 60 to 100 variants per
+stage bench, against the 8 to 18 it carried since phase 5.
+
+**The protocol held**, which is the part that is worth as much as the lines. Batches of
+forty, one family and one stage and one register each. Ten anchors per bench, re-read
+before every third batch. And every agent reports cutting **a quarter to a third** of what
+it wrote, which is what 11.2 asks for and what a cut rate near zero would have disproved.
+
+### The gate suite is what made a pass this size possible
+
+The owner replaced the per batch human read with mechanical gates, and eight of them were
+built before a word was authored:
+
+| gate | what it means mechanically |
+|---|---|
+| fragment | a run of six or more tokens with two or more content words, markers collapsed, shared across families |
+| construction | nine named shapes, capped at two families each and a third of any bench |
+| vocabulary | the validator's own 128 patterns, over all rendered strings including questions and response labels |
+| binding | every marker has a fact behind it, checked without simulating |
+| lengthBand | no band over 60 percent of a bench, computed rather than read from a tag |
+| register | two variants per register per stage, and a hot bench carries its volume's core registers |
+| duplicate | token multiset minus function words, distance one, so a singular and plural pair survives and one line under two keys does not |
+| renders | **every line fills from real facts and passes layer five**, walked over 11,867 fact sets harvested from eleven persona years |
+
+**Every gate is also shown a corpus with a fresh violation planted in it and has to find
+that one.** That is the only evidence a baseline excuses the past rather than the future.
+
+`docs/CORPUS_ANCHORS.md` holds 305 anchors across all 36 hot benches, each with a line
+saying what about the voice it carries, and a test verifies every one against the corpus
+character for character on every run.
+
+### What it moved
+
+**Variant repeats inside ninety days went 7,370 to 3,898. Length band collisions went 719
+to 277.** Those are the readings a person feels. Before this the simulator had a Momentum
+headline repeating after a single day.
+
+### What it did not move, and why that is the result rather than a disappointment
+
+**Pulse silence is 65.7 percent, exactly where it was**, and the silent day split is
+identical to the day: 1,161 filtered, 895 nothing qualified, 11 too little data.
+
+**Three thousand two hundred and thirty lines changed the silent day count by zero.**
+
+The premise the phase ran on was wrong, and it is named rather than suspected now:
+
+- **`VariantChoice.choose` reuses the bench** rather than falling silent when everything
+  has been said inside ninety days, so bench depth cannot produce silence at all
+- **`Realizer.realize` returns `NotProducible` only when no line can be filled**, which is
+  a binding question and not a depth one. A hundred lines with an unbound marker are as
+  silent as one
+- the rest is **`Selector.select` step 6**, and none of its five filters reads the corpus
+
+So the prediction that a bench deep enough to empty the filtered column leaves silence at
+28.7 percent **could never have been tested by authoring**, because its antecedent does not
+exist. Four measurements had been read as evidence about the corpus and were evidence about
+the selector.
+
+### The phase's real product: three measured engine defects
+
+**86 authored lines cannot reach a screen, and 80 of them wait on a binding rather than on
+an author.** That is 8 percent of the corpus and it lands hardest exactly where silence is
+worst. `reportedVsActual` fires 173 times a year and has **two sayable lines**.
+`comebackPattern` fires seventy times and has **one**. A bench of one cannot avoid
+repeating, and no amount of authoring reaches a line whose marker has no fact behind it.
+
+**`RegisterChoice.preference` returns registers in order and the realizer takes the first
+it can fill, never choosing among them.** Across eleven simulated years that is one register
+per surface: the Pulse spoke plain 1,080 times of 1,081, and Momentum and the Areas banner
+spoke reflective on all 5,594 firings. **487 of volume 3's 748 register tagged lines sit in
+registers nothing can ask for.** 11.1 sizes a stage bench and the chooser sees a register,
+so measured where the choice is actually made, phase 9's hot benches are still warm.
+
+**9.2's parallel numeric clause rule is implemented by nothing at all**, which is why that
+one reading moved the wrong way, 41 runs to 121: the phase authored depth into benches
+whose shapes are numeric and the composer had no reason to care.
+
+### Two incidents worth the record
+
+**The first `verifyClarity` of the phase returned green in 499 milliseconds with every task
+up to date.** The gates read the corpus off the repository root at runtime, and the `Test`
+task declared none of those files as inputs, so Gradle could not see two thousand new lines.
+The declaration is in `app/build.gradle.kts` now and it was proved rather than assumed: one
+extra byte in a corpus file forces a rerun.
+
+**A `git checkout` intended to revert one draft bench destroyed 336 uncommitted lines** of
+another agent's work. It was restored byte exactly from a persisted tool output and
+verified. The part worth acting on is that **the gates could not see the loss**:
+grandfathering is by bench size, so a shorter bench is more exempt, and all seven gates
+stayed green over a corpus missing 336 lines. Only the anchors test caught it, and only
+because an anchor quoted a line that no longer existed. A gate that goes green when work
+disappears is worse than no gate, because it is trusted.
+
+### Three findings inside the language itself
+
+**`cleanSlate` speaks to two different people.** Its rule is no events plus at least one
+area, with no install age criterion, so it fires on a fresh install **and** on a two year
+old install whose last fortnight is empty. All six approved lines were written for the
+first reader only, and `A clean slate. Your first steps will show up here.` said to
+somebody coming back after a fortnight is the app having forgotten them. Every new line is
+true either way and none says first, begin or start.
+
+**`{areaName}` is the busiest area, never a majority.** `dominantAreaId` is a strict
+maximum, null on a tie. `balancedWeek` and `singleAreaWeek` carry share criteria that make
+the word *most* true; `quietStretch` and `steadyStretch` do not. Six lines saying *most*
+were rewritten to *busiest*, and two approved ones still say it.
+
+**The pointed `pt.gone` variant did not ship.** 14b.10 allowed it only where a person had
+indicated an area was deliberately paused, said that needs a fact with a real source, and
+said that if no response can supply that fact the variant does not ship. None can, so
+`pt.gone.09` is retired and its key is never reused.
 
 ---
 
