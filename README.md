@@ -10,6 +10,13 @@ a calm progress mirror, and the **Clarity Report**, a weekly narrative. **Trail*
 chronological event log, is the source of truth from which every piece of state and
 every sentence derives.
 
+Alongside them: **focus sessions** on a dark screen with an arc instead of a countdown,
+**six home screen widgets** so the app does not have to be opened to be useful, an
+**unfiled inbox** for writing something down without deciding where it goes, an
+**encrypted backup** you make and keep yourself, an **adjustable text size** on top of
+the phone's own, and a **calm mode** that takes the color down without taking the
+meaning out.
+
 Built by Kamsiob.
 
 ---
@@ -40,7 +47,8 @@ so does uninstalling.
 
 ## Build state
 
-The app is being built in thirteen phases. This is **phase 2 of 13**.
+The app is being built in thirteen phases. **Twelve are done or built, and phase 9 is
+the one substantial piece left.**
 
 Current state, in detail: `docs/BUILD_STATE.md`. Remaining work, with acceptance
 criteria on every ticket: the [issue board](https://github.com/kamsiob/clarity-now/issues).
@@ -49,22 +57,29 @@ criteria on every ticket: the [issue board](https://github.com/kamsiob/clarity-n
 |---|---|---|
 | 1 | Foundations: theme, fonts, event log, reducer, replay harness, golden fixture | done |
 | 2 | Areas, items, the queue, swipe gestures, the promotion animation | done |
-| 3 | Trail | next |
-| 4 | Focus sessions | |
-| 5 | The logic engine skeleton and the simulator | |
-| 6 | Pulse | |
-| 7 | Momentum | |
-| 8 | Week snapshots and the Clarity Report | |
-| 9 | The sentence corpus | |
-| 9b | Guidance | |
-| 10 | Onboarding and the tutorial | |
-| 11 | Settings, About, export, import, erase | |
-| 12 | Widgets and notifications | |
-| 13 | Baseline profile, accessibility pass, release | |
+| 3 | Trail | done |
+| 3b | Executive function retrofit: the unfiled inbox, first steps, estimates, calm mode | done |
+| 3c | Design foundations: the value ladder, tracking, the type scale | done |
+| 4 | Focus sessions, and the first Contemplative surface | done |
+| 5 | The logic engine's five layers, and the simulator | done |
+| 6 | Pulse | done |
+| 7 | Momentum | done |
+| 8 | Week snapshots and the Clarity Report | done |
+| 9 | The sentence corpus | in progress |
+| 9b | Guidance, layer six | not started |
+| 10 | Onboarding and the tutorial | built |
+| 11 | Settings, About, export, import, erase | built |
+| 12 | Six widgets, three shortcuts, a quick settings tile | built |
+| 12b | Design surfaces: the scroll edge, the field, the Trail's icon column | built |
+| 12c | The re-entry screen | not started |
+| 13 | Baseline profile, accessibility pass, store listing, release | in progress |
 
-Phase 2 ships a usable app. You can create areas, add items, complete them, swap,
-reorder and delete, with the whole event log and replay machinery underneath. The
-three reflective features and their language engine arrive in phases 5 through 9.
+**What phase 9 is.** The engine, the rules, the facts and every surface exist and
+render. What the sentence benches do not yet have is depth: the families that fire
+most often carry eight to eighteen phrasings each against a target of sixty to a
+hundred, so the app is quiet more often than it should be and repeats itself sooner
+than it should. That is authoring, it is measured by a simulator that plays eleven
+synthetic years, and the current reading is in `docs/BUILD_STATE.md`.
 
 ---
 
@@ -100,6 +115,13 @@ or document contains an em dash, an en dash, a non ASCII character or a British
 spelling, and the whole unit test suite passes. Warnings are errors in this project,
 so a warning is a failed build.
 
+The suite is not only unit tests. It replays a committed golden log and asserts byte
+identical state, folds two diverged logs and asserts they merge to the same place,
+plays eleven synthetic years through the language engine and asserts every composition
+rule over the result, checks **every foreground and background pair the app can put on
+screen** against a contrast floor, and refuses a build in which any sentence about a
+person's own data reached a screen by a second path.
+
 ---
 
 ## Repository layout
@@ -112,7 +134,11 @@ docs/BUILD_STATE.md       what is done, what is half done, what is known broken
 docs/ARCHITECTURE.md      the code map and the layering rules
 docs/EVENT_FORMAT.md      the event log contract, in prose
 docs/DESIGN_RESEARCH.md   the standing design review behind the visual decisions
+docs/STORE_LISTING.md     the Play listing as final text, and the health policy rules
+docs/CORPUS_ANCHORS.md    ten voice anchors per hot family, so authoring does not drift
+docs/CORPUS_REVIEW.md     a simulated year of engine output, annotated, for reading
 docs/addenda/            directives as they arrived, provenance and not authority
+HANDOFF.md                the things only the owner can do, with the exact steps
 testdata/                 the golden log and the exact state it must produce
 rationale/                review panels and superseded drafts, not needed to build
 ```
