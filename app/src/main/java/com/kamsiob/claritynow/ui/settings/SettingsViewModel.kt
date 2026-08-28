@@ -201,22 +201,31 @@ internal class SettingsViewModel(
     /**
      * After completing, MASTER_BUILD_PROMPT 14.1.
      *
-     * **The `SETTING_CHANGED` event this change is supposed to write is not written**,
-     * and that is a missing seam rather than a decision. `ClarityRepository` is the only
-     * writer in the app and `commit` is private, so there is no way to append an
-     * arbitrary payload from here; the method this needs is one of its own, shaped like
-     * `recordSettingChanged(key, previousValue, newValue)` beside `recordAppOpened`,
-     * writing `SettingChanged("afterCompleting", previous.name, value.name)`. The
-     * repository was outside this phase's file list, so the gap is reported rather than
-     * worked around: an event written down any second path would be worse than an event
-     * that is missing, per the single write path rule in `CLAUDE.md`.
+     * **This is the one preference in this screen that writes to the log**, and the seam
+     * it needed took four phases to land. Phase 11 built the screen, found `commit` was
+     * private with no method taking an arbitrary payload, and reported the gap rather
+     * than reaching around the single write path. `ClarityRepository.recordSettingChanged`
+     * is that method, and it is deliberately not a general one: it says at its own
+     * declaration which preferences belong in the log and which do not.
      *
-     * Everything downstream already exists. `ClarityEventType.SETTING_CHANGED` is in the
-     * catalog, the reducer folds it, `TrailRow` renders it and `TrailFacts` keeps it in
-     * as something the person did, so the day that method lands the row appears in the
-     * Trail with nothing else to change.
+     * **The previous value is read before the write and passed in**, because
+     * `SettingChanged` carries both and a reducer that had to look up what a setting used
+     * to be would be reading state to describe a change to state.
+     *
+     * Everything downstream already existed. `ClarityEventType.SETTING_CHANGED` is in the
+     * catalog, the reducer folds it, `TrailRow` renders it and `TrailFacts` keeps it in as
+     * something the person did, so the row appeared in the Trail with nothing else to
+     * change.
      */
-    fun setAfterCompleting(value: AfterCompleting) = write { preferences.setAfterCompleting(value) }
+    fun setAfterCompleting(value: AfterCompleting) = write {
+        val previous = state.value.afterCompleting
+        preferences.setAfterCompleting(value)
+        repository.recordSettingChanged(
+            key = "afterCompleting",
+            previousValue = previous.name,
+            newValue = value.name,
+        )
+    }
 
     fun setPulseReminders(value: Boolean) = write { preferences.setPulseRemindersEnabled(value) }
 

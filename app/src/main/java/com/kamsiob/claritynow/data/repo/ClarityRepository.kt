@@ -33,6 +33,7 @@ import com.kamsiob.claritynow.data.event.ItemReordered
 import com.kamsiob.claritynow.data.event.ItemStatus
 import com.kamsiob.claritynow.data.event.PulseAnswered
 import com.kamsiob.claritynow.data.event.PulseGenerated
+import com.kamsiob.claritynow.data.event.SettingChanged
 import com.kamsiob.claritynow.data.export.ClarityBackupStore
 import com.kamsiob.claritynow.data.export.ExportSnapshot
 import com.kamsiob.claritynow.data.prefs.AfterCompleting
@@ -1071,6 +1072,41 @@ class ClarityRepository(
                 .any { it.type == ClarityEventType.APP_OPENED.name }
             if (alreadyToday) return@withLock
             commitLocked(AppOpened(dateKey = today))
+        }
+    }
+
+    /**
+     * One setting a person changed, written to the log. MASTER_BUILD_PROMPT 14.1.
+     *
+     * **This exists because `commit` is private and it has to stay private.** Phase 11
+     * built the Settings screen, found that `After completing` had nowhere to write its
+     * event, and reported the gap rather than reaching around the single write path,
+     * which was the right call: an event written down a second path is worse than an
+     * event that is missing, because the second path is invisible afterwards.
+     *
+     * **Not every preference belongs here, and the rule is whether the log is the truth
+     * about it.** `After completing` changes what completing an item does, so a Trail
+     * that does not record the change cannot explain why two completions on the same day
+     * behaved differently. A text size, a theme and a reminder hour are facts about one
+     * install rather than about a life, they are already in DataStore where a second
+     * device is supposed to disagree with them, and putting them in the log would put a
+     * row in the Trail every time somebody dragged a slider.
+     *
+     * **Nothing is written when the value did not change**, because a setting screen can
+     * hand back the value it is already holding and a row saying a person changed a
+     * setting to what it already was is a small lie in the file the desktop app is built
+     * against.
+     */
+    suspend fun recordSettingChanged(key: String, previousValue: String, newValue: String) {
+        if (previousValue == newValue) return
+        mutex.withLock {
+            commitLocked(
+                SettingChanged(
+                    key = key,
+                    previousValue = previousValue,
+                    newValue = newValue,
+                ),
+            )
         }
     }
 
