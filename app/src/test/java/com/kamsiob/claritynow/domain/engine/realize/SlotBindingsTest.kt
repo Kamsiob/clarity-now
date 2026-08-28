@@ -194,6 +194,12 @@ class SlotBindingsTest {
             weeksSincePersonalBest = 8,
             mostRecentBetterWeekKey = "2026-01-11",
             personalBestFocusMinutesWeek = 90,
+            // A week with something in every corner now has to include estimates in it,
+            // because `estimateCalibration` reads them. Seven is above 14b.8's floor of
+            // five and 2.6 is inside `EstimateTendency.LONGER`, which is the band the
+            // family's only rule fires in.
+            estimatedCompletions = 7,
+            activeToEstimateRatio = 2.6,
         ),
         pulse = EngineFacts.pulse(
             answeredLifetime = 9,

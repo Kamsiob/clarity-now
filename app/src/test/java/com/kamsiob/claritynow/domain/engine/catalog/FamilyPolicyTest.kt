@@ -122,27 +122,26 @@ class FamilyPolicyTest {
         assertEquals(
             "7.4 says the neutral agent variant is preferred where the family has one at the " +
                 "selected stage, and falls through to reflective, observational or plain where it " +
-                "does not. MASTER_BUILD_PROMPT 14b.10 assigns the missing benches to phase 9, so " +
-                "this set is a to do list and not a failure. A family leaving it is progress; a " +
-                "family joining it is a corpus regression",
+                "does not. MASTER_BUILD_PROMPT 14b.10 assigned the missing benches to phase 9, " +
+                "which wrote them for `neglectedArea` stage 1, `queuePressure`, `persistentItem`, " +
+                "`focusAbandonment` and `intakeVsOutput` stage 1. What is left is the eight the " +
+                "corpus format cannot reach. A family joining this set is a corpus regression; a " +
+                "family leaving it now needs a change to the format rather than a batch of lines",
             setOf(
-                "neglectedArea",
-                "queuePressure",
-                "focusAbandonment",
-                "decliningActivity",
+                // Eight families that no author can take off this list, and it is a
+                // property of the corpus format rather than of anybody's diligence.
+                // `CORPUS_2_REPORT.md` carries a register tag in section 2 alone, and
+                // `ReportWalker` refuses one on a headline or a pattern line, so every
+                // variant in those two sections is PLAIN by construction and step 4 of 7.4
+                // is what they get. `quietWeek`, `decliningActivity` and `queuePressure`
+                // are here for their headline rule and not their observation one, whose
+                // benches all three now carry `[N]` lines. Recorded in 7.4 with the
+                // argument.
                 "quietWeek",
+                "decliningActivity",
+                "queuePressure",
                 "growingQueues",
                 "areaGoneQuiet",
-                "persistentItem",
-                // The three below are neither progress nor a regression, and the difference
-                // matters because the message above reads every arrival as one. 7.4 has
-                // always enumerated all three, and `CORPUS_2_REPORT.md` has never authored
-                // an `[N]` line in a pattern family, so nothing about either side moved.
-                // What changed is that the facts phase gave each of them a rule, and an
-                // unflattering rule is what this test counts: before, they had authored
-                // language and no rule, so there was nothing here to notice them by. No
-                // line was removed and no bench got smaller. Phase 9 owes them the same
-                // neutral agent bench it owes the eight above.
                 "narrowingFocus",
                 "focusHabitFading",
                 "abandonmentPattern",

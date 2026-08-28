@@ -47,17 +47,25 @@ class RuleCatalogTest {
      * would produce a candidate that is always vetoed, which is a silence with no reason
      * anyone could find.
      *
-     * **Two families are exceptions, and the exception is a real conflict in the
+     * **Three families are exceptions, and the exception is a real conflict in the
      * specification rather than an oversight here.** `neglectedArea` and `areaGoneQuiet`
      * exist precisely to name an area that did nothing, and prohibition 1 forbids naming
-     * an area with zero events **in the window under consideration**. For these two the
+     * an area with zero events **in the window under consideration**. For these the
      * window under consideration is the neglect window rather than the report week, and
      * check 1 has to be scoped to say so. Recorded in the phase 5 report for the validator
-     * slice; the catalog's part is to name the two families rather than leave them looking
+     * slice; the catalog's part is to name the families rather than leave them looking
      * like rules that forgot the criterion.
+     *
+     * **`familiarDip` is the third and it is the second branch of the same silence.**
+     * 14b.9 removes `neglectedArea` and `areaGoneQuiet` from the ranking when the area's
+     * quiet has a precedent, and this is the family that speaks in their place about the
+     * same area over the same window. A gate that excused the two it relieves and not the
+     * one that replaces them would swap a vetoed sentence for a differently vetoed one.
+     * `AbsenceSubject` still requires a real lifetime, a non new area and a measured gap,
+     * so a phantom area stays unnameable by this rule as by the other two.
      */
     @Test
-    fun `a rule with an area subject requires that area to have events, or is one of the two silence families`() {
+    fun `a rule with an area subject requires that area to have events, or is one of the three silence families`() {
         val areaRules = CorpusFixture.catalog.rules.filter { it.subject === Subjects.AREA }
         assertTrue("no area subject rules found", areaRules.size >= 5)
         val namesASilentArea = areaRules.filterNot { rule ->
@@ -67,7 +75,7 @@ class RuleCatalogTest {
         }
         assertEquals(
             "these are the only rules that may name an area with no events in the week",
-            setOf("neglectedArea", "areaGoneQuiet"),
+            setOf("neglectedArea", "areaGoneQuiet", "familiarDip"),
             namesASilentArea.map { it.family }.toSet(),
         )
     }

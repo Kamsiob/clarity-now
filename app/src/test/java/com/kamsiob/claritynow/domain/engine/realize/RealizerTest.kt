@@ -34,6 +34,9 @@ class RealizerTest {
 
     private val morning = EngineMoment(EngineFacts.dateKey(1), PartOfDay.MORNING)
 
+    /** Enough days for the variant hash to walk a bench of seventy. */
+    private val NAMING_DAYS = 40
+
     private fun rule(key: String): ClarityRule =
         catalog.rules.firstOrNull { it.key == key } ?: error("no rule $key in the catalog")
 
@@ -96,14 +99,41 @@ class RealizerTest {
         assertFalse(candidate.responses.last().isPositive)
     }
 
+    /**
+     * Written as an invariant over many days rather than over one, because the bench moved.
+     *
+     * It used to assert that one realization of `persistence` stage 2 named the item, which
+     * held while every line of an eighteen line bench carried `{itemTitle}`. Phase 9 grew that
+     * bench past sixty and some of the new lines name the area or nothing at all, exactly as
+     * `persistence.s2.15` already did, so which line the hash picks decides whether an item is
+     * named. What the validator actually needs is the correspondence: an id is recorded when
+     * and only when the sentence carries the name.
+     */
     @Test
     fun `the item and the area a sentence names are recorded for the validator`() {
-        val candidate = rendered(realize("pulse.persistence.s2", persistenceFacts, item))
+        var named = 0
+        for (day in 1..NAMING_DAYS) {
+            val moment = EngineMoment(EngineFacts.dateKey(day), PartOfDay.MORNING)
+            val candidate = rendered(realize("pulse.persistence.s2", persistenceFacts, item, moment = moment))
+            val carriesTitle = "Rewrite the proposal intro" in candidate.rendered
+            if (carriesTitle) named++
+            assertEquals(
+                "the recorded item ids have to match the names in `${candidate.rendered}`",
+                if (carriesTitle) setOf("item-1") else emptySet(),
+                candidate.namedItemIds,
+            )
+            assertTrue(candidate.namedAreaIds.all { it == "work" })
+            assertEquals(
+                "the recorded area ids have to match the names in `${candidate.rendered}`",
+                if ("Work" in candidate.rendered) setOf("work") else emptySet(),
+                candidate.namedAreaIds,
+            )
+        }
         assertTrue(
-            "every stage 2 line names the item, so the candidate has to carry it",
-            candidate.namedItemIds == setOf("item-1"),
+            "no sampled day produced a sentence naming the item, so the correspondence above " +
+                "was never tested in the direction that matters",
+            named > 0,
         )
-        assertTrue(candidate.namedAreaIds.all { it == "work" })
     }
 
     @Test
@@ -244,11 +274,22 @@ class RealizerTest {
         assertTrue(bands.all { it is Realization.Rendered })
     }
 
+    /**
+     * Read against `burst`, whose every line names its area, rather than against
+     * `persistence`.
+     *
+     * The bench this needs is one where no line can be filled once the subject is gone, and
+     * `persistence` stopped being that bench: `persistence.s3.13` was already marker free
+     * before phase 9 and the lines phase 9 added include more, so a stage with no active item
+     * would now render a sentence about items in general instead of falling silent. Both
+     * `burst` benches carry a marker in every line and 11.1 sizes the family in the tier below
+     * hot, so nothing in this phase grows it out from under this test.
+     */
     @Test
     fun `a rule whose bench cannot be filled says so rather than rendering a marker`() {
-        // No active item anywhere, so every persistence line loses its subject.
+        // No areas anywhere, so every burst line loses the subject its markers read.
         val facts = EngineFacts.factSet(window = EngineFacts.window(totalEvents = 3))
-        val result = realize("pulse.persistence.s2", facts, item)
+        val result = realize("pulse.burst.s1", facts, workArea)
         assertTrue(result is Realization.NotProducible)
     }
 

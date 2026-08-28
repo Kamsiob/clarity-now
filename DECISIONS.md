@@ -71,6 +71,163 @@ The old entry stays where it is, wrong, dated, and useful.
 
 ---
 
+## August 28, 2026: the seventh measurement, and what a deeper bench cannot buy
+
+The pass that compiled phase 9. Eight sessions wrote 3,230 corpus lines across three
+volumes without running Gradle once. **All of it builds and every gate is
+green:** `verifyClarity` passes at 991 tests, including the eight corpus gates, the render
+gate over 11,867 harvested fact sets, the anchors test, the totals audit, language hygiene
+and the merged manifest check.
+
+**No corpus line was written, added, reworded or removed in this pass.** It measures, it
+records, and it produces the review the owner asked for.
+
+### Decided
+
+**Phase 9's authoring is finished and no further authoring is scheduled against silence.**
+Every hot bench in all three volumes is inside 11.1's band, the corpus is 4,733 lines
+against the 1,503 the last commit records, and the seventh measurement shows that not one
+silent day in eleven persona years was caused by a bench.
+
+**`docs/CORPUS_REVIEW.md` is the review artifact**: a full simulated year each for
+`queueHoarder`, `abandoning` and `balancedAcrossFour`, annotated with family, stage,
+register and variant key, with every `hardStretch` line flagged by name and all five of the
+run's `hardStretch` firings listed whether or not they fall inside those three years.
+Chosen as the corners rather than as samples: the most talkative year at 37 percent silence,
+the hardest year at 88, and the year that hears nine Pulses in three hundred and sixty five
+days at 97.
+
+**11.1's tier table is corrected in place** with the measured counts, 36 hot benches and 18
+warm rather than the phase 5 estimates of fifteen and thirty, and two gaps in it are named:
+eight families fall between the warm ceiling of 20 firings and the hot floor of 40, and six
+fire between 335 and 1,308 times a year with no tier above them.
+
+**The register finding is recorded and not acted on.** `RegisterChoice.preference` returns
+registers in order and `Realizer.realize` takes the first it can fill, so one register
+speaks per surface and a sixty line stage bench offers twenty lines. Changing that is a rule
+change and belongs to whoever owns 7.4.
+
+**The simulator's open hour stays at 07:00**, so the seventh measurement is comparable with
+the six before it, and the eighth is where the evening Pulse gets measured.
+
+**Every file `CorpusFixture` reads is now a declared input of the test task**: the three
+corpus volumes, `docs/CORPUS_ANCHORS.md` and `CLARITY_LOGIC_ENGINE.md`. None of them was,
+and the gates open them off the repository root at runtime rather than off the test
+classpath, so Gradle could not see the reads: a corpus edit left `testDebugUnitTest`
+UP-TO-DATE and **`verifyClarity` returned green in 499 milliseconds over two thousand lines
+it had never read.** Proved fixed rather than assumed: one extra byte in
+`CORPUS_1_PULSE.md` now makes the task execute, and the file was restored and checked back
+to its own hash.
+
+### Why: silence did not move by one day, and that is the finding
+
+2,067 silent Pulse days out of 3,148 opens, splitting 1,161 filtered, 895 nothing qualified
+and 11 insufficient. **That is the sixth measurement's split to the day**, after 3,230 new
+lines. The prediction on record was that emptying the filtered column would leave silence
+near 28.7 percent; the column did not empty by a single day, and the reason is that bench
+depth cannot empty it.
+
+The brief that opened phase 9 said the filtered column "is bench depth". It is not, and the
+code says so in three places:
+
+- **`VariantChoice.choose` never falls silent on a full bench.** When every line has been
+  used inside ninety days it drops the most recently used one and reuses the rest, per 7.6
+  step 2. Exhaustion produces a repeat, never a silence, so depth cannot produce silence
+- **`Realizer.realize` returns `NotProducible` only when no line at any register can be
+  filled from the facts on hand.** That is a question about slot bindings and rule shape. A
+  hundred lines carrying an unbound marker are exactly as silent as one
+- **The rest is step 6 of `Selector.select`**: family availability, callback resolution, the
+  horizon, the Pulse repeat filter and the cooldowns. None of the five reads the corpus
+
+So `ALL_QUALIFIED_RULES_FILTERED` has two producers and neither is sensitive to bench size.
+The empirical half of the same statement is that tripling the corpus changed the count by
+zero. **The 1,161 can only be moved by a rule, a binding or a cooldown.** The owner's
+standing instruction that this is reported and not ground at stands, now with a mechanism
+under it rather than an estimate.
+
+### Why: what a deeper bench did buy, and the one thing it cost
+
+Variant repeats inside ninety days fell from **7,370 to 3,898**. Two consecutive report
+leads sharing a length band fell from **719 to 277**, which nothing predicted and which is
+the gate suite's length band work arriving on a surface. Layer 5 vetoed nothing. The pattern
+section's slot allocation is unchanged in every figure.
+
+**Runs of three or more parallel numeric clauses went from 41 to 121**, the one reading that
+moved the wrong way. Deeper benches gave the composer more numeric leads to place beside
+each other. 9.2's band rule survived the same pressure because `Realizer.choose` honors it
+as a preference on every pick, and the numeric rule survived nothing because **nothing
+anywhere implements it**. It is the one stated rule of section 9 with no code behind it, and
+it was invisible while the benches were too shallow to expose it.
+
+**95 percent of the repeats that remain are the Momentum headline and the areas banner**,
+which recompute on every app open rather than once a day: 2,108 and 1,586 of 3,898, against
+46 in the Pulse. `weekMixed` fires 1,308 times across the run against a bench of 77 of which
+19 are reachable, and `bn.mixed.25` is said 101 times. No bench size holds a ninety day
+exclusion against that.
+
+### Considered and rejected
+
+**Writing more lines to move silence.** Rejected on the measurement above: it is not that
+more lines would help a little, it is that the mechanism has no path from bench size to a
+silent day. Continuing would have been grinding, which the brief forbade in advance.
+
+**Opening the simulator in the evening so the reflective Pulse bench is measured.** The
+simulator builds only the before 17:00 window, so every one of its 1,081 Pulses is a morning
+one and `RegisterChoice` never offers the reflective register; roughly 312 reflective and
+427 observational statement lines of volume 1 are unmeasured. Rejected **here** because
+changing the instrument in the same run that changes the corpus makes the seventh
+measurement incomparable with all six before it, which is the exact mistake section 12
+already argues against over the twelfth persona. It is the eighth measurement's first job.
+
+**Making `RegisterChoice` or `Realizer` choose across registers.** Rejected: a rule change
+under 7.4, outside an authoring brief, and it would have moved every reading in the table in
+the same run as the corpus did.
+
+**Adding a tier above 40 firings to 11.1's table.** Rejected: the bench size in that row
+would be a number nobody has measured, and 11.1 has just finished replacing projected
+figures with counted ones. The gap is named instead, with the six families that fall in it.
+
+**Keeping the dump harness as a test.** It was a throwaway JUnit class that wrote each
+persona's year into a scratch directory, and it is deleted. The alternatives were a test
+that writes 850 kilobytes into `docs/` on every run, or a test that asserts nothing unless a
+property is set, and this repository already argues against the second one in
+`SimulationChecks`. Regenerating the review means writing the same forty lines again, and
+`SimulationDump.of(run)` does all the work.
+
+**Dumping all eleven personas into the review.** Rejected at 3.1 megabytes. Three corners
+carry the reading and a file nobody finishes is not a review.
+
+**Fixing `ob.focus.s3` while it was in front of me.** `focusInvestment` is warm at 36
+firings, its reachable observational bench is one line because the other one is unbound, and
+`highFocus` hears that single sentence thirty five times in a year while it claims a record
+its rule does not establish. Rejected because the brief forbids touching a warm bench and
+forbids adding a binding, and because a defect this specific deserves its own decision
+rather than a drive by fix. It is written up in the review with the three lines of evidence.
+
+### Revisit if
+
+**The silence conclusion** is revisited if a rule, a binding or a cooldown changes, since
+those are the only three things the measurement leaves able to move it. Another authoring
+pass is not one of them.
+
+**The register decision** is revisited the moment 7.4 is opened for any reason, because the
+sizing target in 11.1 and the register order in `RegisterChoice` are one question asked
+twice and they should be answered together.
+
+**The simulator open hour** is revisited at the eighth measurement, which should take the
+same year twice, once at 07:00 and once after 17:00, and report both columns rather than
+replacing one with the other.
+
+**The parallel numeric clause rule** is revisited when somebody implements it. Until then
+the reading is a count of a rule nothing enforces, and it will keep rising with every line
+added to a numeric bench.
+
+**The test input declaration** is revisited if a corpus file is ever moved out of the
+repository root, at which point the declaration and `CorpusFixture.REPOSITORY_ROOT` have to
+move together or the gates go quiet again.
+
+---
+
 ## August 28, 2026: the surfaces pass, the size control, and the contrast audit
 
 Three passes landed in one tree in one night, and this entry carries the choices from

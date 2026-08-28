@@ -14,8 +14,8 @@ import org.junit.Test
  * subtly monotonous with nothing failing anywhere.
  *
  * The last test is the one that would catch a regression to hand tagging. It asserts that
- * the fifteen advisory `[S]` markers in `CORPUS_2_REPORT.md` are recorded and decide
- * nothing, by checking each one against the band the words actually produce.
+ * every advisory `[S]` marker in `CORPUS_2_REPORT.md` is recorded and decides nothing, by
+ * checking each one against the band the words actually produce.
  */
 class LengthBandTest {
 
@@ -75,7 +75,7 @@ class LengthBandTest {
     fun `the advisory short markers are recorded and decide nothing`() {
         val marked = CorpusFixture.catalog.allVariants.filter { it.shortMarker }
         assertEquals(
-            "CORPUS_2_REPORT.md carries fourteen [S] authoring hints on keyed lines",
+            "CORPUS_2_REPORT.md carries thirty five [S] authoring hints on keyed lines",
             SHORT_MARKERS_IN_THE_REPORT_CORPUS,
             marked.size,
         )
@@ -94,6 +94,6 @@ class LengthBandTest {
     }
 
     private companion object {
-        const val SHORT_MARKERS_IN_THE_REPORT_CORPUS = 14
+        const val SHORT_MARKERS_IN_THE_REPORT_CORPUS = 35
     }
 }

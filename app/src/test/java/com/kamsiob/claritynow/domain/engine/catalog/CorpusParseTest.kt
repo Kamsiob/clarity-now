@@ -63,10 +63,13 @@ class CorpusParseTest {
                 CorpusFixture.keyedLineCount(total.file),
             )
         }
+        // Empty since phase 9. This used to name CORPUS_3_MOMENTUM.md, whose totals table
+        // claimed 112 Momentum headlines against 96 authored; every one of the three files
+        // now agrees with its own table, so any name appearing here is a fresh drift.
         assertEquals(
-            "only CORPUS_3_MOMENTUM.md is known to disagree with its own totals table. A new " +
-                "entry here means a totals table drifted from the lines beneath it",
-            listOf("CORPUS_3_MOMENTUM.md"),
+            "no corpus file is known to disagree with its own totals table. A name here means " +
+                "a totals table drifted from the lines beneath it",
+            emptyList<String>(),
             drifted.map { it.file },
         )
     }
@@ -196,8 +199,8 @@ class CorpusParseTest {
         assertEquals("acknowledgment lines", 12, auxiliary.getValue("ack").size)
         assertEquals("banner captions", 10, auxiliary.getValue("bnc").size)
         assertEquals("basis lines", 6, auxiliary.getValue("bs").size)
-        assertEquals("nothing to report", 3, auxiliary.getValue("ed.none").size)
-        assertEquals("first week", 3, auxiliary.getValue("ed.first").size)
+        assertEquals("nothing to report", 6, auxiliary.getValue("ed.none").size)
+        assertEquals("first week", 6, auxiliary.getValue("ed.first").size)
         assertEquals("the generated line", 1, auxiliary.getValue("footer.generated").size)
         assertEquals("Generated on your device", auxiliary.getValue("footer.generated").single().text)
     }

@@ -151,9 +151,7 @@ class FamilyAvailabilityTest {
         )
         assertNull(
             "and INSUFFICIENT is not the permission either, so the rhythm family says nothing",
-            FamiliesAwaitingLanguage.RULES.firstOrNull { rule ->
-                rule.criteria.all { it.test(facts, null) }
-            },
+            rhythmRules().firstOrNull { rule -> rule.criteria.all { it.test(facts, null) } },
         )
     }
 
@@ -164,7 +162,7 @@ class FamilyAvailabilityTest {
      */
     @Test
     fun `the second branch qualifies on the precedent that closed the gate, and only on that`() {
-        val rhythm = FamiliesAwaitingLanguage.RULES.single { it.key.endsWith("activity") }
+        val rhythm = rhythmRules().single { it.key.endsWith("activity") }
         assertTrue(
             "PRESENT is what the rhythm family speaks on",
             rhythm.criteria.all { it.test(decliningYear(activityPrecedent = Precedent.PRESENT), null) },
@@ -316,13 +314,13 @@ class FamilyAvailabilityTest {
         assertTrue(
             "otherwise the capacity gate would replace a withheld decline line with a rhythm " +
                 "line that says the same forbidden thing",
-            FamiliesAwaitingLanguage.FAMILIAR_DIP in FamilyAvailability.WITHHELD_ON_RE_ENTRY,
+            RHYTHM_FAMILY in FamilyAvailability.WITHHELD_ON_RE_ENTRY,
         )
     }
 
     // ------------------------------------------------------------------ the tables
 
-    /** Every family either gate names is a family that exists, or is reserved for phase 9. */
+    /** Every family either gate names is a family that exists, or is reserved for later. */
     @Test
     fun `every gated family key names a declared or reserved family`() {
         val declared = Purpose.entries.flatMap { EngineFamilies.keysFor(it) }.toSet() +
@@ -349,47 +347,46 @@ class FamilyAvailabilityTest {
     }
 
     /**
-     * The reservation says enough for phase 9 to author against without asking.
+     * The second branch is a real family now, and the register that held it is empty.
      *
-     * A register whose entries nothing reads is a comment in the shape of a data structure.
-     * This is what makes the difference: the key, the purpose, the cooldown, the corpus
-     * prefix and the constraints the bench is written under all have to be there, and every
-     * declared rule has to point at the family the entry names.
+     * `FamiliesAwaitingLanguage` carried `familiarDip`'s three rules until phase 9 authored
+     * its bench, and the five steps it named have all been taken. What this asserts is the
+     * end state rather than the handoff: the family is declared, its rules are in the
+     * catalog, its bench is in the corpus, and nothing is waiting on language any more. A
+     * new entry in that register is a family whose sentences somebody owes.
      */
     @Test
-    fun `the reserved family is declared completely enough to author against`() {
-        val reservation = FamiliesAwaitingLanguage.FAMILIES.single()
-        assertEquals(FamiliesAwaitingLanguage.FAMILIAR_DIP, reservation.key)
-        assertEquals(Purpose.REPORT_OBSERVATION, reservation.purpose)
-        assertEquals(EngineFamilies.REPORT_DEFAULT_COOLDOWN_DAYS, reservation.cooldownDays)
-        assertTrue("a bench needs a key prefix", reservation.keyPrefix.isNotBlank())
-        assertTrue("an entry with no citation is a comment", reservation.citation.isNotBlank())
-        assertTrue("an entry with no reason is a parking space", reservation.why.isNotBlank())
-        assertTrue(
-            "the constraints are half of what phase 9 is being handed",
-            FamiliesAwaitingLanguage.FAMILIAR_DIP_CONSTRAINTS.size >= 4,
+    fun `the second branch is in the catalog and the register that held it is empty`() {
+        assertEquals(
+            "a reservation left standing after its bench landed is a handoff nobody closed",
+            emptyList<FamiliesAwaitingLanguage.Reservation>(),
+            FamiliesAwaitingLanguage.FAMILIES,
         )
         assertTrue(
-            "every reserved rule points at the family the entry names",
-            FamiliesAwaitingLanguage.RULES.all { it.family == reservation.key },
+            "the family is declared where every other observation family is declared",
+            RHYTHM_FAMILY in EngineFamilies.keysFor(Purpose.REPORT_OBSERVATION),
         )
         assertTrue(
-            "a reserved rule key may not collide with one the catalog already carries",
-            FamiliesAwaitingLanguage.RULES.none { rule ->
-                CorpusFixture.catalog.rules.any { it.key == rule.key }
-            },
+            "and the corpus carries a bench for it, which is what the parser demands of a " +
+                "declared family",
+            CorpusFixture.catalog.familiesFor(Purpose.REPORT_OBSERVATION).any { it.key == RHYTHM_FAMILY },
         )
-        assertTrue(
-            "the family is not declared in EngineFamilies, because the corpus parser " +
-                "fails on a declared family with no bench",
-            Purpose.entries.none { reservation.key in EngineFamilies.keysFor(it) },
+        assertEquals(
+            "one rule per subject the precedent facts measure, and no more",
+            3,
+            rhythmRules().size,
+        )
+        assertEquals(
+            "its cooldown is the flat Report fourteen days, per 7.3",
+            EngineFamilies.REPORT_DEFAULT_COOLDOWN_DAYS,
+            EngineFamilies.reportCooldownDays(RHYTHM_FAMILY),
         )
     }
 
     /** Every subject the gate reads has a rhythm rule to answer with, and no more than that. */
     @Test
     fun `the second branch covers every subject the gate closes on`() {
-        val covered = FamiliesAwaitingLanguage.RULES.map { it.key.substringAfterLast('.') }.toSet()
+        val covered = rhythmRules().map { it.key.substringAfterLast('.') }.toSet()
         assertEquals(
             "a gate that closes on a subject with no rhythm rule behind it is a family " +
                 "excluded with nothing put in its place, and a rhythm rule for a subject " +
@@ -398,8 +395,17 @@ class FamilyAvailabilityTest {
             covered,
         )
         assertTrue(
-            "and none of them is in the catalog yet, because the language is phase 9's",
-            CorpusFixture.catalog.rules.none { it.family == FamiliesAwaitingLanguage.FAMILIAR_DIP },
+            "and every one of them speaks, because phase 9 authored the bench they fill",
+            CorpusFixture.catalog.rules.any { it.family == RHYTHM_FAMILY },
         )
+    }
+
+    private companion object {
+
+        /** 14b.9's second branch, named here once rather than spelled at seven call sites. */
+        const val RHYTHM_FAMILY: FamilyKey = "familiarDip"
+
+        /** Its three rules, read from the catalog now that they are in it. */
+        fun rhythmRules() = CorpusFixture.catalog.rules.filter { it.family == RHYTHM_FAMILY }
     }
 }

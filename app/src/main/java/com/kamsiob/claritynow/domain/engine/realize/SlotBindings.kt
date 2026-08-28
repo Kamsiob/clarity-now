@@ -446,6 +446,27 @@ internal object SlotBindings {
         // firstMilestone and hardStretch declare nothing. hardStretch is authored without a
         // marker in it, which 6.4 all but requires: the grammatical subject is the pattern,
         // and a number would make it the person.
+        //
+        // familiarDip declares one marker and no number, which its constraints all but
+        // require in the same way: 14b.9 forbids it from stating the depth, the duration or
+        // the date of any fall, and `Precedent` carries the verdict and nothing else, so
+        // there is no count for a line to ask for. The area name is bound to the rule's own
+        // subject, so the three lines that carry it fill for the area rule and drop out of
+        // the bench for the two rules whose subject is the person's whole record.
+        family(
+            Purpose.REPORT_OBSERVATION, "familiarDip",
+            "areaName" to subject("areaName"),
+        ),
+        // The estimate reading is a multiple and never a percentage, per 14b.8, so `{n}` is
+        // a count of times rather than a share and there is deliberately no `pct` here.
+        // `{m}` is the sample the ratio was read across, which is the same count the floor
+        // criterion gates on, so the number in the sentence and the number that let the
+        // sentence fire are one fact read twice.
+        family(
+            Purpose.REPORT_OBSERVATION, "estimateCalibration",
+            "n" to bind("estimateMultiple"),
+            "m" to bind("estimatedCompletions"),
+        ),
     )
 
     // ------------------------------------------------------------------ Report patterns

@@ -3,7 +3,6 @@ package com.kamsiob.claritynow.domain.engine.select
 import com.kamsiob.claritynow.domain.engine.FactSet
 import com.kamsiob.claritynow.domain.engine.FamilyKey
 import com.kamsiob.claritynow.domain.engine.Precedent
-import com.kamsiob.claritynow.domain.engine.catalog.FamiliesAwaitingLanguage
 import com.kamsiob.claritynow.domain.engine.catalog.Purpose
 import com.kamsiob.claritynow.domain.engine.catalog.Subject
 import com.kamsiob.claritynow.domain.engine.catalog.SubjectKind
@@ -40,7 +39,7 @@ import com.kamsiob.claritynow.domain.engine.catalog.SubjectKind
  *
  * [PRECEDENT_GATED] is 14b.9: a fall this deep and this long that has happened to this
  * subject before is a rhythm rather than a decline, so the family does not fire and
- * `FamiliesAwaitingLanguage.FAMILIAR_DIP` is what speaks in its place. It has no purpose
+ * `familiarDip` is what speaks in its place. It has no purpose
  * scope, because 14b.9 has none: the claim is false on every surface it could appear on.
  *
  * ## Where they overlap, and why the overlap is safe
@@ -123,8 +122,7 @@ internal object FamilyAvailability {
         "comeback" to "it names the gap the return came back from",
         "areaRevival" to "it names the days an area was still before it moved again",
         "comebackPattern" to "it counts the gaps an area has come back from",
-        FamiliesAwaitingLanguage.FAMILIAR_DIP to
-            "a familiar stretch of low weeks is the absence in a kinder vocabulary",
+        "familiarDip" to "a familiar stretch of low weeks is the absence in a kinder vocabulary",
     )
 
     /**

@@ -85,6 +85,24 @@ class ClaritySimulator(
     private val zone: ZoneId = DEFAULT_ZONE,
     private val startDate: LocalDate = DEFAULT_START_DATE,
     private val days: Int = DAYS_IN_YEAR,
+    /**
+     * Called with the fact set behind every invocation, before anything is decided about it.
+     *
+     * **A [SimulationRun] keeps what the engine said and throws away what it was looking
+     * at.** That is the right shape for the dump, which is about output, and it is the wrong
+     * shape for the one question the corpus phase has to answer about every authored line:
+     * given facts a real life actually produced, can this line be filled and does layer 5
+     * believe it. There is nowhere else those fact sets exist. Layer one builds them from a
+     * log that grew as the engine spoke into it, so they cannot be reconstructed afterwards
+     * from the run, and a second simulator written to capture them would be a second day
+     * loop to drift from this one.
+     *
+     * So the fact set is handed out as it is built, and the default does nothing. A caller
+     * that wants none pays nothing and a caller that wants a sample keeps what it needs
+     * rather than the year: eleven persona years hold roughly thirty thousand fact sets and
+     * no reading needs all of them at once.
+     */
+    private val onFacts: (Int, SimulatedSurface, FactSet) -> Unit = { _, _, _ -> },
 ) {
 
     /** Every rule by key, so the dump can print the criteria that fired. */
@@ -365,6 +383,19 @@ class ClaritySimulator(
     // ------------------------------------------------------------ one invocation
 
     private fun record(
+        day: Int,
+        log: SimulatorLog,
+        surface: SimulatedSurface,
+        facts: FactSet,
+        result: EngineResult,
+        ordinal: Int?,
+        vetoes: List<String>,
+    ): SimulatedInvocation {
+        onFacts(day, surface, facts)
+        return invocation(day, log, surface, facts, result, ordinal, vetoes)
+    }
+
+    private fun invocation(
         day: Int,
         log: SimulatorLog,
         surface: SimulatedSurface,

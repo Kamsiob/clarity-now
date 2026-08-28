@@ -209,6 +209,15 @@ class CapacityGatePersonaTest {
      * moment somebody makes either gate a criterion instead, because `specificity` is
      * `criteria.size` and a criterion reorders the ranking rather than shortening it, which
      * is the mistake `FamilyAvailability` spends its class comment arguing against.
+     *
+     * **The second branch is excluded from the gated side, and the exclusion is the shape of
+     * the control rather than a concession.** The control run is the same facts with every
+     * precedent forced to `NONE`, and `familiarDip`'s three rules qualify on `PRESENT`, so
+     * the family cannot appear in the open ranking on any day and its presence in the gated
+     * one is not the gate adding anything. 14b.9 requires exactly this, that a different
+     * family fire with different language, and the family fires because its own rule
+     * qualified on the value that closed the gate. What is still asserted, and is the whole
+     * point of this test, is that every other pair keeps its place.
      */
     @Test
     fun `the gate only ever removes, and never reorders or adds`() {
@@ -220,6 +229,7 @@ class CapacityGatePersonaTest {
             val moment = engine.momentOf(week.facts)
             for (purpose in FamilyAvailability.RE_ENTRY_PURPOSES) {
                 val gated = ranked(selector, purpose, week.facts, week.history, moment)
+                    .filterNot { it.startsWith(SECOND_BRANCH_PREFIX) }
                 val open = ranked(selector, purpose, withoutPrecedents(week.facts), week.history, moment)
                 compared++
                 if (!isSubsequenceOf(gated, open)) {
@@ -337,6 +347,15 @@ class CapacityGatePersonaTest {
         if (subjectId in facts.areas) SubjectKind.AREA else SubjectKind.ITEM
 
     private companion object {
+
+        /**
+         * 14b.9's second branch, by rule key prefix.
+         *
+         * The prefix rather than the family key because [ranked] renders a rule key and a
+         * subject, and the three rules that carry this family share it.
+         */
+        const val SECOND_BRANCH_PREFIX = "report.observation.familiarDip"
+
         const val DAYS_PER_WEEK = 7
         const val REPORT_HOUR = 8
 

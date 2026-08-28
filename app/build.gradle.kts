@@ -47,8 +47,14 @@ plugins {
 // reach a surface from a widget or a shortcut, and withhold a decline observation
 // from somebody whose dip has a precedent. Not a major bump because 1.0 is the
 // release, and phase 9 has not written a line of it yet.
+// 0.10.0: phase 9, the corpus, plus 12c and the archive view. A minor bump because the
+// app says three thousand things it could not say yesterday, and because two screens
+// arrived: the one a returning person meets, and the one that gets an archived area
+// back. The version is 0.10.0 rather than 0.9.1 because a patch is for a correction and
+// this triples the language. versionCode is 1000, which is why the scheme multiplies
+// minor by a hundred.
 val versionMajor = 0
-val versionMinor = 9
+val versionMinor = 10
 val versionPatch = 0
 
 // The application id and the one suffix that changes it, written once.
@@ -131,6 +137,23 @@ tasks.withType<Test>().configureEach {
         "clarity.regenerateGolden",
         providers.gradleProperty("regenerateGolden").getOrElse("false"),
     )
+    // Every file `CorpusFixture` opens off the repository root at runtime, rather than off the
+    // test classpath. Gradle cannot see those reads, so without this the task reports
+    // UP-TO-DATE after a corpus edit and every gate over the corpus goes green without
+    // running. Found in phase 9: `verifyClarity` passed in 499ms over two thousand lines it
+    // had never read. A gate that only runs when somebody remembers to force it is the
+    // failure this repository documents in three other places.
+    //
+    // The list is `CorpusFixture`'s and has to move with it: the three volumes, the anchors
+    // file `CorpusAnchorsTest` verifies character for character, and the engine specification,
+    // whose stated totals `CorpusTotalsAuditTest` recounts.
+    inputs.files(
+        rootProject.layout.projectDirectory.file("CORPUS_1_PULSE.md"),
+        rootProject.layout.projectDirectory.file("CORPUS_2_REPORT.md"),
+        rootProject.layout.projectDirectory.file("CORPUS_3_MOMENTUM.md"),
+        rootProject.layout.projectDirectory.file("CLARITY_LOGIC_ENGINE.md"),
+        rootProject.layout.projectDirectory.file("docs/CORPUS_ANCHORS.md"),
+    ).withPropertyName("corpusFiles").withPathSensitivity(PathSensitivity.RELATIVE)
 }
 
 kotlin {

@@ -200,11 +200,15 @@ internal object ReportInvariants {
     /**
      * 12.3's narrowing, as families. `neglectedArea` speaks about seven and fourteen days
      * of silence and `areaGoneQuiet` about three weeks of it, and both name the area
-     * precisely because it did nothing. `areaRevival` carries the same flag on its rule and
-     * is deliberately absent: its own criteria require the area to have moved again inside
+     * precisely because it did nothing. `familiarDip` is the third and it is the second
+     * branch of the same silence: 14b.9 removes the other two from the ranking when the
+     * area's quiet has a precedent, and this is what speaks in their place, about the same
+     * area over the same window. `areaRevival` carries the same flag on its rule and is
+     * deliberately absent: its own criteria require the area to have moved again inside
      * the window, so a revival naming a silent area is a defect this list should catch.
      */
-    private val ABSENCE_SUBJECT_FAMILIES: Set<FamilyKey> = setOf("neglectedArea", "areaGoneQuiet")
+    private val ABSENCE_SUBJECT_FAMILIES: Set<FamilyKey> =
+        setOf("neglectedArea", "areaGoneQuiet", "familiarDip")
 
     /** `RollupFacts.neglectedAreaIds`'s own floor, written out rather than imported. */
     private const val ABSENCE_LIFETIME_EVENTS = 5

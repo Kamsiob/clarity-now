@@ -1,6 +1,8 @@
 package com.kamsiob.claritynow.domain.engine.catalog
 
+import com.kamsiob.claritynow.domain.engine.EstimateTendency
 import com.kamsiob.claritynow.domain.engine.FamilyKey
+import com.kamsiob.claritynow.domain.engine.Precedent
 
 /**
  * The Report rules: the headline, the observations and the pattern line.
@@ -96,6 +98,46 @@ internal object ReportRules {
 
     /** A comparison against every week since install. */
     private const val RECORD_HORIZON = 180
+
+    /**
+     * The oldest fact `familiarDip` reads, which is this person's whole history.
+     *
+     * A precedent is the earliest fall at least as deep and at least as long as the current
+     * one and it can sit anywhere in the log, so section 4's horizon, the maximum age of the
+     * oldest fact referenced, is the number the record families already use for the same
+     * reason. Carried over from `FamiliesAwaitingLanguage`, which held these rules until
+     * phase 9 authored the bench.
+     */
+    private const val HISTORY_HORIZON = 180
+
+    /**
+     * The twelve weekly buckets `HistoryFacts.activeToEstimateRatio` is read over.
+     *
+     * `EstimateTendency.WINDOW_WEEKS` times seven, so the horizon and the reading cannot
+     * come apart. 14b.8's consequence for the corpus follows from the same number: a family
+     * reading this may not say `this week`.
+     */
+    private const val CALIBRATION_HORIZON = EstimateTendency.WINDOW_WEEKS * 7
+
+    /**
+     * Where `familiarDip` ranks, and it is a restoration rather than a new decision.
+     *
+     * `FamiliesAwaitingLanguage` wrote these three rules with one criterion each and said in
+     * as many words that the consequence, ranking at the bottom of the observation pass, was
+     * correct: a rhythm line is not entitled to a slot a real observation wants.
+     * `CatalogIntegrity` refuses a single criterion rule, so the second criterion had to be
+     * written, and specificity is `criteria.size`, so writing it silently promoted these
+     * three from last to level with almost every other observation rule. Measured over
+     * eleven persona years, the promotion cost `intakeVsOutput` forty firings and
+     * `queuePressure` thirty six.
+     *
+     * Priority is the only field left that can hold the rank the reservation asked for, and
+     * it is how this catalog already says last resort: `datedFallback` sits at -100 and
+     * `MomentumRules` puts `cleanSlate` at -10 for the same reason. Ten rather than a
+     * hundred because this is a real observation that ranks last, not a fallback that must
+     * never outrank anything.
+     */
+    private const val LAST_RESORT = -10
 
     /** Patterns need three weeks of snapshots before any of them may fire. 6.3. */
     private val threeWeeksOfData = window(
@@ -659,6 +701,88 @@ internal object ReportRules {
                 strictlyFalling(it.history.weekTotalEventsSeries, 4)
             },
             window("hard.fourWeeksOfData", "there are four weeks to see it across") { it.history.weeksOfData >= 4 },
+        )),
+        /**
+         * The second branch of 14b.9's capacity gate, one rule per subject the precedent
+         * facts measure. Held in `FamiliesAwaitingLanguage` until phase 9 authored the
+         * bench, and moved here unchanged.
+         *
+         * **The reservation said one criterion each, and one criterion is not allowed.**
+         * `Precedent.PRESENT` already means low now, at least twelve weeks of this
+         * subject's own history behind it, and an earlier fall at least as deep and at
+         * least as long, so a criterion restating any of that could never separate one fact
+         * set from another. What the reservation did not know is that
+         * `CatalogIntegrity.qualitativeStagesCarryTheirOwnCriteria` refuses a single
+         * criterion rule outright, on the argument that a rule requiring one thing is still
+         * a sentence about somebody's week. The second criterion is therefore chosen to be
+         * the one the sentences genuinely rest on rather than the one that reaches two: the
+         * week has to have something in it. A report on a week with no events at all is
+         * replaced whole by `CORPUS_2_REPORT.md` 6.1, and a line about a familiar shape
+         * said into that page would be an observation with no week behind it. It is the
+         * same guard `quietWeek` and `firstMilestone` carry, for the same reason.
+         *
+         * The area rule takes the history guard instead, which is `neglectedArea`'s own.
+         * That one is not a floor reaching for two either: `AbsenceSubject` refuses to let
+         * an area with fewer than five lifetime events be named, so without the criterion
+         * the rule would select an area layer 5 then silently vetoed. These still rank at
+         * the bottom of the observation pass, which is correct: 11.4 forbids padding a
+         * report to reach a minimum, and a rhythm line is not entitled to a slot a real
+         * observation wants.
+         *
+         * The subject split is `FamilyAvailability.PRECEDENT_GATED`'s own discipline read
+         * from the other side. A family is gated only where a precedent fact measures the
+         * same quantity its claim is about, so the family that answers instead has to be
+         * split the same way.
+         */
+        report("report.observation.familiarDip.activity", Purpose.REPORT_OBSERVATION, "familiarDip", 1, HISTORY_HORIZON, priority = LAST_RESORT, criteria = listOf(
+            window("familiarDip.activity.precedent", "this person's weeks have been this low, for this long, before") {
+                it.history.activityDipPrecedent == Precedent.PRESENT
+            },
+            window("familiarDip.notEmpty", "the week has something in it, so there is a report to sit inside") {
+                it.window.totalEvents >= 1
+            },
+        )),
+        report("report.observation.familiarDip.focus", Purpose.REPORT_OBSERVATION, "familiarDip", 1, HISTORY_HORIZON, priority = LAST_RESORT, criteria = listOf(
+            window("familiarDip.focus.precedent", "focus has fallen away like this, for this long, before") {
+                it.history.focusDipPrecedent == Precedent.PRESENT
+            },
+            window("familiarDip.notEmpty", "the week has something in it, so there is a report to sit inside") {
+                it.window.totalEvents >= 1
+            },
+        )),
+        // The subject is the area's silence, exactly as it is for the two families this one
+        // relieves, so check 1 has to be told. `AbsenceSubject` still requires a real
+        // lifetime, a non new area and a measured gap, so a phantom area stays unnameable.
+        report("report.observation.familiarDip.area", Purpose.REPORT_OBSERVATION, "familiarDip", 1, HISTORY_HORIZON, Subjects.AREA, priority = LAST_RESORT, absenceSubject = true, criteria = listOf(
+            area("familiarDip.area.precedent", "this area has been this quiet, for this long, before") {
+                it.dipPrecedent == Precedent.PRESENT
+            },
+            area("neglect.hasHistory", "the area has real history, so this is a silence and not a new area") {
+                it.lifetimeEvents >= 5 && !it.isNew
+            },
+        )),
+        /**
+         * Calibration, never error. 14b.8, and the facts, the floor and the veto were all
+         * built before this rule existed.
+         *
+         * **One direction, and it is the only one that can be said.** `estimateMultiple` is
+         * the median per item ratio rounded, so a stay under half its estimate rounds to
+         * nought and the measure answers null, and a stay close to its estimate rounds to
+         * one, which is a sentence with nothing in it. The remaining band is the one
+         * 14b.8's permitted example names. `EstimateTendency.CLOSE` and `SHORTER` are left
+         * without a rule rather than given lines with no number in them, and the two
+         * tendency sentences that would carry them cannot be written without a comparison
+         * against what somebody predicted, which check 11 vetoes by pattern.
+         *
+         * The floor is doubled on purpose. The fact already refuses a ratio under five
+         * estimated completions, and `estimateFloor` is what makes the count travel as a
+         * `FactRef` the validator re-reads, per 11.4.
+         */
+        report("report.observation.estimateCalibration", Purpose.REPORT_OBSERVATION, "estimateCalibration", 1, CALIBRATION_HORIZON, criteria = listOf(
+            window("$ESTIMATE_READING_PREFIX.tendency.longer", "estimated things stay active markedly longer than the estimate") {
+                it.history.estimateTendency == EstimateTendency.LONGER
+            },
+            estimateFloor(),
         )),
     )
 
