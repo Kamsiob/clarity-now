@@ -87,6 +87,66 @@ worse than either of them**, and the way to edit these is to replace the whole b
 
 ---
 
+## What the device check found at 0.9.0
+
+Run on the Pixel 8 (`shiba`) at versionName 0.9.0, versionCode 900, with `adb logcat`
+checked after every step. **Zero fatal exceptions across the whole pass.** This is the
+check that covered phases 4, 10, 12b and the accessibility pass at once, because they had
+all landed in one tree.
+
+### The two phase 4 checks that could not be met by reasoning both pass
+
+**The session survives a process kill.** A 25 minute session was started, the ring read
+`24:57`, `adb shell am force-stop` killed the process, and the app was relaunched. **It
+came back straight to the running session** rather than to the tab it was on, and the
+ring read `24:32`: exactly the twenty five seconds of wall clock that had passed. The arc
+redrew at the right position, which is the property that proves it is computed from the
+persisted end instant rather than animated from a counter.
+
+**Back leaves the session running.** Back went to Areas, the notification stayed posted,
+and the area card carried `In focus, 25 minutes left` with the play glyph in the area's
+color.
+
+**The notification was read out of `dumpsys` rather than judged from a screenshot**, and
+it carries what 14b.6 asks for: `channel=ongoing`, `category=progress`, flags
+`ONGOING_EVENT|ONLY_ALERT_ONCE|LOCAL_ONLY|PROMOTED_ONGOING`, and two actions, `Add 10 min`
+and `End`, both broadcasts rather than activity launches. **`PROMOTED_ONGOING` was granted
+by the platform**, so the Live Update treatment is live rather than degraded to an
+ordinary ongoing notification.
+
+**The completion screen is a success state.** `Session complete`, the item title,
+`2 minutes in Today`, then `Mark item complete` and `Done`. The word this project renamed
+away from reaches nothing a person can see.
+
+### The tutorial runs, which it could not before
+
+All five spotlights were walked and each aligned on its element: the FAB, the first area
+card, the Focus chip, the Pulse chip and the tab bar. Phase 10 had left four of the five
+targets without a `tutorialTarget`, so the mechanism waited rather than running wrong,
+which was the designed failure and was the right one.
+
+### The text size control, at the largest step
+
+Set to `Largest` and every screen re-laid out: type grew, spacing grew with it, the
+segmented control wrapped `Choose from queue` to two lines rather than truncating, the
+item title wrapped to two lines on the area card, and **the floating tab bar held**,
+which was the tightest element by a wide margin in the static analysis. Nothing clipped
+anywhere the pass looked.
+
+### One defect found, and it was invisible
+
+**The Momentum area balance percentages did not sum and nothing said why.** Two areas
+read 64 and 21 percent under a sidehead called `Area balance`, with fifteen points
+unaccounted for and every automated gate green. Both numbers were correct: the shares are
+shares of every user activity event in the fortnight, and answering a Pulse or changing a
+setting belongs to no area. It is fixed by stating the denominator rather than by changing
+it, and the reasoning is in its own commit and in a test on the fact.
+
+**That is the argument for this pass in one item.** It was not a rendering bug, a crash or
+a contrast failure. It was two true numbers that a person would add.
+
+---
+
 ## What the device check found in phase 3b
 
 Run on the Pixel 8 at 0.4.0, versionCode 400, with `adb logcat` checked after every
