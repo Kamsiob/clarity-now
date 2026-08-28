@@ -53,9 +53,13 @@ plugins {
 // back. The version is 0.10.0 rather than 0.9.1 because a patch is for a correction and
 // this triples the language. versionCode is 1000, which is why the scheme multiplies
 // minor by a hundred.
+// 0.10.1: the reach pass and its follow ups. A patch rather than a minor bump because
+// nothing new can be done with the app: every change corrects something that was already
+// specified and already wrong, and the largest of them is eight lines restoring a bound
+// three documents already stated.
 val versionMajor = 0
 val versionMinor = 10
-val versionPatch = 0
+val versionPatch = 1
 
 // The application id and the one suffix that changes it, written once.
 //

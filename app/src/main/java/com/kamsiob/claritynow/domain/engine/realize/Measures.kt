@@ -520,7 +520,7 @@ internal object Measures {
             "what this area's queue was holding before it fell to nothing", "thing", "things") read@{ facts, id, _ ->
             count(area(facts, id)?.queueDrainedFrom)
         },
-        // The exception, for `ob.drain.l01`, `It held {n} things on Sunday`. It is the only
+        // The exception, for `ob.drain.l01`, `It held {n} things a week ago`. It is the only
         // line in either volume that dates the count to the window boundary, and it is true
         // only when the fall began at or before it. Answering null the rest of the time
         // drops that one lead off the bench, per SlotBindings' slot completeness rule, which

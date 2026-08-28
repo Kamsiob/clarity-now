@@ -205,7 +205,7 @@ internal fun parseDayKey(dateKey: String): LocalDate? =
  * who opened the app and did nothing. Three numbers would go wrong and each would
  * still look plausible: CORPUS_3's `mo.steady`, active on 9 or more of the last 14
  * days, would tell that person they had been steady; CORPUS_2's `ob.day.l03`,
- * `{n} of seven days had activity`, would become a count of app opens presented as
+ * `{n} of 7 days had activity`, would become a count of app opens presented as
  * a count of activity; and `quietDay`, which fires below two events in a window,
  * would be close to unreachable. Worse than any of those, APP_OPENED exists only to
  * detect an absence for Addendum 01 4d, and a returning person must never be

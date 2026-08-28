@@ -71,6 +71,86 @@ The old entry stays where it is, wrong, dated, and useful.
 
 ---
 
+## August 28, 2026: the Pulse repeat filter covers yesterday, because that is what it always said it covered
+
+**Decided.** The Pulse repeat filter at step 4 of selection now applies **only where the last
+Pulse was generated yesterday**. `Selector.REPEAT_WINDOW_DAYS` is one and it is not a tuning
+number; it is the length of the word yesterday. The filter is still keyed on the family alone
+and **is not narrowed to `(family, subjectId)`**, which was the option this pass was pointed at
+and which the measurement ruled out. **Pulse silence falls from 65.7 percent to 56.0**, 2,067
+silent days across eleven persona years to 1,762, and `verifyClarity` is green at 1,025 tests.
+
+**Why.** `CLARITY_LOGIC_ENGINE.md` 7.3 says the cooldown covers `cooldownDays` and is
+"separate from the no-repeat rule, which covers only yesterday". Section 12's table calls this
+filter "yesterday's family cannot be today's". Step 4 of section 5 names the fact rather than
+the rule, `PulseFacts.lastGeneratedFamily`, and that fact is the family of the most recent
+Pulse generated **at any point in the past**. The code followed the fact name. Three statements
+in the authoritative document say one day and the implementation said forever, so this is a
+defect against the document that wins inside `domain.engine` rather than a behavior change,
+and it is not the owner's to rule on.
+
+**The unbounded reading is self-reinforcing, and that is the part no reading of the code
+shows.** A family blocked at step 4 writes no `PULSE_GENERATED`. `lastGeneratedFamily`
+therefore does not advance. The same family is blocked again tomorrow, and the morning after
+that, for as long as it stays the only family a life qualifies for. Of the 869 days where this
+filter alone emptied the candidate list, **only 169 were a gap of one day**; 287 were two to
+six, 121 a week to a month, 78 one to three months and **214 were ninety days or more**.
+
+**`balancedAcrossFour` is the case, and it is worse than the aggregate.** The eighth
+measurement recorded it as speaking nine times a year, all between January 5 and January 20,
+then filtered on 348 consecutive days, and concluded that no change to a wait could reach it.
+That was right about waits and wrong about the cause: the filter is what holds it. Four evenly
+used areas qualified `persistence` on a **different item** almost every day and every candidate
+was discarded at family level off a Pulse from January 20. It now hears **183 Pulses instead of
+9**, its silence is 49 percent instead of 97, and its longest silent run is **one day instead of
+348**. The bound makes the loop unreachable rather than unlikely, because a day the Pulse did
+not speak is a day this filter cannot apply.
+
+**Considered and rejected.** *Narrowing the filter to `(family, subjectId)`.* This was the
+option the pass was directed at, on the argument that the filter's only distinct effect is
+blocking a different subject of the same family and that nobody has argued for that. Both
+halves were measured and they rule it out. **Of the 869 days, 366 carry a candidate whose
+subject differs from the last Pulse's and 359 would speak under a narrowed filter**, which is
+41 percent of the cost against the bound's 66. And **every Pulse family declares three days of
+cooldown or more**, so on consecutive days step 5 already blocks the exact pair: of the 691
+same pair candidates the filter dropped, **not one at a gap of a single day escaped its own
+family's cooldown**. Narrowing is therefore an exact no-op on the one day the rule is about.
+It does not keep the protection and drop the cross subject blocking; it drops the protection
+the specification states and keeps the blocking after a long gap that the specification never
+asked for. Cross subject blocking on consecutive days is not a side effect of step 4, it is the
+only thing step 4 contributes that nothing else does.
+
+*Removing the filter entirely.* Still the owner's and still not taken. It is worth 120 further
+days now rather than the 574 the eighth measurement priced, because most of that 574 was the
+missing bound and not the rule.
+
+*Building a permanent per filter counter into `Selector`.* Rejected for the reason the eighth
+pass rejected it: mutable accounting inside a layer whose purity is a build rule, for a
+question asked twice. The instrumentation was temporary, the file was restored from a copy
+taken before it and `git diff` shows only the bound.
+
+*Leaving `HotFamilies` and `docs/CORPUS_ANCHORS.md` at the eighth measurement.* The table is
+compared against a live run by `CorpusRenderTest` and 20 rows moved, so it cannot be left. Three
+families sit within two firings of the forty firing line and all three crossed it: `freshStart`
+in at 42, `consistentRhythm` and `cleanSlate` out. The anchors moved with the table.
+
+**One reading moved the wrong way and it is not rhythm.** The worst family concentration went
+from 48 percent to 97: `balancedAcrossFour` takes 178 of its 183 Pulses from `persistence`.
+That is the bound making something visible rather than causing it. With four evenly used areas
+no area holds seventy percent of a window, so `concentration` cannot qualify, `spread` fires
+once, and `persistence` is the only family whose rules that life satisfies. **Nine sentences a
+year hid it.** It belongs to the 907 day `NO_RULE_QUALIFIED` column, which is now the largest
+single producer of Pulse silence for the first time, and it is a rule coverage finding rather
+than a reason to restore the block.
+
+**Revisit if** the owner rules on removing the filter outright, at which point 120 days is the
+number to re-measure against; or if a persona is ever seen to hear the same family on two
+consecutive days, which the bound must never allow and which `SelectorTest` asserts at one day
+and two; or if `NO_RULE_QUALIFIED` is worked, at which point the family concentration reading
+is the one that should move and this entry is the record of why it is high.
+
+---
+
 ## August 28, 2026: the eighth measurement, and the one line that is three quarters of Pulse silence
 
 **Decided.** Four passes that had each verified themselves alone were run together for the

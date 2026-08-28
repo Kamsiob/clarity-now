@@ -79,8 +79,8 @@ class CorpusParseTest {
         // The editorial register belongs to the Report. CORPUS_3_MOMENTUM.md says so in
         // prose; this asserts the parser holds the line rather than trusting the note.
         val text = CorpusFixture.momentumText.replace(
-            "mo.steady.01  [P]  Active {dayCount} of the last fourteen days.",
-            "mo.steady.01  [E]  Active {dayCount} of the last fourteen days.",
+            "mo.steady.01  [P]  Active {dayCount} of the last 14 days.",
+            "mo.steady.01  [E]  Active {dayCount} of the last 14 days.",
         )
         assertTrue("the replacement did not apply", text != CorpusFixture.momentumText)
         val thrown = runCatching { CorpusParser.parse(CorpusVolume.MOMENTUM, text) }.exceptionOrNull()

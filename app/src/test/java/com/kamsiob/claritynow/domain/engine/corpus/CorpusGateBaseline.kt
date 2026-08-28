@@ -26,7 +26,8 @@ import com.kamsiob.claritynow.domain.engine.catalog.Purpose
  * | renders | 82 lines that no real moment could fill or that layer 5 always vetoed |
  *
  * Every one of them is recorded below and nothing else is, so the next finding fails the
- * build.
+ * build. An entry leaves this file only when the corpus stops producing the finding it
+ * records, which has happened once and is argued where it happened.
  *
  * Every entry is a debt with a name on it, and phase 9 should leave this file shorter rather
  * than longer. Nothing is added here without a corpus edit being the alternative, which is
@@ -62,17 +63,31 @@ internal object CorpusGateBaseline {
     /**
      * Clauses in two families of one purpose today. See [CorpusGates.sharedFragments].
      *
-     * Nine, and only the longest run of each collision is listed, so one shared clause is
-     * one entry rather than one entry per window inside it. Two of the nine are already
-     * recorded in `KnownCorpusViolations` as whole shared sentences; the other seven are
+     * Seven, and only the longest run of each collision is listed, so one shared clause is
+     * one entry rather than one entry per window inside it. One of the seven is also
+     * recorded in `KnownCorpusViolations` as a whole shared sentence; the other six are
      * clauses inside sentences that differ, which the production check cannot see.
+     *
+     * **Nine were recorded on the day this was written, and the ninth is deleted rather
+     * than left standing.** It was `on {} of the seven days`, shared by `dayShape` and
+     * `focusInvestment`, and the reach pass rewrote both lines for issue 57 so that no
+     * digit slot sits beside a number word: `ob.day.l05` now reads `of the 7 days` and
+     * `ob.focus.s3.l04` was restructured to `on {n} days out of 7`. The collision is gone,
+     * so the entry matched nothing. This gate grandfathers by subset, so an entry that
+     * matches nothing cannot fail and cannot lapse either, which makes it the one shape of
+     * row that quietly costs the file its meaning: it records a debt that has been paid,
+     * and left alone it would go on recording it for as long as the file exists.
+     *
+     * **The eighth left the same way and for the same defect.** It was `active {} of the
+     * last fourteen days`, shared by `mo.steady.01` and `mo.quiet.01`, and `mo.steady` was
+     * the half of it that was also wrong: `{dayCount}` renders 9 to 14 there and Momentum
+     * renders ten and above as digits, so the line read `Active 12 of the last fourteen
+     * days.` on five of the six values the slot can take. The nine `mo.steady` lines that
+     * paired a rendered digit with the word `fourteen` now write `14`; `mo.quiet` keeps
+     * `fourteen` because its own slot never reaches ten. One edit fixed the sentence and
+     * ended the collision, which is what issue 57 is about in both places it has landed.
      */
     val FRAGMENTS: List<RecordedFragment> = listOf(
-        RecordedFragment(
-            Purpose.MOMENTUM_HEADLINE,
-            "active {} of the last fourteen days",
-            setOf("quietStretch", "steadyStretch"),
-        ),
         RecordedFragment(
             Purpose.MOMENTUM_HEADLINE,
             "the last two weeks have been",
@@ -83,7 +98,6 @@ internal object CorpusGateBaseline {
             "been waiting more than a fortnight",
             setOf("intakeVsOutput", "queuePressure"),
         ),
-        RecordedFragment(Purpose.REPORT_OBSERVATION, "on {} of the seven days", setOf("dayShape", "focusInvestment")),
         RecordedFragment(
             Purpose.REPORT_OBSERVATION,
             "the queues have grown three weeks running",
@@ -155,6 +169,9 @@ internal object CorpusGateBaseline {
     val LENGTH_BANDS: Map<String, Int> = mapOf(
         "AREAS_BANNER weekBuilding s1" to 8,
         "AREAS_BANNER weekMixed s1" to 8,
+        // Dead since the batch that took this bench to sixty, and kept for the reason the
+        // note above gives: the grown bench meets the cap on its own, at 26 SHORT and 34
+        // MEDIUM, and this row is what it looked like at eight lines all in one band.
         "AREAS_BANNER weekQuiet s1" to 8,
         "AREAS_BANNER weekStarting s1" to 8,
         "AREAS_BANNER weekStrong s1" to 8,
@@ -244,16 +261,26 @@ internal object CorpusGateBaseline {
     val REGISTERS: Map<String, Int> = mapOf(
         "AREAS_BANNER weekBuilding s1" to 8,
         "AREAS_BANNER weekMixed s1" to 8,
-        // The one entry in this file that a register rule added rather than an author.
-        // `bn.quiet` is eight lines and every one of them is `[N]`, which
-        // `CORPUS_3_MOMENTUM.md` authoring rule 5 requires of a quiet state, so it carries
-        // no plain, observational or reflective line at all. It was not held to the hot
-        // standard before because it had never fired: 7.4 could not reach the neutral agent
-        // register on this surface and the family was structurally silent. It now takes 240
-        // banner windows a year, which makes it hot and makes the missing three registers
-        // visible. **The bench is owed sixty lines by 11.1 and this exemption lapses on the
-        // ninth**, which is the right shape: whoever adds a line inherits the debt.
-        "AREAS_BANNER weekQuiet s1" to 8,
+        // **The one entry in this file that is not a debt anybody can pay.** `bn.quiet` is
+        // sixty lines and every one of them is `[N]`, which `CORPUS_3_MOMENTUM.md`
+        // authoring rule 5 requires of a quiet state, so it carries no plain, observational
+        // or reflective line at all. This entry recorded eight lines and lapsed on the
+        // ninth, and that debt was paid the way 11.1 asks: the bench went from eight lines
+        // to the hot floor of sixty. It went there in one voice, and the reason is
+        // mechanical rather than editorial. 7.4 step 1 offers `NEUTRAL_AGENT` as a tier of
+        // one to a rule marked unflattering, `Realizer.realize` leaves a tier only when
+        // nothing in it can be filled, and no line in this bench carries a slot. So the
+        // neutral agent tier fills on every one of the family's 240 firings a year and the
+        // open tier is never reached: a plain, observational or reflective line written
+        // here would be a line the app can never say, which is the defect the register pass
+        // had just removed, pointing the other way. This gate's reason for asking a hot
+        // bench for the three open registers is that a stage missing one has a register the
+        // realizer will ask for and never get, and that premise is false for exactly this
+        // bench. **The durable fix is in the gate rather than here**: `registerDepth` should
+        // not ask for the open tier of a hot bench whose rule is unflattering and whose
+        // `[N]` bench is not empty. Until it does, this holds at sixty and lapses at sixty
+        // one, like every other row.
+        "AREAS_BANNER weekQuiet s1" to 60,
         "AREAS_BANNER weekStarting s1" to 8,
         "AREAS_BANNER weekStrong s1" to 8,
         "MOMENTUM_HEADLINE cleanSlate s1" to 6,

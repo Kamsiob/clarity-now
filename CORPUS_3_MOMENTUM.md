@@ -39,21 +39,21 @@ Under 12 words, serif, the first thing on the Momentum screen. Selected on scree
 Trigger: active on 9 or more of the last 14 days.
 
 ```
-mo.steady.01  [P]  Active {dayCount} of the last fourteen days.
-mo.steady.02  [P]  {dayCount} active days out of fourteen.
-mo.steady.03  [O]  A steady stretch, {dayCount} of the last fourteen days.
+mo.steady.01  [P]  Active {dayCount} of the last 14 days.
+mo.steady.02  [P]  {dayCount} active days out of 14.
+mo.steady.03  [O]  A steady stretch, {dayCount} of the last 14 days.
 mo.steady.04  [O]  Most days in the last fortnight had something in them.
-mo.steady.05  [O]  You have shown up on {dayCount} of the last fourteen days.
+mo.steady.05  [O]  You have shown up on {dayCount} of the last 14 days.
 mo.steady.06  [O]  Something moved on most days this fortnight.
 mo.steady.07  [R]  A consistent stretch.
 mo.steady.08  [R]  The last two weeks have been fairly even.
 mo.steady.09  [R]  Steady, across fourteen days.
-mo.steady.10  [P]  {dayCount} of fourteen.
+mo.steady.10  [P]  {dayCount} of 14.
 mo.steady.11  [O]  Only {m} quiet days in the last fortnight.
-mo.steady.12  [N]  Fourteen days, {dayCount} with activity.
+mo.steady.12  [N]  14 days, {dayCount} with activity.
 mo.steady.13  [R]  A rhythm, more than a run.
 mo.steady.14  [O]  {n} things finished across those days.
-mo.steady.15  [O]  {areaName} has been part of most of them.
+mo.steady.15  [O]  {areaName} has been busier than any other area.
 mo.steady.16  [R]  Even going, two weeks running.
 mo.steady.17  [P]  Active most days this fortnight.
 mo.steady.18  [O]  A stretch with very few gaps in it.
@@ -71,7 +71,7 @@ mo.steady.29   [R]  Two weeks of fairly even going.
 mo.steady.30   [R]  A stretch with more days in it than gaps.
 mo.steady.31   [R]  A fortnight with more movement than stillness.
 mo.steady.32   [O]  Something moved on {dayCount} separate days.
-mo.steady.33   [O]  {dayCount} days out of fourteen had something in them.
+mo.steady.33   [O]  {dayCount} days out of 14 had something in them.
 mo.steady.34   [O]  {n} things went through in fourteen days.
 mo.steady.35   [O]  Activity has landed on {dayCount} of the days.
 mo.steady.36   [O]  {m} days passed without anything in them.
@@ -88,7 +88,7 @@ mo.steady.46   [P]  {dayCount} active days, {m} quiet.
 mo.steady.47   [P]  {n} completions in fourteen days.
 mo.steady.48   [P]  A steady fortnight.
 mo.steady.49   [P]  Fourteen days, mostly active.
-mo.steady.50   [P]  Even, {dayCount} days of fourteen.
+mo.steady.50   [P]  Even, {dayCount} days of 14.
 mo.steady.51   [P]  {m} quiet days, the rest with something.
 mo.steady.52   [N]  Fourteen days, {m} of them without activity.
 mo.steady.53   [N]  The fortnight holds more active days than quiet ones.
@@ -97,7 +97,7 @@ mo.steady.55  [R]  Two weeks with something in most of them.
 mo.steady.56  [R]  A fortnight of small steady days.
 mo.steady.57  [O]  Activity turns up on more days than not.
 mo.steady.58  [O]  The fortnight has few days with nothing in them.
-mo.steady.59  [P]  Fourteen days, {dayCount} of them moving.
+mo.steady.59  [P]  14 days, {dayCount} of them moving.
 mo.steady.60  [N]  The active days outnumber the quiet ones.
 ```
 
@@ -118,7 +118,7 @@ mo.quiet.09  [P]  {dayCount} active days in fourteen.
 mo.quiet.10  [N]  The queues have mostly held where they were.
 mo.quiet.11  [R]  A still fortnight.
 mo.quiet.12  [N]  Little has moved in two weeks.
-mo.quiet.13  [O]  {areaName} accounts for most of what did happen.
+mo.quiet.13  [O]  {areaName} took more of the fortnight than any other.
 mo.quiet.14  [N]  Two weeks, {n} completions.
 mo.quiet.15  [R]  A fortnight with a few days in it.
 mo.quiet.16  [R]  A fortnight that stayed mostly still.
@@ -797,9 +797,63 @@ bn.quiet.05  [N]  Little movement this week.
 bn.quiet.06  [N]  Nothing completed yet this week.
 bn.quiet.07  [N]  A slow week here.
 bn.quiet.08  [N]  Quiet, for now.
+bn.quiet.09  [N]  A low week so far.
+bn.quiet.10  [N]  The week has stayed still.
+bn.quiet.11  [N]  Few things through so far.
+bn.quiet.12  [N]  A thin week here.
+bn.quiet.13  [N]  Slow going here.
+bn.quiet.14  [N]  Not a busy week.
+bn.quiet.15  [N]  The week has moved little.
+bn.quiet.16  [N]  Quiet across the areas so far.
+bn.quiet.17  [N]  Little has gone through yet.
+bn.quiet.18  [N]  The week sits mostly still.
+bn.quiet.19  [N]  Not much through, so far.
+bn.quiet.20  [N]  The week has been light.
+bn.quiet.21  [N]  Little movement here so far.
+bn.quiet.22  [N]  The queues have held still.
+bn.quiet.23  [N]  The week has held few things so far.
+bn.quiet.24  [N]  Little has come out of the week yet.
+bn.quiet.25  [N]  The week has run quietly, with days still to come.
+bn.quiet.26  [N]  The week has been quiet, with days left in it.
+bn.quiet.27  [N]  Few things have moved, with the week still open.
+bn.quiet.28  [N]  The days have gone by with little in them.
+bn.quiet.29  [N]  Little has changed in the queues this week.
+bn.quiet.30  [N]  The week has passed quietly so far.
+bn.quiet.31  [N]  Most of the week has stayed as it was.
+bn.quiet.32  [N]  The areas have stayed much as they were.
+bn.quiet.33  [N]  Not much has landed here this week so far.
+bn.quiet.34  [N]  The week has carried little through it yet.
+bn.quiet.35  [N]  A slow week here, with days still to run.
+bn.quiet.36  [N]  The week has been light on movement so far.
+bn.quiet.37  [N]  The week has held still while the days went by.
+bn.quiet.38  [N]  Little movement across the areas so far this week.
+bn.quiet.39  [N]  Quiet, with the week still going.
+bn.quiet.40  [N]  Days have gone by quietly here.
+bn.quiet.41  [N]  The week holds little so far.
+bn.quiet.42  [N]  Little has stirred here this week.
+bn.quiet.43  [N]  There is not much on the week yet.
+bn.quiet.44  [N]  The week has not filled up much.
+bn.quiet.45  [N]  The days so far have been light ones.
+bn.quiet.46  [N]  Not a great deal has happened here yet.
+bn.quiet.47  [N]  The week has been more still than busy.
+bn.quiet.48  [N]  Things have stayed where they are this week.
+bn.quiet.49  [N]  The week has been slow to fill so far.
+bn.quiet.50  [N]  Little has left the queues this week.
+bn.quiet.51  [N]  Not much has come through here yet.
+bn.quiet.52  [N]  The week is holding still for now.
+bn.quiet.53  [N]  Few things have shifted here this week.
+bn.quiet.54  [N]  The week has kept to itself so far.
+bn.quiet.55  [N]  Movement has been light here so far.
+bn.quiet.56  [N]  The week has taken its time so far.
+bn.quiet.57  [N]  A light week so far, with days still in it.
+bn.quiet.58  [N]  Little has moved out of the queues yet.
+bn.quiet.59  [N]  Few things have moved through this week.
+bn.quiet.60  [N]  The week has been quiet on the queues.
 ```
 
-**Every line in this family is `[N]`.** A quiet week is the one banner state where agentive second person, *you have not completed anything*, would read as an accusation on a screen the user sees every time they open the app. That argument is what `CLARITY_LOGIC_ENGINE.md` 7.4 now cites for marking `weekQuiet` unflattering, which is the only way anything can ask for this register and therefore the only way this family can speak.
+**All sixty lines in this family are `[N]`, and that is a property of the engine rather than a preference.** A quiet week is the one banner state where agentive second person, *you have not completed anything*, would read as an accusation on a screen the user sees every time they open the app. That argument is what `CLARITY_LOGIC_ENGINE.md` 7.4 cites for marking `weekQuiet` unflattering, which is the only way anything can ask for this register and therefore the only way this family can speak.
+
+**The same flag is why a plain, observational or reflective line here would be a line nobody could ever read.** 7.4 step 1 is a tier of one, and `Realizer.realize` leaves a tier only when nothing in it can be filled. Not one line in this bench carries a slot, so the neutral agent tier fills on every firing and the open tier is never reached. Authoring rule 5 and the mechanism agree for once, and the bench was grown to 11.1's hot floor of sixty in one voice rather than three. The register gate records that as an exemption at sixty in `CorpusGateBaseline.REGISTERS`, which is the one entry in that file that is not a debt somebody can pay.
 
 ## bn.mixed, weekMixed
 
@@ -904,7 +958,7 @@ bnc.10  Nothing completed yet this week
 
 **Zero never renders through a `Count` slot.** `bnc.04` and `bnc.10` exist precisely so the zero case has authored lines rather than a template producing `0 completed`. See `CLARITY_LOGIC_ENGINE.md` 8, validator check 4.
 
-**Banner totals: 281 sentences and 10 captions, 2,810 combinations across 5 families.** Four of the five are grown and inside 11.1's hot band: `weekMixed` fires 1,308 times in eleven simulated years and carries 77 sentences, `weekStarting` 731 and 62, `weekBuilding` 284 and 72, `weekStrong` 65 and 62. **The fifth, `weekQuiet`, was left at eight lines because it had never once spoken, and it speaks now.** Its eight lines are every one of them `[N]`, which authoring rule 5 requires of a quiet state, and 7.4 reached the neutral agent register only through a rule marked `unflattering`, which no Momentum rule was. So the family qualified and the realizer found no line it was allowed to say: across 3,148 simulated banner windows it produced nothing. That was a rule to amend rather than a bench to deepen, and the amendment landed. 7.4's enumeration now names `weekQuiet`, and the family takes **240 banner windows a year**, 167 of which nothing spoke on at all. **That makes it hot, and eight lines against 11.1's sixty makes it the deepest bench debt in this corpus.** It is the one bench in volume 3 that still owes an authoring batch, and the batch is written to the anchors in `docs/CORPUS_ANCHORS.md`: every line `[N]`, no second person, no verb the reader could have performed.
+**Banner totals: 333 sentences and 10 captions, 3,330 combinations across 5 families.** All five are now grown and inside 11.1's hot band: `weekMixed` fires 1,308 times in eleven simulated years and carries 77 sentences, `weekStarting` 731 and 62, `weekBuilding` 284 and 72, `weekStrong` 65 and 62, `weekQuiet` 240 and 60. **The fifth was the last, and it was the deepest bench debt in the corpus for exactly one pass.** Its lines are every one of them `[N]`, which authoring rule 5 requires of a quiet state, and 7.4 used to reach the neutral agent register only through a rule marked `unflattering`, which no Momentum rule was. So the family qualified and the realizer found no line it was allowed to say: across 3,148 simulated banner windows it produced nothing. That was a rule to amend rather than a bench to deepen, and the amendment landed first. 7.4's enumeration now names `weekQuiet`, and the family takes **240 banner windows a year**, 167 of which nothing spoke on at all, which made it hot and left it holding eight lines against 11.1's sixty. The batch that closed it was written to the anchors in `docs/CORPUS_ANCHORS.md`: every line `[N]`, no second person, no verb the reader could have performed, and a word in each one that keeps the week open. Fifty two lines went in out of seventy two drafted, a cut of twenty eight percent. Seven of the twenty cut were caught by the gates, six as near duplicates of a line already in the bench and one for sharing a six word run with `weekBuilding`; the other thirteen were cut by ear, most of them because a second line said what a first line had already said, and the rest because they were wry where this bench has to be flat.
 
 ---
 
@@ -934,11 +988,11 @@ bnc.10  Nothing completed yet this week
 | bench | lines | surfaces |
 |---|---|---|
 | Momentum headlines | 467 | 467 |
-| Banner sentences | 281 | |
-| Banner captions | 10 | 2,810 combined |
-| **Total** | **758** | **3,277** |
+| Banner sentences | 333 | |
+| Banner captions | 10 | 3,330 combined |
+| **Total** | **810** | **3,797** |
 
-**Corpus grand total across all three volumes: 4,733 authored lines, and roughly 320,000 distinct surfaces.** Counted when volume 2 closed, with 1,775 Pulse lines and 2,200 Report lines beside this volume's 758. Two earlier readings stood here: 2,942, taken at the moment this volume closed, when volume 1 was still being grown and had moved twice in the hour before it, and 4,407, which assumed 1,874 Report lines against the 1,617 the file carried and was failing the audit from the day it was written. This one is settled rather than a reading: all three volumes have closed. `CorpusTotalsAuditTest` recounts it on every run and names this line when it drifts. The surface figure is the one number here that is approximate on purpose, because two of its three parts are products of benches rather than counts of lines.
+**Corpus grand total across all three volumes: 4,785 authored lines, and roughly 320,000 distinct surfaces.** Counted when the last hot bench in volume 3 closed, with 1,775 Pulse lines and 2,200 Report lines beside this volume's 810. Two earlier readings stood here: 2,942, taken at the moment this volume closed, when volume 1 was still being grown and had moved twice in the hour before it, and 4,407, which assumed 1,874 Report lines against the 1,617 the file carried and was failing the audit from the day it was written. This one is settled rather than a reading: all three volumes have closed. `CorpusTotalsAuditTest` recounts it on every run and names this line when it drifts. The surface figure is the one number here that is approximate on purpose, because two of its three parts are products of benches rather than counts of lines.
 
 ---
 
@@ -950,12 +1004,12 @@ Everything in volumes 1 and 2 applies, plus:
 2. **No questions.** The Pulse asks; Momentum does not
 3. **No advice.** The closing line of the Report is the only place advice exists
 4. **No editorial register.** These surfaces are read many times a day and a clever line becomes tiresome by the third reading
-5. **Every quiet or low-activity line is `[N]`.** These states appear on the screen the user opens most often, and agentive framing on a bad week is the fastest way to make someone delete an app
+5. **Every quiet or low-activity line is `[N]`.** These states appear on the screen the user opens most often, and agentive framing on a bad week is the fastest way to make someone delete an app. **This rule and 7.4 now point the same way, and for one pass they pointed opposite ways.** The rule made `bn.quiet` entirely `[N]` and 7.4 could not reach that register on this surface, so the family was silent on every window it qualified for; the register pass marked `weekQuiet` unflattering and the rule became reachable instead of merely mandatory. It is still mandatory here, and the reason is now mechanical as well as ethical: 7.4 step 1 is a tier of one, `Realizer.realize` leaves a tier only when nothing in it can be filled, and no line in this bench carries a slot, so a plain, observational or reflective line written into `bn.quiet` is a line the app can never say
 6. **Captions carry no tone.** They are arithmetic. If a caption reads as commentary, rewrite it
 7. **Under 12 words per headline**, checked against the realized form with slots filled at their longest plausible value
 8. **`mo.come` states no length of absence.** `MASTER_BUILD_PROMPT.md` 14b.4 governs this family: no line may say how long the gap was, count what waited through it, or ask where the person has been, in any wording including a warm one. **Not in days, not in weeks, not as a date, and not as an adjective**, so `a long gap` and `after a while` are the same violation as `{ageDays}`. Every line added in phase 9 is therefore free of `{ageDays}`, and the vague nouns the family already uses, `a gap`, `a pause`, `a stop`, are what is left to say instead. The three approved lines that do render the gap, `mo.come.01`, `mo.come.02` and `mo.come.05`, predate the rule and are the reason `comeback` sits in `FamilyAvailability.WITHHELD_ON_RE_ENTRY`
 9. **A count slot never says what is waiting.** `{n}` in this file is always something that moved, never a queue depth, for the same reason as 8
 10. **`mo.clean` speaks to two people and every line has to be true for both.** `cleanSlate` triggers on no events in the window plus at least one area, and carries no criterion on the age of the install. So it fires on a fresh install and it fires on an install two years old whose last fourteen days are completely empty. The six approved lines are written for the first reading only, and `A clean slate. Your first steps will show up here.` said to somebody coming back after a fortnight away is the app having forgotten them. Every line added in phase 9 is true of an empty fourteen days whichever person is reading it, and none of them says first, begin or start
-11. **`{areaName}` names the busiest area and never a majority.** `RollupFacts.dominantAreaId` is a strict maximum and is null on a tie, so it always means more than any other area and it does not mean more than all of them together. `balancedWeek` and `singleAreaWeek` carry share criteria that make `most` true; `quietStretch`, `steadyStretch` and `strongPace` carry none, and in those three a line saying `most` is false whenever four areas split the window. New lines there say busiest, or more than any other. `mo.quiet.13` and `mo.steady.15` predate this and say most
+11. **`{areaName}` names the busiest area and never a majority.** `RollupFacts.dominantAreaId` is a strict maximum and is null on a tie, so it always means more than any other area and it does not mean more than all of them together. `balancedWeek` and `singleAreaWeek` carry share criteria that make `most` true; `quietStretch`, `steadyStretch` and `strongPace` carry none, and in those three a line saying `most` is false whenever four areas split the window. New lines there say busiest, or more than any other. `mo.quiet.13` and `mo.steady.15` predated this rule and said most. Both were rewritten in the pass that grew `bn.quiet`, to *took more of the fortnight than any other* and *has been busier than any other area*, which is exactly what a strict maximum supports. No line in this file says most of an area now
 12. **`quietStretch` counts the days that had something in them, never the days that did not.** `{dayCount}` binds `activeDays`, and `quietDays` has no binding in this family at all, so the harsher arithmetic cannot be rendered even by an author who reaches for it. That is deliberate and is the binding table doing the work rather than somebody's restraint
 13. **All three open benches are reached, and the hedge phase 9 wrote paid off.** `Realizer.realize` used to take the first register that had a line it could fill, and `RegisterChoice` put `REFLECTIVE` first for every rule not marked `unflattering`, which was every rule in `MomentumRules`: reflective was the only voice either surface ever spoke, on 5,594 firings out of 5,594. Phase 9 made reflective the deepest bench in every family it grew, and recorded that as a hedge rather than a preference against 14b.10 widening 7.4 and the order changing. It changed. Step 4 of 7.4 is now a tier chosen among rather than an order, the other benches took over as this rule predicted, and across eleven persona years Momentum reads plain 1,052, observational 1,007 and reflective 1,074. **The one register still out of reach on these surfaces is `[N]` outside `weekQuiet`**, which is fifty five lines across `mo.quiet`, `bn.start`, `bn.build`, `bn.mixed`, `bn.strong`, `mo.single` and `mo.steady`: 7.4 reaches that register through the `unflattering` flag alone, and it names only the quiet week. 7.4 records which families were considered beside it and why each was left

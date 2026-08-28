@@ -50,12 +50,13 @@ beautifully, they rendered, they were being said, and neither corpus gate could 
 because a false claim in words carries no marker. An anchor teaches the voice of the line it
 quotes, so an anchor that quotes a claim the app cannot support teaches exactly that. **That rule left nineteen
 of these families short of ten anchors when phase 9 opened, six when volume 2 was
-half grown, and one now.** Thirty six of the thirty seven carry ten, which is 368 rows,
-because a bench grown to sixty lines can supply ten sayable ones even when a handful of its
-markers are unbound. **The thirty seventh is `weekQuiet`**, which joined the hot tier when
-the register pass gave it a voice it could speak in, and which carries its whole bench of
-eight because eight is all it has. Where a heading still names a sayable count below the line count, that gap is a
-finding about the bench rather than a gap in this file.
+half grown, and none now.** All thirty six carry ten, which is 360 rows, because a bench
+grown to sixty lines can supply ten sayable ones even when a handful of its markers are
+unbound. **The last one to get there was `weekQuiet`**, which joined the hot tier when the
+register pass gave it a voice it could speak in, carried its whole bench of eight for one
+pass because eight was all it had, and now carries sixty. Where a heading still names a
+sayable count below the line count, that gap is a finding about the bench rather than a gap
+in this file.
 
 `CorpusAnchorsTest` checks every row on every run: the key exists, the sentence matches the
 corpus character for character, the register and band are the ones the catalog computes, the
@@ -90,7 +91,7 @@ Three registers: `[P]` plain, `[O]` observational, `[R]` reflective. Every Pulse
 is about yesterday, and every one of them combines with a question and a response pair from
 its own stage.
 
-### persistence, 277 firings a year, 276 statements today
+### persistence, 482 firings a year, 276 statements today
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -105,7 +106,7 @@ its own stage.
 | `persistence.s3.13` | R | MEDIUM | `Three weeks is long enough for something to stop being a decision.` | Generalizes without addressing the reader. The word `you` is absent on purpose. |
 | `persistence.s4.07` | R | MEDIUM | `{ageDays}. At some point an item stops being a task and becomes furniture.` | The one reach the family allows itself, at the top of the ladder, and still no instruction. |
 
-### quietDay, 227 firings a year, 198 statements today
+### quietDay, 283 firings a year, 198 statements today
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -120,7 +121,7 @@ its own stage.
 | `quietday.s3.05` | R | SHORT | `A long still stretch.` | Escalation carried by one adjective and by nothing in the tone. |
 | `quietday.s3.10` | R | MEDIUM | `Sometimes a quiet week is the right week.` | The furthest this corpus goes toward reassurance, and it is stated as a general truth rather than about this person. |
 
-### concentration, 211 firings a year, 199 statements today
+### concentration, 246 firings a year, 199 statements today
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -135,7 +136,7 @@ its own stage.
 | `concentration.s3.09` | R | MEDIUM | `Several days in a row have all been the same area.` | A run, stated without the banned word for a run. |
 | `concentration.s3.12` | R | MEDIUM | `This has stopped being a busy day and become a pattern.` | Escalation as a change of category rather than a change of temperature. |
 
-### accumulation, 157 firings a year, 199 statements today
+### accumulation, 163 firings a year, 199 statements today
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -150,7 +151,7 @@ its own stage.
 | `accumulation.s3.08` | R | MEDIUM | `Things keep arriving faster than they leave.` | Things are the agents. Nobody let them in. |
 | `accumulation.s3.10` | O | MEDIUM | `{areaName} is holding {n} things that have not moved.` | The area holds. Nothing suggests somebody is holding it back. |
 
-### rebalance, 101 firings a year, 136 statements today
+### rebalance, 100 firings a year, 136 statements today
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -164,6 +165,27 @@ its own stage.
 | `rebalance.s2.06` | R | MEDIUM | `Something came back that had been gone a long time.` | No name, no number, no area. The most abstract line the family has. |
 | `rebalance.s2.07` | P | SHORT | `First activity in {areaName} in {ageDays}.` | Six words, and `first` does the escalating that an adjective would otherwise have to. |
 | `rebalance.s2.08` | O | MEDIUM | `{areaName} was almost forgotten. Yesterday it was not.` | Two beats where the second cancels the first. The nearest this family gets to warmth. |
+
+### freshStart, 42 firings a year, 10 statements today
+
+New to the hot tier at the ninth measurement, at 42 firings against 26 at the eighth. The
+whole bench is listed because the whole bench is ten lines: this family was sized for the
+long tail and the recency bound on the Pulse repeat filter moved it over the line. It is a
+bench debt rather than an anchor set, and the ten below are what the voice is today rather
+than what it should be grown into.
+
+| key | tag | band | line | what the voice carries |
+|---|---|---|---|---|
+| `freshstart.s1.01` | P | SHORT | `{areaName} has its first item.` | The area is the subject and the person is absent from the sentence. |
+| `freshstart.s1.02` | P | SHORT | `You added {areaName}.` | The one line in the family that addresses the reader, and it does nothing but state what they did. |
+| `freshstart.s1.03` | P | MEDIUM | `{itemTitle} is the first thing in {areaName}.` | Two names and an ordinal. No adjective anywhere near a beginning. |
+| `freshstart.s1.04` | O | MEDIUM | `There is somewhere new to put things now.` | Describes what the person gained without congratulating them for it. |
+| `freshstart.s1.05` | O | SHORT | `{areaName} started yesterday.` | Three words and a date word. A beginning stated as flatly as a quiet day is. |
+| `freshstart.s1.06` | O | MEDIUM | `A new area, with one thing in it.` | A noun phrase and a subordinate clause, no verb between them. The house rhythm at a beginning. |
+| `freshstart.s1.07` | R | SHORT | `{areaName} exists now.` | Three words. `exists` is the plainest verb available and the family takes it. |
+| `freshstart.s1.08` | R | MEDIUM | `Something new got a place of its own.` | `something` rather than a name, and the thing is the one doing the getting. |
+| `freshstart.s1.09` | P | SHORT | `{areaName} went from empty to active.` | A transition named by its two ends, with no word for the crossing. |
+| `freshstart.s1.10` | O | MEDIUM | `{areaName} has one thing and nothing behind it.` | States the queue depth at a beginning, where every later family would read it as pressure. |
 
 ---
 
@@ -179,7 +201,7 @@ of the person.
 anchor below is two to five words long and why the length band gate exempts headline
 benches. Do not read the headline anchors as permission to write short observations.
 
-### comeback, headline, 90 firings a year, 60 lines, 10 listed
+### comeback, headline, 91 firings a year, 60 lines, 10 listed
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -224,7 +246,7 @@ benches. Do not read the headline anchors as permission to write short observati
 | `hd.since.17` | P | SHORT | `A peak, though not the peak.` | The one line that says the record is unbroken, and it says it without apology. |
 | `hd.since.41` | P | MEDIUM | `A rise. An old mark still stands.` | Two beats where the second does not explain the first, which is the house rhythm. |
 
-### balanced, headline, 61 firings a year, 60 lines, 10 listed
+### balanced, headline, 62 firings a year, 60 lines, 10 listed
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -239,7 +261,7 @@ benches. Do not read the headline anchors as permission to write short observati
 | `hd.bal.11` | P | SHORT | `Evenly distributed.` | The flattest possible statement of the week. |
 | `hd.bal.12` | P | SHORT | `A week without a subject.` | The one line that is nearly a figure of speech, and it still states a fact. |
 
-### intakeVsOutput, observation, 246 firings a year, 240 lines, 10 listed
+### intakeVsOutput, observation, 212 firings a year, 240 lines, 10 listed
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -269,7 +291,7 @@ benches. Do not read the headline anchors as permission to write short observati
 | `ob.rev.l53` | E | MEDIUM | `{areaName} was not gone. It was still.` | Two beats where the second corrects the category rather than the fact. |
 | `ob.rev.l44` | P | LONG | `{areaName} had been quiet for {ageDays} before this week, and the report had nothing to say about it in that time.` | The app naming its own silence, and never the person's. |
 
-### queuePressure, observation, 166 firings a year, 80 lines, 10 listed
+### queuePressure, observation, 156 firings a year, 80 lines, 10 listed
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -284,7 +306,7 @@ benches. Do not read the headline anchors as permission to write short observati
 | `ob.qp.l07` | N | SHORT | `{n} things are in the queues.` | Neutral agent at its shortest. A count and a place, and no verb the person is the subject of. |
 | `ob.qp.l09` | E | LONG | `A queue is a record of decisions not yet made, and this one got longer.` | Editorial reaching once, and what it reaches for is a definition rather than a judgment. |
 
-### areaBalance, observation, 117 firings a year, 80 lines, 10 listed
+### areaBalance, observation, 118 firings a year, 80 lines, 10 listed
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -299,7 +321,7 @@ benches. Do not read the headline anchors as permission to write short observati
 | `ob.bal.e03` | E | MEDIUM | `Broad weeks and deep weeks measure different things.` | Refuses the ranking the reader is about to make. |
 | `ob.bal.l16` | E | MEDIUM | `Spread is not the same as balance. This week was spread.` | Refuses the word the reader is about to reach for, in the same breath as the fact. |
 
-### persistentItem, observation, 106 firings a year, 80 lines, 10 listed
+### persistentItem, observation, 90 firings a year, 80 lines, 10 listed
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -314,7 +336,7 @@ benches. Do not read the headline anchors as permission to write short observati
 | `ob.pers.e04` | O | SHORT | `{n} things are waiting behind it.` | Six words, one number, the spatial `behind` again. |
 | `ob.pers.l11` | N | LONG | `The front of {areaName} has been {itemTitle} for {ageDays} and nothing in the queue has come past it.` | The longest line here, and the person is not in it at all. The queue is what did not move. |
 
-### timeOfDay, observation, 106 firings a year, 80 lines, 10 listed
+### timeOfDay, observation, 105 firings a year, 80 lines, 10 listed
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -329,7 +351,7 @@ benches. Do not read the headline anchors as permission to write short observati
 | `ob.tod.l31` | O | LONG | `When something happened this week, it was in one part of the day at least as often as in the other three put together.` | The claim spelled out exactly, because every shorter form of it rounds it off. |
 | `ob.tod.l55` | E | SHORT | `Days have shapes.` | Three words of generalization, and the only line here with no week in it. |
 
-### completionSplit, observation, 102 firings a year, 80 lines, 10 listed
+### completionSplit, observation, 162 firings a year, 80 lines, 10 listed
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -374,7 +396,7 @@ benches. Do not read the headline anchors as permission to write short observati
 | `ob.best.e03` | E | MEDIUM | `Peaks are worth noticing. They are not worth defending.` | The line that keeps a record from becoming a standard, which is the whole reason this family is careful. |
 | `ob.best.e05` | E | MEDIUM | `What made the difference is worth knowing, if you can name it.` | An invitation with an escape in it. Nothing here has to be answered. |
 
-### selfReportVsData, observation, 60 firings a year, 80 lines, 10 listed
+### selfReportVsData, observation, 85 firings a year, 80 lines, 10 listed
 
 This is the flagship family, and 9.1 gives it a cooldown that never lets it repeat about the
 same subject. Every line quotes the person to themselves, and none of them wins the argument.
@@ -392,7 +414,7 @@ same subject. Every line quotes the person to themselves, and none of them wins 
 | `ob.srvd.e05` | E | MEDIUM | `The first read may still be the right one.` | The app siding with the person against its own numbers. |
 | `ob.srvd.e06` | O | MEDIUM | `It has been active {ageDays} in total.` | A plain fact placed after a delicate one, to land the section on the ground. |
 
-### singleFocus, observation, 50 firings a year, 160 lines, 10 listed
+### singleFocus, observation, 49 firings a year, 160 lines, 10 listed
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -407,7 +429,7 @@ same subject. Every line quotes the person to themselves, and none of them wins 
 | `ob.single.s2.l15` | N | SHORT | `One area. All week.` | Neutral agent at its shortest: two fragments, no verb, no person. |
 | `ob.single.s2.e04` | E | MEDIUM | `Sprints end. Blind spots do not, until something forces them to.` | Follows `l09` without repeating it, which is what an extension is for. |
 
-### steadyPace, observation, 46 firings a year, 80 lines, 10 listed
+### steadyPace, observation, 43 firings a year, 80 lines, 10 listed
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -422,7 +444,7 @@ same subject. Every line quotes the person to themselves, and none of them wins 
 | `ob.stead.l55` | O | SHORT | `The week held.` | Three words for a family whose subject is that nothing happened worth more. |
 | `ob.stead.l46` | E | LONG | `What the app can see is that the size held. What that was like is not in the record.` | Names the limit of the measurement in the same breath as the measurement. |
 
-### reportedVsActual, pattern, 173 firings a year, 60 lines, 10 listed
+### reportedVsActual, pattern, 177 firings a year, 60 lines, 10 listed
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -456,7 +478,7 @@ times a year and has exactly one sentence.**
 | `pt.come.55` | P | LONG | `Whether the quiet weeks in {areaName} were a decision or an interruption is not something the app has any way to know.` | Two readings named, neither chosen, and the app admits which of them it cannot tell. |
 | `pt.come.57` | P | LONG | `Two things are true of {areaName}: it has been quiet for whole weeks, and it is not quiet now.` | A colon and two facts. No third clause drawing them together. |
 
-### growingQueues, pattern, 55 firings a year, 60 lines, 10 listed
+### growingQueues, pattern, 58 firings a year, 60 lines, 10 listed
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -471,21 +493,6 @@ times a year and has exactly one sentence.**
 | `pt.grow.49` | P | LONG | `Whether the queues are longer because more arrived or because less left is not something this reading separates.` | The unflattering family saying what it has not measured, before anyone infers it. |
 | `pt.grow.58` | P | SHORT | `Still rising.` | Two words. The shortest the family gets, and it still names no one. |
 
-### consistentRhythm, pattern, 42 firings a year, 60 lines, 10 listed
-
-| key | tag | band | line | what the voice carries |
-|---|---|---|---|---|
-| `pt.rhy.01` | P | MEDIUM | `Your activity has stayed within a narrow band for four weeks.` | A band again, matching the steadyPace observation, which is how two families stay one voice. |
-| `pt.rhy.02` | P | MEDIUM | `Four weeks, all within {n} events of each other.` | The tolerance stated as a number instead of as an adjective. |
-| `pt.rhy.03` | P | MEDIUM | `The pace has not changed meaningfully in a month.` | `meaningfully` is a hedge doing real work, because small changes are not the claim. |
-| `pt.rhy.05` | P | SHORT | `A steady month.` | Three words, and it is the whole pattern. |
-| `pt.rhy.06` | P | MEDIUM | `Four weeks of roughly the same shape.` | `shape` rather than amount, which is a different and more accurate claim. |
-| `pt.rhy.07` | P | MEDIUM | `Consistency, more than a month of it.` | A noun, then its duration. No sentence structure at all. |
-| `pt.rhy.08` | P | SHORT | `Same rhythm, four weeks running.` | Five words. Note `running` where the banned word for a run would have gone. |
-| `pt.rhy.47` | P | MEDIUM | `The month is flat. Flat is a shape too.` | The one line that answers the reading a flat month invites, and it answers it flatly. |
-| `pt.rhy.54` | P | LONG | `A month can be steady without being still, and this one had a total in every week of it.` | Separates two things a flat series is often read as being. |
-| `pt.rhy.60` | P | SHORT | `A month without news.` | Four words, and news is the right noun because the family exists where there is none. |
-
 ---
 
 ## Momentum and the Areas banner
@@ -496,11 +503,11 @@ times a day is tiresome by the third reading, and these are the two surfaces a p
 most often. **A Momentum headline is capped at eleven words by validator check 9**, so the
 band gate holds these benches to two bands rather than three.
 
-The banner families are the highest firing benches in the app: `weekMixed` fires 1,308 times
-a year against eight lines. Read those four banner tables as the tightest constraint in the
+The banner families are the highest firing benches in the app: `weekMixed` fires 1,241 times
+a year against seventy seven lines. Read those four banner tables as the tightest constraint in the
 whole corpus, not as the loosest.
 
-### singleAreaWeek, Momentum, 1,054 firings a year, 12 lines, 10 listed
+### singleAreaWeek, Momentum, 1,033 firings a year, 12 lines, 10 listed
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -515,7 +522,7 @@ whole corpus, not as the loosest.
 | `mo.single.11` | P | SHORT | `{areaName}, mostly.` | Two words. The shortest line in the family and one of the best. |
 | `mo.single.12` | N | MEDIUM | `One area holds {pct} of the fortnight.` | Neutral agent with a number in it, which is the register's most useful shape. |
 
-### balancedWeek, Momentum, 831 firings a year, 12 lines, 10 listed
+### balancedWeek, Momentum, 849 firings a year, 12 lines, 10 listed
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -530,7 +537,7 @@ whole corpus, not as the loosest.
 | `mo.bal.11` | O | MEDIUM | `The gap between your busiest and quietest area is small.` | Describes a gap rather than praising a balance. |
 | `mo.bal.12` | R | SHORT | `Nothing has dominated.` | Three words. The whole fortnight. |
 
-### comeback, Momentum, 604 firings a year, 12 lines, 11 sayable, 10 listed
+### comeback, Momentum, 608 firings a year, 12 lines, 11 sayable, 10 listed
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -545,17 +552,17 @@ whole corpus, not as the loosest.
 | `mo.come.10` | R | SHORT | `The gap ended.` | Three words, and the gap is the subject. |
 | `mo.come.12` | R | SHORT | `Back in motion.` | Three words. Note that none of these twelve congratulates anybody. |
 
-### steadyStretch, Momentum, 335 firings a year, 18 lines, 10 listed
+### steadyStretch, Momentum, 343 firings a year, 18 lines, 10 listed
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
-| `mo.steady.01` | P | MEDIUM | `Active {dayCount} of the last fourteen days.` | The bare count. Note there is no word for a run anywhere in this family. |
-| `mo.steady.03` | O | MEDIUM | `A steady stretch, {dayCount} of the last fourteen days.` | `stretch` is the house word where another app would say streak. |
+| `mo.steady.01` | P | MEDIUM | `Active {dayCount} of the last 14 days.` | The bare count. Note there is no word for a run anywhere in this family, and that `14` is a numeral because `{dayCount}` is one on five of the six values it takes here. |
+| `mo.steady.03` | O | MEDIUM | `A steady stretch, {dayCount} of the last 14 days.` | `stretch` is the house word where another app would say streak. |
 | `mo.steady.04` | O | MEDIUM | `Most days in the last fortnight had something in them.` | `something` again, because the count is already in the line above. |
 | `mo.steady.07` | R | SHORT | `A consistent stretch.` | Three words, and `stretch` again rather than any word for a run. |
 | `mo.steady.08` | R | MEDIUM | `The last two weeks have been fairly even.` | `fairly` is a hedge that stops the line becoming a standard to keep. |
-| `mo.steady.10` | P | SHORT | `{dayCount} of fourteen.` | Three words. A ratio with no noun. |
-| `mo.steady.12` | N | SHORT | `Fourteen days, {dayCount} with activity.` | Neutral agent: the days are the subject and they simply have activity in them. |
+| `mo.steady.10` | P | SHORT | `{dayCount} of 14.` | Three words. A ratio with no noun, and two numerals rather than a numeral beside a number word. |
+| `mo.steady.12` | N | SHORT | `14 days, {dayCount} with activity.` | Neutral agent: the days are the subject and they simply have activity in them. |
 | `mo.steady.13` | R | SHORT | `A rhythm, more than a run.` | The family saying out loud what it refuses to be. |
 | `mo.steady.16` | R | SHORT | `Even going, two weeks running.` | `running` in its spatial sense, which is allowed, unlike the banned noun. |
 | `mo.steady.18` | O | MEDIUM | `A stretch with very few gaps in it.` | Counts the gaps instead of the days, which is the same fact from the other side. |
@@ -575,11 +582,11 @@ whole corpus, not as the loosest.
 | `mo.first.09` | P | SHORT | `{dayCount} days, {n} completions.` | Two numbers and one comma. There is no verb to make either of them into an achievement. |
 | `mo.first.10` | R | SHORT | `Early, but it is starting.` | The only `but` in the family, and it does not turn against the reader. |
 
-### quietStretch, Momentum, 124 firings a year, 66 lines, 10 listed
+### quietStretch, Momentum, 153 firings a year, 66 lines, 10 listed
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
-| `mo.quiet.01` | P | MEDIUM | `Active {dayCount} of the last fourteen days.` | Identical to `mo.steady.01` and carrying the opposite reading in its number alone. Recorded as a shared fragment and defensible. |
+| `mo.quiet.01` | P | MEDIUM | `Active {dayCount} of the last fourteen days.` | The near twin of `mo.steady.01`, carrying the opposite reading in its number alone. It keeps the word `fourteen` where the steady line takes `14`, because `{dayCount}` never reaches ten in this family and a word beside a word is what 7.2 asks for. |
 | `mo.quiet.03` | N | SHORT | `A quiet fortnight.` | Three words. The neutral agent register with nothing to be neutral about but the time. |
 | `mo.quiet.04` | O | MEDIUM | `The last two weeks have been mostly still.` | `still` rather than empty, and never inactive. |
 | `mo.quiet.06` | R | SHORT | `A slow stretch.` | Three words, and `slow` is as far as it goes. |
@@ -588,24 +595,9 @@ whole corpus, not as the loosest.
 | `mo.quiet.09` | P | SHORT | `{dayCount} active days in fourteen.` | Counts the active days rather than the quiet ones, which is the kinder arithmetic and the same number. |
 | `mo.quiet.11` | R | SHORT | `A still fortnight.` | Three words. This is the line the fourteen day window exists to allow. |
 | `mo.quiet.12` | N | SHORT | `Little has moved in two weeks.` | `little`, not nothing, because nothing is almost never true. |
-| `mo.quiet.13` | O | MEDIUM | `{areaName} accounts for most of what did happen.` | Finds the one thing that did happen and names it. |
+| `mo.quiet.13` | O | MEDIUM | `{areaName} took more of the fortnight than any other.` | Finds the one thing that did happen and names it. `more than any other` rather than `most`, because `dominantAreaId` is a strict maximum and four areas splitting a quiet fortnight would make `most` false. |
 
-### cleanSlate, Momentum, 42 firings a year, 60 lines, 10 listed
-
-| key | tag | band | line | what the voice carries |
-|---|---|---|---|---|
-| `mo.clean.01` | O | MEDIUM | `A clean slate. Your first steps will show up here.` | Two beats, and the second explains the surface rather than instructing the person. |
-| `mo.clean.02` | O | MEDIUM | `Nothing here yet. It fills in as you use the app.` | Same shape, and `as you use the app` is a statement of how it works, not a request. |
-| `mo.clean.03` | R | SHORT | `Empty, for now.` | Three words. The comma is the whole reassurance. |
-| `mo.clean.04` | O | MEDIUM | `This page starts filling once something moves.` | The page is the subject throughout the family. |
-| `mo.clean.05` | R | SHORT | `A blank fortnight, waiting.` | Four words. `waiting` belongs to the app, as it does in the Pulse quietDay family. |
-| `mo.clean.06` | O | MEDIUM | `No activity yet. Add something to an area to begin.` | The one imperative in the corpus outside layer 6, permitted because there is nothing to observe yet. |
-| `mo.clean.11` | R | SHORT | `Fourteen days with nothing in them.` | The one line that states the emptiness as arithmetic. Nothing is owed and nobody is addressed. |
-| `mo.clean.13` | R | MEDIUM | `A page waiting for something to put on it.` | `waiting` again, and the page is the one doing it. Phase 9 growth. |
-| `mo.clean.32` | O | MEDIUM | `Nothing in fourteen days. The page waits.` | The house two beat rhythm, with the second beat about the app rather than the person. |
-| `mo.clean.49` | P | SHORT | `Two weeks, nothing through.` | Four words. This family is the one place `nothing` is literally true, and it is stated flat. |
-
-### weekMixed, Areas banner, 1,308 firings a year, 77 lines, 10 listed
+### weekMixed, Areas banner, 1,241 firings a year, 77 lines, 10 listed
 
 The highest firing bench in the app, and phase 9 took it from eight lines to seventy seven. The last two rows are from that growth, and they are here because the bench had no reflective line at all before it and the realizer asks for that voice first.
 
@@ -622,7 +614,7 @@ The highest firing bench in the app, and phase 9 took it from eight lines to sev
 | `bn.mixed.15` | R | SHORT | `Tilted, so far.` | Three words and a comma. The reflective voice on this surface is the plain one with the sentence taken away. |
 | `bn.mixed.13` | R | MEDIUM | `A week with a center of gravity in it.` | The family's one image, and it describes a distribution rather than grading it. |
 
-### weekStarting, Areas banner, 731 firings a year, 62 lines, 10 listed
+### weekStarting, Areas banner, 732 firings a year, 62 lines, 10 listed
 
 The bench with the least to say: one or two days into a week with under three completions is almost no fact at all. The last two rows are from the phase 9 growth, for the same reason as `weekMixed`.
 
@@ -639,7 +631,7 @@ The bench with the least to say: one or two days into a week with under three co
 | `bn.start.15` | R | SHORT | `Nothing settled yet.` | Three words. `yet` is what keeps a description of emptiness from being a verdict on it. |
 | `bn.start.22` | R | MEDIUM | `There is more week ahead than behind.` | `behind` in its spatial sense, and the line points at what is left rather than at what is missing. |
 
-### weekBuilding, Areas banner, 284 firings a year, 72 lines, 10 listed
+### weekBuilding, Areas banner, 331 firings a year, 72 lines, 10 listed
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -654,16 +646,27 @@ The bench with the least to say: one or two days into a week with under three co
 | `bn.build.09` | R | SHORT | `A week under way.` | Four words. The bench had no reflective line before phase 9, and this surface's reflective voice is the plain one with the sentence taken away. |
 | `bn.build.29` | R | MEDIUM | `Some days gone, some things done, the week still open.` | Three balanced clauses, the last of which is what keeps a midweek reading from sounding final. |
 
-### weekQuiet, Areas banner, 240 firings a year, 8 lines, 8 listed
+### weekQuiet, Areas banner, 234 firings a year, 60 lines, 10 listed
 
-**The whole bench, because the whole bench is eight lines.** This family fired zero times in
-every measurement before the register pass: all eight of its lines are `[N]`, nothing could
-ask for the neutral agent register on this surface, and the realizer answered
-`NotProducible` every time the rule qualified. 7.4 now marks it unflattering and it takes
-240 banner windows a year, which puts it in the hot tier owing sixty lines and holding
-eight. **It is the largest bench debt in the corpus.** Every line below is `[N]` and `SHORT`,
-which is what a batch written into this bench has to sound like: no second person, no verb
-the reader could have performed, and a word in every line that keeps the week open.
+**The bench that went from silent to the deepest debt in the corpus in one change, and was
+paid in the next.** This family fired zero times in every measurement before the register
+pass: all eight of its lines were `[N]`, nothing could ask for the neutral agent register on
+this surface, and the realizer answered `NotProducible` every time the rule qualified. 7.4
+now marks it unflattering, it takes 240 banner windows a year, and the batch that followed
+took it from eight lines to 11.1's hot floor of sixty.
+
+**All sixty are `[N]`, and no line here will ever be anything else.** 7.4 step 1 offers the
+neutral agent register as a tier of one, `Realizer.realize` leaves a tier only when nothing
+in it can be filled, and not one line in this bench carries a slot. So the neutral agent
+tier fills on every firing and the open tier is never reached: a plain, observational or
+reflective line written here would be unreachable for the same structural reason the `[N]`
+lines used to be. Authoring rule 5 and the engine want the same thing on this one bench.
+
+The first eight rows are the whole approved bench the batch was written to. The last two are
+from the batch, and they are here because the bench now reaches a second length band: it is
+26 `SHORT` lines and 34 `MEDIUM` ones, and a `MEDIUM` line has to hold the same flatness
+over twice the words. What every line in this bench has to be: no second person, no verb the
+reader could have performed, and a word in every one that keeps the week open.
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
@@ -675,6 +678,8 @@ the reader could have performed, and a word in every line that keeps the week op
 | `bn.quiet.06` | N | SHORT | `Nothing completed yet this week.` | The closest this bench comes to saying zero, and `yet` is the whole reason it can. |
 | `bn.quiet.07` | N | SHORT | `A slow week here.` | `slow` rather than bad, empty or wasted, and it is the week that is slow. |
 | `bn.quiet.08` | N | SHORT | `Quiet, for now.` | Three words, and `for now` is the argument for this family being sayable at all. |
+| `bn.quiet.25` | N | MEDIUM | `The week has run quietly, with days still to come.` | The `MEDIUM` shape: a flat clause, a comma, and a second clause whose only job is to stop the first one sounding final. |
+| `bn.quiet.48` | N | MEDIUM | `Things have stayed where they are this week.` | Things stay. Nobody kept them there, and the sentence has no room for anyone who might have. |
 
 ### weekStrong, Areas banner, 65 firings a year, 62 lines, 10 listed
 

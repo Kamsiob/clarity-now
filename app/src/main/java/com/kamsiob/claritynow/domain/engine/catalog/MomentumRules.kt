@@ -17,9 +17,12 @@ import com.kamsiob.claritynow.domain.engine.FamilyKey
  * enumeration is the only place the question is answered. 14b.10 and Addendum 01 7c widen
  * that enumeration to every rule concerning a decline, a gap, a neglect, an imbalance or an
  * unmet expectation, and the quiet week is the one state on these two surfaces where
- * `CORPUS_3_MOMENTUM.md`'s authoring rule 5 applies: all eight of `bn.quiet`'s lines are
+ * `CORPUS_3_MOMENTUM.md`'s authoring rule 5 applies: all sixty of `bn.quiet`'s lines are
  * `[N]`, and before the widening nothing could ask for that register, so the family
- * qualified on real windows and said nothing across eleven simulated years.
+ * qualified on real windows and said nothing across eleven simulated years. It was eight
+ * lines at the widening and it is sixty now, still in one voice, because 7.4 step 1 is a
+ * tier of one and no line in that bench carries a slot: the neutral agent tier fills on
+ * every firing, so nothing else written there could ever be said.
  *
  * **`quietStretch`, `singleAreaWeek` and `weekMixed` were considered and left alone**, with
  * the reasons in 7.4. The short version is that the flag exists to stop agentive second

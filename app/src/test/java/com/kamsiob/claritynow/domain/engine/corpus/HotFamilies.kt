@@ -14,7 +14,7 @@ import com.kamsiob.claritynow.domain.engine.catalog.Purpose
  *
  * ## Why the table is a constant with a test behind it
  *
- * The numbers below are the sixth measurement, taken over the eleven personas of section 12
+ * The numbers below are the ninth measurement, taken over the eleven personas of section 12
  * across a full simulated year each, read out of `SimulationAggregate.hotFamilies`. They are
  * a constant here because the six fast gates in this package run in under a second and
  * measuring a year of eleven lives takes three minutes; an author running the gates after
@@ -33,7 +33,21 @@ import com.kamsiob.claritynow.domain.engine.catalog.Purpose
  * one of its two benches is here. `personalBest` is hot at both, at 88 each.
  * `mostActiveSince` is hot at both, at 88 and 78. `singleFocus` and `steadyPace` are hot as
  * observations only. `comeback` is a different family at each of its two purposes and both
- * are hot, at 90 and 604.
+ * are hot, at 91 and 608.
+ *
+ * ## What the ninth measurement moved, and the three rows at the boundary
+ *
+ * The Pulse repeat filter was bounded to yesterday, which is what 7.3 always said it
+ * covered, and the Pulse spoke 305 more times across the eleven years. Every Pulse row here
+ * rose. Three families sit within two firings of the forty firing line and all three
+ * crossed it: `freshStart` came in at 42, and `consistentRhythm` and `cleanSlate` both fell
+ * from 42 to below forty and are gone from the table.
+ *
+ * **A row this close to the line will cross it again.** The tier is a threshold and the
+ * families near it will flap, which is a property of a hard cut and not a defect in the
+ * measurement. What follows a crossing is mechanical and cheap: the anchors move with the
+ * table, and a bench that arrives short of 11.1's sixty has its debt recorded rather than
+ * paid, exactly as `weekQuiet`'s was.
  */
 internal object HotFamilies {
 
@@ -55,63 +69,68 @@ internal object HotFamilies {
      * Sorted as the simulator prints them: purpose in declaration order, then family.
      */
     val ALL: List<Hot> = listOf(
-        Hot(Purpose.PULSE, "persistence", 277),
-        Hot(Purpose.PULSE, "quietDay", 227),
-        Hot(Purpose.PULSE, "concentration", 211),
-        Hot(Purpose.PULSE, "accumulation", 157),
-        Hot(Purpose.PULSE, "rebalance", 101),
-        Hot(Purpose.REPORT_HEADLINE, "comeback", 90),
+        Hot(Purpose.PULSE, "persistence", 482),
+        Hot(Purpose.PULSE, "quietDay", 283),
+        Hot(Purpose.PULSE, "concentration", 246),
+        Hot(Purpose.PULSE, "accumulation", 163),
+        Hot(Purpose.PULSE, "rebalance", 100),
+        // **New, and it is the second bench debt this table carries.** 26 firings at the
+        // eighth measurement. The repeat filter's recency bound let a family that had been
+        // blocked off a Pulse from any distance speak again, and this is the family that
+        // gained proportionally most from it: it fires on a first week and on a return, both
+        // of which are exactly the moments a long stale `lastGeneratedFamily` used to sit on.
+        // Its bench is short of 11.1's sixty and the debt is recorded rather than paid, for
+        // the reason `weekQuiet`'s is below.
+        Hot(Purpose.PULSE, "freshStart", 42),
+        Hot(Purpose.REPORT_HEADLINE, "comeback", 91),
         Hot(Purpose.REPORT_HEADLINE, "personalBest", 88),
         Hot(Purpose.REPORT_HEADLINE, "mostActiveSince", 78),
-        Hot(Purpose.REPORT_HEADLINE, "balanced", 61),
-        Hot(Purpose.REPORT_OBSERVATION, "intakeVsOutput", 246),
+        Hot(Purpose.REPORT_HEADLINE, "balanced", 62),
         Hot(Purpose.REPORT_OBSERVATION, "areaRevival", 219),
-        Hot(Purpose.REPORT_OBSERVATION, "queuePressure", 166),
-        Hot(Purpose.REPORT_OBSERVATION, "areaBalance", 117),
-        Hot(Purpose.REPORT_OBSERVATION, "persistentItem", 106),
-        Hot(Purpose.REPORT_OBSERVATION, "timeOfDay", 106),
-        // 102 at the sixth measurement, 101 once phase 9 grew the Pulse response benches and
-        // 113 once it grew the Report ones: this family reads the label a person last gave a
-        // Pulse, and a deeper pool of response pairs changes which label the simulated
-        // personas hand back. It is the only row in this table that phase 9 moved, and the
-        // tier is unchanged at every reading of it. Re-measure the whole table when phase 9
-        // closes.
-        Hot(Purpose.REPORT_OBSERVATION, "completionSplit", 113),
+        Hot(Purpose.REPORT_OBSERVATION, "intakeVsOutput", 212),
+        // 102 at the sixth measurement, 113 at the eighth, 162 now. This family reads the
+        // label a person last gave a Pulse, so it moves whenever the Pulse speaks more: the
+        // recency bound put 305 more Pulses into the eleven logs and this row is where most
+        // of that arrives on the Report.
+        Hot(Purpose.REPORT_OBSERVATION, "completionSplit", 162),
+        Hot(Purpose.REPORT_OBSERVATION, "queuePressure", 156),
+        Hot(Purpose.REPORT_OBSERVATION, "areaBalance", 118),
+        Hot(Purpose.REPORT_OBSERVATION, "timeOfDay", 105),
+        Hot(Purpose.REPORT_OBSERVATION, "persistentItem", 90),
         Hot(Purpose.REPORT_OBSERVATION, "mostActiveSince", 88),
         Hot(Purpose.REPORT_OBSERVATION, "personalBest", 88),
-        Hot(Purpose.REPORT_OBSERVATION, "selfReportVsData", 60),
-        Hot(Purpose.REPORT_OBSERVATION, "singleFocus", 50),
-        Hot(Purpose.REPORT_OBSERVATION, "steadyPace", 46),
-        Hot(Purpose.REPORT_PATTERN, "reportedVsActual", 173),
+        // 60 at the eighth measurement. Same cause as `completionSplit`: it sets what
+        // somebody said against what happened, and there is more of what somebody said.
+        Hot(Purpose.REPORT_OBSERVATION, "selfReportVsData", 85),
+        Hot(Purpose.REPORT_OBSERVATION, "singleFocus", 49),
+        Hot(Purpose.REPORT_OBSERVATION, "steadyPace", 43),
+        Hot(Purpose.REPORT_PATTERN, "reportedVsActual", 177),
         Hot(Purpose.REPORT_PATTERN, "comebackPattern", 70),
-        Hot(Purpose.REPORT_PATTERN, "growingQueues", 55),
-        Hot(Purpose.REPORT_PATTERN, "consistentRhythm", 42),
-        Hot(Purpose.MOMENTUM_HEADLINE, "singleAreaWeek", 1054),
-        Hot(Purpose.MOMENTUM_HEADLINE, "balancedWeek", 831),
-        Hot(Purpose.MOMENTUM_HEADLINE, "comeback", 604),
-        Hot(Purpose.MOMENTUM_HEADLINE, "steadyStretch", 335),
+        Hot(Purpose.REPORT_PATTERN, "growingQueues", 58),
+        Hot(Purpose.MOMENTUM_HEADLINE, "singleAreaWeek", 1033),
+        Hot(Purpose.MOMENTUM_HEADLINE, "balancedWeek", 849),
+        Hot(Purpose.MOMENTUM_HEADLINE, "comeback", 608),
+        Hot(Purpose.MOMENTUM_HEADLINE, "steadyStretch", 343),
+        Hot(Purpose.MOMENTUM_HEADLINE, "quietStretch", 153),
         Hot(Purpose.MOMENTUM_HEADLINE, "firstDays", 139),
-        Hot(Purpose.MOMENTUM_HEADLINE, "quietStretch", 124),
-        Hot(Purpose.MOMENTUM_HEADLINE, "cleanSlate", 42),
-        Hot(Purpose.AREAS_BANNER, "weekMixed", 1308),
+        Hot(Purpose.AREAS_BANNER, "weekMixed", 1241),
         // 804 at the sixth measurement. The register pass gave `weekQuiet` a voice it could
-        // speak in, and 73 of the windows this family used to take are windows where the
-        // quiet week now outranks it. Those windows did not change; what changed is that
-        // one of the two candidates on them stopped being unrealizable.
-        Hot(Purpose.AREAS_BANNER, "weekStarting", 731),
-        Hot(Purpose.AREAS_BANNER, "weekBuilding", 284),
-        // **New, and it is the finding rather than a row.** This family fired zero times in
-        // every measurement before the register pass, because all eight of its lines are
-        // `[N]` and nothing could ask for that register: it qualified, the realizer answered
+        // speak in, and the windows this family used to take are windows where the quiet week
+        // now outranks it. Those windows did not change; what changed is that one of the two
+        // candidates on them stopped being unrealizable.
+        Hot(Purpose.AREAS_BANNER, "weekStarting", 732),
+        Hot(Purpose.AREAS_BANNER, "weekBuilding", 331),
+        // **The largest bench debt in the corpus.** This family fired zero times in every
+        // measurement before the register pass, because all eight of its lines are `[N]` and
+        // nothing could ask for that register: it qualified, the realizer answered
         // `NotProducible`, and the selector moved on. 7.4 now marks it unflattering and it
-        // takes 240 banner windows a year, 167 of which nothing spoke on at all.
+        // takes 234 banner windows a year.
         //
-        // **240 firings makes it hot, and it holds eight lines against 11.1's sixty.** That
-        // is the largest bench debt in the corpus and it is recorded in
-        // `CorpusGateBaseline.REGISTERS` rather than paid, because authoring is not this
-        // pass's to do. `CORPUS_3_MOMENTUM.md` says the bench was left at eight on purpose
-        // "because it has never once spoken", which was true and is not any more.
-        Hot(Purpose.AREAS_BANNER, "weekQuiet", 240),
+        // **234 firings makes it hot, and it holds eight lines against 11.1's sixty.** That
+        // is recorded in `CorpusGateBaseline.REGISTERS` rather than paid, because authoring is
+        // not this pass's to do. `CORPUS_3_MOMENTUM.md` says the bench was left at eight on
+        // purpose "because it has never once spoken", which was true and is not any more.
+        Hot(Purpose.AREAS_BANNER, "weekQuiet", 234),
         Hot(Purpose.AREAS_BANNER, "weekStrong", 65),
     )
 

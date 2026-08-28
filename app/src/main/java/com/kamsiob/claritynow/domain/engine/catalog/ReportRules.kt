@@ -643,12 +643,12 @@ internal object ReportRules {
          * carries the account of the fact.
          *
          * **One lead of this bench does date itself and is handled where a line is handled.**
-         * `ob.drain.l01`, *It held {n} things on Sunday*, is the only sentence in either
+         * `ob.drain.l01`, *It held {n} things a week ago*, is the only sentence in either
          * volume that names the boundary, and it is false whenever the fall began after it.
          * `SlotBindings` overrides `{n}` there to a measure that answers only when the fall
          * began at or before the window opened, so the line drops off the bench rather than
-         * renders a number nobody could fault about a Sunday that held nothing. A criterion
-         * could not do this: it would take the whole family down with the one line.
+         * renders a number nobody could fault about a window start that held nothing. A
+         * criterion could not do this: it would take the whole family down with the one line.
          */
         report("report.observation.queueDrained", Purpose.REPORT_OBSERVATION, "queueDrained", 1, WEEK_HORIZON, Subjects.AREA, criteria = listOf(
             criterion("drained.area", "this area's queue emptied this week") { facts, subject ->

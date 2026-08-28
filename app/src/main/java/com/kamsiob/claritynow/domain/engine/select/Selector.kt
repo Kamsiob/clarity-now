@@ -71,14 +71,15 @@ class Selector(private val catalog: ClarityCatalog) {
         // degrades into a version without the quote, because the sentence was authored
         // around it.
         // 3. Horizon. Drop a pair referencing a fact older than the rule declares.
-        // 4. Repeat filter, Pulse only. Yesterday's family cannot be today's.
+        // 4. Repeat filter, Pulse only. Yesterday's family cannot be today's, and only
+        // yesterday's, per 7.3. See [repeatsYesterday].
         // 5. Cooldown. A (family, subject) pair that fired inside its cooldown, which is
         // the family's own everywhere but the pattern section. See [PATTERN_COOLDOWN_DAYS].
         val ranked = qualified
             .filter { FamilyAvailability.unavailable(it, facts) == null }
             .mapNotNull { withCallback(it, facts, moment) }
             .filter { withinHorizon(it, facts, moment) }
-            .filterNot { purpose == Purpose.PULSE && it.rule.family == facts.pulse.lastGeneratedFamily }
+            .filterNot { purpose == Purpose.PULSE && repeatsYesterday(it, facts, moment) }
             .filterNot { inCooldown(it, history, moment) }
             // 6. Rank.
             .sortedWith(RANKING)
@@ -238,6 +239,62 @@ class Selector(private val catalog: ClarityCatalog) {
         return ages.max() <= selection.rule.horizonDays
     }
 
+    // ---------------------------------------------------------------- step 4
+
+    /**
+     * True when this pair's family is the one the Pulse used **yesterday**. Section 5 step 4,
+     * bounded by 7.3.
+     *
+     * ## The bound is the rule, and it was missing
+     *
+     * Step 4 names `PulseFacts.lastGeneratedFamily`, which is the family of the most recent
+     * Pulse generated at any point in the past. That equals yesterday's family only on a day
+     * after a day the Pulse spoke. 7.3 states the rule the other way round and in words:
+     * the cooldown covers `cooldownDays`, and it is "separate from the no-repeat rule, which
+     * covers **only yesterday**". Section 12's own table calls the filter "yesterday's family
+     * cannot be today's". Three statements say one day; the fact name says forever, and the
+     * code followed the name.
+     *
+     * ## What the unbounded reading did
+     *
+     * **It is self-reinforcing, which is the part no reading of the code shows.** A blocked
+     * family generates no `PULSE_GENERATED`, so `lastGeneratedFamily` does not advance, so
+     * the same family is blocked again tomorrow. Where one family is the only one a life
+     * qualifies for, the Pulse stops for good. Measured across eleven persona years: of 869
+     * days where this filter alone emptied the candidate list, only 169 were a gap of one
+     * day. 214 were a gap of ninety days or more, and one persona, four areas and a steady
+     * week, spoke nine times in January and was then held silent for **348 consecutive
+     * days** by the family of a Pulse from January 20.
+     *
+     * With the bound, a lock can last exactly one day: the day after, no Pulse was generated
+     * yesterday and this filter does not apply at all. The absorbing state is not made
+     * unlikely, it is made unreachable.
+     *
+     * ## What still stands behind it
+     *
+     * Everything the rule was written to prevent. The same `(family, subjectId)` pair waits
+     * `cooldownDays`, which is three at the shortest and thirty at the longest, so no pair
+     * can return inside three days by any route. 7.6's ninety day variant exclusion
+     * guarantees a different sentence. This filter is the only one of the three that reaches
+     * a *different* subject of the same family, and on consecutive days that is exactly what
+     * it still does.
+     *
+     * A day count of zero is included for the degenerate case of a second selection on a day
+     * the Pulse has already spoken on. `PulseGeneration` holds at most one entry per local
+     * day so it should not arise, and a repeat filter that let it through would be the one
+     * place the same family could appear twice in one day.
+     *
+     * An unparseable key reads as available, which is `FactDates.daysBetweenKeys`'s stated
+     * direction and the same one `variantUsedWithin` takes: losing one exclusion costs a
+     * repeat, and treating an unreadable key as yesterday would restore the permanent block.
+     */
+    private fun repeatsYesterday(selection: Selection, facts: FactSet, moment: EngineMoment): Boolean {
+        if (selection.rule.family != facts.pulse.lastGeneratedFamily) return false
+        val lastKey = facts.pulse.lastGeneratedDateKey ?: return false
+        val since = FactDates.daysBetweenKeys(lastKey, moment.dateKey) ?: return false
+        return since in 0..REPEAT_WINDOW_DAYS
+    }
+
     // ---------------------------------------------------------------- step 5
 
     /** True when this `(family, subject)` pair fired inside the cooldown that applies to it. */
@@ -310,6 +367,16 @@ class Selector(private val catalog: ClarityCatalog) {
          */
         val RANKING: Comparator<Selection> =
             compareBy<Selection, ClarityRule>(ClarityRule.RANKING) { it.rule }.thenBy { it.subjectId.orEmpty() }
+
+        /**
+         * Step 4's reach in days, which 7.3 states as yesterday and yesterday alone.
+         *
+         * One rather than a tunable, because it is not a tuning number: it is the length of
+         * the word "yesterday". A longer wait for a family is `cooldownDays`, which every
+         * family already declares and which the table in 7.3 sets per family for reasons
+         * this filter has no way to know.
+         */
+        const val REPEAT_WINDOW_DAYS = 1
 
         /** 5.1. A single bare condition, and nothing more interesting available. */
         const val BARE_SPECIFICITY = 1

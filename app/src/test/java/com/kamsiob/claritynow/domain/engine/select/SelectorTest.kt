@@ -108,6 +108,49 @@ class SelectorTest {
     }
 
     @Test
+    fun `step 4 reaches yesterday and no further, so a blocked family cannot lock the Pulse`() {
+        val facts = persistenceOnly()
+
+        fun spokeOn(offset: Int) = EngineFacts.factSet(
+            window = facts.window,
+            areas = facts.areas.values.toList(),
+            dominantAreaId = "work",
+            pulse = EngineFacts.pulse(
+                lastGeneratedFamily = "persistence",
+                lastGeneratedDateKey = EngineFacts.dateKey(offset),
+            ),
+        )
+
+        // The moment is day ten, so day nine is yesterday and day eight is not.
+        assertFalse(
+            "yesterday's family is today's, which is the rule",
+            ranked(Purpose.PULSE, spokeOn(9)).any { it.rule.family == "persistence" },
+        )
+        assertTrue(
+            "7.3 says the no-repeat rule covers only yesterday, so a Pulse from two days " +
+                "ago is the cooldown's business and not this filter's",
+            ranked(Purpose.PULSE, spokeOn(8)).any { it.rule.family == "persistence" },
+        )
+        assertTrue(
+            "a family blocked at step 4 writes no PULSE_GENERATED, so an unbounded filter " +
+                "would keep blocking it forever off a Pulse from any distance",
+            ranked(Purpose.PULSE, spokeOn(-355)).any { it.rule.family == "persistence" },
+        )
+
+        // A family that has spoken at some point and has no date recorded against it is
+        // available. FactDates.daysBetweenKeys answers null on an unreadable key and this
+        // filter takes the same direction FiringHistory.variantUsedWithin takes: losing one
+        // exclusion costs a repeat, and reading it as yesterday restores the permanent block.
+        val undated = EngineFacts.factSet(
+            window = facts.window,
+            areas = facts.areas.values.toList(),
+            dominantAreaId = "work",
+            pulse = EngineFacts.pulse(lastGeneratedFamily = "persistence"),
+        )
+        assertTrue(ranked(Purpose.PULSE, undated).any { it.rule.family == "persistence" })
+    }
+
+    @Test
     fun `step 5 drops a family and subject pair that fired inside its cooldown`() {
         val facts = persistenceOnly()
         val history = FiringHistory(
@@ -233,7 +276,10 @@ class SelectorTest {
             window = persistenceOnly().window,
             areas = persistenceOnly().areas.values.toList(),
             dominantAreaId = "work",
-            pulse = EngineFacts.pulse(lastGeneratedFamily = "persistence"),
+            pulse = EngineFacts.pulse(
+                lastGeneratedFamily = "persistence",
+                lastGeneratedDateKey = EngineFacts.dateKey(9),
+            ),
         )
         assertEquals(SilenceReason.ALL_QUALIFIED_RULES_FILTERED, silence(Purpose.PULSE, filtered))
     }

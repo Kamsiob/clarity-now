@@ -117,7 +117,7 @@ class CatalogIntegrityTest {
     }
 
     @Test
-    fun `no fragment appears in two families of the same purpose, beyond the recorded six`() {
+    fun `no fragment appears in two families of the same purpose, beyond the recorded five`() {
         val findings = CatalogIntegrity.fragmentsInTwoFamilies(CorpusFixture.catalog)
         assertTrue(
             "a new shared fragment. 7.7 gives a clause bench to exactly one family, because " +
@@ -127,7 +127,7 @@ class CatalogIntegrityTest {
         )
         assertEquals(
             "the recorded set is a debt list for phase 9 and should only ever shrink",
-            6,
+            5,
             KnownCorpusViolations.SHARED_FRAGMENTS.size,
         )
     }

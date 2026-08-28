@@ -137,8 +137,8 @@ class TrailQueriesTest {
      *
      * - `mo.steady` in CORPUS_3_MOMENTUM.md, "active on 9 or more of the last 14
      *   days", would tell someone who did nothing for a fortnight that they had been
-     *   steady, and would render "Active 14 of the last fourteen days."
-     * - `ob.day.l03` in CORPUS_2_REPORT.md 2.13, "{n} of seven days had activity",
+     *   steady, and would render "Active 14 of the last 14 days."
+     * - `ob.day.l03` in CORPUS_2_REPORT.md 2.13, "{n} of 7 days had activity",
      *   would become a count of app opens presented as a count of activity
      * - `quietDay` in CLARITY_LOGIC_ENGINE.md 6.1, which fires below two events in a
      *   window, would be close to unreachable

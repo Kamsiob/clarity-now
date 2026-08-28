@@ -8,11 +8,20 @@ import com.kamsiob.claritynow.domain.engine.FamilyKey
  *
  * **Why this is a list and not a disabled test.** 7.7 requires that no fragment appear in
  * two families and that no rhetorical construction appear in more than two. The corpus was
- * authored before either check existed and it breaks both, in six places and two shapes.
+ * authored before either check existed and it breaks both, in five places and two shapes.
  * There are three things one can do with that: delete the checks, ignore them until phase
  * 9 grows the corpus, or write down exactly what is wrong and fail on anything new. Only
  * the third leaves the build honest in the meantime, and it hands phase 9 a list rather
  * than a rediscovery.
+ *
+ * **The sixth entry left in the pass that fixed `mo.steady`.** `Active {dayCount} of the
+ * last fourteen days.` stood under two keys, `mo.steady.01` and `mo.quiet.01`, and was
+ * recorded here as one string in two families. `{dayCount}` renders 9 to 14 in
+ * `steadyStretch` and Momentum renders ten and above as digits, so that line put a
+ * numeral and the word fourteen side by side for the same unit on five of the six values
+ * the slot can take. The nine `mo.steady` lines that did it now write `14`, `mo.quiet`
+ * still writes `fourteen` because its own slot never reaches ten, and the two sentences
+ * are no longer one sentence.
  *
  * **Nothing is added here without a corpus edit being the alternative.** An entry is a
  * debt with a name on it. Phase 9 authors in batches of forty, one family and stage at a
@@ -60,13 +69,6 @@ internal object KnownCorpusViolations {
             "{}, then {}, then {} sessions",
             setOf("focusHabitFading", "focusHabitForming"),
             "pt.fade.02 and pt.hab.02",
-        ),
-        SharedFragment(
-            Purpose.MOMENTUM_HEADLINE,
-            "active {} of the last fourteen days",
-            setOf("quietStretch", "steadyStretch"),
-            "mo.steady.01 and mo.quiet.01. The same sentence carries the whole difference in " +
-                "its number, which is defensible and is still one string in two families",
         ),
     )
 
@@ -131,19 +133,19 @@ internal object KnownCorpusViolations {
         ),
         ClaimedTotal(
             "CORPUS_3_MOMENTUM.md",
-            claimed = 758,
-            actual = 758,
+            claimed = 810,
+            actual = 810,
             note = "the totals table agrees, and so does every prose total in the file. " +
-                "Phase 9 closed this volume: eleven of its thirteen benches are grown and " +
-                "every family clearing forty firings a year now sits inside 11.1's hot band. " +
-                "The twelfth, weekQuiet, was left at eight lines because it had never once " +
-                "spoken, which was a register rule to amend rather than a bench to deepen. " +
-                "The amendment landed: 7.4 marks it unflattering, it takes 240 banner " +
-                "windows a year and it is now the deepest bench debt in the corpus at eight " +
-                "lines against a hot target of sixty, recorded in CorpusGateBaseline. " +
-                "strongPace is the thirteenth and does not clear forty. The figure " +
-                "this entry used to record as stale, 112 Momentum headlines against 96 " +
-                "authored, was corrected by the facts phase and is recounted by " +
+                "Every family in this volume clearing forty firings a year now sits inside " +
+                "11.1's hot band, and weekQuiet was the last of them. It was left at eight " +
+                "lines because it had never once spoken, which was a register rule to amend " +
+                "rather than a bench to deepen; 7.4 now marks it unflattering, it takes 240 " +
+                "banner windows a year, and the batch that followed took it from eight lines " +
+                "to sixty. All sixty are neutral agent, because 7.4 step 1 is a tier of one " +
+                "and no line in that bench carries a slot, so nothing else could ever be " +
+                "said there. strongPace is the one bench that does not clear forty. The " +
+                "figure this entry used to record as stale, 112 Momentum headlines against " +
+                "96 authored, was corrected by the facts phase and is recounted by " +
                 "CorpusTotalsAuditTest on every run",
         ),
     )
