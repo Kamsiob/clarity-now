@@ -1173,4 +1173,28 @@
     <string name="widget_config_automatic_explainer">Whichever area you have gone longest without touching. It is chosen once a day.</string>
     <string name="widget_config_all_explainer">Every area is shown. Turn off any you would rather not see here.</string>
 
+    <!--
+        The re-entry state, MASTER_BUILD_PROMPT 14b.4 and design-v3.md 11.2.
+
+        **Fixed copy rather than an authored observation, and 11.2's own test is what
+        decides it.** That section leaves the choice to the corpus phase and states the
+        rule: if the line says anything at all about what happened while the person was
+        away, it is an observation and it comes from a corpus through the engine. These
+        four say nothing about it. 14b.4 forbids stating the gap, counting anything and
+        asking where somebody has been, which leaves an observation nothing to be about,
+        so what is left is an invitation and two labels naming what each choice does.
+
+        **No number appears on this screen at all**, in any string here, in any string
+        these are read beside, and in no accessibility label: the button labels are the
+        click labels. `ReEntryLanguageTest` reads this file and holds it.
+
+        The second choice says what it does rather than saying `Start fresh`, because
+        the fear at that moment is losing the work, and the wording is the only thing on
+        the screen that can answer it before the tap rather than after.
+    -->
+    <string name="reentry_title">Everything is where you left it.</string>
+    <string name="reentry_body">Keep it that way, or start fresh by putting the active items back in their queues. Nothing is deleted and nothing is marked complete.</string>
+    <string name="reentry_keep">Keep everything as it is</string>
+    <string name="reentry_requeue">Put active items back in their queues</string>
+
 </resources>

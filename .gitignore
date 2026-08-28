@@ -21,3 +21,6 @@ __pycache__/
 
 # Reference screenshots of other apps, kept locally as design input only.
 HQmX*.jpg
+
+# Kotlin compiler session markers, written on every build.
+.kotlin/

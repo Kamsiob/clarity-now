@@ -30,8 +30,6 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -288,7 +286,15 @@ fun ClarityShell(
     // host, because the elements that report into it are composed above the host.
     val tutorialTargets = remember { TutorialTargets() }
 
-    CompositionLocalProvider(LocalTutorialTargets provides tutorialTargets) {
+    // The other registry, and the same arrangement for the same reason: the screens that
+    // report into it are composed inside the tabs, below this function, and the bar they
+    // are reporting about is drawn by this function. design-v3.md 10.15, issue #58.
+    val pushedScreens = remember { PushedScreens() }
+
+    CompositionLocalProvider(
+        LocalTutorialTargets provides tutorialTargets,
+        LocalPushedScreens provides pushedScreens,
+    ) {
         Box(modifier = modifier.fillMaxSize().background(colors.canvas)) {
             AnimatedContent(
                 targetState = selected,
@@ -336,22 +342,33 @@ fun ClarityShell(
                 PulseRoute(onDismiss = { pulseOpen = false })
             }
 
-            ClarityTabBar(
-                tabs = tabs,
-                selectedKey = selected,
-                onSelect = { selected = it },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .navigationBarsPadding()
-                    // design-v3.md 10.4's inset, and it holds at every text size for the
-                    // reason `ClaritySpacing.tabBarHeight` gives: this is chrome floating off
-                    // an edge, not a gap between two lines of type.
-                    .padding(bottom = ClaritySpacing.tabBarInset)
-                    // The tutorial's fifth step. The modifier goes after the padding so the
-                    // rectangle reported is the bar itself rather than the bar plus the inset
-                    // it floats above. MASTER_BUILD_PROMPT 13.2.
-                    .tutorialTarget(TutorialStep.TAB_BAR),
-            )
+            // **Not drawn over a pushed screen.** design-v3.md 10.15: the bar belongs to
+            // the four views, and Settings, About and the Report's history page are not
+            // four views, they are screens over one of them. `PushedScreens` carries the
+            // whole of that decision and why the Android convention lost.
+            //
+            // The Focus surface is not in this condition and does not need to be: it is
+            // drawn after the bar, it covers it, and it blocks every pointer that could
+            // reach it. That is the older half of the same rule, arrived at by position
+            // because that surface is hosted here and a pushed screen is not.
+            if (!pushedScreens.any) {
+                ClarityTabBar(
+                    tabs = tabs,
+                    selectedKey = selected,
+                    onSelect = { selected = it },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
+                        // design-v3.md 10.4's inset, and it holds at every text size for the
+                        // reason `ClaritySpacing.tabBarHeight` gives: this is chrome floating off
+                        // an edge, not a gap between two lines of type.
+                        .padding(bottom = ClaritySpacing.tabBarInset)
+                        // The tutorial's fifth step. The modifier goes after the padding so the
+                        // rectangle reported is the bar itself rather than the bar plus the inset
+                        // it floats above. MASTER_BUILD_PROMPT 13.2.
+                        .tutorialTarget(TutorialStep.TAB_BAR),
+                )
+            }
 
             if (focusEntry.open) {
                 // The tabs and the tab bar stay composed underneath, because design-v3.md
@@ -462,25 +479,6 @@ private fun Context.findActivity(): Activity? {
  */
 private class FocusSurfaceStore : ViewModelStoreOwner {
     override val viewModelStore: ViewModelStore = ViewModelStore()
-}
-
-/**
- * Consumes every pointer event that reaches this element, so nothing drawn beneath it
- * can be touched.
- *
- * Consuming in the initial pass is what makes it total: the initial pass runs from the
- * root down, so by the time a change has been consumed here, no node below this one in
- * the tree and no sibling behind it will act on it. That is also why an element wearing
- * this must never be an ancestor of something that needs the pointer, and why the one
- * use of it is a sibling drawn behind the surface it protects rather than a scrim over
- * it.
- */
-private fun Modifier.swallowsPointerInput(): Modifier = pointerInput(Unit) {
-    awaitPointerEventScope {
-        while (true) {
-            awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() }
-        }
-    }
 }
 
 /**

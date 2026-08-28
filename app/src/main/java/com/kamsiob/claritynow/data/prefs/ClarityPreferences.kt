@@ -101,6 +101,7 @@ class ClarityPreferences(private val context: Context) {
         val pulseReminderHour = intPreferencesKey("pulseReminderHour")
         val hasCompletedOnboarding = booleanPreferencesKey("hasCompletedOnboarding")
         val hasSeenTutorial = booleanPreferencesKey("hasSeenTutorial")
+        val reEntrySettledOn = stringPreferencesKey("reEntrySettledOn")
         val originId = stringPreferencesKey("originId")
         val lamportCounter = longPreferencesKey("lamportCounter")
         val lastExportAt = longPreferencesKey("lastExportAt")
@@ -215,6 +216,28 @@ class ClarityPreferences(private val context: Context) {
     val hasSeenTutorial: Flow<Boolean> =
         context.store.data.map { it[Keys.hasSeenTutorial] ?: false }
 
+    /**
+     * The return this device has already offered the re-entry state for, as the date
+     * key of that return. Null until one has been answered. MASTER_BUILD_PROMPT 14b.4.
+     *
+     * **A date key rather than a boolean, and it is the date of the return rather than
+     * anything about the absence.** A boolean would have to be cleared by somebody, and
+     * the day it was not cleared is the day the screen never appears again. Holding the
+     * return's own date means the next gap has a different value and offers the screen
+     * again with nothing to reset, which is the same shape `ExternalRequest`'s serial
+     * uses for the same reason. `ReEntry` hands out exactly this value and no other, per
+     * DECISIONS.md, so nothing here can be subtracted from anything.
+     *
+     * **Local rather than derived from the log, which rule 6 in CLAUDE.md is worth
+     * checking this against.** That rule keeps engine state out of DataStore because two
+     * devices holding one log must not disagree about what the engine has said. This is
+     * not engine state and the two devices should disagree: each one is a phone somebody
+     * picked up after a fortnight, and answering the question on one of them is not an
+     * answer given on the other. It sits beside [hasSeenTutorial], which is the same kind
+     * of fact about this install.
+     */
+    val reEntrySettledOn: Flow<String?> = context.store.data.map { it[Keys.reEntrySettledOn] }
+
     val lastExportAt: Flow<Long?> = context.store.data.map { it[Keys.lastExportAt] }
 
     suspend fun setTheme(value: ClarityThemeSetting) = put(Keys.theme, value.name)
@@ -251,6 +274,7 @@ class ClarityPreferences(private val context: Context) {
     suspend fun setPulseReminderHour(value: Int) = put(Keys.pulseReminderHour, value)
     suspend fun setHasCompletedOnboarding(value: Boolean) = put(Keys.hasCompletedOnboarding, value)
     suspend fun setHasSeenTutorial(value: Boolean) = put(Keys.hasSeenTutorial, value)
+    suspend fun setReEntrySettledOn(returnedOn: String) = put(Keys.reEntrySettledOn, returnedOn)
     suspend fun setLastExportAt(value: Long) = put(Keys.lastExportAt, value)
 
     suspend fun currentAfterCompleting(): AfterCompleting = afterCompleting.first()

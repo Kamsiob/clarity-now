@@ -15,6 +15,7 @@ import com.kamsiob.claritynow.ui.nav.ClarityShell
 import com.kamsiob.claritynow.ui.nav.ExternalRequest
 import com.kamsiob.claritynow.ui.nav.destinationFor
 import com.kamsiob.claritynow.ui.onboarding.FirstRunGate
+import com.kamsiob.claritynow.ui.reentry.ReEntryDecision
 import com.kamsiob.claritynow.ui.theme.ClarityHaptics
 import com.kamsiob.claritynow.ui.theme.ClarityTextSize
 import com.kamsiob.claritynow.ui.theme.ClarityTheme
@@ -52,6 +53,16 @@ class MainActivity : ComponentActivity() {
         // and both halves go through the one function so the two starts cannot differ.
         noteRequest(intent)
         val haptics: ClarityHaptics = ClarityGraph.haptics
+        // MASTER_BUILD_PROMPT 14b.4. Built once per Activity rather than inside the
+        // composition, so a recomposition cannot ask the log the question again. A
+        // configuration change does build a new one and does ask again, which is the
+        // answer that is wanted: an offer nobody has answered yet is still standing
+        // after a rotation, and one that has been answered is refused by the stored
+        // date rather than by this object having survived.
+        val reEntry = ReEntryDecision(
+            repository = ClarityGraph.repository,
+            preferences = ClarityGraph.preferences,
+        )
         setContent {
             val theme by ClarityGraph.preferences.theme
                 .collectAsStateWithLifecycle(initialValue = ClarityThemeSetting.SYSTEM)
@@ -71,8 +82,17 @@ class MainActivity : ComponentActivity() {
                     // design-v3.md 10.15's first launch rules, and nothing else, live in
                     // FirstRunGate. This Activity asks it what a cold start does and
                     // renders whatever it answers; the shell is what it answers with in
-                    // every case except an install that has never finished onboarding.
-                    FirstRunGate(preferences = ClarityGraph.preferences) { tutorialQueued ->
+                    // every case except an install that has never finished onboarding
+                    // and the one open in 14b.4 that is somebody coming back.
+                    //
+                    // The re-entry decision is built here rather than reached for inside
+                    // the gate, so that the gate takes a question it can be handed a
+                    // different answer to and this Activity stays the only place in the
+                    // composition that touches the graph.
+                    FirstRunGate(
+                        preferences = ClarityGraph.preferences,
+                        reEntry = reEntry,
+                    ) { tutorialQueued ->
                         ClarityShell(
                             request = request,
                             tutorialQueued = tutorialQueued,

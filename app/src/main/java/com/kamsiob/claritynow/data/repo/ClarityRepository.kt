@@ -43,6 +43,8 @@ import com.kamsiob.claritynow.domain.daysBetween
 import com.kamsiob.claritynow.domain.parseDateKey
 import com.kamsiob.claritynow.domain.weekStartKey
 import com.kamsiob.claritynow.domain.engine.catalog.ResponseOption
+import com.kamsiob.claritynow.domain.query.ReEntry
+import com.kamsiob.claritynow.domain.query.TrailQueries
 import com.kamsiob.claritynow.domain.replay.AreaState
 import com.kamsiob.claritynow.domain.replay.ClarityCheckpoint
 import com.kamsiob.claritynow.domain.replay.ClarityCheckpointCodec
@@ -1061,6 +1063,64 @@ class ClarityRepository(
             if (alreadyToday) return@withLock
             commitLocked(AppOpened(dateKey = today))
         }
+    }
+
+    /**
+     * The return this open is, or null on every other open. MASTER_BUILD_PROMPT 14b.4.
+     *
+     * The one question the re-entry screen asks, and the only place in the app that
+     * asks it. It answers non null on the day of a return and never again for that
+     * gap, because [TrailQueries.reEntryOn] is true on exactly one calendar day.
+     *
+     * **It writes today's marker itself rather than assuming somebody else has.**
+     * `ClarityApp` writes it on the first foreground and this runs on the first
+     * composition of the same launch, so the two are concurrent, and "the write has
+     * probably landed by now" is a race whose failure mode is a returning person seeing
+     * nothing at all. [recordAppOpened] is at most once per calendar day, decides under
+     * the same lock it writes under, and costs one indexed read when the day is already
+     * there, so a second caller is what it was built for rather than a cost. Reading
+     * before the marker exists is the exact trap that method's own documentation names:
+     * the gap is measured to the newest open strictly before today, and today has to be
+     * in the log for [TrailQueries.reEntryOn] to have a today to be about.
+     *
+     * **[load] first, because a commit before a load is a crash rather than a missing
+     * event**, and it is idempotent under the same lock, so whichever caller reaches it
+     * first does the work.
+     *
+     * **The log handed to [TrailQueries] is the presence markers and nothing else**,
+     * through the one bounded query that can select them. `reEntryOn` reads
+     * `APP_OPENED` payloads and no other event, so the answer is identical to the one a
+     * whole log would give, and the difference is that this runs on a cold start beside
+     * everything else a cold start is doing. A full `allEvents` here would be a second
+     * pass over the largest table in the app for a question about a handful of rows.
+     *
+     * **The value is the date of the return. It is never the length of the absence**,
+     * and [ReEntry] has no field and no function that yields one. DECISIONS.md.
+     */
+    suspend fun reEntryOnThisOpen(): ReEntry? {
+        load()
+        recordAppOpened()
+        val opens = events.ofTypes(listOf(ClarityEventType.APP_OPENED.name))
+            .mapNotNull { it.toEvent() }
+        return TrailQueries(opens, clock.zone()).reEntryOn(clock.dateKey())
+    }
+
+    /**
+     * The re-entry screen's second choice. Every active item returns to the head of its
+     * own queue. MASTER_BUILD_PROMPT 14b.4.
+     *
+     * **Nothing is deleted and nothing is completed**, and [activeItemsBackInTheirQueues]
+     * is where that is proved rather than here: it decides the whole answer, it can only
+     * return `ITEM_QUEUED`, and it runs on a plain JVM where a test can read it.
+     *
+     * One commit rather than one per item, so a person who chose this and lost the
+     * process halfway through does not come back to half a fresh start. The keys are
+     * chosen against one state, which is correct because an area holds at most one
+     * active item: no two payloads here are choosing a key in the same ordering space.
+     */
+    suspend fun putActiveItemsBackInTheirQueues() {
+        val payloads = activeItemsBackInTheirQueues(_state.value, jitter)
+        commit(*payloads.toTypedArray())
     }
 
     // Pulse -------------------------------------------------------------------

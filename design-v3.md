@@ -728,6 +728,12 @@ Rises above the tab bar, card colored, 12dp radius, one line plus an action in a
 
 Four tabs at the root: Areas, Momentum, Report, Trail. Everything else is a bottom sheet or a pushed screen over one of them. There is no drawer, no hamburger, no hidden navigation.
 
+**The floating tab bar belongs to the four views and is not drawn over anything else. Settled, phase 12c, issue #58.** Through 0.9.0 the bar kept floating over Settings with `Areas` shown as selected, which was accurate, and tapping that selected tab did nothing at all. Back worked, so section 17's requirement that every screen can be left was met, and what was left was a control that looks live and is inert, which is the thing 10.16 objects to elsewhere in this app.
+
+**The statistically common answer is that tapping the selected tab pops to that tab's root**, which is what every application with a bottom bar does, and section 15 makes that a reason to look at it twice rather than a reason to take it. It is refused. It gives one control two meanings that differ by state a person cannot see: `Areas` means "go to Areas" from three tabs and "leave Settings" from Settings. It is also undiscoverable, so the bar goes on looking live to everybody who does not already know the convention. This audience pays for both.
+
+Not drawing the bar serves the brief better on three counts. The inert control is removed rather than given a second job. The app already applies this rule to the Focus surface, which covers the bar because it is not one of the four views, so a pushed screen doing the same is the app being consistent with itself rather than with the platform. And it deletes a state instead of adding one: with the bar gone there is no way to leave a pushed screen sideways, so there is no returning to the Areas tab and finding Settings still open where it was left. What it costs is the sideways move, one tap from a pushed screen to another tab, and back is one press and lands on the tab the bar would have. It reaches Settings, About and the Report's history page; a bottom sheet is unaffected, because a sheet is a window of its own over a scrim. `ui/nav/PushedScreens.kt` is the mechanism, one line at each pushed screen, and `PushedScreensTest` asserts the bar has one call site and that it is inside the guard.
+
 | destination | entered from | left by |
 |---|---|---|
 | Area detail | tapping a card | drag down, scrim tap, or back |
@@ -777,9 +783,9 @@ Cold start reads two flags in order. `hasCompletedOnboarding` false routes to on
 
 **"Once the first frame has settled" is implemented as a fact rather than as a delay.** The tutorial starts when every one of its five targets has reported a rectangle, which is the thing a delay was standing in for, and a delay guesses differently on a cold start, on a slow device and on a phone with a long area list. Four of the five targets are on the Areas screen, so readiness cannot be true before Areas has laid out. It also handles the zero areas state above with no special case: there is no card to point at, so the tutorial waits until there is one.
 
-**The third check below is not built and the gate leaves its place marked**, after both branches, never inside them.
+**A third check joins them, after both flags. Built, phase 12c**, where phase 10 left the place marked, after both branches and never inside them. When onboarding and the tutorial are both behind the user and the gap since the last recorded open is 14 days or more, cold start routes to the re-entry state in 11.2 instead of to Areas. It runs once, on that open, and the ordinary route resumes afterward. It is checked last so that it can never delay or replace a first run.
 
-**A third check joins them, after both flags. Pending, phase 6.** When onboarding and the tutorial are both behind the user and the gap since the last recorded open is 14 days or more, cold start routes to the re-entry state in 11.2 instead of to Areas. It runs once, on that open, and the ordinary route resumes afterward. It is checked last so that it can never delay or replace a first run.
+**"Instead of to Areas" is a screen that covers Areas rather than a branch that replaces it**, and the difference is deliberate. The two flags are read from DataStore in a frame or two; this one has to ask the log, which is the same load every other reader of a cold start is already waiting for. A gate that held the first frame until the log answered would put a blank screen in front of every launch this app has, for a question that is false on all but one day in a person's whole use of it. So the app arrives when it always did and the re-entry state covers it opaquely when the answer comes back, on item 25's entrance, whose 150ms delay is exactly the guard that stops that reading as a flash. **The tutorial is held while the answer is outstanding**, which costs nothing and closes the one race that would break 14b.4's "it is first and it is alone": the tutorial waits for five targets to report and four of them are on the Areas screen.
 
 ### 10.16 The unfiled inbox
 
@@ -977,9 +983,9 @@ Second, one line at the end of onboarding announcing Pulse before it ever appear
 
 ### 11.2 The re-entry state
 
-**Pending. Detection phase 3b. The two engine side rules that follow this screen were built in phase 6. The screen itself was not, and it has no phase.** Addendum 01 4d. **This is the highest-stakes screen in the app**, and it is the one that has to be right the first time, because the person seeing it already decided once to stop.
+**Built, phase 12c. Detection phase 3b. The two engine side rules that follow this screen were built in phase 6 and phase 8.** Addendum 01 4d, issue #56. **This is the highest-stakes screen in the app**, and it is the one that has to be right the first time, because the person seeing it already decided once to stop.
 
-**Do not read this section as shipped.** Phase 6 owned it and did not carry it. What exists today is the detection query from phase 3b and the Pulse suppression from phase 6: a person returning after a fortnight sees the ordinary Areas screen and a Pulse that stays quiet for two days. Nothing measures their absence, and nothing greets them either. `MASTER_BUILD_PROMPT.md` 14b.4 says the same at the point a session would otherwise miss it, and `docs/BUILD_STATE.md` carries the phase assignment as an open question for the owner.
+**It is also the one screen nobody building or testing this app daily will ever see**, which is why every rule below is checked by a test rather than by looking. `ReEntryLanguageTest` reads the resource file and the screen's own source and holds the language rules; `ReEntryRoutingTest` walks a log a day at a time and holds when it appears; `ReEntryClearingTest` holds what the second choice writes. `ui/reentry/` is the whole surface and it is two files.
 
 This audience leaves and comes back. That is ordinary use, not failure, and the app has no opinion about it.
 
@@ -991,13 +997,22 @@ This audience leaves and comes back. That is ordinary use, not failure, and the 
 
 **The world it lives in. Daylight, on canvas, with the Areas structure behind it. Not Contemplative.** The obvious answer is a dark ceremonial welcome, a serif line and a soft glow, which is exactly what this design system is good at and exactly the wrong instrument. Ceremony says the absence was an event. A quiet Daylight screen says the app kept the user's place and is ready when they are. Section 15.
 
-**Type and copy.** One readSerif line, one body line beneath, then the two options. No illustration, no mascot, no exclamation mark, 10.13. Whether that line is a fixed invitation in `strings.xml` or an authored observation is settled at the corpus phase and not here, and the test is simple: if it says anything at all about what happened while the user was away, it is an observation and it comes from a corpus through the engine like every other sentence about a person's own data.
+**Type and copy.** One readSerif line, one body line beneath, then the two options. No illustration, no mascot, no exclamation mark, 10.13. Whether that line is a fixed invitation in `strings.xml` or an authored observation was left to the corpus phase, with a simple test: if it says anything at all about what happened while the user was away, it is an observation and it comes from a corpus through the engine like every other sentence about a person's own data.
+
+**Settled, phase 12c: it is fixed copy in `strings.xml`, and the test above is what settles it rather than a shortcut past it.** `MASTER_BUILD_PROMPT.md` 14b.4 forbids stating the gap, counting anything and asking where somebody has been, which leaves an observation with nothing to be about. What is left is an invitation and two labels naming what each choice does, and none of the four says anything whatever about the person's data. The engine is not involved and 11.1 is not bent: there is no sentence here about their own behavior for it to be the source of. The four strings carry the whole reasoning at their call site in `strings.xml`, and `ReEntryLanguageTest` asserts there is no fifth string, no literal in the source and no accessibility label carrying a word the four do not.
 
 **Motion.** Item 25's entrance, and nothing else. No iris, no bloom, no transition into a different world.
 
 **What follows it.** Pulse generates nothing for the first two days back, and the Report suppresses every decline, neglect and gap observation for the first full week back. Those are engine rules and `CLARITY_LOGIC_ENGINE.md` owns the mechanism. They are named here because their entire purpose is that this screen is not followed three hours later by the measurement it just declined to make.
 
 **A returning user is never greeted by a measurement of their absence.** That sentence is the acceptance criterion for the screen.
+
+**What phase 12c chose where this section left a choice open, under section 15.**
+
+- **The block sits at the top of the screen and is left aligned**, where the Areas screen's own title sits, keeping its 20dp screen padding. The statistically common welcome screen centers a short line in the middle of an empty page with its buttons pinned to the bottom edge, which is a dialog, and a dialog is a demand. Sitting where the screen's content sits says the app is carrying on rather than staging a moment, and it makes the screen after this one look like the same screen with the sentences taken out
+- **"With the Areas structure behind it" is read as structure, and separately the app genuinely is composed behind it.** The surface is opaque and nothing of the app shows through, but it is drawn over a live shell rather than instead of one, which is what makes 14b.4's "a conflict card waits behind it rather than being dropped" true of something that is still there afterwards. It also means the first frame of a cold start is not held while the log answers, which would put a blank screen in front of every launch this app will ever have for a question that is false on all but one day
+- **The second choice is worded as what it does**, `Put active items back in their queues`, rather than as `Start fresh`. 14b.4 requires the wording to say that nothing is deleted and nothing is completed, and the fear at that moment is losing the work. The body line says both, and the label says where the items go
+- **There is no back and no handler pretending otherwise.** 10.15's table gives this screen two ways out and neither is back, so back does here what it does on the first screen of the app, which is leave. The offer has not been answered, so it is still standing on the next launch that day. A handler that swallowed back would be a control that looks live and does nothing, which is the defect issue #58 exists to remove
 
 ### 11.3 Analog time
 

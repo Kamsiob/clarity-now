@@ -30,9 +30,9 @@ import com.kamsiob.claritynow.R
 import com.kamsiob.claritynow.ui.components.ClarityIcon
 import com.kamsiob.claritynow.ui.components.ClarityIcons
 import com.kamsiob.claritynow.ui.components.ScrollEdge
-import com.kamsiob.claritynow.ui.components.TabBarHeight
 import com.kamsiob.claritynow.ui.components.scrollEdgeFade
 import com.kamsiob.claritynow.ui.components.clarityClickable
+import com.kamsiob.claritynow.ui.nav.CoversTheTabBar
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
 import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
@@ -42,16 +42,14 @@ import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
  * A screen pushed over a tab, design-v3.md 10.15: entered from a glyph or a row, left
  * by back, and covering the tab it came from.
  *
- * **It reserves room at the foot for the floating tab bar, and that is a seam rather
- * than a design choice.** 10.15 makes Settings a pushed screen, which should cover the
- * tab bar entirely. `ClarityShell` draws that bar as a sibling above the tab content,
- * and hosting a pushed screen above it means hosting it from `ClarityShell`, which was
- * outside this phase's file list. So the surface is hosted from inside the Areas tab
- * and pads its content past the bar instead, which keeps everything reachable and
- * readable while the bar floats over the canvas. The fix is one branch in
- * `ClarityShell` beside the Focus surface, at which point this padding becomes the
- * ordinary navigation bar inset. `docs/BUILD_STATE.md` and the phase report both carry
- * it.
+ * **The bar is not drawn while this is composed**, which closes the seam phase 11 left
+ * here. That phase hosted this surface inside the Areas tab, because `ClarityShell`
+ * draws the floating bar as a sibling above the tab content and covering it meant
+ * hosting the screen there, so the bar went on floating over a screen it does not
+ * belong to and the content was padded past it. Issue #58 settled the question the
+ * other way: the bar belongs to the four views, a pushed screen is not one of them, and
+ * [CoversTheTabBar] below is this screen saying so. `ui/nav/PushedScreens.kt` carries
+ * the decision, and the padding at the foot is now the ordinary navigation bar inset.
  *
  * The title is the serif `displayTitle` the Areas screen uses, so a pushed screen
  * announces itself the same way the home does rather than inventing a second voice for
@@ -69,6 +67,10 @@ internal fun PushedScreen(
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
+    // design-v3.md 10.15, issue #58. Nothing else about this screen changes: it is the
+    // shell that reads this and declines to draw the bar.
+    CoversTheTabBar()
+
     Box(modifier = modifier.fillMaxSize().background(colors.canvas)) {
         Column(
             modifier = Modifier
@@ -78,15 +80,17 @@ internal fun PushedScreen(
                 // `ScrollEdge.kt`.
                 .scrollEdgeFade(
                     top = topInset + ScrollEdge.underTheClock,
-                    bottom = bottomInset + ClaritySpacing.tabBarInset + TabBarHeight +
-                        ScrollEdge.aboveTheBar,
+                    // No bar to fade behind any more, so the edge is the screen's own,
+                    // and what the content passes under at the foot is the navigation
+                    // bar. design-v3.md 6.1's scroll edges.
+                    bottom = bottomInset + ScrollEdge.aboveTheBar,
                 )
                 .verticalScroll(rememberScrollState())
                 .padding(
                     start = ClaritySpacing.screenPadding,
                     end = ClaritySpacing.screenPadding,
                     top = topInset + 8.dp,
-                    bottom = bottomInset + TabBarHeight + ClaritySpacing.tabBarInset + 32.dp,
+                    bottom = bottomInset + 32.dp,
                 ),
         ) {
             Box(

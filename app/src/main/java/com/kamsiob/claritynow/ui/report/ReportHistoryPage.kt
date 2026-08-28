@@ -33,6 +33,7 @@ import com.kamsiob.claritynow.ui.components.ClarityIcons
 import com.kamsiob.claritynow.ui.components.clarityClickable
 import com.kamsiob.claritynow.ui.components.clarityFocusRing
 import com.kamsiob.claritynow.ui.components.clarityPressScale
+import com.kamsiob.claritynow.ui.nav.CoversTheTabBar
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
 import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
@@ -85,6 +86,10 @@ internal fun ReportHistoryPage(
     val contemplative = LocalContemplativeColors.current
     val type = LocalClarityTypography.current
 
+    // design-v3.md 10.15, issue #58. This is a screen pushed over the Report tab, and
+    // the floating tab bar is not drawn over one. `ui/nav/PushedScreens.kt`.
+    CoversTheTabBar()
+
     Box(modifier = modifier.fillMaxSize()) {
         ReportBackdrop()
 
@@ -93,8 +98,10 @@ internal fun ReportHistoryPage(
             contentPadding = PaddingValues(
                 top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() +
                     ClaritySpacing.minTouchTarget + TITLE_TOP,
+                // The navigation bar and nothing else: with the tab bar gone there is
+                // no floating chrome at the foot of this screen to clear.
                 bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() +
-                    ClaritySpacing.tabBarHeight + ClaritySpacing.tabBarInset + LIST_BOTTOM,
+                    LIST_BOTTOM,
             ),
         ) {
             item(key = "title") {
