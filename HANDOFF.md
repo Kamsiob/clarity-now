@@ -153,6 +153,16 @@ between phase 12 and closed.
 
 ### Release signing
 
+**The release build works.** `assembleRelease` succeeds with R8 and resource shrinking
+on, and produces a **5.6 MB** APK against the debug build's 44 MB. That is worth knowing
+because R8 is the step most likely to break an app that compiles: it can strip code only
+reflection reaches, and this app has Room, Compose, Glance, kotlinx serialization and a
+corpus parser reading from assets. Nothing needed a keep rule beyond the defaults.
+
+**What is not proved by that** is that the shrunk APK runs. An assembled APK is not a
+working one, and the check that matters is installing a signed release build on the phone
+and walking the four tabs. That needs the keystore below.
+
 `app/build.gradle.kts` has no `signingConfig` on the release build type, so
 `assembleRelease` produces an unsigned APK. That is correct for now: a keystore is a
 secret and this repository is public.
