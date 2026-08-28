@@ -248,10 +248,17 @@ class SelectorTest {
         )
         assertEquals(SilenceReason.INSUFFICIENT_DATA, silence(Purpose.REPORT_PATTERN, weeksOld(3)))
 
-        // Once there is a week to look at, the section says so rather than showing nothing,
-        // which is what the insufficientData family is for.
-        assertTrue(
-            ranked(Purpose.REPORT_PATTERN, weeksOld(10)).any { it.rule.family == "insufficientData" },
+        // What used to be asserted here is that `insufficientData` was ranked once there was
+        // a week to look at. That rule is gone, and its absence is the point. It could never
+        // have fired: `ReportComposer` asks the engine for a pattern only when there are
+        // three weeks of snapshots and the rule required fewer, so the two conditions were
+        // complements. The owner's ruling is that it was never a pattern, it is the pattern
+        // section's empty state, and `ReportComposer.patternNote` renders its line directly.
+        // A rule left behind beside that render would be a second source for one line.
+        assertFalse(
+            "insufficientData is the section's empty state, rendered by ReportComposer, and " +
+                "selection must not carry a rule for it",
+            catalog.rules.any { it.family == "insufficientData" },
         )
     }
 

@@ -190,6 +190,7 @@ data class AreaFacts(
     val hasActiveItem: Boolean,
     val activeItemId: ItemId?, val activeItemTitleSnapshot: String?, val activeItemAgeDays: Int?,
     val queueLength: Int, val queueLengthAtWindowStart: Int, val queueDelta: Int,
+    val queueDrainedFrom: Int?,          // the height of the fall to nothing, null when none
     val daysSinceLastEvent: Int,         // Int.MAX_VALUE when never
     val lifetimeEvents: Int, val lifetimeCompletions: Int,
     val ageDays: Int, val isNew: Boolean, // isNew == ageDays < 14
@@ -202,7 +203,7 @@ data class RollupFacts(
     val dominantShare: Double,
     val neglectedAreaIds: List<AreaId>,  // lifetimeEvents >= 5, daysSinceLastEvent >= 7, !isNew
     val dormantReturnedAreaIds: List<AreaId>,
-    val queueDrainedAreaIds: List<AreaId>,
+    val queueDrainedAreaIds: List<AreaId>,   // queueDrainedFrom >= 3
     val queueGrowingAreaIds: List<AreaId>,
     val freshStartAreaIds: List<AreaId>
 )
@@ -257,6 +258,14 @@ data class PulseFacts(
 **`mostRecentBetterWeekKey` is strictly greater, not greater or equal.** If no week beats the current one it is null, `your most active week since X` must not fire, and a personal-best family applies instead. Getting this backwards produces a claim that is subtly false, which is worse than obviously false.
 
 **No streak facts exist.** Deliberately. No `currentStreak`, no `longestStreak`, no `daysInARow`. Their absence makes it structurally impossible for streak language to appear by accident. Do not add them.
+
+**`queueDrainedFrom` is a transition and not a difference of two boundaries.** It is the height an area's queue fell from, in one uninterrupted fall to nothing that has held to the window end, and null when no such fall happened inside the window. Read it backwards from the window end through `TrailQueries.queueSizeSeriesByArea`: a sample at least as large as the one after it is still part of the fall, and the first sample smaller than its successor is the moment something arrived, which puts the top of the fall at that successor. So 5, 4, 3, 2, 1, 0 reads five; 0, 3, 1, 4, 0 reads four; and 0, 5, 0, 2, 0 reads two rather than five, because two things arrived after the five left and `{n} things left {areaName}, and nothing replaced them` would be false of the larger number.
+
+**It exists because a boundary pair cannot see a drain.** `queueLengthAtWindowStart` and `queueLength` are the same two numbers for a week that opened holding five and closed holding nothing and for a week that built five on Tuesday and finished them on Saturday, and only the second is what `CORPUS_1_PULSE.md` 10's `{areaName}'s queue went from {n} to nothing` and `CORPUS_2_REPORT.md` 2.17's `{areaName} cleared its entire queue this week` describe. `queueDrain`, `clearing` and `queueDrained` were dark across eleven simulated years for exactly that reason, and no criterion could approximate it, because `queueLength`, `queueLengthAtWindowStart` and `queueDelta` are all read at the same two instants.
+
+**Null rather than zero, for both of the cases where nothing drained**, exactly as in `dormantDaysBeforeReturn`, which this mirrors: that field measures the gap an area returned from rather than the gap since the window opened, and this one measures the queue an area drained from rather than the queue it happened to hold at a boundary. The queue is not empty now, or it is empty and nothing fell to get it there. A rule cannot tell those apart and must not be able to.
+
+**It carries no claim about how the items left.** A queue also empties by deletion. `RuleBuilders.drainedByFinishing` requires `completionsInWindow >= queueDrainedFrom` and is carried by both drain families, because every sentence on both benches says somebody finished something.
 
 **Phase 5, three readings this section leaves open, resolved and recorded.**
 
@@ -537,6 +546,10 @@ Stage 4 references `HistoryFacts.longestEverActiveDays` and its rule carries a c
 | `freshStart` | 30 | per subject, so a new area still fires |
 
 Report families use a flat 14 days per `(family, subjectId)`, except `selfReportVsData` which never repeats on the same subject at all, and `hardStretch` at 42 days per 6.4.
+
+**The pattern section waits three weeks on top of that, and the floor sits on the surface rather than on the declaration.** Every `REPORT_PATTERN` selection waits at least 21 days per `(family, subjectId)`, keyed the way the Pulse is keyed and read out of `FiringHistory` by the same call, so this is the instrument above and not a second one. It is a floor on the selection because one family key serves two surfaces: `decliningActivity` is a headline family and a pattern family at once and the two share one cooldown key, so a longer number on the declaration would hold the headline back as well, and only the pattern section was ordered to wait.
+
+**Counted in reports rather than in days, because on this surface the two are not the same.** A report is recorded against its week start key and selected against its week end, so two consecutive reports are 14 days apart on the only clock `FiringHistory` keeps. A cooldown of `C` days therefore holds a pair out of the next `ceil(C / 7) - 2` reports, or out of none where that is not positive, and the head of the ranking rotates among `ceil(C / 7) - 1` pairs. **The flat 14 holds nobody out of anything**, which is what the facts phase measured from the other end: 419 pattern slots across a simulated year, 416 of them filled, and three families holding 402. Three weeks rotates two. Rotating seven would take eight. `PatternCooldownTest` measures every figure in this paragraph against the real catalog.
 
 ### 7.4 Register selection
 
@@ -860,18 +873,26 @@ Build this in phase 5, before a single corpus sentence is written. In `devtools`
 
 The four enforced now are the ones whose failure would mean something already built is wrong rather than something not yet written: the vocabulary check, the phantom area check, the visible slot syntax check and the non-compliance test. The first three are already vetoed by layer 5, so a dump containing one is evidence that a sentence reached a surface without passing through the validator. The fourth passes trivially today because layer 6 does not exist, and is enforced anyway so that the day layer 6 arrives, this is already watching.
 
-The readings the deferred checks produce are the baseline phase 9 is judged against and the full tables, with the reasoning, are in `DECISIONS.md` and `docs/BUILD_STATE.md`. **Three measurements exist and the third is the current one.** Phase 5, the facts phase, and the slot bindings phase, over the same eleven personas and the same simulated year each time.
+The readings the deferred checks produce are the baseline phase 9 is judged against and the full tables, with the reasoning, are in `DECISIONS.md` and `docs/BUILD_STATE.md`. **Four measurements exist and the fourth is the current one.** Phase 5, the facts phase, the slot bindings phase and the rules pass, over the same eleven personas and the same simulated year each time.
 
-| reading | target | phase 5 | facts phase | current |
-|---|---|---|---|---|
-| Pulse silence, every persona together | 8 to 25 percent of opened days | 76 percent | 73 percent | **68 percent** |
-| Pulse silence, per persona | the same band | 43 to 98 | 42 to 98 | **40 to 97** |
-| Pulse families that ever fired | 11 of 11 | 6 of 11 | 7 of 11 | **8 of 11** |
-| every family the corpus declares fires | 78 of 78 | not measured | 58 of 78 | **60 of 78** |
-| every stage of every hot family fires | all | 29 hot, one gap | 31 hot, two gaps | **33 hot, the same two gaps** |
-| no variant repeats inside ninety days | none | 7,384 | 7,430 | **7,445, tightest after 1 day** |
+| reading | target | phase 5 | facts | bindings | current |
+|---|---|---|---|---|---|
+| Pulse silence, every persona together | 8 to 25 percent of opened days | 76 percent | 73 percent | 68 percent | **68 percent, unchanged** |
+| Pulse silence, per persona | the same band | 43 to 98 | 42 to 98 | 40 to 97 | **40 to 97, unchanged** |
+| Pulse families that ever fired | 11 of 11 | 6 of 11 | 7 of 11 | 8 of 11 | **8 of 11, unchanged** |
+| every family the corpus declares fires | 78 of 78 | not measured | 58 of 78 | 60 of 78 | **65 of 78** |
+| every stage of every hot family fires | all | 29 hot, one gap | 31 hot, two gaps | 33 hot, two gaps | **35 hot, the same two gaps** |
+| no variant repeats inside ninety days | none | 7,384 | 7,430 | 7,445 | **7,376, tightest after 1 day** |
+| layer 5 vetoes across the run | none | not reported | not reported | 107, every one check 1 | **0, and 92 absences named on purpose** |
+| pattern slots, and their concentration | no family holds a section | not reported | not reported | 416 of 419 filled, 8 families, top three took 402 | **401 of 419 filled, 12 families, top three took 296** |
 
-**Three things are worth reading before authoring anything, and none of them is fixed by authoring.** First, silence is 68 percent against a ceiling of 25, and the 2,167 silent Pulse days split into 1,185 where a rule qualified and every candidate was filtered, 971 where nothing qualified at all, and 11 with too little data. A bench deep enough to empty the first column entirely would leave silence at 31 percent, so bench depth is necessary and provably not sufficient. Second, nine of the eighteen families that never fire never qualified once, and nor did the two hot family stages that are short, which is a threshold or a window rather than a bench, and `insufficientData` cannot fire at all because 6.3 admits a pattern only with three weeks of data and that family's rule requires fewer. Third, `neglectedArea` and `areaGoneQuiet` are the only families vetoed anywhere in the run, 107 times, every one of them check 1 of section 8: their rules require an area to have been silent for one to three weeks and check 1 forbids naming an area with no events in the window. That conflict is recorded as open in `DECISIONS.md` and is not a builder's to settle.
+**Phase 9's job is named by the fourth reading, and the owner named it in advance.** If silence landed near band, phase 9 would be authoring to fix repeats; it did not, so **phase 9 is authoring to fix silence.** Those are different jobs and the difference is what a bench is grown for.
+
+**Silence is 68 percent against a ceiling of 25 and it did not move across the rules pass**, because that pass carried no Pulse instrument: its cooldown applies to pattern selections, its check 1 narrowing serves three Report families, and the one Pulse rule it touched was already dark. The 2,167 silent Pulse days split into 1,185 where a rule qualified and every candidate was filtered, 971 where nothing qualified at all, and 11 with too little data. **A bench deep enough to empty the first column entirely would leave silence at 31 percent, with five of the eleven personas in band and six outside**, so bench depth is necessary and provably not sufficient. The owner's standing instruction is that this is reported and not ground at: an app that ships at 30 percent silence is better than one that does not ship.
+
+**Two things beside it are worth reading before authoring anything, and neither is fixed by authoring.** First, eight of the families that never fire never qualified once, and nor did the two hot family stages that are short. The rules pass diagnosed every one at the rule that carries it and moved no threshold, because a stage threshold is a corpus stage header: three of them are waiting on a fact 3.1 does not declare, the queue an area held immediately before the promotion that emptied it, and the other five are a property of the eleven personas rather than of the rules. Second, `insufficientData` is no longer among them. Its rule was unreachable by construction, the Report renders that bench itself through `ReportLanguage`, and `ReportRules.RENDERED_DIRECTLY` records it as a family that left the engine on a decision rather than a family that went quiet.
+
+**The check 1 conflict that the third reading recorded as open is closed.** `neglectedArea`, `areaGoneQuiet` and `areaRevival` were the only families vetoed anywhere in the run, 107 times, every one of them check 1 of section 8. The owner ruled that the check was right and the writing was wrong, and section 8 check 1 is narrowed rather than widened: a rule carrying `ClarityRule.absenceSubject` may name an area with no events in the window, and only when that area has a real lifetime, is not new, and has a measured `daysSinceLastEvent`. A new empty area is still refused by every rule. The fourth reading records no vetoes at all and 92 absences named on purpose.
 
 ---
 

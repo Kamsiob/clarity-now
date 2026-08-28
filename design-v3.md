@@ -825,7 +825,7 @@ This audience leaves and comes back. That is ordinary use, not failure, and the 
 
 ### 11.3 Analog time
 
-**Duration reads as a shape before it reads as a number.** Addendum 01 8d. Three surfaces show a session's remaining time, and all three make the depleting arc the primary carrier with the digits secondary: the focus ring in section 11, the Live Update track in 11.4, and the Focus Countdown widget in 12.2. **The first two are built, phase 4. The widget is phase 12.**
+**Duration reads as a shape before it reads as a number.** Addendum 01 8d. Three surfaces show a session's remaining time, and all three make the depleting arc the primary carrier with the digits secondary: the focus ring in section 11, the Live Update track in 11.4, and the Focus Countdown widget in 12.2. **The first two are built, phase 4, and the widget is built, phase 12**, drawing its arc from the same persisted end instant so that the three cannot disagree.
 
 The reason is specific to this audience. A number has to be read, subtracted from, and then converted into a feeling about how much room is left. That is three operations, and the third is exactly the one this app's users find expensive. A shrinking arc **is** the feeling, with no arithmetic in between. Time blindness is not an inability to read a clock.
 
@@ -865,7 +865,7 @@ It is a platform surface taken at step 1 of 17.1: the promoted-notification prog
 
 ## 12. Widgets
 
-**Eight specified, six required in v1. Pending, phase 12.** Addendum 01 Step 6 supersedes the two-widget plan in `MASTER_BUILD_PROMPT.md` 13.3, and that supersession is logged in `DECISIONS.md`.
+**Eight specified, six required in v1. The six are built, phase 12; the two optional ones are not.** Addendum 01 Step 6 supersedes the two-widget plan in `MASTER_BUILD_PROMPT.md` 13.3, and that supersession is logged in `DECISIONS.md`.
 
 **Why widgets, and not more notifications.** A notification is an event: it arrives once, it is swiped away, and for this audience that means it never happened. A widget is persistent and cannot be dismissed. It is still there tomorrow. It works **with** out of sight, out of mind rather than against it. That is the whole argument, and it is why this app spends its home screen budget here while keeping its notification budget to the Pulse reminder and the one Live Update in 11.4.
 
@@ -909,6 +909,18 @@ Glance updates are throttled by the system. The cadence is chosen deliberately a
 
 **This must never become a streak.** No consecutive count, no longest run, no flame, no chain, no comparison with the previous fortnight, no color change for a run of good days. **A gap is a lighter dot and nothing else is said about it.** The reason is in 14, and it is the strongest reason in that section.
 
+**Built, phase 12**, all six, in `widget/`. What they draw is one snapshot, written by the
+app on every meaningful change and refreshed every six hours, and nothing in that snapshot
+is a key or a family or a stage, so there is no way for a widget to compose a sentence
+even if one were asked for.
+
+**The one part of 12.1 that is not built is the preview image.** This section requires it
+to be generated from the real widget and never from a mockup, and a hand written preview
+layout is that mockup with a different file extension, so the six ship with none and the
+picker shows the loading layout until a real one is generated on a device. It is the only
+shared rule in 12.1 that phase 12 did not meet, and each widget's resource file says so at
+the line the attribute would sit on.
+
 ### 12.3 Optional, built if phase 12 has room
 
 **This Week**, small, 2x2. Three numbers from Momentum: completed, focus minutes, reflections. Typographic, no chart, no gauge, and **no ring filling toward a target, because there is no target.**
@@ -917,13 +929,47 @@ Glance updates are throttled by the system. The cadence is chosen deliberately a
 
 **Rule.** This is the only place guidance appears outside the Report, and it appears only because the user chose it. **It never shows an unaccepted plan and never shows a declined one**, and there is no state in which this widget asks the user to accept anything. A plan the user did not accept has no home screen presence at all.
 
+**Neither was built in phase 12, which this section permits.** The snapshot carries a slot
+for each, `WidgetWeek` and `WidgetGuidance`, so building them later is a composer change
+and a widget rather than a change to the shape the other six read. The rule above is
+already enforced at the boundary: the composer reads whether a plan was accepted and
+writes nothing otherwise, so an unaccepted plan cannot reach a home screen even by
+mistake.
+
 ### 12.4 The other launcher surfaces
 
-**Pending, phase 12.** Same reasoning as the widgets: fewer steps between intention and action.
+**Built, phase 12.** Same reasoning as the widgets: fewer steps between intention and action.
 
 **App shortcuts**, on a long press of the app icon. Three static shortcuts: Quick capture, Start focus, Today's Pulse. Icons come from the set in section 7, `add`, `play_arrow` and `graphic_eq`, rendered as the launcher requires. Short sentence-case labels, no counts, no dynamic shortcuts and no recents. This strikes home screen shortcuts from `MASTER_BUILD_PROMPT.md` 18, and that is logged in `DECISIONS.md`.
 
 **A quick settings tile.** One tile that starts or ends a focus session from the shade and reflects live session state in its label and its active state. It shows no count and no area color: a tile has one accent and it belongs to the system, 17.1.
+
+**How the two were built, and the three choices inside them.**
+
+The shortcuts are a static resource and one manifest line, with the `add`, `play_arrow`
+and `graphic_eq` glyphs from section 7 on the app icon's own #141A2E disc. **The disc is
+not decoration.** A launcher draws a shortcut icon into a popup whose background follows
+the phone's theme and it does not tint it, so a bare ink glyph is invisible in one of the
+two themes; the disc gives the three their own ground and makes the row read as this app.
+The short label and the long label are the same three names, because a launcher shows the
+long one where it fits and a more descriptive long label would be the string most people
+actually saw, which would quietly replace the three names this section chose.
+
+**`Start focus` opens the Focus surface rather than starting a session**, on the shortcut
+and on the tile alike, even where exactly one area has an active item and the choice would
+be unambiguous. Section 15's test applies and the obvious answer loses on its merits: a
+session is a row in a log that only gains rows, the person has not seen a screen yet, and
+the First Step widget already answers the same question the same way, so all three
+launcher surfaces say one thing rather than two. With a session already running, the same
+tap opens that session, so nothing here can start a second one.
+
+**The tile keeps one icon in both states.** `timer`, from section 7, with the label
+reading `Start focus` or `End focus` and the tile's own active state carrying the rest.
+Swapping the icon as well would be a second separation device on one element, 6.1, and
+the third signal is the one that eventually disagrees with the other two. It carries no
+subtitle and no countdown either: the shade is readable over a lock screen and what
+somebody is working on is not for a passer by, while a number that only moves when the
+shade opens is worse than no number at all.
 
 ---
 

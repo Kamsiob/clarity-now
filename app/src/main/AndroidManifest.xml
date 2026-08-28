@@ -90,6 +90,18 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!--
+                The three static app shortcuts on a long press of the icon.
+                MASTER_BUILD_PROMPT 13.5, design-v3.md 12.4, issue #40.
+
+                It sits on this activity because the platform reads this meta-data from
+                the activity that carries MAIN and LAUNCHER, and there is exactly one.
+                The resource says what the three are and why none of them is dynamic.
+            -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
 
         <!--
@@ -107,5 +119,156 @@
         <receiver
             android:name=".notifications.FocusActionReceiver"
             android:exported="false" />
+
+        <!--
+            The three widgets built in this phase, Quick Capture, Focus Countdown and
+            Rhythm. MASTER_BUILD_PROMPT 13.3 and design-v3.md 12.2.
+
+            **Exported, and it has to be.** An app widget provider is a broadcast
+            receiver the platform sends APPWIDGET_UPDATE to on behalf of the launcher,
+            so a provider that is not exported is a widget that never draws. Each one
+            handles that one action and nothing else, carries no data, and the class
+            behind it reads a snapshot and renders it.
+
+            The label is what the widget picker shows. The metadata resource is the size,
+            the resize rules and the picker description, one file per widget in res/xml.
+        -->
+        <receiver
+            android:name=".widget.QuickCaptureWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_quick_capture_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_quick_capture" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.FocusCountdownWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_focus_countdown_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_focus_countdown" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.RhythmWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_rhythm_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_rhythm" />
+        </receiver>
+
+        <!--
+            The three area widgets, Next Up, First Step and All Areas.
+            MASTER_BUILD_PROMPT 13.3 and design-v3.md 12.2. Exported for the reason the
+            three above are: a provider the platform cannot broadcast to never draws.
+
+            Each names a configuration screen and each marks it optional, so a widget is
+            placed and drawn immediately with the automatic area and configured
+            afterward if the person wants to pin one. res/xml/widget_next_up.xml says
+            why at more length.
+        -->
+        <receiver
+            android:name=".widget.NextUpWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_next_up_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_next_up" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.FirstStepWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_first_step_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_first_step" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.AllAreasWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_all_areas_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_all_areas" />
+        </receiver>
+
+        <!--
+            The screen that points one placed widget at one area.
+
+            **Exported, because the launcher starts it**, which is how a configuration
+            activity is reached at all. It is given an app widget id and nothing else,
+            and everything it can do is write which area that one widget shows. An app
+            widget id it does not own resolves to no widget and the screen closes.
+
+            Excluded from recents: it is a modal helper opened from a home screen, and a
+            person swiping through their recent apps should not find it sitting there
+            after they have chosen an area.
+        -->
+        <activity
+            android:name=".widget.WidgetConfigurationActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:theme="@style/Theme.ClarityNow">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            The quick settings tile that starts or ends a focus session from the shade.
+            MASTER_BUILD_PROMPT 13.5, design-v3.md 12.4, issue #41.
+
+            **Exported, and guarded by a permission only the system holds.** A tile
+            service is bound by System UI, so it has to be exported to be bound at all,
+            and `BIND_QUICK_SETTINGS_TILE` is what makes that the only binder. It is a
+            permission required **of** the caller rather than one this app asks for, so
+            it adds nothing to the merged manifest's uses-permission list.
+
+            The icon is `timer`, from design-v3.md section 7, and it is the same in both
+            states: the label says which of the two things a tap does and the tile's own
+            active state says which one is true, so a third signal would be one more
+            thing that can disagree with the other two.
+
+            The label here is the fixed name in the tile picker, where the tile is being
+            chosen rather than used. The live labels are set in the service.
+
+            **No ACTIVE_TILE meta-data**, so this is an ordinary tile: the system tells
+            it when the shade opens and it reads the running session then. An active
+            tile would put the app in charge of saying when to redraw, which would mean
+            waking to update something nobody is looking at.
+        -->
+        <service
+            android:name=".tile.FocusTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_timer"
+            android:label="@string/tile_focus_name"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>

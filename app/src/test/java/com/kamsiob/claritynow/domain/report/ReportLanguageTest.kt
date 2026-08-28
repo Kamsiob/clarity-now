@@ -55,6 +55,33 @@ class ReportLanguageTest {
         assertTrue(first!!.variantKey, first.variantKey.startsWith("ed.first."))
     }
 
+    /**
+     * The pattern section's empty state, which is the fifth bench and the newest.
+     *
+     * `CORPUS_2_REPORT.md` 3.16 is authored as a pattern family and is not one. It has no
+     * rule, on purpose and by an owner's decision recorded at `ReportComposer.patternNote`,
+     * and the Report renders it here instead. What this asserts is that renders means
+     * renders: a real line out of the shipped corpus, chosen the way every bench is chosen,
+     * and through layer 5 like everything else that reaches a screen.
+     */
+    @Test
+    fun `the pattern empty state resolves to a corpus line the validator accepts`() {
+        val note = language.insufficientData(facts, ReportFixture.DATE_KEY)
+        assertNotNull("no pt.none line survived layer 5", note)
+        assertTrue(note!!.variantKey, note.variantKey.startsWith("pt.none."))
+        assertTrue(note.text, note.text.isNotBlank())
+        assertTrue("an empty state states no number: ${note.text}", note.text.none { it.isDigit() })
+    }
+
+    @Test
+    fun `the pattern empty state varies with the day, like every other bench`() {
+        val keys = (1..28).map { day ->
+            language.insufficientData(facts, "2026-04-%02d".format(day))?.variantKey
+        }
+        assertTrue("every day resolved to a line", keys.all { it != null })
+        assertTrue("one line on every date is a bench nobody is choosing from", keys.toSet().size > 1)
+    }
+
     @Test
     fun `an edge state varies with the day, because the bench is chosen the way every bench is`() {
         val keys = (1..28).map { day ->

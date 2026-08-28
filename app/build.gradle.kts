@@ -44,12 +44,23 @@ val versionMajor = 0
 val versionMinor = 8
 val versionPatch = 0
 
+// The application id and the one suffix that changes it, written once.
+//
+// `res/xml/shortcuts.xml` needs the running package name inside an intent, and a
+// resource file is one of the few places `${applicationId}` does not reach: manifest
+// placeholders are substituted in the manifest and nowhere else. So the id is generated
+// as a string resource per build type below. A literal in the resource would have named
+// the release package on every debug install, which is the build every device check
+// runs on, and three shortcuts that do nothing is a defect nothing in the build can see.
+val clarityApplicationId = "com.kamsiob.claritynow"
+val clarityDebugSuffix = ".debug"
+
 android {
     namespace = "com.kamsiob.claritynow"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.kamsiob.claritynow"
+        applicationId = clarityApplicationId
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = versionMajor * 10000 + versionMinor * 100 + versionPatch
@@ -63,11 +74,17 @@ android {
 
     buildTypes {
         debug {
-            applicationIdSuffix = ".debug"
+            applicationIdSuffix = clarityDebugSuffix
             versionNameSuffix = "-debug"
             manifestPlaceholders["appLabel"] = "Clarity Now debug"
+            resValue(
+                "string",
+                "clarity_application_id",
+                clarityApplicationId + clarityDebugSuffix,
+            )
         }
         release {
+            resValue("string", "clarity_application_id", clarityApplicationId)
             isMinifyEnabled = true
             isShrinkResources = true
             manifestPlaceholders["appLabel"] = "Clarity Now"
@@ -81,6 +98,11 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        // The widget provider needs the application id as a resource, because a Glance
+        // provider's metadata is XML and cannot read BuildConfig. The debug variant
+        // carries the suffix, so the two builds can be installed side by side without
+        // their widgets colliding.
+        resValues = true
     }
 
     packaging {

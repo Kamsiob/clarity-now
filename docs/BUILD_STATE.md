@@ -2,13 +2,16 @@
 
 Where the build actually is. Updated at the end of every phase.
 
-**Last updated:** August 27, 2026, end of the slot bindings phase.
-**Phases 4, 5, 6, 7, 8, 10 and 11, the facts phase and the slot bindings phase are all
-built and all awaiting the check that closes them.** Everything this file says about focus
-sessions, about the engine, about the Pulse, about Momentum, about the Report, about first
-run, about Settings, about the twelve facts and fourteen rules and about the nine families
-that gained a slot binding is true of the source and is not yet true of anything
-installed.
+**Last updated:** August 27, 2026, end of phase 12 and of the rules pass, which ran in
+the same tree at the same time.
+**Phases 4, 5, 6, 7, 8, 10, 11 and 12, the facts phase, the slot bindings phase and the
+rules pass are all built and all awaiting the check that closes them.** Everything this
+file says about focus sessions, about the engine, about the Pulse, about Momentum, about
+the Report, about first run, about Settings, about the six widgets, the three app
+shortcuts and the quick settings tile, about the twelve facts and fourteen rules, about
+the nine families that gained a slot binding and about the pattern cooldown, the check 1
+narrowing and the fourth simulator reading is true of the source and is not yet true of
+anything installed.
 **Version:** the orchestrator chooses it at the release. `MASTER_BUILD_PROMPT.md` 16.7
 makes the number a deliberate choice and the release is the orchestrator's closing step.
 The recommendation is still **0.11.0, versionCode 1100**, one minor bump for all three
@@ -16,15 +19,22 @@ rather than three: onboarding, the tutorial, Settings, About and the backup path
 as screens on contracts that already existed, the facts phase and the slot bindings phase
 between them change what the engine can say without adding a screen, a permission or an
 event type, the event catalog is untouched, and nothing in the log format moved. A major is not warranted before the ship phase.
+**Phase 12 argues for one more minor bump on top of that, 0.12.0, versionCode 1200.** It
+adds three surfaces outside the app that did not exist before, six widgets, three
+shortcuts and a tile, which is something a person can do that they could not do the day
+before, and that is what a minor has meant every other time in this file.
 **Installed and verified on:** Pixel 8 (`shiba`), over USB, last at the end of phase 3c.
 
 **No device check has run since phase 3c, and none of them failed: none was attempted.**
-No `adb` command was issued from phases 6, 7, 8, 10 or 11, from the facts phase or from
-the slot bindings phase, and neither of those two ran a Gradle task either, because another
-workflow was building in the tree. The orchestrator runs the closing build, install and
-device pass, so every claim in the phase sections below is a claim about source and unit
-tests, and the readings from the facts and slot bindings phases are a claim about source
-alone. **Two of the three phase 6 integration gaps are
+No `adb` command was issued from phases 6, 7, 8, 10 or 11, from the facts phase, from the
+slot bindings phase or from the rules pass, and none of those three ran a Gradle task
+either, because another workflow was building in the tree. The orchestrator runs the
+closing build, install and device pass, so every claim in the phase sections below is a
+claim about source and unit tests, and the readings from the facts phase, the slot bindings
+phase and the rules pass are a claim about source alone. **The working tree also holds
+uncommitted phase 12 widget work from that other workflow**, which is not part of the rules
+pass and is not measured by anything in the rules pass section: the simulator compiles
+`domain`, `data.event` and `devtools` and reaches none of it. **Two of the three phase 6 integration gaps are
 closed**: `ClarityShell` hosts every tab, and phases 7 and 8 hung Momentum and the Report
 on the two branches that read `UnderConstruction`. The corpus is packaged by a Gradle task
 into `assets/corpus/` and all three engine surfaces read the same packaged files, so a
@@ -63,11 +73,12 @@ worse than either of them**, and the way to edit these is to replace the whole b
 | 8. Snapshots and the Report | built, awaiting the device check and one write | #6 |
 | Facts and rules, the facts phase | built, awaiting the closing build | no issue, owner approved |
 | Slot bindings, and the third simulator reading | built, awaiting the closing build | no issue, owner approved |
-| 9. Corpus | not started, gated on the two coverage readings, and now three pieces of work rather than one | #7 |
+| The rules pass, and the fourth simulator reading | built, awaiting the closing build | no issue, owner approved |
+| 9. Corpus | not started. The fourth reading settles which job it is: **authoring to fix silence**, not repeats | #7 |
 | 9b. Guidance, layer six | not started | #8 |
 | 10. First run | built, awaiting four modifiers and the device check | #9 |
 | 11. Settings, About, data | built, awaiting the device check | #10 |
-| 12. Widgets and notifications | not started | #11 |
+| 12. Widgets and notifications | built, awaiting the device check and one route | #11 |
 | 12b. Design surfaces, the polish pass | not started | #54 |
 | 13. Ship | not started | #12 |
 
@@ -326,6 +337,19 @@ them into the list above.
   the glow holds still, the bloom becomes a check appearing, and **the arc still
   depletes**, because it is information
 
+**Outside the app**, added in phase 12 and true of the source rather than of anything
+installed.
+
+- **Six widgets**, all reading one snapshot the app rewrites whenever the content
+  changes and a job refreshes every six hours. They draw the right thing today; where a
+  tap lands is the routing gap in the open questions below
+- **Three shortcuts** on a long press of the icon: `Quick capture`, `Start focus`,
+  `Today's Pulse`. The middle one lands on the Focus surface today and the other two open
+  the app, for the same reason
+- **One quick settings tile**, which says `Start focus` or `End focus` depending on the
+  session the log holds, opens the chooser from the first and ends the session from the
+  second, and asks a locked phone for its passcode before either
+
 ## What is deliberately not there yet
 
 Each of these is a phase, not an oversight. See the linked issue for why.
@@ -365,23 +389,34 @@ Each of these is a phase, not an oversight. See the linked issue for why.
 
 ## Known defects and open questions
 
-- **WorkManager pulls three permissions into the merged manifest**:
-  `FOREGROUND_SERVICE`, `WAKE_LOCK`, `RECEIVE_BOOT_COMPLETED`. None is a network
-  permission and the no internet gate passes on both variants. But
-  `MASTER_BUILD_PROMPT` section 18 says no permission beyond notifications is in
-  scope for v1, and WorkManager is required by section 3 for the Pulse reminder and
-  the widget refresh. **Open since phase 2, and phase 6 is the first thing that
-  really uses it.** The merged manifest, debug and release, today declares six
-  permissions in total: `POST_NOTIFICATIONS`, `POST_PROMOTED_NOTIFICATIONS`,
-  `VIBRATE`, `FOREGROUND_SERVICE`, `WAKE_LOCK` and `RECEIVE_BOOT_COMPLETED`.
-  `ACCESS_NETWORK_STATE`, which work-runtime also declares, is removed with
-  `tools:node="remove"` and appears in neither. Phase 6 checked that removal against
-  work-runtime 2.11.2 rather than assuming it: a request with no constraints never
-  reaches the network tracker, so **adding any constraint to any work request in this
-  app means putting that permission back**, which changes what the privacy policy
-  invites people to verify. **Still the owner's call, and it is now due at phase 11**,
-  where the privacy sheet and the permission card have to show this list to a person.
-  `DECISIONS.md` carries it as open with the recommendation stated and not taken.
+- **The WorkManager permission question is answered, phase 12, and the answer is that
+  the rule was wrong rather than the build.** Open since phase 2.
+  `MASTER_BUILD_PROMPT.md` section 18 said no permission beyond notifications was in
+  scope for v1, section 3 requires WorkManager, and 12.1 and 13.3 both schedule work
+  with it. **The merged manifest was read for both variants rather than reasoned
+  about**, at `app/build/intermediates/`, on the debug main manifest, the debug
+  packaged manifest and the release main manifest. All three carry the same list, and
+  it is seven entries and not the six this file used to claim:
+  `POST_NOTIFICATIONS`, `POST_PROMOTED_NOTIFICATIONS` and `VIBRATE` from this app,
+  `WAKE_LOCK`, `RECEIVE_BOOT_COMPLETED` and `FOREGROUND_SERVICE` from work-runtime,
+  and `<applicationId>.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` from androidx.core,
+  which is a signature permission the app both declares and uses and which nothing
+  else on the phone can hold. **`ACCESS_NETWORK_STATE` is in neither**, removed with
+  `tools:node="remove"`, and no network permission appears in either variant.
+  **Plainly: the app as built does not match what section 18 promised.** Four of the
+  seven are beyond notifications. Section 18 now states the list above and why each
+  one stays, because dropping WorkManager would cost the Pulse reminder and the widget
+  refresh, both required by name, and `VIBRATE` is required by name in `design-v3.md`
+  9. None of the four is a runtime permission and none appears in the permission list
+  a person is shown. **What is unchanged is the network half**: phase 6 checked the
+  `ACCESS_NETWORK_STATE` removal against work-runtime 2.11.2 rather than assuming it,
+  a request with no constraints never reaches the network tracker, and **adding any
+  constraint to any work request in this app means putting that permission back**,
+  which changes what the privacy policy invites people to verify and stays the owner's
+  call. `DECISIONS.md` still carries the entry as open and it can now be closed with
+  this; phase 12 could not edit that file, which another workflow held.
+  **One number in the phase 6 and phase 11 records is wrong because of this**: they say
+  six permissions, and the seventh, the androidx.core signature one, was never counted.
 - **The re-entry surface is not built and has no phase.** `MASTER_BUILD_PROMPT.md`
   14b.4 and `design-v3.md` 11.2 assigned it to phase 6, phase 6 built the two engine
   side rules that follow it and did not build the screen. Both documents now say so at
@@ -391,10 +426,18 @@ Each of these is a phase, not an oversight. See the linked issue for why.
   owner's call.** The two candidates are a phase of its own, since it is one screen and
   it is finished when it works, or phase 10, which already owns the first thing a person
   sees.
-- **One integration gap from phase 6 is still open.** `MainActivity` does not route
-  `PulseIntents.opensPulse`, so tapping the Pulse reminder opens the app at whatever tab it
-  was on. The call goes in `onCreate` and in `onNewIntent`, beside the
-  `FocusIntents.opensFocusSession` call that is already there. The other two are closed:
+- **`MainActivity` routes one intent, and phase 12 made that gap six surfaces wide.**
+  It calls `FocusIntents.opensFocusSession` and nothing else. So the Pulse reminder
+  still opens the app at whatever tab it was on, which is the phase 6 gap, and now the
+  taps that open an area, open capture into the inbox, open Momentum or start a session
+  on one item do the same, along with two of the three app shortcuts. **Every predicate
+  they need already exists**, in `WidgetIntents` and `PulseIntents`, written as
+  contracts by the phases that could not reach that Activity, and each is one call in
+  `onCreate` and one in `onNewIntent` beside the call that is there. The two surfaces
+  that do work are the `Start focus` shortcut and the quick settings tile, because both
+  send the one action that is routed. **This is the single highest value hour left in
+  the tree**: it is the difference between six widgets and three launcher surfaces that
+  deep link and the same ten that merely launch. The other two phase 6 gaps are closed:
   `ClarityShell` hosts every tab, and the corpus is packaged into `assets/corpus/` by a
   Gradle task that all three engine surfaces read from.
 - **Nothing writes `REPORT_GENERATED`, and three consequences follow that are not design
@@ -516,27 +559,33 @@ Each of these is a phase, not an oversight. See the linked issue for why.
 - **Eight of the twelve simulator checks in `CLARITY_LOGIC_ENGINE.md` 12 fail**, by design
   and with a date and an issue on each. Ten were built in phase 5 and the facts phase added
   the family coverage reading and rewrote the stage one. They are listed here so nobody has
-  to rediscover which are expected. The current numbers are in the slot bindings section
-  below and the reasoning is in `DECISIONS.md`.
-- **Nine families and two hot family stages have rules that never qualified once**, across
-  eleven simulated years and three measurements. In the Pulse, `throughput`, `burst` and
+  to rediscover which are expected. The current numbers are in the rules pass section below
+  and the reasoning is in `DECISIONS.md`.
+- **Eight families and two hot family stages have rules that never qualified once**, across
+  eleven simulated years and four measurements. In the Pulse, `throughput`, `burst` and
   `queueDrain`, unchanged since phase 5, and `accumulation` stage 2. In the Report,
-  `clearing`, `fragmented`, `netOutflow`, `queueDrained`, `weekendShift`,
-  `insufficientData` and `intakeVsOutput` stage 3. The criteria were evaluated one at a
-  time over the same years, so this is measured rather than inferred: `throughput` requires
-  completions to exceed additions inside the one day Pulse window and that criterion held
-  zero times all year. **A threshold or a window is wrong, and growing those benches would
-  change nothing.** `insufficientData` is worse than a threshold and is unreachable by
-  construction: 6.3 admits a pattern only with three weeks of data and its rule fires only
-  with fewer.
-- **`neglectedArea` and `areaGoneQuiet` are vetoed by the check that exists to stop phantom
-  areas**, and they are the only families vetoed anywhere in the run: 107 vetoes, every one
-  of them check 1, "names an area which had 0 events in this window". Both families exist
-  to observe an area that has stopped, so their rules require one to three weeks of silence
-  and check 1 forbids naming an area with no events in the window. **The rule's
-  precondition and the validator's are exact opposites.** This is a conflict between
-  section 8 and two families in `CORPUS_2_REPORT.md`, thirty seven authored lines, and it
-  is recorded as open in `DECISIONS.md` rather than settled by a builder.
+  `clearing`, `fragmented`, `netOutflow`, `queueDrained`, `weekendShift` and
+  `intakeVsOutput` stage 3. **The rules pass diagnosed every one of them at the rule that
+  carries it and deliberately moved no threshold**, because every stage threshold in a
+  ladder is a corpus stage header that `StageRangeTest` asserts against, so lowering one
+  would make the engine say a sentence about a day that did not happen. Three of them,
+  `queueDrain`, `queueDrained` and `clearing`, are a real anchoring error and are waiting on
+  a fact 3.1 does not declare: the queue an area held immediately before the promotion that
+  took it to zero, rather than the queue read at the window boundary. The other five are the
+  persona set rather than the rule, and the rules pass entry in `DECISIONS.md` says which is
+  which. **`insufficientData` has left this list**: it was unreachable by construction, and
+  it is now rendered by the Report itself rather than by a rule.
+- **The check 1 conflict is closed, and this bullet is kept rather than deleted because the
+  slot bindings section below still records it as open.** `neglectedArea` and
+  `areaGoneQuiet` were the only families vetoed anywhere in the run, 107 vetoes, every one
+  of them check 1, because their rules require an area to have been silent for one to three
+  weeks and check 1 forbade naming an area with no events in the window. The owner ruled
+  that **the check was right and the writing was wrong**, and it is narrowed rather than
+  widened: `ClarityRule.absenceSubject` marks a rule whose subject is the silence, and
+  `AbsenceSubject` grants the exception only to an area with a real lifetime, not new, and
+  a measured `daysSinceLastEvent`. A brand new empty area is still refused by every rule.
+  The fourth measurement records **0 vetoes across the whole run and 92 absences named on
+  purpose.**
 - **The tutorial cannot start**, phase 10. Four of its five spotlight targets do not wear
   `Modifier.tutorialTarget`: only the tab bar does, and `TutorialTargets.ready` requires
   all five. The overlay therefore waits and `hasSeenTutorial` is never written, which is
@@ -559,6 +608,172 @@ Each of these is a phase, not an oversight. See the linked issue for why.
   cold start rather than immediately. The erase itself is immediate. This is a consequence
   of the rule that makes beat 3's write survive the reveal, not an oversight, but it is a
   behavior a device check will notice and should not report as a defect.
+
+---
+
+## The rules pass delivered
+
+**Not on the issue board.** The owner ordered it after reading the third measurement,
+which found that Pulse silence at 68 percent was **mostly trigger windows and two
+specification contradictions rather than corpus depth**, and that emptying the filtered
+column entirely would still leave silence at 31 percent with six of eleven personas
+outside the band. The pass was to fix the rules. Phase 9 writes the sentences and comes
+after it.
+
+- **The pattern section waits three weeks.** `Selector.PATTERN_COOLDOWN_DAYS` is 21,
+  applied as a floor on a `REPORT_PATTERN` selection rather than on a family's
+  declaration, because `decliningActivity` is a headline family and a pattern family at
+  once and the two share one `(family, subjectId)` cooldown key. The flat Report 14 could
+  not hold anybody out of anything: a report is recorded against its week start and
+  selected against its week end, so two consecutive reports are 14 days apart on the only
+  clock `FiringHistory` keeps.
+- **Check 1 is narrowed, and the specification conflict the last phase refused to settle
+  is closed.** `ClarityRule.absenceSubject` marks a rule whose subject is an area's
+  silence, and `AbsenceSubject` in `domain.engine.validate` holds the one exception that
+  both implementations of check 1 read. Three rules carry the flag: `neglectedArea` at
+  both stages, `areaGoneQuiet` and `areaRevival`. Phantom protection is untouched, because
+  the exception requires a real lifetime, a non new area and a measured
+  `daysSinceLastEvent` rather than the never sentinel.
+- **A queue that emptied has to have been finished rather than deleted.**
+  `drainedByFinishing()` is one criterion shared by `pulse.queueDrain` at both stages and
+  by `report.observation.queueDrained`, and `drained.hadAQueue` is gone as padding that
+  bought a free point of specificity.
+- **`insufficientData` left the engine.** Its rule was unreachable by construction, the
+  composer asking for a pattern only at three weeks of data and the rule requiring fewer.
+  `ReportRules.RENDERED_DIRECTLY` names it, `ReportComposer` renders it through
+  `ReportLanguage.insufficientData`, and `CatalogIntegrity` reads the new register so a
+  family cannot leave the engine without somebody deciding it should. **Layer 5 is not
+  bypassed**: the line still goes through `VariantChoice`, `SlotRenderer` and
+  `ClarityValidator`.
+- **Not one threshold was moved.** Every stage threshold in a ladder is a corpus stage
+  header that `StageRangeTest` asserts against, so moving one to make a family fire in a
+  measurement run would make the engine say a sentence about a day that did not happen.
+  The eight families that never qualify are diagnosed instead, at the rule that carries
+  each of them.
+- **Not one corpus line was written, added or edited.** That is phase 9.
+- **The simulator now reports how each report section shared its slots out.**
+  `SimulationAggregate.sectionSlots` measures concentration rather than fill, because a
+  section can be 99 percent full while three families take everything, which is exactly
+  what the pattern section was doing and what nothing in the run reported until somebody
+  read a dump by hand.
+
+### What the simulator measured, beside the three earlier baselines
+
+The same eleven personas, a full simulated year each. 3,148 opens, 15,281 events, 451
+reports, 419 pattern slots, 11,901 engine invocations.
+
+| gate | target | phase 5 | facts | bindings | after the rules pass |
+|---|---|---|---|---|---|
+| Pulse silence, all personas | 8 to 25 percent of opened days | 76 percent | 73 percent | 68 percent | **68 percent, unchanged** |
+| Pulse silence, per persona | the same band | 43 to 98 | 42 to 98 | 40 to 97 | **40 to 97, unchanged** |
+| Pulse families that ever fired | 11 of 11 | 6 of 11 | 7 of 11 | 8 of 11 | **8 of 11, unchanged** |
+| every family the corpus declares fires | 78 of 78 | not measured | 58 of 78 | 60 of 78 | **65 of 78** |
+| every stage of every hot family fires | all | 29 hot, one gap | 31 hot, two gaps | 33 hot, two gaps | **35 hot, the same two gaps** |
+| no variant repeats inside ninety days | none | 7,384 | 7,430 | 7,445 | **7,376, tightest after 1 day** |
+| no family over a fifth of a year's Pulses | 20 percent | 27 to 60 | 25 to 57 | 25 to 51 | **25 to 51, unchanged** |
+| no two consecutive leads share a band | none | 715 | 725 | 716 | **712 across 451 reports** |
+| no three parallel numeric clauses | none | 27 runs | 37 runs | 36 runs | **41 runs** |
+| layer 6 silence | at least 15 percent | not measurable | not measurable | not measurable | **not measurable** |
+
+Three readings the earlier tables could not carry:
+
+| reading | before | after |
+|---|---|---|
+| layer 5 vetoes across the run | 107, every one check 1 | **0** |
+| pattern slots | 416 of 419 filled, 8 families ever held one, top three took 402 | **401 of 419 filled, 12 families held one, top three took 296** |
+| absences named on purpose | 0, all 107 vetoed | **92** |
+
+The four enforced checks still pass. Family coverage in full: PULSE 8 of 11,
+REPORT_HEADLINE 13 of 17, REPORT_OBSERVATION 20 of 21, REPORT_PATTERN 12 of 16,
+MOMENTUM_HEADLINE 8 of 8, AREAS_BANNER 4 of 5. The five families that gained a voice are
+all on the Report: `neglectedArea` 71, `growingQueues` 55, `areaGoneQuiet` 21,
+`focusHabitForming` 19 and `broadeningFocus` 1. **One of the thirteen still counted quiet
+left the engine on purpose**, `insufficientData`, and `SimulationChecks` now says so on
+its own failure line.
+
+**The pattern section, before and after**, which is the reading the cooldown was set by:
+`reportedVsActual` 233 to 170, `comebackPattern` 98 to 71, `consistentRhythm` 71 to 41,
+and `growingQueues` 0 to 55, `areaGoneQuiet` 0 to 21, `focusHabitForming` 0 to 19,
+`decliningActivity` 2 to 13, `queueEquilibrium` 2 to 4, `broadeningFocus` 0 to 1. Empty
+slots rose from 3 to 18, which the cooldown was documented in advance as costing.
+
+### The reading, and it names which job phase 9 is
+
+**Pulse silence is 68 percent and it did not move by a single day.** 2,167 silent days
+out of 3,148 opens, splitting into **1,185 where a rule qualified and every candidate was
+filtered, 971 where nothing qualified at all, and 11 with too little data**, which are the
+same three numbers the third measurement produced.
+
+**The cause is that the pass moved the Report and the Pulse was never in its reach.** The
+pattern cooldown applies to `REPORT_PATTERN` selections; the check 1 narrowing is read by
+`ClarityValidator` and `ReportIntegrity` for three families that only exist on the Report.
+The one instrument that touches a Pulse rule, `drainedByFinishing`, touches `queueDrain`,
+which fired zero times before the pass and zero times after. A pass with no Pulse
+instrument in it cannot move a Pulse number.
+
+**The owner's determination was stated in advance and the number decides it.**
+
+> If silence lands near band, phase 9 is authoring to fix repeats. If it does not, phase 9
+> is authoring to fix silence.
+
+68 against a ceiling of 25 is not near band. **Phase 9 is authoring to fix silence.**
+
+**What authoring alone could reach, measured rather than estimated.** Emptying the
+filtered column completely, which is the most a deeper bench can ever do, leaves 982
+silent days out of 3,148, which is **31 percent**, six points above the ceiling. Per
+persona at that floor: `queueHoarder` 8, `sporadic` 9, `brandNew` 14, `highFocus` 16,
+`balancedAcrossFour` 21, `abandoning` 26, `lowFocus` 42, `heavySingleArea` 44,
+`acceptsEveryPlan` 45, `fastCompleter` 47, `longDormantRevival` 50. **Five of eleven
+personas reach the band and six do not**, and the six are not the worst six today:
+`balancedAcrossFour` is the worst persona in the run at 97 percent and lands in band at
+the floor, while `lowFocus` sits at 63 today and would still be at 42.
+
+**The owner's standing instruction applies and this phase stops here.**
+
+> If after the rules pass and the hot family growth silence is still outside the band, do
+> not keep grinding. Report the number, state the cause, and move on. An app that ships
+> with 30 percent silence is better than one that does not ship.
+
+The number is 68 percent, the floor authoring can reach is 31 percent, the cause is above,
+and **no further rules pass is proposed.**
+
+### Two deferrals the owner authorized
+
+- **Warm and long tail families stay at their current depth for v1.** 11.1 grows hot
+  families from four to eight lines per stage to sixty to a hundred; the other two tiers
+  are not grown with them. A family that fires five times a year cannot repeat itself
+  inside ninety days however thin its bench is, so lines added there buy variety nobody
+  encounters.
+- **Variant repeats at roughly 7,400 are the honest baseline, not a defect.** 7,376 here,
+  against 7,445, 7,430 and 7,384 before it. 7.6 excludes a variant for ninety days and the
+  benches are the size phase 5 found them. **The number is what phase 9 moves, and its
+  movement is how phase 9 is measured.** A session that finds it high has found the
+  baseline rather than a regression.
+
+### What is deliberately not in this pass
+
+- **Not one corpus line.** Unchanged across four phases and still the owner's condition.
+- **No threshold moved.** See above. The eight families that never qualify are diagnosed
+  in place and three of them are waiting on a fact rather than on a number.
+- **The eight week pattern cooldown that would rotate every starved family.** Three weeks
+  rotates two pairs at the head and reached four more families. Rotating all seven would
+  take eight weeks and cost more empty slots, and that number is the owner's to set.
+- **Splitting the `weekendShift` bench.** Three of its five lines claim absolute silence
+  and two claim a share, and one rule cannot encode both without letting the looser branch
+  select `Nothing has happened on a weekend in four weeks` for a month that had one. That
+  is authoring work.
+- **Layer 6**, still phase 9b, still not measurable.
+
+### What the closing check still has to find
+
+**No Gradle task and no `adb` command was run in this pass either.** The readings were
+produced the way the two before them were: by compiling `domain`, `data.event` and
+`devtools` with a driver out of tree against the committed corpus files and running the
+year. The devtools sources compile clean with warnings as errors. **The unit suite has not
+been run on this work.** The closing build settles whether `verifyClarity` is green and
+whether `SimulatorTest`, `PatternCooldownTest`, `DarkFamilyRulesTest`, `SelectorTest`,
+`CatalogIntegrityTest`, `ValidatorVetoTest`, `ReportIntegrityVetoTest`,
+`ReportLanguageTest` and `ReportCompositionTest` all pass.
 
 ---
 
@@ -794,6 +1009,125 @@ against the committed corpus files. **The unit suite has not been run on this wo
 the first thing the closing build settles is whether `verifyClarity` is green, and the
 second is whether `SimulatorTest` still passes with two checks added to the report and one
 of them measuring against a new denominator.
+
+---
+
+## Phase 12 delivered
+
+Widgets, the launcher surfaces and the permission question, issue #11.
+`MASTER_BUILD_PROMPT.md` 13.3 and 13.5, `design-v3.md` section 12, issues #33 to #41.
+
+**Built by three slices working in one tree at the same time**, which is why this section
+is written by one of them rather than by each: the widget slices owned code and this one
+owned the record. Everything below about the widgets is a claim about source that was read
+rather than written here, and it is marked where it matters.
+
+- **Six widgets**, in `widget/`, on `androidx.glance`. `Next Up`, `First Step`,
+  `All Areas`, `Quick Capture`, `Focus Countdown` and `Rhythm`. Three of them name an
+  optional configuration screen, `WidgetConfigurationActivity`, so a widget draws on the
+  automatic area the moment it is placed and is pinned to one afterward if the person
+  wants that
+- **One snapshot they all read**, `data/widget/ClarityWidgetSnapshot.kt`, one JSON
+  document in one DataStore file, written by a collector `ClarityApp` installs that
+  follows the projection and rewrites only when the content changed, plus
+  `WidgetRefreshWorker` every six hours
+- **Three static app shortcuts**, `res/xml/shortcuts.xml` and one `meta-data` line on the
+  launcher activity: `Quick capture`, `Start focus`, `Today's Pulse`
+- **One quick settings tile**, `tile/FocusTileService.kt`, which starts or ends a focus
+  session from the shade and reflects the running session live
+- **Two contract tests**, `ShortcutContractTest` and `FocusTileContractTest`, which read
+  the resource and the manifest, because neither a shortcut nor a tile can be reached from
+  a unit test and both fail silently when they are declared wrong
+- **The permission question, answered**, in the open questions above and in section 18
+
+### The rule this phase was most likely to break
+
+**Widgets never read a corpus and never run the engine**, 13.3 and 11.1. The boundary is
+the snapshot type and it is enforced by what that type is allowed to contain: facts, and
+finished sentences the engine rendered before they were stored. No key, no family, no
+stage, no fact reference, so there is nothing on the far side that could be realized even
+if somebody tried. The accepted plan line the deferred `One Thing` widget will need is
+carried whole rather than as the four keys it was built from, for exactly this reason.
+
+The tile is outside that rule and deliberately so. It shows no sentence at all: two fixed
+labels, `Start focus` and `End focus`, which are interface labels in `strings_launcher.xml`
+like every other control in the app.
+
+### Seven decisions where the obvious answer was rejected
+
+1. **`Start focus` opens the chooser rather than starting a session**, on the shortcut and
+   on the tile, even when exactly one area has an active item and the choice would be
+   unambiguous. Issue #40 leaves this to the builder. A session is a row in a log that only
+   ever gains rows, the person has not seen a screen yet, and the `First Step` widget had
+   already answered the same question the same way, so all three launcher surfaces now say
+   one thing instead of two
+2. **The tile keeps one icon in both states.** `timer`, with the label and the tile's own
+   active state carrying the change. Swapping the icon too would be a second separation
+   device on one element, and the third signal is the one that eventually disagrees with
+   the other two
+3. **The tile carries no subtitle and no item title.** The shade is readable over a lock
+   screen. What somebody is working on is not for whoever is holding the phone
+4. **Both halves of the tile run behind `unlockAndRun`.** Ending could be done without it,
+   since it opens nothing, but two halves of one tile with two different rules about a
+   locked phone is a tile nobody can predict, and ending writes to the log
+5. **The shortcuts' short label and long label are the same three names.** A launcher shows
+   the long one where it fits, so a more descriptive long label would have been the string
+   most people actually saw, quietly replacing the three names the design chose
+6. **The shortcut icons carry their own disc.** A launcher does not tint a shortcut icon
+   and draws it on a popup that follows the phone's theme, so a bare ink glyph is invisible
+   in one of the two themes. The disc is the app icon's own #141A2E with the mark's #F3F1EC
+   on it
+7. **The package name inside each shortcut intent is a generated string resource.**
+   `${applicationId}` reaches the manifest and not a resource file, and the debug variant
+   carries `.debug`, so a literal would have been three dead shortcuts on every build a
+   device check runs on. `app/build.gradle.kts` generates `clarity_application_id` per
+   build type from the same constant that sets `applicationId`
+
+### What is deliberately not in this phase
+
+- **The two optional widgets**, `This Week` and `One Thing`. 13.3 makes them optional and
+  the snapshot carries a slot for each, so building them later is a composer change and a
+  widget rather than a change to the shape the other six read
+- **Preview images.** `design-v3.md` 12.1 requires one generated from the real widget and
+  never from a mockup, and a hand written preview layout is that mockup with a different
+  file extension. The six ship with none, the picker shows the loading layout, and each
+  resource file says so at the line the attribute would sit on. It needs a device
+- **Dynamic and pinned shortcuts**, and `reportShortcutUsed` with them. 13.5 rules out a
+  list that reorders itself around what somebody did most, because that is a measurement of
+  the person. `ShortcutContractTest` asserts no file in `src/main/java` calls any of the
+  four APIs that would publish one
+- **A confirm on the tile's `End`.** The same reasoning `FocusActionReceiver` gives for the
+  Live Update's `End` action: a confirm on this surface could only be a second notification
+  or a screen, and a labeled control in the shade is already a deliberate tap
+- **`SETTING_CHANGED` for the tile**, because nothing on the tile is a setting
+
+### The one thing that stops this phase closing, and it is not on the phone
+
+**`MainActivity` routes one intent.** The Pulse reminder, four of the six widget taps and
+two of the three shortcuts send actions nothing routes, so they open the app rather than a
+surface. The predicates all exist, in `WidgetIntents` and `PulseIntents`, written as
+contracts by the phases that could not reach that Activity. It is one call each in
+`onCreate` and `onNewIntent`, it is recorded in the open questions above, and until it
+lands most of this phase deep links only as far as the app.
+
+### What the device check still has to find
+
+**No Gradle task and no `adb` command was run in this phase.** Another workflow was
+building in the tree, so the orchestrator runs the build, the unit suite and the device
+pass, and everything above is a claim about source.
+
+- Whether the three shortcuts appear on a long press of the icon, on the debug install,
+  with the labels unclipped on a Pixel 8, and whether each lands where it should once the
+  routing above exists
+- Whether the tile appears in the shade's tile picker, and whether adding it, starting a
+  session, extending it from the Live Update and ending it from the tile leaves the tile,
+  the notification and the app agreeing
+- Whether the tile behaves as stated on a locked phone: a passcode prompt first, then the
+  tap
+- Whether every widget draws in both themes, at the smallest grid size, and whether a
+  completion updates them
+- `adb logcat` after each, per CLAUDE.md. Two of the three surfaces here can only fail
+  silently
 
 ---
 

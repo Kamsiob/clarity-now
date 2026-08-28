@@ -91,6 +91,63 @@ class ReportCompositionTest {
         assertTrue(note!!.variantKey, note.variantKey.startsWith("ed.none."))
     }
 
+    // ------------------------------------ 3.16, the pattern section's empty state
+
+    /**
+     * Under three weeks the section says so, and it says so without a rule.
+     *
+     * `insufficientData` was written as a pattern rule and could never fire: `compose` asks
+     * the engine for a pattern only when there are three weeks of snapshots, and the rule
+     * required fewer than three, so the two conditions were complements. The owner's ruling
+     * is that it was never a pattern in the first place, it is the section's empty state,
+     * and the Report renders it directly. `ReportComposer.patternNote` carries the full
+     * reasoning; this is the behavior it produces.
+     */
+    @Test
+    fun `under three weeks the pattern section is the corpus empty state rather than a pattern`() {
+        val early = ValidateFixture.facts(
+            history = ValidateFixture.history(daysSinceInstall = 16, weeksOfData = 2),
+        )
+        val report = composed(
+            listOf(ReportFixture.workShare(), ReportFixture.focus()),
+            facts = early,
+        )
+        assertNull("a pattern needs three weeks behind it", report.pattern)
+        val note = report.patternNote
+        assertNotNull("the corpus carries four pt.none lines and one of them should be here", note)
+        assertTrue(note!!.variantKey, note.variantKey.startsWith("pt.none."))
+    }
+
+    /**
+     * And with the history behind it the section is a pattern, with no empty state beside it.
+     *
+     * The two are complements, which is what lets one block on the screen draw either.
+     */
+    @Test
+    fun `with three weeks behind it the section is a pattern and carries no empty state`() {
+        val report = composed(
+            listOf(ReportFixture.workShare(), ReportFixture.focus()),
+            pattern = ReportFixture.pattern(),
+        )
+        assertNotNull(report.pattern)
+        assertNull("an empty state beside a pattern would draw the section twice", report.patternNote)
+    }
+
+    /**
+     * The rule is gone, and this is the test that says so out loud.
+     *
+     * Leaving the rule in place beside the direct render would give the section two sources
+     * that disagree the first time somebody edits one of them.
+     */
+    @Test
+    fun `insufficientData has no rule anywhere in the catalog`() {
+        assertTrue(
+            "the pattern section's empty state is rendered by ReportComposer.patternNote, not " +
+                "selected: a rule for it would be a second source for one line",
+            CorpusFixture.catalog.rules.none { it.family == "insufficientData" },
+        )
+    }
+
     // ------------------------------------------------------- 9.2, one area, two mentions
 
     @Test

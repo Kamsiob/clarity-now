@@ -101,6 +101,40 @@ object SimulationAggregate {
         val complete: Boolean get() = missing.isEmpty()
     }
 
+    /**
+     * One Report section, and how its slots were shared out.
+     *
+     * **A section is a fixed number of slots and a family wins one or loses it**, which is
+     * a different scarcity from the one every reading above measures. A Pulse family that
+     * qualifies and is filtered leaves a silent day; a pattern family that qualifies and is
+     * outranked leaves a slot filled by somebody else, so the section looks healthy from
+     * every angle except the family's. That is how the pattern section held 416 of 419
+     * slots while three families took 402 of them and seven that qualified every week took
+     * none, and nothing in the run reported it until somebody read a dump by hand.
+     *
+     * So concentration is measured rather than fill. [topThreeShare] is the number the
+     * cooldown in `Selector.PATTERN_COOLDOWN_DAYS` was set to move, and [holders] is the
+     * number it was set to raise.
+     */
+    data class SlotReading(
+        val surface: SimulatedSurface,
+        val slots: Int,
+        val filled: Int,
+        val byFamily: List<FamilyReading>,
+    ) {
+        val empty: Int get() = slots - filled
+
+        /** Families that ever took a slot in this section. */
+        val holders: Int get() = byFamily.size
+
+        /** What the three most frequent holders took, as a share of the filled slots. */
+        val topThreeShare: Int get() = SimulationSummary.percent(byFamily.take(TOP).sumOf { it.firings }, filled)
+
+        private companion object {
+            const val TOP = 3
+        }
+    }
+
     // ------------------------------------------------------------------ measurements
 
     /** Every persona's Pulse silence, then every persona's together. */
@@ -144,6 +178,27 @@ object SimulationAggregate {
                 }
                 .sortedWith(compareByDescending<FamilyReading> { it.firings }.thenBy { it.family })
         }
+    }
+
+    /**
+     * The three Report sections, and how concentrated each one's slots are.
+     *
+     * Ordered as the report is read: the headline, the four observations, the one pattern.
+     * A section with no invocations at all is still returned, with zeroes, because a
+     * section that stopped being invoked is a finding rather than an absence.
+     */
+    fun sectionSlots(runs: List<SimulationRun>): List<SlotReading> = REPORT_SECTIONS.map { surface ->
+        val invocations = runs.flatMap { it.of(surface) }
+        val spoken = invocations.mapNotNull { it.spoken }
+        val counts = spoken.groupingBy { it.familyKey }.eachCount()
+        SlotReading(
+            surface = surface,
+            slots = invocations.size,
+            filled = spoken.size,
+            byFamily = counts.entries
+                .map { FamilyReading(surface.purpose, it.key, it.value, rules = 0) }
+                .sortedWith(compareByDescending<FamilyReading> { it.firings }.thenBy { it.family }),
+        )
     }
 
     /** Every hot family, and the stages of it a year of eleven lives reached. */
@@ -193,6 +248,7 @@ object SimulationAggregate {
         append(silenceBlock(runs))
         append(familyBlock(runs))
         append(stageBlock(runs))
+        append(slotBlock(runs))
     }
 
     private fun silenceBlock(runs: List<SimulationRun>): String = buildString {
@@ -269,8 +325,28 @@ object SimulationAggregate {
         }
     }
 
+    private fun slotBlock(runs: List<SimulationRun>): String = buildString {
+        appendLine()
+        appendLine("-- how each report section shared its slots out -----------------------")
+        for (reading in sectionSlots(runs)) {
+            appendLine(
+                reading.surface.label.padEnd(NAME_WIDTH) + reading.slots.toString().padStart(NUMBER_WIDTH) +
+                    " slots, " + reading.filled + " filled, " + reading.empty + " empty, " +
+                    "${reading.holders} families held one, top three took ${reading.topThreeShare} percent",
+            )
+            appendLine("  " + reading.byFamily.joinToString(", ") { "${it.family} ${it.firings}" }.ifEmpty { "none" })
+        }
+    }
+
     /** What every persona's Pulses together are called in the silence table. */
     const val ALL_PERSONAS = "all personas"
+
+    /** The three sections of a report, in the order a person reads them. */
+    private val REPORT_SECTIONS = listOf(
+        SimulatedSurface.REPORT_HEADLINE,
+        SimulatedSurface.REPORT_OBSERVATION,
+        SimulatedSurface.REPORT_PATTERN,
+    )
 
     private const val RULE = "================================================================"
     private const val NAME_WIDTH = 22

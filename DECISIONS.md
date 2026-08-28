@@ -71,6 +71,302 @@ The old entry stays where it is, wrong, dated, and useful.
 
 ---
 
+## August 27, 2026: the rules pass, and the fourth measurement
+
+The pass the owner ordered after reading the third measurement. The finding it was
+ordered on was that Pulse silence at 68 percent was **mostly trigger windows and two
+specification contradictions rather than corpus depth**, and that if authoring emptied
+the filtered column entirely, silence would still be 31 percent and six of eleven
+personas would still be outside the band.
+
+This entry records what the pass changed, what the fourth run of the same eleven
+personas over the same simulated year then said, and the determination the owner asked
+for: **which job phase 9 is.**
+
+**Not one corpus line was written, added or edited.** That is phase 9 and it comes
+after this.
+
+### The readings, beside the three earlier baselines
+
+Eleven personas, a full simulated year each. 3,148 opens, 15,281 events, 451 reports,
+419 pattern slots, 11,901 engine invocations. The three earlier columns are the tables
+in the three entries below this one and none of them is changed.
+
+| gate, `CLARITY_LOGIC_ENGINE.md` 12 | target | phase 5 | facts | bindings | after the rules pass |
+|---|---|---|---|---|---|
+| Pulse silence, every persona together | 8 to 25 percent of opened days | 76 percent | 73 percent | 68 percent | **68 percent, unchanged** |
+| Pulse silence, per persona | the same band | 43 to 98 | 42 to 98 | 40 to 97 | **40 to 97, unchanged** |
+| Pulse families that ever fired | 11 of 11 | 6 of 11 | 7 of 11 | 8 of 11 | **8 of 11, unchanged** |
+| every family the corpus declares fires | 78 of 78 | not measured | 58 of 78 | 60 of 78 | **65 of 78** |
+| every stage of every hot family fires | all | 29 hot, one gap | 31 hot, two gaps | 33 hot, two gaps | **35 hot, the same two gaps** |
+| no variant repeats inside ninety days | none | 7,384 | 7,430 | 7,445 | **7,376, tightest after 1 day** |
+| no family over a fifth of a year's Pulses | 20 percent | 27 to 60 | 25 to 57 | 25 to 51 | **25 to 51, unchanged** |
+| no two consecutive report leads share a band | none | 715 | 725 | 716 | **712** |
+| no three consecutive parallel numeric clauses | none | 27 runs | 37 runs | 36 runs | **41 runs** |
+| layer 6 silence | at least 15 percent of reports | not measurable | not measurable | not measurable | **not measurable, layer 6 is phase 9b** |
+
+Three readings the earlier tables did not carry, because the rules pass is the first
+one that could move them:
+
+| reading | before | after |
+|---|---|---|
+| layer 5 vetoes across the whole run | 107, every one of them check 1 | **0** |
+| pattern slots, and how concentrated they are | 416 of 419 filled, 8 families ever held one, the top three took 402 of 416 | **401 of 419 filled, 12 families held one, the top three took 296 of 401** |
+| areas named with no events in the window, on purpose | 0, because all 107 were vetoed | **92** |
+
+The four enforced checks still pass.
+
+**Family coverage in full:** PULSE 8 of 11, REPORT_HEADLINE 13 of 17,
+REPORT_OBSERVATION 20 of 21, REPORT_PATTERN 12 of 16, MOMENTUM_HEADLINE 8 of 8,
+AREAS_BANNER 4 of 5. The five families that gained a voice are all on the Report:
+`neglectedArea` 71 firings, and the pattern families `growingQueues` 55,
+`areaGoneQuiet` 21, `focusHabitForming` 19 and `broadeningFocus` 1. **One of the
+thirteen still counted quiet left the engine on purpose** and cannot ever fire here:
+`insufficientData` is rendered by the Report itself, and `SimulationChecks` now says so
+on its own failure line rather than leaving a reader to chase it.
+
+**Pulse silence per persona**, unchanged to the day: `queueHoarder` 40, `brandNew` 42,
+`heavySingleArea` 61, `highFocus` 61, `sporadic` 62, `lowFocus` 63, `acceptsEveryPlan`
+63, `abandoning` 75, `longDormantRevival` 78, `fastCompleter` 92, `balancedAcrossFour`
+97. Not one is in the band.
+
+### The reading the owner asked for, and it decides phase 9
+
+**Silence is 68 percent, and it did not move by a single day.** 2,167 silent Pulse days
+out of 3,148 opens, splitting into **1,185 where a rule qualified and every candidate
+was filtered, 971 where nothing qualified at all, and 11 with too little data.** Those
+are the same three numbers the third measurement produced, in the same order, from the
+same personas.
+
+**The cause is not a failure of the pass. It is that the pass moved the Report and the
+Pulse was never in its reach.** Of the three instruments built here, two are Report
+instruments by construction: the pattern cooldown applies to `Purpose.REPORT_PATTERN`
+selections and the check 1 narrowing is consumed by `ClarityValidator` and
+`ReportIntegrity` on families that only exist on the Report. The third, the
+`drainedByFinishing` guard, is the only one that touches a Pulse rule, and it touches
+`queueDrain`, which fired zero times before the pass and zero times after. **A pass with
+no Pulse instrument in it cannot move a Pulse number**, and it did not.
+
+**So the determination is silence, not repeats.**
+
+> If silence lands near band, phase 9 is authoring to fix repeats. If it does not,
+> phase 9 is authoring to fix silence.
+
+68 against a ceiling of 25 is not near band. **Phase 9 is authoring to fix silence.**
+
+**What authoring alone could reach from here, measured rather than estimated.** If
+phase 9 emptied the filtered column completely, which is the most a deeper bench can
+ever do, 982 silent days would remain out of 3,148, which is **31 percent**, still six
+points above the ceiling. Per persona at that floor: `queueHoarder` 8, `sporadic` 9,
+`brandNew` 14, `highFocus` 16, `balancedAcrossFour` 21, `abandoning` 26,
+`lowFocus` 42, `heavySingleArea` 44, `acceptsEveryPlan` 45, `fastCompleter` 47,
+`longDormantRevival` 50. **Five of eleven personas reach the band and six do not**, and
+the six are not the worst six today: `balancedAcrossFour` is the worst persona in the
+run at 97 percent and lands in band at the floor, while `lowFocus` sits at 63 today and
+would still be at 42.
+
+**That is the same floor the third measurement reported, and it is worth saying why it
+did not improve either.** The floor is the days where nothing qualified plus the days
+with too little data, and moving it means making a rule qualify on a day it does not
+qualify on now. The rules pass deliberately moved no threshold, for the reason the next
+section gives, so the floor could not move.
+
+**The owner's standing instruction applies and this entry stops here.**
+
+> If after the rules pass and the hot family growth silence is still outside the band,
+> do not keep grinding. Report the number, state the cause, and move on. An app that
+> ships with 30 percent silence is better than one that does not ship.
+
+The number is 68 percent, the floor is 31 percent, the cause is stated above, and no
+further rules pass is proposed.
+
+### What the pass decided, and every one of them is recorded here
+
+Six decisions were made by the builders in this pass. Each is a decision rather than a
+repair, and each is stated with what lost.
+
+**1. The pattern section waits three weeks, and the floor sits on the selection rather
+than on the family.** `Selector.PATTERN_COOLDOWN_DAYS` is 21, applied with `maxOf`
+against whatever the family declares, and only to `Purpose.REPORT_PATTERN`. *Why:* a
+report is recorded against its week start key and selected against its week end, so two
+consecutive reports are 14 days apart on the only clock `FiringHistory` keeps, and the
+flat Report 14 holds nobody out of anything. That is what 416 of 419 slots filled with
+three families taking 402 of them looks like from the other end. *Considered and
+rejected:* raising the number on the declaration in `EngineFamilies`, which loses
+because `decliningActivity` is a headline family and a pattern family at once and the
+two share one `(family, subjectId)` key, so a longer declaration would have held the
+headline back as well and only the pattern section was ordered to wait. *What it did
+not buy, stated in advance and confirmed by the run:* three weeks rotates two pairs at
+the head, so it raised the holders from 8 to 12 and dropped the top three from 96
+percent of filled slots to 73, and it did not reach all seven starved families, which
+would take eight weeks. It also cost fill, exactly as predicted: the pattern section
+went from 3 empty slots to 18. *Revisit if:* the owner wants the remaining four pattern
+families to hold a slot, at which point the number is eight weeks and the cost is more
+empty slots.
+
+**2. Check 1 is narrowed rather than the three silence families loosened.**
+`ClarityRule.absenceSubject` marks a rule whose subject is an area's silence, and
+`AbsenceSubject` in `domain.engine.validate` holds the one exception both
+implementations of check 1 consult. A flagged rule may name an area with no events in
+the window only when the area has at least `FactExtractor.NEGLECT_LIFETIME_EVENTS`
+lifetime events, is not new, and has a measured `daysSinceLastEvent` rather than the
+never sentinel. *Why:* this was the specification conflict the third measurement
+recorded as open and refused to settle. `neglectedArea`, `areaGoneQuiet` and
+`areaRevival` exist to say an area has been still, so every candidate they ever
+produced named an area with no events and every one was vetoed, 107 times across a
+year, all of them check 1. The rule's precondition and the validator's were exact
+opposites. The owner ruled that the check was right and the writing was wrong: check 1
+exists to stop a phantom, meaning an area that never had activity being named as though
+it had, and a family whose subject **is** the absence has to name an area with no
+events. *Considered and rejected:* dropping check 1 for area subject rules, which loses
+because a brand new empty area would then be nameable and that is the failure a person
+cannot recover from. *Result:* vetoes went from 107 to 0, 92 absences are named on
+purpose across the run, and no phantom appeared. *Revisit if:* a fourth family wants the
+flag. A rule that wants it because its candidates are being vetoed is a rule with the
+wrong criteria.
+
+**3. `AbsenceSubjectRules` is a static key set rather than a catalog threaded into the
+validator.** *Why:* `ClarityValidator` is constructed with a zone and nothing else at
+five call sites, and layer 5 is handed a `Candidate` carrying a rule key rather than a
+rule. Threading a catalog through all five to read one boolean would create a place
+where somebody could hand the validator a catalog whose flags disagreed with the one
+the engine selected from, which is a worse failure than the one it solves. An unknown
+key answers false, so a hand built test candidate with an invented key is not quietly
+granted the exception. *Revisit if:* `absenceSubject` ever stops being decidable from
+the rule key alone.
+
+**4. A queue that emptied has to have been finished, not deleted.**
+`drainedByFinishing()` requires `completionsInWindow >= queueLengthAtWindowStart` and is
+carried by `pulse.queueDrain` at both stages and by `report.observation.queueDrained`.
+*Why:* `RollupFacts.queueDrainedAreaIds` reads a queue length at each end of the window
+and never asks how the items left, and both benches claim somebody finished something.
+The realizer may select any line on a bench, so one false line is enough to require the
+guard. It is stricter than the truth by one item in exactly one case, an area that
+began the window holding a queue with nothing active, and one item of slack toward
+silence is the right direction for a family that claims a completion. *Alongside it,
+`drained.hadAQueue` was deleted as padding*: membership in `queueDrainedAreaIds` already
+carries a starting queue of three or more, so restating it could never separate one fact
+set from another and bought a free point of specificity, which is the one number
+`ClarityRule` says must never be authored. *Revisit if:* the drain facts ever record how
+an item left a queue, at which point the guard becomes exact instead of conservative.
+
+**5. `insufficientData` leaves the engine.** `ReportRules.RENDERED_DIRECTLY` names it,
+`ReportComposer` renders it through `ReportLanguage.insufficientData`, and
+`CatalogIntegrity.everyFamilyHasARule` reads the new register. *Why:* the rule was
+unreachable by construction. The composer asks the engine for a pattern only when
+`weeksOfData >= 3` and the rule required `weeksOfData < 3`, so the two conditions were
+complements and the family had four authored lines that could not be spoken. It is also
+not a pattern: its four lines say there is not yet enough history to see a shape, with
+no subject, no number, no escalation and no claim about the person. **This is an owner
+authorized exception to the rule that every sentence about a person's own data comes
+through the engine, and it is narrow: an empty state makes no claim about anybody's
+data.** *What is not skipped is layer 5.* The line is still chosen with `VariantChoice`,
+rendered with `SlotRenderer` and validated with `ClarityValidator`, exactly like the
+three benches the Report already rendered itself. What is skipped is rule selection,
+which is the layer that decides whether something is worth saying, and here there is
+nothing to decide. *Considered and rejected:* making the composer ask for a pattern it
+has already decided it does not want so that a rule can answer that there is none,
+which is machinery in the shape of a section header. *Revisit if:* anybody proposes a
+second entry in `RENDERED_DIRECTLY`. Add one only for a bench that makes no claim about
+a person, and never to park a rule that is inconvenient to write.
+
+**6. Not one threshold was moved, and the nine dark families were diagnosed instead.**
+This is the decision that most needs its reason recorded, because the pass was ordered
+on the finding that trigger windows were the problem and the obvious response was to
+move them. *Why not:* every stage threshold in a Pulse ladder is a corpus stage header,
+parsed out of the corpus files and asserted against by `StageRangeTest`, so lowering one
+would make the engine say a sentence about a day that did not happen. The diagnoses, all
+of them now written at the rules that carry them:
+
+- **`throughput`, `burst`, `netOutflow`, `accumulation` stage 2 and `intakeVsOutput`
+  stage 3 are the persona set, not the rule.** Every persona reaches the log through
+  `SimulationPersona.work` and every call site passes completions no greater than
+  captures, so `additions >= completions` on every simulated day and therefore every
+  simulated week. No persona completes three things in one area in one day either.
+  Three completions in one area in one day is an ordinary Saturday and no simulated
+  life has one.
+- **`queueDrain`, `queueDrained` and `clearing` are a genuine anchoring error, and the
+  only one among the nine.** `queueLengthAtWindowStart` reads the queue at the boundary
+  the window opened on, and every line of those families describes a transition. A queue
+  built on Tuesday and finished on Saturday reads as no drain at all. The fix is a fact
+  and not a criterion: the mirror of `AreaFacts.dormantDaysBeforeReturn`, meaning the
+  queue the area was holding immediately before the promotion or deletion that took it to
+  zero, null when it did not reach zero in the window. It is not declared in 3.1 and no
+  criterion can approximate it from what is.
+- **`fragmented` needs a persona, not a threshold.** Its switching criterion held ten
+  times in the run and never beside the other two, because no simulated life both hoards
+  and switches. `QueueHoarder` clears the first two criteria most weeks and never swaps
+  once all year; `HeavySingleArea` is the only persona that swaps and it finishes three
+  or four things a week.
+- **`weekendShift` is a persona blindness too.** No persona in section 12 knows what day
+  of the week it is: every one acts off a day index, so weekend days carry the same load
+  as weekdays and four consecutive empty weekends can only happen by coincidence, which
+  is what its single occurrence was. Its bench is also wider than its rule, and splitting
+  the bench is authoring work.
+
+*Revisit if:* the personas change. Five of these nine are a statement about eleven
+synthetic lives rather than about the rules, and the honest reading is that the
+simulator cannot currently tell a wrong threshold from a life nobody in section 12
+lives.
+
+**7. `CLEAR_FLOW_MARGIN` keeps its number and loses its reasoning.** Three, still, and
+the argument that chose it is replaced rather than left standing. *Why:* the original
+was that two is where the Pulse `accumulation` and `throughput` ladders begin and a
+headline should not fire on the margin a daily note uses, which compares a week to a day.
+A weekly margin set one above a daily one is a weaker claim per day, not a stronger one,
+so the number was being justified by an argument for a different number. It stays on its
+own weekly terms: it is the floor for both directions, and `netInflow` at this margin
+took 34 of 451 report windows, which is a headline that means something rather than one
+that is always there. *Revisit if:* somebody wants `netOutflow` to fire. Lowering this
+will not do it, for the reason in decision 6.
+
+### Two deferrals the owner authorized, recorded so they are not rediscovered as defects
+
+**Warm and long tail families stay at their current depth for v1.** 11.1 grows hot
+families from four to eight lines per stage to sixty to a hundred; the warm and long
+tail tiers are not grown with them. *Why:* the readings above say where depth buys
+something. A family that fires five times a year cannot repeat itself inside ninety days
+no matter how thin its bench is, so lines added there buy variety nobody encounters,
+while the same effort on a hot family moves the one column authoring can move. *Revisit
+if:* a real person's firing counts turn out to differ from the simulated ones enough to
+make a warm family hot.
+
+**Variant repeats at roughly 7,400 are the honest baseline, not a defect.** 7,376 in
+this run, against 7,445, 7,430 and 7,384 in the three before it. *Why:* 7.6 excludes a
+variant for ninety days and the benches are the size phase 5 found them, four to eight
+lines per stage. A bench of `n` lines firing every `d` days holds out for `n * d` days
+and no longer, and the hot families fire most days. **The number is what phase 9 moves,
+and its movement is how phase 9 is measured.** It is expected to stay high until then,
+and a session that finds it high has found the baseline rather than a regression.
+*Revisit if:* it rises after phase 9 rather than falling, which would mean the bench
+grew and the selector stopped spreading across it.
+
+### What the fourth measurement did not settle
+
+- **Whether 68 percent is what a person would see.** Every diagnosis in decision 6 that
+  blames the persona set is a statement about eleven synthetic lives. The simulator is
+  the only instrument this project has and it cannot distinguish a threshold that is
+  wrong from a life nobody in section 12 lives.
+- **The two hot family stages that are short.** `accumulation` never reaches stage 2 and
+  `intakeVsOutput` never reaches stage 3, both for the reason in decision 6, and both
+  unchanged across four measurements.
+- **Three parallel numeric clauses went from 36 runs to 41.** More observation slots
+  filled, `neglectedArea` among them, and more of the leads that filled them are numeric.
+  It is a corpus and ordering property and it is phase 9's, along with the 712 length
+  band collisions.
+
+### What ran, and what did not
+
+**No Gradle task and no `adb` command was run in this pass.** The readings were produced
+the way the second and third measurements produced theirs: by compiling `domain`,
+`data.event` and `devtools` with a driver out of tree against the committed corpus files
+and running the year. The devtools sources compile clean with warnings as errors. **The
+unit suite has not been run on this work**, and the closing build settles whether
+`verifyClarity` is green and whether `SimulatorTest`, `PatternCooldownTest`,
+`DarkFamilyRulesTest` and the changed validator and report tests all pass.
+
+---
+
 ## August 27, 2026: the slot bindings, and what a third measurement says
 
 The bindings the facts phase deliberately left out, and the third run of the same

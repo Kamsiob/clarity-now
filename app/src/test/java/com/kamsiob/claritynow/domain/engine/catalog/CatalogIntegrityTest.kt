@@ -30,28 +30,36 @@ class CatalogIntegrityTest {
     }
 
     @Test
-    fun `every family has a rule, or is recorded as awaiting a fact that does not exist`() {
+    fun `every family has a rule, or is recorded as awaiting a fact, or is rendered directly`() {
         val findings = CatalogIntegrity.everyFamilyHasARule(CorpusFixture.catalog)
         assertTrue(findings.joinToString("\n"), findings.isEmpty())
 
-        val silent = CorpusFixture.catalog.families
+        val withoutRules = CorpusFixture.catalog.families
             .filter { CorpusFixture.catalog.rulesOf(it.purpose, it.key).isEmpty() }
             .map { it.key }
             .toSet()
         assertEquals(
             "a family with authored language and no rule is silent, and a silent family looks " +
                 "exactly like one that never happened to qualify. Nine of them were, and the " +
-                "facts phase declared what their triggers named, so the register is empty and " +
-                "every family in the corpus now has a rule. A family appearing in this set is a " +
-                "rule being lost; a family appearing in RulesAwaitingFacts is a decision that " +
-                "one may be",
-            RulesAwaitingFacts.FAMILIES_WITHOUT_RULES,
-            silent,
+                "facts phase declared what their triggers named, so every family in the corpus " +
+                "had a rule. A family appearing in this set that is in neither register is a " +
+                "rule being lost",
+            RulesAwaitingFacts.FAMILIES_WITHOUT_RULES + ReportRules.RENDERED_DIRECTLY,
+            withoutRules,
         )
         assertTrue(
-            "no family is silent, which is the state the facts phase was for. If this ever " +
-                "fails, read the message above before adding a register entry to make it pass",
-            silent.isEmpty(),
+            "RulesAwaitingFacts is a rule that cannot be written because the fact it needs " +
+                "does not exist, and it is empty. If this ever fails, read the message above " +
+                "before adding an entry to make it pass",
+            RulesAwaitingFacts.FAMILIES_WITHOUT_RULES.isEmpty(),
+        )
+        assertEquals(
+            "insufficientData is the pattern section's empty state rather than a pattern, and " +
+                "the Report renders its line itself. It is the only family that may be here, " +
+                "and it is here by a decision recorded on ReportRules.RENDERED_DIRECTLY and at " +
+                "ReportComposer.patternNote rather than by a rule going missing",
+            setOf("insufficientData"),
+            ReportRules.RENDERED_DIRECTLY,
         )
     }
 

@@ -92,3 +92,42 @@ internal const val SHARE_FLOOR_PREFIX = "floor"
 
 /** Every criterion that reads a share carries this in its id, so the floor test can find it. */
 internal const val SHARE_READING_PREFIX = "share"
+
+/**
+ * The queue emptied because its items were finished, and not because they were thrown away.
+ *
+ * A queue loses one item per promotion and a promotion follows a completion, so an area
+ * that fell from `n` queued to nothing by working through it has at least `n` completions
+ * behind it. A queued item can also be deleted, and nothing in the drain facts can tell the
+ * two apart: `AreaFacts.queueDrainedFrom` measures how far the queue fell and never asks
+ * how the items left.
+ *
+ * That matters because both drain benches claim somebody finished something.
+ * `CORPUS_1_PULSE.md` 10 authors `{areaName} finished everything it was holding` and
+ * `You cleared everything in {areaName}`, and `CORPUS_2_REPORT.md` 2.17 authors
+ * `{areaName} cleared its entire queue this week`. Every one of those is false of a person
+ * who deleted three things, and the realizer may select any line on the bench, so one false
+ * line is enough to require this. `report.headline.clearing` carries the window scoped
+ * version of the same guard already, which is where the requirement was first recognized.
+ *
+ * **It counts against the fall rather than against the window boundary**, and that is not
+ * cosmetic. A queue built inside the window and then emptied holds nothing at the boundary,
+ * so the boundary reading made this `completions >= 0` on exactly the shape the drain fact
+ * was declared to reach: a person who added five things and deleted all five would have
+ * been told they cleared them. The guard has to be measured against the same number the
+ * sentence names.
+ *
+ * **It is stricter than the truth by one item in exactly one case**, an area whose fall
+ * began with nothing active, where the first promotion costs no completion. One item of
+ * slack toward silence is the right direction for a family whose sentences claim somebody
+ * finished something.
+ *
+ * The null case reads as zero and so passes, because this is a guard and never the
+ * condition that selects. Both rules carrying it also require the fall itself, at a
+ * height of three or more, and a null fall fails those before this is reached.
+ */
+internal fun drainedByFinishing(): Criterion = area(
+    "queue.drainedByFinishing",
+    "the area finished at least as many things as the queue it fell from was holding, so " +
+        "the queue emptied by being worked through rather than by being deleted",
+) { it.completionsInWindow >= (it.queueDrainedFrom ?: 0) }

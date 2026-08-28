@@ -1018,4 +1018,125 @@
     <string name="tutorial_tabs_title">Four views</string>
     <string name="tutorial_tabs_body">Areas, Momentum, Report and Trail. Nothing is hidden anywhere else.</string>
 
+    <!--
+        Widgets: Quick Capture, Focus Countdown and Rhythm. MASTER_BUILD_PROMPT 13.3 and
+        design-v3.md 12.
+
+        **Not one line here is an observation, and a widget could not render one if it
+        were.** A widget never reads a corpus and never runs the engine, 13.3, so every
+        sentence it shows is either a fixed label from this file or a sentence the engine
+        wrote, put into the widget snapshot, and repeated verbatim. The strings below are
+        all of the first kind: labels, one direct readout of a queried number, and the
+        content descriptions that make each widget one node for a screen reader.
+
+        **The inbox count is plain text.** Never a badge, never a red dot, never a colored
+        pill, per design-v3.md 12.2 and section 14 as amended by Addendum 01. It is absent
+        at zero rather than reading zero, because an empty inbox is not a state that needs
+        reporting.
+
+        **There is no streak string here and there must never be one.** The Rhythm widget
+        reuses momentum_active_days above, so the two surfaces state one fact in one
+        wording. See RhythmWidget.kt.
+    -->
+    <string name="widget_quick_capture_label">Quick capture</string>
+    <string name="widget_quick_capture_description">One tap to write something down, straight into your inbox.</string>
+    <string name="widget_focus_countdown_label">Focus countdown</string>
+    <string name="widget_focus_countdown_description">The session you are in, as a shrinking ring.</string>
+    <string name="widget_rhythm_label">Rhythm</string>
+    <string name="widget_rhythm_description">Your last fourteen days, one dot each.</string>
+
+    <!--
+        Quick Capture. The word is an invitation rather than an instruction, and it is the
+        same idea as the tutorial line about the same gesture: write it down without
+        choosing where it goes.
+    -->
+    <string name="widget_capture_word">Add anything</string>
+    <string name="widget_capture_word_compact">Add</string>
+    <plurals name="widget_capture_inbox">
+        <item quantity="one">%d item in your inbox</item>
+        <item quantity="other">%d items in your inbox</item>
+    </plurals>
+    <string name="cd_widget_capture">Add anything to your inbox</string>
+    <plurals name="cd_widget_capture_waiting">
+        <item quantity="one">Add anything to your inbox, %d item waiting</item>
+        <item quantity="other">Add anything to your inbox, %d items waiting</item>
+    </plurals>
+
+    <!--
+        Focus Countdown. The spoken figure is whole minutes, like the ring on the session
+        screen, so it changes once a minute rather than once a second, which is also the
+        honest resolution of a widget refreshed once a minute.
+
+        The elapsed line states that the planned time is up and nothing else. A session
+        that has run its length is finished, never late and never overdue.
+    -->
+    <string name="widget_focus_start">Start focus</string>
+    <string name="cd_widget_focus_start">Start a focus session</string>
+    <string name="cd_widget_focus_elapsed">Focus session, the planned time is up</string>
+    <plurals name="cd_widget_focus_remaining">
+        <item quantity="one">Focus session, %d minute remaining</item>
+        <item quantity="other">Focus session, %d minutes remaining</item>
+    </plurals>
+
+    <!--
+        Rhythm. The empty line describes how the widget works and says nothing whatever
+        about the person, which is what lets it live in this file at all.
+
+        The description names the window and a count of a set. It never says which days
+        those were, and never says anything about the ones that were quiet.
+    -->
+    <string name="widget_rhythm_empty">Your last fourteen days appear here.</string>
+    <string name="cd_widget_rhythm">Activity, the last %1$d days. Active on %2$d of them.</string>
+
+    <!--
+        Next Up, First Step and All Areas, design-v3.md 12.2 and MASTER_BUILD_PROMPT
+        13.3. Labels, counts and two notices, and nothing that interprets anything: a
+        widget never reads a corpus, so every sentence it can draw is either here or is
+        a name the person typed.
+
+        `widget_waiting` is a direct readout of a queried number, which is what CLAUDE.md
+        rule 8 keeps in this file. It is absent at zero rather than reading `0 waiting`,
+        for the reason the inbox chip is absent at zero.
+
+        The two reconfigure lines are the one place a widget explains itself. They name
+        what happened in one plain sentence and offer the fix in the next, per
+        design-v3.md 12.1: never an error, never a blank box, never a stale name.
+
+        `widget_add_first_step` is the only prompt for a first step anywhere in this app,
+        per Addendum 01 4b, and it exists on that widget alone because somebody chose to
+        put it on their home screen. Nothing else may use this string.
+    -->
+    <string name="widget_next_up_label">Next up</string>
+    <string name="widget_next_up_description">One active item, and what waits behind it.</string>
+    <string name="widget_first_step_label">First step</string>
+    <string name="widget_first_step_description">The smallest action on what you are working on.</string>
+    <string name="widget_all_areas_label">All areas</string>
+    <string name="widget_all_areas_description">Every area, and what is active in each one.</string>
+
+    <string name="widget_idle">Idle</string>
+    <plurals name="widget_waiting">
+        <item quantity="one">%d waiting</item>
+        <item quantity="other">%d waiting</item>
+    </plurals>
+    <plurals name="widget_and_more">
+        <item quantity="one">and %d more</item>
+        <item quantity="other">and %d more</item>
+    </plurals>
+    <string name="widget_add_first_step">Add a first step</string>
+    <string name="widget_no_areas">No areas yet</string>
+    <string name="widget_no_areas_invitation">Tap to make one.</string>
+    <string name="widget_area_archived">%1$s is archived. Tap to choose another area.</string>
+    <string name="widget_area_gone">That area is no longer here. Tap to choose another area.</string>
+
+    <!--
+        The widget configuration screen. It opens after a widget is placed rather than
+        before, so these are the words of somebody changing their mind rather than of a
+        form standing between a person and a thing they already asked for.
+    -->
+    <string name="widget_config_title_one">Which area?</string>
+    <string name="widget_config_title_subset">Which areas?</string>
+    <string name="widget_config_automatic">Automatic</string>
+    <string name="widget_config_automatic_explainer">Whichever area you have gone longest without touching. It is chosen once a day.</string>
+    <string name="widget_config_all_explainer">Every area is shown. Turn off any you would rather not see here.</string>
+
 </resources>

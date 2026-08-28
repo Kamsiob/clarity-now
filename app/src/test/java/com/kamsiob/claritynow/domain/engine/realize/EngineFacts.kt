@@ -104,6 +104,11 @@ internal object EngineFacts {
         activeItemAgeDays: Int? = null,
         queueLength: Int = 0,
         queueLengthAtWindowStart: Int = 0,
+        // A fixture that opens the window holding a queue and closes it empty has drained,
+        // so the default derives rather than being a third number a caller has to remember
+        // to keep consistent with the other two. Pass it explicitly for the shape the
+        // boundary pair cannot express: a queue built and emptied inside the window.
+        queueDrainedFrom: Int? = queueLengthAtWindowStart.takeIf { queueLength == 0 && it > 0 },
         daysSinceLastEvent: Int = 0,
         lifetimeEvents: Int = events,
         lifetimeCompletions: Int = completions,
@@ -129,6 +134,7 @@ internal object EngineFacts {
         queueLength = queueLength,
         queueLengthAtWindowStart = queueLengthAtWindowStart,
         queueDelta = queueLength - queueLengthAtWindowStart,
+        queueDrainedFrom = queueDrainedFrom,
         daysSinceLastEvent = daysSinceLastEvent,
         dormantDaysBeforeReturn = dormantDaysBeforeReturn,
         lifetimeEvents = lifetimeEvents,

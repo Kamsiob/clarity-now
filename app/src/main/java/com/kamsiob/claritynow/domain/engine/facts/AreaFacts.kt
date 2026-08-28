@@ -67,6 +67,48 @@ data class AreaFacts(
     /** [queueLength] minus [queueLengthAtWindowStart]. Positive means the queue grew. */
     val queueDelta: Int,
     /**
+     * The height this area's queue fell from, in one uninterrupted fall to nothing
+     * that has held to the window end. Null when no such fall happened here.
+     *
+     * This is the mirror of [dormantDaysBeforeReturn], and it exists for the same
+     * reason. That field measures the gap an area **returned from** rather than the
+     * gap since the window opened; this one measures the queue an area **drained
+     * from** rather than the queue it happened to be holding when the window opened.
+     * A drain that starts and finishes between two boundaries is invisible to a
+     * boundary pair, and an unrelated pair of endpoints looks exactly like one.
+     *
+     * **The fall is read backwards from the window end, and any arrival ends it.**
+     * Walking back through `TrailQueries.queueSizeSeriesByArea`, each sample that is
+     * at least as large as the one after it is still part of the fall; the first
+     * sample smaller than its successor is the arrival that interrupted it, and the
+     * height is the sample after that one. So a queue that went 5, 4, 3, 2, 1, 0
+     * reads 5, a queue that went 0, 3, 1, 4, 0 reads 4, and a queue that went 0, 5,
+     * 0, 2, 0 reads 2 rather than 5, because two things arrived after the five left
+     * and `{n} things left {areaName}, and nothing replaced them` would be false of
+     * the larger number. The conservative reading is the correct one here: every
+     * sentence this licenses claims a fall to nothing that is still nothing.
+     *
+     * That is exactly what all three drain families claim. `CORPUS_1_PULSE.md` 10
+     * says `{areaName}'s queue went from {n} to nothing` and `{areaName} finished
+     * everything it was holding`; `CORPUS_2_REPORT.md` 2.17 says `{areaName} cleared
+     * its entire queue this week` and 1.13's trigger is `one or more areas fully
+     * drained`. Not one of them says the queue was anything in particular at a
+     * boundary, and the one line that does date itself, `ob.drain.l01`, is bound
+     * through a measure that reads this only when the fall began at or before the
+     * window opened.
+     *
+     * **Null, never zero, and the two cases are indistinguishable on purpose**,
+     * exactly as in [dormantDaysBeforeReturn]. The queue is not empty at the window
+     * end, or it is empty and nothing fell to get it there. Nothing drained either
+     * way, and a rule that could tell them apart would be a rule that could say so.
+     *
+     * It carries no claim about **how** the items left. A queue also empties by
+     * deletion, and `RuleBuilders.drainedByFinishing` is the guard that makes the
+     * difference, because every sentence on both benches claims somebody finished
+     * something.
+     */
+    val queueDrainedFrom: Int?,
+    /**
      * Whole local days since this area's most recent event, as of the window end.
      *
      * **`Int.MAX_VALUE` when the area has never had one**, which is the value 3.1
@@ -163,7 +205,22 @@ data class RollupFacts(
      * [freshStartAreaIds].
      */
     val dormantReturnedAreaIds: List<AreaId>,
-    /** Areas that held three or more queued items at the window start and none at the end. */
+    /**
+     * Areas whose queue fell to nothing from three or more inside this window.
+     *
+     * [AreaFacts.queueDrainedFrom] with the corpus floor applied, in the same
+     * relationship [dormantReturnedAreaIds] has to [AreaFacts.dormantDaysBeforeReturn]:
+     * the field is the measurement and this is the family's threshold. The three is
+     * `CORPUS_1_PULSE.md` 10's stage 1 header, `queue of three to four drained`,
+     * borrowed by the Report because 1.13 and 2.17 name no figure of their own and a
+     * clean sweep of one queued item is not what `A clean sweep` claims.
+     *
+     * **It is not a queue length at the window start compared with one at the end**,
+     * which is what it was until the fall itself was declared as a fact. Those two
+     * numbers are the same for a week that opened holding five and closed holding
+     * nothing and for a week that built five on Tuesday and finished them on Saturday,
+     * and only the second is what `cleared its entire queue this week` describes.
+     */
     val queueDrainedAreaIds: List<AreaId>,
     /**
      * Areas whose queue is longer at the window end than at the window start.

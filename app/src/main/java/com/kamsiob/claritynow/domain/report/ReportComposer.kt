@@ -155,6 +155,7 @@ class ReportComposer(private val catalog: ClarityCatalog, private val zone: Zone
             headline = headline,
             observations = kept,
             pattern = pattern,
+            patternNote = patternNote(facts, dateKey),
             basis = basis,
             generated = language.generatedLine(),
             firstWeekNote = if (facts.history.isFirstWeekEver) language.firstWeek(facts, dateKey) else null,
@@ -168,6 +169,45 @@ class ReportComposer(private val catalog: ClarityCatalog, private val zone: Zone
             is ReportVerdict.Vetoed -> ReportOutcome.Suppressed(weekStartKey, verdict)
         }
     }
+
+    /**
+     * The pattern section's empty state, or null. `CORPUS_2_REPORT.md` 3.16.
+     *
+     * ## This is deliberate, and it is not a bug to be fixed back into the engine
+     *
+     * Every sentence in this app about a person's own data comes out of a corpus file
+     * through the engine layers in order, and there is no second path. **This line is an
+     * authorized exception, decided by the owner, and it is narrow enough to state
+     * exactly:** `insufficientData` is not a pattern, it is the pattern section's empty
+     * state. Its four lines say that there are not three weeks of history yet. There is no
+     * subject, no number, no escalation and no claim about the person, so there is nothing
+     * for a rule to decide and nothing for the validator to disbelieve.
+     *
+     * It was written as a rule and the rule could never fire. Step 5 above asks the engine
+     * for a pattern only when `weeksOfData >= ReportIntegrity.PATTERN_WEEKS`, and the rule
+     * required fewer weeks than that, so the two conditions were complements and the family
+     * had four authored lines that could not be reached. Restoring the rule means making
+     * the composer ask for a pattern it has already decided it does not want, so that a
+     * rule can answer that there is none. `ReportRules.RENDERED_DIRECTLY` records the
+     * decision on the catalog side and `CatalogIntegrity` reads it, so the family is a
+     * decision rather than a silence.
+     *
+     * **What is not skipped is layer 5.** `ReportLanguage.insufficientData` chooses the
+     * line with `VariantChoice`, renders it with `SlotRenderer` and validates it with
+     * `ClarityValidator`, exactly like the footer, the basis line and the two edge states.
+     * 11.4 forbids bypassing the validator for an empty state and that still holds. What is
+     * skipped is rule selection, which is the layer that decides whether something is worth
+     * saying about somebody, and here there is nothing to decide.
+     *
+     * Computed here rather than passed in, so [compose] and [assemble] cannot disagree
+     * about which weeks get it, and so the condition sits beside its complement in step 5.
+     */
+    private fun patternNote(facts: FactSet, dateKey: String): ReportNote? =
+        if (facts.history.weeksOfData < ReportIntegrity.PATTERN_WEEKS) {
+            language.insufficientData(facts, dateKey)
+        } else {
+            null
+        }
 
     // ------------------------------------------------------------------- the rules
 

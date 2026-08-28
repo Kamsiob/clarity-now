@@ -118,6 +118,11 @@ private class Extraction(
     private val activeItemAtStart: Map<String, String> = queries.activeItemPerAreaAt(start)
     private val queueAtStart: Map<String, Int> = queries.queueSizeByAreaAt(start)
 
+    // The queue's shape across the window rather than at its two ends. One fold, read by
+    // every area, because the drain families describe a transition and two boundaries
+    // cannot see one.
+    private val queueSeries: Map<String, List<Int>> = queries.queueSizeSeriesByArea(start, end)
+
     private val totalEvents: Int = queries.totalEvents(start, end)
     private val eventsPerArea: Map<String, Int> = queries.eventsPerArea(start, end)
     private val completionsPerArea: Map<String, Int> = queries.completionsPerArea(start, end)
@@ -267,6 +272,7 @@ private class Extraction(
             queueLength = queueLength,
             queueLengthAtWindowStart = queueStart,
             queueDelta = queueLength - queueStart,
+            queueDrainedFrom = drainHeightOf(queueSeries[areaId].orEmpty()),
             daysSinceLastEvent = if (lastEventAt == null) Int.MAX_VALUE else daysTo(lastEventAt),
             dormantDaysBeforeReturn = dormantDaysBeforeReturn(areaId),
             lifetimeEvents = lifetimeEventsPerArea[areaId] ?: 0,
@@ -310,7 +316,7 @@ private class Extraction(
                 (it.dormantDaysBeforeReturn ?: 0) >= FactExtractor.DORMANT_DAYS
             }.map { it.areaId },
             queueDrainedAreaIds = areas.values.filter {
-                it.queueLengthAtWindowStart >= FactExtractor.DRAIN_FROM_QUEUE && it.queueLength == 0
+                (it.queueDrainedFrom ?: 0) >= FactExtractor.DRAIN_FROM_QUEUE
             }.map { it.areaId },
             queueGrowingAreaIds = areas.values.filter { it.queueDelta > 0 }.map { it.areaId },
             freshStartAreaIds = areas.values.filter { freshStart(it) }.map { it.areaId },
@@ -337,6 +343,39 @@ private class Extraction(
             FactDates.dateOf(previous, zone),
             FactDates.dateOf(firstIn, zone),
         )
+    }
+
+    /**
+     * The height a queue fell from, given the queue's shape across a window.
+     *
+     * The mirror of [dormantDaysBeforeReturn], and written the same way round. That one
+     * measures back from the area's first event inside the window to the event before it,
+     * so a return is a return rather than an artifact of the boundary. This one measures
+     * back from the window end through the fall that left the queue empty, so a drain is a
+     * drain rather than a subtraction of two endpoints that were never connected.
+     *
+     * The walk is backwards and stops at the first arrival. A sample at least as large as
+     * the one after it is still part of the fall; a sample smaller than its successor is
+     * the moment something arrived, and the fall began at that successor. The queue must
+     * be empty at the last sample, because every sentence these families license is in the
+     * present tense about an area that is empty now, and the height must be above zero,
+     * because a queue that was never holding anything did not drain.
+     *
+     * Null rather than zero for both of the cases where nothing drained, so a rule reading
+     * it for a length cannot render the absence as a number, exactly as in
+     * [dormantDaysBeforeReturn].
+     */
+    private fun drainHeightOf(series: List<Int>): Int? {
+        if (series.isEmpty() || series.last() != 0) return null
+        var height = 0
+        var next = 0
+        for (index in series.lastIndex - 1 downTo 0) {
+            val size = series[index]
+            if (size < next) break
+            height = size
+            next = size
+        }
+        return height.takeIf { it > 0 }
     }
 
     /** Both shapes of `CORPUS_1_PULSE.md` family 11: a new area, or a first item in an empty one. */
@@ -598,13 +637,18 @@ private class Extraction(
         return flags
     }
 
-    private fun bucketDrained(index: Int): Boolean {
-        val before = queries.queueSizeByAreaAt(bucketStartMillis(index))
-        val after = queries.queueSizeByAreaAt(bucketEndMillis(index))
-        return before.any { (areaId, size) ->
-            size >= FactExtractor.DRAIN_FROM_QUEUE && (after[areaId] ?: 0) == 0
-        }
-    }
+    /**
+     * Whether any area drained in an earlier bucket, on the definition this window uses.
+     *
+     * `FIRST_QUEUE_DRAIN` licenses `{areaName} is completely clear for the first time` and
+     * `There is an area with nothing in it for the first time`, so the history behind it
+     * has to be read the same way the present is. Comparing two bucket boundaries would
+     * miss a week that built a queue on Tuesday and finished it on Saturday, and the flag
+     * would announce a first that had already happened.
+     */
+    private fun bucketDrained(index: Int): Boolean =
+        queries.queueSizeSeriesByArea(bucketStartMillis(index), bucketEndMillis(index))
+            .any { (_, series) -> (drainHeightOf(series) ?: 0) >= FactExtractor.DRAIN_FROM_QUEUE }
 
     private fun bucketHadEveryAreaActive(index: Int): Boolean {
         val live = queries.liveAreaIdsAt(bucketEndMillis(index))

@@ -432,6 +432,27 @@ internal object Measures {
             "what was waiting in this area when the window opened", "thing", "things") read@{ facts, id, _ ->
             count(area(facts, id)?.queueLengthAtWindowStart)
         },
+        // The two drain measures. `{n}` on both drain benches is the height the queue fell
+        // from, because every line but one describes the fall: `went from {n} to nothing`,
+        // `It held {n} things`, `{n} things left {areaName}, and nothing replaced them`.
+        // Before `AreaFacts.queueDrainedFrom` existed the slot read the window boundary,
+        // which is the same number only when the fall began there.
+        Measure("areaDrainedFrom", "area", MeasureKind.COUNT, MeasureScope.AREA,
+            "what this area's queue was holding before it fell to nothing", "thing", "things") read@{ facts, id, _ ->
+            count(area(facts, id)?.queueDrainedFrom)
+        },
+        // The exception, for `ob.drain.l01`, `It held {n} things on Sunday`. It is the only
+        // line in either volume that dates the count to the window boundary, and it is true
+        // only when the fall began at or before it. Answering null the rest of the time
+        // drops that one lead off the bench, per SlotBindings' slot completeness rule, which
+        // is the harmless failure. A criterion cannot do this: it would silence the family.
+        Measure("areaDrainedFromAtStart", "area", MeasureKind.COUNT, MeasureScope.AREA,
+            "what this area was holding when the window opened, when that is where its " +
+                "fall to nothing began", "thing", "things") read@{ facts, id, _ ->
+            val subject = area(facts, id) ?: return@read null
+            val from = subject.queueDrainedFrom ?: return@read null
+            count(from.takeIf { it == subject.queueLengthAtWindowStart })
+        },
         Measure("areaDaysSinceLastEvent", "area", MeasureKind.DAYS, MeasureScope.AREA,
             "how long this area has been still") read@{ facts, id, _ -> days(area(facts, id)?.daysSinceLastEvent) },
         Measure("areaFocusSessions", "area", MeasureKind.COUNT, MeasureScope.AREA,

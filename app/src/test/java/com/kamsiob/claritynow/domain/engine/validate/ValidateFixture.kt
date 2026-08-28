@@ -48,6 +48,9 @@ internal object ValidateFixture {
     /** An area the person archived. Absent from the fact set, by construction, per 3.1. */
     const val ARCHIVED: AreaId = "area-archived"
 
+    /** An area made three days ago and never used. The phantom check 1 exists for. */
+    const val NEW_AREA: AreaId = "area-garden"
+
     const val ACTIVE_ITEM: ItemId = "item-proposal"
     const val COMPLETED_ITEM: ItemId = "item-invoice"
 
@@ -119,6 +122,10 @@ internal object ValidateFixture {
         activeItemAgeDays: Int? = null,
         queueLength: Int = 0,
         queueLengthAtWindowStart: Int = 0,
+        // Derived for the same reason it is derived in EngineFacts: a window that opened
+        // with a queue and closed empty drained, and a third independent number would only
+        // give a fixture a way to disagree with itself.
+        queueDrainedFrom: Int? = queueLengthAtWindowStart.takeIf { queueLength == 0 && it > 0 },
         daysSinceLastEvent: Int = 0,
         lifetimeEvents: Int = 20,
         lifetimeCompletions: Int = 8,
@@ -144,6 +151,7 @@ internal object ValidateFixture {
         queueLength = queueLength,
         queueLengthAtWindowStart = queueLengthAtWindowStart,
         queueDelta = queueLength - queueLengthAtWindowStart,
+        queueDrainedFrom = queueDrainedFrom,
         daysSinceLastEvent = daysSinceLastEvent,
         dormantDaysBeforeReturn = dormantDaysBeforeReturn,
         lifetimeEvents = lifetimeEvents,
@@ -204,6 +212,30 @@ internal object ValidateFixture {
         lifetimeEvents = 12,
         lifetimeCompletions = 5,
         ageDays = 400,
+    )
+
+    /**
+     * Live, visible, brand new and completely empty.
+     *
+     * The area the `absenceSubject` exception must not reach. It has no events in the
+     * window, like [reading], and unlike [reading] it has no history for the silence to be
+     * a silence from: nothing has ever happened in it, it is three days old, and
+     * `daysSinceLastEvent` is the never sentinel rather than a measured gap. All three of
+     * the conditions `AbsenceSubject` requires fail at once, on purpose, because a fixture
+     * that failed only one of them would pass if two of the three checks were dropped.
+     *
+     * **This is not in [facts] by default.** Every existing test in this package was
+     * written against a three area week and a fourth area silently joining it would change
+     * shares, rollups and dominance under tests that never mentioned it.
+     */
+    fun newAndEmpty(): AreaFacts = area(
+        areaId = NEW_AREA,
+        nameSnapshot = "Garden",
+        eventsInWindow = 0,
+        daysSinceLastEvent = Int.MAX_VALUE,
+        lifetimeEvents = 0,
+        lifetimeCompletions = 0,
+        ageDays = 3,
     )
 
     fun rollup(

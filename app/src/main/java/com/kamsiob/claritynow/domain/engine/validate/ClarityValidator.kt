@@ -145,22 +145,31 @@ class ClarityValidator(private val zone: ZoneId) : CandidateValidator {
     internal val checkOrder: List<ValidationCheck> get() = CHECKS.map { it.first }
 
     /**
-     * Check 1. Every named area has real events in the window being described.
+     * Check 1. Every named area has real events in the window being described, unless the
+     * absence is what the sentence is about.
      *
      * **Not merely exists, not merely unarchived.** An area with no events in the window is
      * a phantom: the sentence is about a week, and an area that did nothing that week cannot
      * be part of what the week was. An archived or tombstoned area fails this same check by
      * a shorter route, because 3.1 keeps it out of `FactSet.areas` entirely.
+     *
+     * **The one exception is [AbsenceSubject], and it is a narrowing rather than a
+     * widening.** Three families say that an area has been still, and against the check as
+     * it was first written every candidate they produced was vetoed. A rule flagged
+     * `absenceSubject` may name an area with no events in the window when that area has a
+     * real history behind the silence; everything else is refused exactly as before, and a
+     * new empty area is refused by any rule at all. Read that file for what was wrong and
+     * why the fix went this way rather than the other.
      */
     private fun areaExistence(inspection: Inspection): String? {
         for (areaId in inspection.candidate.namedAreaIds.sorted()) {
             val area = inspection.facts.areas[areaId]
                 ?: return "names area $areaId, which is not in this window's facts. Archived and " +
                     "tombstoned areas are absent from AreaFacts by construction, per 3.1"
-            if (area.eventsInWindow <= 0) {
-                return "names ${area.nameSnapshot} ($areaId), which had ${area.eventsInWindow} events " +
-                    "in this window. Check 1 requires real events, not merely an area that exists"
-            }
+            if (area.eventsInWindow > 0) continue
+            val refusal = AbsenceSubject.refusalFor(inspection.candidate.ruleKey, area) ?: continue
+            return "names ${area.nameSnapshot} ($areaId), which had ${area.eventsInWindow} events " +
+                "in this window. $refusal"
         }
         return null
     }

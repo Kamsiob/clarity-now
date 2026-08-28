@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    All Areas, 4x2. design-v3.md 12.2.
+
+    The width floor is four cells because a row is a dot, a name and what is active in
+    that area, and a narrower one would truncate the third of those on every row. The
+    height floor is two cells: rows are 48dp because a row is a touch target, and a
+    shorter widget would be one row and an overflow line saying everything else is
+    elsewhere.
+
+    It grows, and growing is the answer to having more areas than fit. What does not fit
+    is one plain line reading `and 2 more`, never a scroll and never a truncated dot row.
+
+    updatePeriodMillis, the configuration attributes and the absent preview are all as
+    widget_next_up.xml, and that file states why for all three.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:configure="com.kamsiob.claritynow.widget.WidgetConfigurationActivity"
+    android:description="@string/widget_all_areas_description"
+    android:initialLayout="@layout/glance_default_loading_layout"
+    android:minWidth="250dp"
+    android:minHeight="110dp"
+    android:minResizeWidth="250dp"
+    android:minResizeHeight="110dp"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen"
+    android:widgetFeatures="reconfigurable|configuration_optional" />

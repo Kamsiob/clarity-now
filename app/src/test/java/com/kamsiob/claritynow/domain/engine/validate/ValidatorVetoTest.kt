@@ -3,6 +3,7 @@ package com.kamsiob.claritynow.domain.engine.validate
 import com.kamsiob.claritynow.domain.engine.FactRef
 import com.kamsiob.claritynow.domain.engine.FactSet
 import com.kamsiob.claritynow.domain.engine.catalog.Purpose
+import com.kamsiob.claritynow.domain.engine.catalog.Register
 import com.kamsiob.claritynow.domain.engine.realize.Candidate
 import com.kamsiob.claritynow.domain.engine.realize.Slot
 import org.junit.Assert.assertEquals
@@ -91,6 +92,80 @@ class ValidatorVetoTest {
             ),
         )
     }
+
+    // Check 1, the absence subject exception. These two are the point of the narrowing.
+
+    /**
+     * The exception buys a silence about a real history and nothing else.
+     *
+     * `neglectedArea` is flagged `absenceSubject`, and it still may not name an area
+     * created three days ago that nothing has ever happened in. That area fails all three
+     * of the conditions at once, which is what a phantom looks like: no lifetime events,
+     * still new, and a `daysSinceLastEvent` that is the never sentinel rather than a
+     * measured gap. If this ever passes, the narrowing became a widening and check 1 stopped
+     * doing the one job it was written for.
+     */
+    @Test
+    fun `check 1 refuses a brand new empty area even to a rule whose subject is the absence`() {
+        val garden = ValidateFixture.newAndEmpty()
+        val facts = ValidateFixture.facts(areas = ValidateFixture.facts().areas + (garden.areaId to garden))
+        val veto = veto(namesNeglect(garden.areaId, garden.nameSnapshot), facts)
+        assertEquals(ValidationCheck.AREA_EXISTENCE, veto.check)
+        assertTrue(veto.detail, veto.detail.contains("Garden"))
+        assertTrue(veto.detail, veto.detail.contains("0 events"))
+        assertTrue(
+            "the detail should say which condition refused it: ${veto.detail}",
+            veto.detail.contains("absence"),
+        )
+    }
+
+    /**
+     * The other half, and the reason the change was made at all.
+     *
+     * Reading is live, four hundred days old, has twelve events in its history and has been
+     * still for twenty one days. Every candidate `neglectedArea` produced about an area like
+     * this was vetoed by check 1, 107 times across a simulated year, and the family exists to
+     * say exactly this. It passes now, and it passes every other check too, so this is a
+     * sentence that reaches a person rather than one that only clears check 1.
+     */
+    @Test
+    fun `check 1 allows a long dormant area with a real history to a rule whose subject is the absence`() {
+        passes(namesNeglect(ValidateFixture.READING, "Reading"))
+    }
+
+    /**
+     * The flag belongs to the rule and not to the area, which is what makes it narrow.
+     *
+     * The same area, the same sentence, from a rule that is not about an absence. Reading
+     * did nothing this week, so a line claiming it moved is the phantom claim check 1 has
+     * always refused, and it still is. `namesReading` above is that rule.
+     */
+    @Test
+    fun `check 1 still refuses the same dormant area to a rule that is not about an absence`() {
+        val veto = veto(namesReading())
+        assertEquals(ValidationCheck.AREA_EXISTENCE, veto.check)
+        assertTrue(
+            "an unflagged rule gets check 1 exactly as it was written: ${veto.detail}",
+            veto.detail.contains("Check 1 requires real events"),
+        )
+    }
+
+    /** A neglect line about [areaId], from the rule whose subject is that area's silence. */
+    private fun namesNeglect(areaId: String, name: String): Candidate = ValidateFixture.candidate(
+        ruleKey = "report.observation.neglectedArea.s2",
+        familyKey = "neglectedArea",
+        variantKey = "ob.neg.s2.l01",
+        purpose = Purpose.REPORT_OBSERVATION,
+        stage = 2,
+        register = Register.OBSERVATIONAL,
+        rendered = "$name has been still for three weeks.",
+        renderedQuestion = null,
+        slots = mapOf("areaName" to Slot.Text("areaName", name)),
+        sourceFacts = emptyMap(),
+        namedAreaIds = setOf(areaId),
+        namedItemIds = emptySet(),
+        subjectId = areaId,
+    )
 
     /** A rebalance line about the one area that did nothing all week. */
     private fun namesReading(): Candidate = ValidateFixture.candidate(

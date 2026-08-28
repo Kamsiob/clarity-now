@@ -7,6 +7,7 @@ import com.kamsiob.claritynow.domain.engine.catalog.ClarityCatalog
 import com.kamsiob.claritynow.domain.engine.catalog.CorpusLine
 import com.kamsiob.claritynow.domain.engine.catalog.Purpose
 import com.kamsiob.claritynow.domain.engine.catalog.Register
+import com.kamsiob.claritynow.domain.engine.catalog.ReportRules
 import com.kamsiob.claritynow.domain.engine.catalog.SlotKey
 import com.kamsiob.claritynow.domain.engine.catalog.Template
 import com.kamsiob.claritynow.domain.engine.realize.Candidate
@@ -81,6 +82,64 @@ class ReportLanguage(private val catalog: ClarityCatalog, private val zone: Zone
     /** `CORPUS_2_REPORT.md` 6.2. Shown only in the first week there has ever been. */
     fun firstWeek(facts: FactSet, dateKey: String): ReportNote? =
         note(FIRST_WEEK_BENCH, facts, dateKey)
+
+    /**
+     * `CORPUS_2_REPORT.md` 3.16. The pattern section's empty state, under three weeks.
+     *
+     * **No rule and no engine, on purpose, and it is an exception somebody decided.**
+     * 3.16 is written as a pattern family and it is not one. Its four lines say there is
+     * not enough history yet to see a shape: no subject, no escalation, no number, and
+     * nothing a person could disagree with about their own week. It is the pattern
+     * section's empty state, exactly as 6.1 is the whole report's, and 6.1 comes through
+     * this class rather than through a rule for the same reason.
+     *
+     * As a rule it was also unreachable. `ReportComposer` asks the engine for a pattern
+     * only when `weeksOfData >= 3` and the rule required `weeksOfData < 3`, so the two
+     * conditions could never both hold. `ReportRules.RENDERED_DIRECTLY` carries the
+     * decision and `ReportComposer` carries the note at the point the condition is read.
+     *
+     * **It is not a bypass of layer 5.** The line is chosen with [VariantChoice], rendered
+     * with [SlotRenderer] and validated with [ClarityValidator], exactly like the three
+     * benches above it. 11.4 says never bypass the validator, not for a simple sentence,
+     * not for an empty state, and that still holds; what this skips is rule selection,
+     * which is the part that decides whether something is worth saying about a person, and
+     * there is nothing here to decide.
+     *
+     * Read from the family rather than from the auxiliary map because the corpus authors it
+     * as a family and the parser is the corpus's reader, not this class's.
+     */
+    fun insufficientData(facts: FactSet, dateKey: String): ReportNote? {
+        val family = catalog.familiesFor(Purpose.REPORT_PATTERN)
+            .firstOrNull { it.key in ReportRules.RENDERED_DIRECTLY }
+            ?: return null
+        val chosen = VariantChoice.choose(family.allVariants, dateKey, FiringHistory.EMPTY) { it.key }?.value
+            ?: return null
+        // An empty state that needed a number would be stating a fact about the person, and
+        // this is the one line in the report that states nothing about them. A slotted line
+        // is dropped rather than filled, exactly as an unfillable variant leaves a bench.
+        if (chosen.statement.slots.isNotEmpty()) return null
+        val rendered = SlotRenderer.render(chosen.statement.text, emptyMap(), Purpose.REPORT_PATTERN)
+            ?: return null
+        val candidate = Candidate(
+            ruleKey = "$RULE_KEY_PREFIX${family.key}",
+            familyKey = family.key,
+            variantKey = chosen.key,
+            purpose = Purpose.REPORT_PATTERN,
+            stage = chosen.stage,
+            register = chosen.register,
+            lengthBand = chosen.lengthBand,
+            rendered = rendered,
+            renderedQuestion = null,
+            slots = emptyMap(),
+            sourceFacts = emptyMap(),
+            namedAreaIds = emptySet(),
+            namedItemIds = emptySet(),
+        )
+        return when (validator.validate(candidate, facts)) {
+            is ValidationResult.Passed -> ReportNote(candidate.variantKey, candidate.rendered)
+            is ValidationResult.Vetoed -> null
+        }
+    }
 
     /**
      * The footer's basis line, or null when nothing about the basis can be stated.

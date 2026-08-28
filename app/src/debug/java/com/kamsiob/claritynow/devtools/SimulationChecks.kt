@@ -1,6 +1,8 @@
 package com.kamsiob.claritynow.devtools
 
+import com.kamsiob.claritynow.domain.engine.catalog.AbsenceSubjectRules
 import com.kamsiob.claritynow.domain.engine.catalog.Purpose
+import com.kamsiob.claritynow.domain.engine.catalog.ReportRules
 import com.kamsiob.claritynow.domain.engine.validate.ValidatorVocabulary
 
 /**
@@ -207,6 +209,15 @@ object SimulationChecks {
      * the thing that gates the corpus phase has to be a number the build prints on every
      * run.
      */
+    /**
+     * **One quiet family is a decision rather than a silence, and it is named as one.**
+     * `insufficientData` is the pattern section's empty state, the Report renders it through
+     * `ReportLanguage` and the simulator never calls the composer, so it can only ever read
+     * as a family that never fired. The denominator stays at every family the corpus
+     * declares, deliberately: dropping it would make this run's number incomparable with the
+     * three before it, which is the mistake the stage check already made once. So the count
+     * is unchanged and the line says which of the quiet families left the engine on purpose.
+     */
     private fun everyFamilyFires(runs: List<SimulationRun>): CheckOutcome {
         val readings = SimulationAggregate.familyFirings(runs)
         val failures = mutableListOf<String>()
@@ -217,9 +228,14 @@ object SimulationChecks {
             val fired = ofPurpose.count { it.fired }
             measured += "${purpose.name} $fired of ${ofPurpose.size}"
             for (quiet in ofPurpose.filterNot { it.fired }) {
-                failures += when (quiet.rules) {
-                    0 -> "${purpose.name} ${quiet.family} never fired, and has no rule at all"
-                    1 -> "${purpose.name} ${quiet.family} never fired, and has 1 rule"
+                failures += when {
+                    quiet.family in ReportRules.RENDERED_DIRECTLY ->
+                        "${purpose.name} ${quiet.family} never fired here, and never will: the " +
+                            "Report renders it itself, so it has no rule for the engine to select. " +
+                            "ReportRules.RENDERED_DIRECTLY carries the decision"
+
+                    quiet.rules == 0 -> "${purpose.name} ${quiet.family} never fired, and has no rule at all"
+                    quiet.rules == 1 -> "${purpose.name} ${quiet.family} never fired, and has 1 rule"
                     else -> "${purpose.name} ${quiet.family} never fired, and has ${quiet.rules} rules"
                 }
             }
@@ -406,16 +422,32 @@ object SimulationChecks {
     }
 
     /**
-     * No sentence names an area with no events in the window it describes. 12, check 1.
+     * No sentence names an area with no events in the window it describes, unless the
+     * absence is what the sentence is about. 12, check 1.
      *
      * Enforced from today, and it is the check with the most behind it. Prohibition 3 of 1.1
      * removes archived and tombstoned areas from `AreaFacts` entirely so a rule cannot reach
      * one, validator check 1 re-reads the count for every area a sentence names, and the
      * `Phantom area` failure mode in section 13 is what both exist for. A failure here means
      * two independent guards failed together.
+     *
+     * **`AbsenceSubjectRules` is the one exception, and it is the same narrowing check 1
+     * makes.** `neglectedArea`, `areaGoneQuiet` and `areaRevival` say that an area has been
+     * still, so naming an area with no events in the week is the whole of what they do.
+     * Against the check as it was first written every one of their candidates was vetoed,
+     * 107 times across this year, and the ruling was that the check was right and the
+     * writing was wrong. The deeper conditions, a real lifetime, not new, and a measured
+     * silence rather than the never sentinel, are `AbsenceSubject`'s, and every sentence
+     * counted here has already been through it. What this can still see, and what it
+     * therefore checks, is that the exception belongs to those rules and to nothing else.
+     *
+     * The count of allowed absences is measured rather than dropped. A year with none of
+     * them means the three families are silent again, which is the state this change was
+     * made to end, and a check that only reported failures would not say so.
      */
     private fun noPhantomArea(runs: List<SimulationRun>): CheckOutcome {
         val failures = mutableListOf<String>()
+        var absences = 0
         for (run in runs) {
             for (invocation in run.invocations) {
                 val spoken = invocation.spoken ?: continue
@@ -425,8 +457,12 @@ object SimulationChecks {
                         failures += "${run.persona.key} ${invocation.dateKey} ${spoken.variantKey} " +
                             "names $areaId, which is not in the fact set at all"
                     } else if (events <= 0) {
-                        failures += "${run.persona.key} ${invocation.dateKey} ${spoken.variantKey} " +
-                            "names $areaId, which had no events in its window"
+                        if (spoken.ruleKey in AbsenceSubjectRules) {
+                            absences++
+                        } else {
+                            failures += "${run.persona.key} ${invocation.dateKey} ${spoken.variantKey} " +
+                                "names $areaId, which had no events in its window"
+                        }
                     }
                 }
             }
@@ -436,7 +472,7 @@ object SimulationChecks {
             name = "no sentence names an area with no events in its window",
             citation = "CLARITY_LOGIC_ENGINE.md 12, 1.1 prohibition 3 and check 1 of section 8",
             passed = failures.isEmpty(),
-            measured = "${failures.size} phantom areas",
+            measured = "${failures.size} phantom areas, $absences absences named on purpose",
             failures = failures,
             deferral = null,
         )

@@ -57,7 +57,8 @@ class Selector(private val catalog: ClarityCatalog) {
         // around it.
         // 3. Horizon. Drop a pair referencing a fact older than the rule declares.
         // 4. Repeat filter, Pulse only. Yesterday's family cannot be today's.
-        // 5. Cooldown. A (family, subject) pair that fired inside its family's cooldown.
+        // 5. Cooldown. A (family, subject) pair that fired inside its cooldown, which is
+        // the family's own everywhere but the pattern section. See [PATTERN_COOLDOWN_DAYS].
         val ranked = qualified
             .mapNotNull { withCallback(it, facts, moment) }
             .filter { withinHorizon(it, facts, moment) }
@@ -223,11 +224,33 @@ class Selector(private val catalog: ClarityCatalog) {
 
     // ---------------------------------------------------------------- step 5
 
-    /** True when this `(family, subject)` pair fired inside its family's cooldown. */
+    /** True when this `(family, subject)` pair fired inside the cooldown that applies to it. */
     private fun inCooldown(selection: Selection, history: FiringHistory, moment: EngineMoment): Boolean {
         val family = catalog.familyFor(selection.rule) ?: return true
-        return history.inCooldown(selection.rule.family, selection.subjectId, moment.dateKey, family.cooldownDays)
+        return history.inCooldown(
+            selection.rule.family,
+            selection.subjectId,
+            moment.dateKey,
+            cooldownDaysFor(selection, family.cooldownDays),
+        )
     }
+
+    /**
+     * How long this pair waits, which is what its family declares everywhere but the
+     * pattern section. 7.3.
+     *
+     * **The floor is a property of the selection and not of the declaration**, because one
+     * family key serves two surfaces. `decliningActivity` is a headline family and a
+     * pattern family at the same time and they share one `(family, subjectId)` cooldown
+     * key, so a longer number on the declaration in `EngineFamilies` would hold the
+     * headline back as well, and only the pattern section was ordered to wait three weeks.
+     *
+     * `maxOf` rather than a replacement, so this can only ever lengthen a wait. Every
+     * pattern family declares the flat Report fourteen today and the floor decides all of
+     * them; one that later declares longer keeps its own number.
+     */
+    private fun cooldownDaysFor(selection: Selection, declared: Int): Int =
+        if (selection.purpose == Purpose.REPORT_PATTERN) maxOf(declared, PATTERN_COOLDOWN_DAYS) else declared
 
     // ---------------------------------------------------------------- 5.1
 
@@ -283,6 +306,46 @@ class Selector(private val catalog: ClarityCatalog) {
 
         /** 6.3. No pattern may fire under three weeks of data. */
         const val PATTERN_WEEKS = 3
+
+        /**
+         * 7.3. The three weeks a pattern family waits, keyed per `(family, subjectId)`.
+         *
+         * ## What it fixes
+         *
+         * The pattern section had no wait of its own and inherited the flat fourteen day
+         * Report cooldown, which cannot block a weekly report at all. A report records its
+         * firing against its **week start** key and the next report selects against its own
+         * **week end**, so two consecutive reports are fourteen days apart on the only
+         * clock `FiringHistory` keeps, and `14 in 0 until 14` is false. The facts phase
+         * measured what followed: 419 pattern slots across a simulated year, 416 filled,
+         * and three families took 402 of them. Selection is deterministic, so on a person
+         * whose week keeps its shape the same rule wins every time and the seven families
+         * that also qualify lose every time.
+         *
+         * ## What it guarantees
+         *
+         * One `(family, subjectId)` pair never appears in two consecutive reports, so over
+         * `n` consecutive weekly reports no pair takes more than `(n + 1) / 2` of them.
+         *
+         * ## What it does not guarantee
+         *
+         * - **That a third family speaks.** Ranking is deterministic and a cooldown only
+         *   moves the winner aside for as long as it lasts, so the head rotates among
+         *   exactly `ceil(days / 7) - 1` pairs and everything below them still loses every
+         *   week. Three weeks rotates two. Rotating all seven starved families would take
+         *   eight weeks, and that number is the owner's to set rather than this one's
+         * - **That one family cannot hold the section.** The key is per subject, exactly as
+         *   7.3 states it for the Pulse, so `areaGoneQuiet` with two quiet areas fills
+         *   consecutive weeks under two subjects without ever entering its own cooldown
+         * - **That a slot stays filled.** A cooldown removes candidates and never adds one.
+         *   Where a single pair qualifies and it is the pair that spoke last week, the
+         *   section falls silent where it used to speak, so the pattern section's share of
+         *   silence rises with this number
+         *
+         * `PatternCooldownTest` measures all four of those statements against the real
+         * catalog rather than restating them.
+         */
+        const val PATTERN_COOLDOWN_DAYS = 21
 
         /**
          * Families whose sentence names a week, and the week key it would name.

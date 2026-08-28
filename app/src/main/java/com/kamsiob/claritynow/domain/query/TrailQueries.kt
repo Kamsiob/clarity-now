@@ -712,19 +712,58 @@ class TrailQueries(
      * costs nothing, and a queue length that grew every time somebody had a thought
      * would make it cost something after all.
      */
-    fun queueSizeByAreaAt(atMillis: Long, includeArchived: Boolean = false): Map<String, Int> {
-        val state = stateBefore(atMillis)
-        val areas = if (includeArchived) {
-            state.areas.values.filter { it.deletedAt == null }
-        } else {
-            state.liveAreas
-        }
-        return areas.associate { it.id to state.queueIn(it.id).size }.toSortedMap()
-    }
+    fun queueSizeByAreaAt(atMillis: Long, includeArchived: Boolean = false): Map<String, Int> =
+        queueSizesOf(stateBefore(atMillis), includeArchived).toSortedMap()
 
     /** The whole queue at the instant, summed over [queueSizeByAreaAt]. */
     fun queueSizeAt(atMillis: Long, includeArchived: Boolean = false): Int =
         queueSizeByAreaAt(atMillis, includeArchived).values.sum()
+
+    /**
+     * Every area's queue length as the window opened and after each event inside it.
+     *
+     * Entry zero of every list is that area's queue at [startMillis], the same instant
+     * [queueSizeByAreaAt] answers and the same number `AreaFacts.queueLengthAtWindowStart`
+     * carries. One entry follows for each event in the window, whether or not that event
+     * touched a queue, so every list is the same length and index `i` names the same
+     * moment in all of them. A caller comparing two areas therefore never has to carry an
+     * instant around, and a caller reading one area sees its shape rather than its ends.
+     *
+     * **It exists because two boundaries cannot see a transition.** A queue that held five
+     * as the window opened and holds nothing now, and a queue that held nothing, grew to
+     * five on Tuesday and was worked down to nothing on Saturday, are the same pair of
+     * numbers and two different weeks. `CORPUS_1_PULSE.md` 10 says `{areaName}'s queue
+     * went from {n} to nothing` and `CORPUS_2_REPORT.md` 2.17 says `{areaName} cleared its
+     * entire queue this week`, which is the second of those, so the fact those families
+     * read is folded out of this series in layer one instead of subtracted from two ends.
+     * There is no boundary pair anywhere that can approximate it, which is why this is a
+     * function here rather than arithmetic there.
+     *
+     * An area is present with a zero at every moment before it existed and after it stopped
+     * holding anything, so an area created inside the window has a full length list and no
+     * caller has to reason about a shorter one. Which areas are counted at all follows
+     * [queueSizeByAreaAt] exactly, archived areas included only on request and tombstoned
+     * areas never, because a series that counted an area the person can no longer see would
+     * feed a rollup that names areas out loud.
+     *
+     * The fold starts from the state at [startMillis] and applies the window's events in
+     * total order, which is what [queueSizeByAreaAt] would answer at each of those instants,
+     * computed once rather than once per event.
+     */
+    fun queueSizeSeriesByArea(
+        startMillis: Long,
+        endMillis: Long,
+        includeArchived: Boolean = false,
+    ): Map<String, List<Int>> {
+        var state = stateBefore(startMillis)
+        val samples = mutableListOf(queueSizesOf(state, includeArchived))
+        for (event in eventsIn(startMillis, endMillis)) {
+            state = ClarityReducer.apply(state, event)
+            samples += queueSizesOf(state, includeArchived)
+        }
+        val areaIds = samples.flatMapTo(sortedSetOf<String>()) { it.keys }
+        return areaIds.associateWith { areaId -> samples.map { it[areaId] ?: 0 } }
+    }
 
     /**
      * Items added into an area in the window. Intake, not gestures.
@@ -1111,6 +1150,21 @@ class TrailQueries(
         }
         memo = atMillis to state
         return state
+    }
+
+    /**
+     * The queue length of every area the state holds, unsorted.
+     *
+     * One definition, read by the instant query and by the series, so the two can never
+     * disagree about what counts as queued or about which areas are visible.
+     */
+    private fun queueSizesOf(state: ClarityState, includeArchived: Boolean): Map<String, Int> {
+        val areas = if (includeArchived) {
+            state.areas.values.filter { it.deletedAt == null }
+        } else {
+            state.liveAreas
+        }
+        return areas.associate { it.id to state.queueIn(it.id).size }
     }
 
     private fun areaCreatedEvent(areaId: String): ClarityEvent? =

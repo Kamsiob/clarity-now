@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Quick Capture. design-v3.md 12.2 allows this one at 2x2 or 1x1, which is what the
+    target cells and the resize floor below say: it opens at two by two and a person can
+    take it down to a single cell, where QuickCaptureWidget drops the count and shows one
+    short word.
+
+    updatePeriodMillis is zero on purpose. The platform's own period has a thirty minute
+    floor and would wake the app on a schedule of its own; every update these widgets get
+    is one the app asked for, when the snapshot changed or when the refresh ran.
+    MASTER_BUILD_PROMPT 13.3.
+
+    There is no previewImage and no previewLayout yet. design-v3.md 12.1 requires the
+    picker preview to be generated from the real widget and never from a mockup, and a
+    hand written preview layout would be exactly the mockup that rule forbids. The
+    launcher shows the app icon and the label until a real one is captured on a device.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_quick_capture_description"
+    android:initialLayout="@layout/glance_default_loading_layout"
+    android:minWidth="110dp"
+    android:minHeight="110dp"
+    android:minResizeWidth="40dp"
+    android:minResizeHeight="40dp"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellWidth="2"
+    android:targetCellHeight="2"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen" />

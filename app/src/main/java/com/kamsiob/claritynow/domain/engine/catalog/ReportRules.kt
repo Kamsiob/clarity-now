@@ -36,9 +36,27 @@ internal object ReportRules {
     /**
      * `clearly exceed` for the two flow headlines.
      *
-     * Three, because two is the point at which the `accumulation` and `throughput` Pulse
-     * families first speak at all, and a headline should not fire on the same margin that
-     * a daily note does. A headline is the largest text in the app and it is a pull quote.
+     * Three, and **the reasoning that first chose it does not hold**, so it is restated
+     * here rather than left standing. The original was that two is where the Pulse
+     * `accumulation` and `throughput` ladders begin and a headline should not fire on the
+     * margin a daily note uses. That compares a week to a day: a weekly margin set one
+     * above a daily one is a weaker claim per day, not a stronger one, so the number was
+     * being justified by an argument for a different number.
+     *
+     * The number stays where it is on its own weekly terms. A headline is the largest text
+     * in the app and it is a pull quote, so it wants a gap somebody would recognize
+     * without being shown the arithmetic; and it is the floor for both directions, so it
+     * has to be a margin `netInflow` can also carry without becoming the default headline
+     * of every ordinary week. Three is the smallest gap that reads as a direction rather
+     * than as noise across seven days, and `netInflow` at this margin took 34 of 451
+     * report windows, which is a headline that means something rather than one that is
+     * always there.
+     *
+     * **`netOutflow` never qualified once and lowering this would not change that.**
+     * `PulseRules.throughput` carries the account: no simulated day finishes more than it
+     * captures, so no simulated week does either, and weekly net flow is at or below zero
+     * throughout the run. The margin is not what is holding this headline back and moving
+     * it would only weaken `netInflow`, which works.
      */
     private const val CLEAR_FLOW_MARGIN = 3
 
@@ -67,9 +85,6 @@ internal object ReportRules {
     /** A comparison across the last few weeks. */
     private const val PATTERN_HORIZON = 90
 
-    /** The first three weeks, which is the whole of what `insufficientData` looks at. */
-    private const val EARLY_HORIZON = 30
-
     /**
      * The fewest weeks `comebackPattern` can see two returns across.
      *
@@ -90,6 +105,42 @@ internal object ReportRules {
 
     val ALL: List<ClarityRule> = headlines() + observations() + patterns()
 
+    /**
+     * Corpus families the Report renders directly, with no rule and no engine selection.
+     *
+     * **One entry, and it is an empty state rather than an observation.**
+     * `CORPUS_2_REPORT.md` 3.16 is written as a pattern family and it is not one: its four
+     * lines say that there is not enough history to see a pattern yet. Nothing in them is a
+     * claim about the person, there is no subject, there is no escalation and there is
+     * nothing for layer 5 to compare against a fact.
+     *
+     * As a rule it was also unreachable. `ReportComposer` asks for a pattern only when
+     * `weeksOfData >= 3`, and the rule required `weeksOfData < 3`, so the two conditions
+     * could never both hold and the family had authored language that could not be spoken.
+     * Making the composer ask for a pattern it did not want, so that a rule could tell it
+     * there was none, is machinery in the shape of a section header.
+     *
+     * So the composer renders the line itself, through `ReportLanguage.insufficientData`,
+     * exactly as it renders the other three benches that are not families. That is a
+     * deliberate and owner authorized exception to the rule that every sentence about a
+     * person's own data comes through the engine, and it is narrow: an empty state makes no
+     * claim about anybody's data. `ReportComposer` carries the full note at the point the
+     * condition is read.
+     *
+     * [CatalogIntegrity.everyFamilyHasARule] reads this, so a family cannot lose its rule
+     * without somebody deciding it should. **Adding an entry here is a family leaving the
+     * engine.** Add one only for a bench that makes no claim about a person, and never to
+     * park a rule that is inconvenient to write.
+     *
+     * **`insufficientData` is the ninth of the nine families that never qualified once,
+     * and it is the only one of them already closed.** The rules pass re-checked it rather
+     * than assuming: it is the entry above, the composer renders it, and the catalog
+     * defect the measurement recorded, a rule requiring fewer than three weeks behind a
+     * gate that only asks for a pattern at three or more, no longer exists. Nothing about
+     * it is a threshold or a window and it needs nothing from phase 9.
+     */
+    val RENDERED_DIRECTLY: Set<FamilyKey> = setOf("insufficientData")
+
     private fun report(
         key: RuleKey,
         purpose: Purpose,
@@ -99,6 +150,7 @@ internal object ReportRules {
         subject: SubjectSelector = Subjects.NONE,
         priority: Int = 0,
         unflattering: Boolean = UnflatteringRules.isUnflattering(family, stage),
+        absenceSubject: Boolean = false,
         callback: CallbackRequirement? = null,
         criteria: List<Criterion>,
     ) = ClarityRule(
@@ -110,6 +162,7 @@ internal object ReportRules {
         priority = priority,
         horizonDays = horizonDays,
         unflattering = unflattering,
+        absenceSubject = absenceSubject,
         requiresCallback = callback,
         stage = stage,
     )
@@ -201,6 +254,32 @@ internal object ReportRules {
             },
             window("headline.queue.holds", "the queues hold something to count") { it.totalQueueLength() >= 3 },
         )),
+        /**
+         * `clearing`, dark for 451 report windows, and the reason was not in this rule.
+         *
+         * It reads `RollupFacts.queueDrainedAreaIds`, which was anchored to the two window
+         * boundaries, so a queue built and finished inside the week was invisible to it.
+         * That list is now `AreaFacts.queueDrainedFrom` with the corpus floor applied, and
+         * this rule reads it unchanged: 1.13's trigger is `one or more areas fully drained`
+         * and a fall to nothing on Saturday is one. `PulseRules.queueDrain` carries the full
+         * account of the fact and why a criterion could not approximate it. Nothing about a
+         * headline is weekly in the wrong way here: 1.13's eight lines are a week's pull
+         * quote and the window they are read over is the week.
+         *
+         * **Two numbers in this rule come from outside 1.13 and both are deliberate.**
+         * The corpus trigger is `one or more areas fully drained` and names no figure at
+         * all. The three inside `queueDrainedAreaIds` is the Pulse family's stage 1 header,
+         * `queue of three to four drained`, borrowed across volumes; a clean sweep of one
+         * queued item is not what `A clean sweep` and `All the way through` claim, so the
+         * floor stays. The completions floor is this file's own and is the guard
+         * [drainedByFinishing] makes exact for the two rules whose subject is the area.
+         * **It is window scoped and the sentence is area scoped**: `hd.clear.04` is
+         * `{areaName} finished everything`, and two completions anywhere in the week do
+         * not establish that the named area produced any of them. Tightening it needs the
+         * criterion to agree with `SlotBindings`, which picks the named area itself, and
+         * that coupling is worth writing only once the boundary fact is fixed and this
+         * family can reach a person at all.
+         */
         report("report.headline.clearing", Purpose.REPORT_HEADLINE, "clearing", 1, WEEK_HORIZON, criteria = listOf(
             window("headline.clearing.drained", "an area's queue emptied this week") {
                 it.rollup.queueDrainedAreaIds.isNotEmpty()
@@ -216,6 +295,29 @@ internal object ReportRules {
                 !isQuietWeek(it.window.totalEvents, it.window.dayCount)
             },
         )),
+        /**
+         * `fragmented`, dark across 451 report windows, and the rule is a faithful reading
+         * of 1.15.
+         *
+         * The corpus trigger is `many events, few completions, high switching` and the
+         * three criteria are those three things in that order, over the week the headline
+         * describes. There is no window error to find: every one of the eight lines is
+         * about a week and the window is the week.
+         *
+         * **What is missing is a persona, not a threshold.** The switching criterion held
+         * ten times in the run and never beside the other two, because no simulated life
+         * both hoards and switches. `QueueHoarder` clears the first two criteria most
+         * weeks, roughly twelve events against one completion, and never swaps once all
+         * year; `HeavySingleArea` is the only persona that swaps at all and it finishes
+         * three or four things a week, which fails `fewCompletions`. The shape this
+         * headline is for, a week of starting things and putting them down again, is
+         * exactly the week nobody in section 12 lives.
+         *
+         * The two swaps are the same count `switchingBehavior` calls high, read at the same
+         * grain, and the ids are kept apart on purpose: `RuleCatalogTest` requires one
+         * criterion id to mean one condition, and the Pulse `switching` family counts an
+         * area's own swaps rather than the window's.
+         */
         report("report.headline.fragmented", Purpose.REPORT_HEADLINE, "fragmented", 1, WEEK_HORIZON, criteria = listOf(
             window("headline.frag.manyEvents", "the week was busy") { it.window.totalEvents >= 10 },
             window("headline.frag.fewCompletions", "very little of it closed") { it.window.completions <= 2 },
@@ -290,15 +392,19 @@ internal object ReportRules {
             window("focus.minutes", "there are minutes to count") { it.window.focusMinutesTotal >= 1 },
         )),
         /**
-         * `neglectedArea` names an area with no events in the week, which is the one
-         * family that sits against validator check 1 in section 8. The conflict is real
-         * and is recorded in the phase 5 report: prohibition 1 forbids naming an area
-         * with zero events **in the window under consideration**, and for this family the
-         * window under consideration is the neglect window rather than the report week.
-         * The rule requires real lifetime history and a non new area so the claim is
-         * about something that used to move.
+         * `neglectedArea` names an area with no events in the week, which is what put it
+         * against validator check 1 in section 8. The conflict was real and it was a
+         * specification error rather than a rule defect: prohibition 1 forbids naming an
+         * area with zero events **in the window under consideration**, and for this family
+         * the window under consideration is the neglect window rather than the report week.
+         *
+         * **The check is now narrowed rather than the rule loosened.** [ClarityRule.absenceSubject]
+         * says the subject of this family is the absence itself, and check 1 answers that
+         * by requiring the area to have a real history rather than by requiring events in
+         * the week. The two criteria below carry that same history requirement, so the rule
+         * cannot select an area the check would then refuse.
          */
-        report("report.observation.neglectedArea.s1", Purpose.REPORT_OBSERVATION, "neglectedArea", 1, PATTERN_HORIZON, Subjects.AREA, criteria = listOf(
+        report("report.observation.neglectedArea.s1", Purpose.REPORT_OBSERVATION, "neglectedArea", 1, PATTERN_HORIZON, Subjects.AREA, absenceSubject = true, criteria = listOf(
             area("neglect.days.7to13", "the area has been silent seven to thirteen days") {
                 it.daysSinceLastEvent in 7..13
             },
@@ -306,7 +412,7 @@ internal object ReportRules {
                 it.lifetimeEvents >= 5 && !it.isNew
             },
         )),
-        report("report.observation.neglectedArea.s2", Purpose.REPORT_OBSERVATION, "neglectedArea", 2, PATTERN_HORIZON, Subjects.AREA, criteria = listOf(
+        report("report.observation.neglectedArea.s2", Purpose.REPORT_OBSERVATION, "neglectedArea", 2, PATTERN_HORIZON, Subjects.AREA, absenceSubject = true, criteria = listOf(
             area("neglect.days.14plus", "the area has been silent fourteen days or more") {
                 it.daysSinceLastEvent >= 14 && it.daysSinceLastEvent != Int.MAX_VALUE
             },
@@ -347,7 +453,18 @@ internal object ReportRules {
             window("obs.queue.growing", "at least one area's queue grew") { it.rollup.queueGrowingAreaIds.isNotEmpty() },
             window("obs.queue.holds", "the queues hold three or more things to count") { it.totalQueueLength() >= 3 },
         )),
-        report("report.observation.areaRevival", Purpose.REPORT_OBSERVATION, "areaRevival", 1, PATTERN_HORIZON, Subjects.AREA, criteria = listOf(
+        /**
+         * The dormancy lead. Its subject is the gap the area came back from, so it is
+         * flagged like the two silence families, and unlike them it also carries
+         * [areaHasEvents]: an area that returned moved inside the window by definition.
+         *
+         * **The flag is therefore inert as this rule stands**, and it is here anyway,
+         * because it records what the family is about. Check 1 only consults it on an area
+         * with no events in the window and this rule cannot select one, so the flag costs
+         * nothing and stops the next author who widens the return window from rediscovering
+         * the same 107 vetoes.
+         */
+        report("report.observation.areaRevival", Purpose.REPORT_OBSERVATION, "areaRevival", 1, PATTERN_HORIZON, Subjects.AREA, absenceSubject = true, criteria = listOf(
             criterion("revival.returned", "this area returned after a dormancy") { facts, subject ->
                 subject != null && subject.id in facts.rollup.dormantReturnedAreaIds
             },
@@ -445,13 +562,47 @@ internal object ReportRules {
             window("abandon.some", "at least two sessions ended early") { it.window.focusEndedEarly >= 2 },
             window("abandon.started", "there are started sessions to set them against") { it.window.focusStarted >= 3 },
         )),
+        /**
+         * `queueDrained`, and the two things that were wrong with it.
+         *
+         * **`drained.hadAQueue` was padding and is gone.** `RollupFacts.queueDrainedAreaIds`
+         * is defined as a queue of three or more at the window start that is zero at the
+         * window end, so membership in that list already carries the starting queue.
+         * Restating it as a second criterion could never separate one fact set from
+         * another and bought a free point of specificity, which is the one number
+         * `ClarityRule` says must never be authored. Section 14's discrimination report
+         * cannot see this shape, because it measures each criterion's pass rate across the
+         * whole corpus rather than conditionally on the rest of its own rule.
+         *
+         * **The completions guard is new and is not a threshold.** Nothing in the drain
+         * facts asks how the items left, and a queue also empties when its items are
+         * deleted. `ob.drain.l02` says `{areaName} cleared its entire queue this week`,
+         * which is false of somebody who threw five things away. [drainedByFinishing]
+         * carries the reasoning and the Pulse family reads the same criterion, so one id
+         * means one condition across both grains.
+         *
+         * **Why it was dark is the anchoring error `PulseRules.queueDrain` carried**, which
+         * survived the move to a week. The queue was read at the two window boundaries, so
+         * an area that built a queue on Tuesday and finished it on Saturday read as no
+         * drain at all. `CORPUS_2_REPORT.md` 1.13 states the trigger for `clearing` as `one
+         * or more areas fully drained` and states no boundary, and 2.17 says `cleared its
+         * entire queue this week` rather than `had a queue on Monday`. Both now read
+         * `AreaFacts.queueDrainedFrom` through the rollup, and `PulseRules.queueDrain`
+         * carries the account of the fact.
+         *
+         * **One lead of this bench does date itself and is handled where a line is handled.**
+         * `ob.drain.l01`, *It held {n} things on Sunday*, is the only sentence in either
+         * volume that names the boundary, and it is false whenever the fall began after it.
+         * `SlotBindings` overrides `{n}` there to a measure that answers only when the fall
+         * began at or before the window opened, so the line drops off the bench rather than
+         * renders a number nobody could fault about a Sunday that held nothing. A criterion
+         * could not do this: it would take the whole family down with the one line.
+         */
         report("report.observation.queueDrained", Purpose.REPORT_OBSERVATION, "queueDrained", 1, WEEK_HORIZON, Subjects.AREA, criteria = listOf(
             criterion("drained.area", "this area's queue emptied this week") { facts, subject ->
                 subject != null && subject.id in facts.rollup.queueDrainedAreaIds
             },
-            area("drained.hadAQueue", "it had a queue of three or more to begin with") {
-                it.queueLengthAtWindowStart >= 3
-            },
+            drainedByFinishing(),
             areaHasEvents(),
         )),
         report("report.observation.steadyPace", Purpose.REPORT_OBSERVATION, "steadyPace", 1, PATTERN_HORIZON, criteria = listOf(
@@ -529,7 +680,7 @@ internal object ReportRules {
             },
             threeWeeksOfData,
         )),
-        report("report.pattern.areaGoneQuiet", Purpose.REPORT_PATTERN, "areaGoneQuiet", 1, PATTERN_HORIZON, Subjects.AREA, criteria = listOf(
+        report("report.pattern.areaGoneQuiet", Purpose.REPORT_PATTERN, "areaGoneQuiet", 1, PATTERN_HORIZON, Subjects.AREA, absenceSubject = true, criteria = listOf(
             area("pattern.gone.threeWeeks", "the area has had nothing in it for three weeks") {
                 it.daysSinceLastEvent in 21..(PATTERN_HORIZON * 2)
             },
@@ -681,6 +832,24 @@ internal object ReportRules {
          * something, and `Your weeks end on Friday, consistently` about somebody who did
          * nothing at all for four weeks is a false claim with correct arithmetic behind
          * it.
+         *
+         * **It qualified once in eleven simulated years and the window is right.** The
+         * family speaks about four weeks, the fact is four weekly buckets and the horizon
+         * reaches them. The reason it is silent is that no persona in section 12 knows
+         * what day of the week it is: every one of them acts off a day index, so weekend
+         * days carry the same load as weekdays and four consecutive empty weekends can
+         * only happen by coincidence, which is what the single occurrence was.
+         *
+         * **The bench is wider than this rule and phase 9 owns the difference.** Three of
+         * the five lines claim absolute silence, `Nothing has happened on a weekend in
+         * four weeks`, and two claim a share, `{pct} of your activity has been on weekdays
+         * for a month` and `Your weeks end on Friday, consistently`. The rule encodes the
+         * strict branch, which is the safe direction: under it all five lines are true,
+         * and `{pct}` renders as a hundred. A second rule for the share branch would be
+         * the 7.3 device for a compound condition and it is **not** available here,
+         * because both rules would share one bench and the looser one could select
+         * `Nothing has happened on a weekend in four weeks` for a month that had a
+         * weekend in it. Splitting the bench is authoring work and comes after this pass.
          */
         report("report.pattern.weekendShift", Purpose.REPORT_PATTERN, "weekendShift", 1, PATTERN_HORIZON, criteria = listOf(
             window("pattern.weekend.silent", "no event fell on a Saturday or a Sunday in any of the last four weeks") {
@@ -748,20 +917,6 @@ internal object ReportRules {
                 it.history.weeksOfData >= COMEBACK_WEEKS
             },
             areaHasEvents(),
-        )),
-        /**
-         * The faint line shown when there are fewer than three weeks of snapshots. It is
-         * the only pattern rule whose criteria are the inverse of the section's own
-         * requirement, and it exists so the section says what it needs rather than
-         * showing a zero, per `MASTER_BUILD_PROMPT.md` 14b.10.
-         */
-        report("report.pattern.insufficientData", Purpose.REPORT_PATTERN, "insufficientData", 1, EARLY_HORIZON, priority = -50, criteria = listOf(
-            window("pattern.none.tooFewWeeks", "there are fewer than three weeks of snapshots") {
-                it.history.weeksOfData < 3
-            },
-            window("pattern.none.hasSomething", "there is at least a week, so this is early rather than empty") {
-                it.history.weeksOfData >= 1
-            },
         )),
     )
 }

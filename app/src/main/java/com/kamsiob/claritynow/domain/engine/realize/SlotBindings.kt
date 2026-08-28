@@ -161,10 +161,14 @@ internal object SlotBindings {
             "areaName" to subject("areaName"),
             "n" to subject("areaCompletions"),
         ),
+        // queueDrain. `{n}` is the height the queue fell from, never the queue at the window
+        // boundary. Every one of the fifteen statements describes the fall: `went from {n}
+        // to nothing`, `It held {n} things`, `{n} things left {areaName}, and nothing
+        // replaced them`. Not one dates itself, which is why this family needs no override.
         family(
             Purpose.PULSE, "queueDrain",
             "areaName" to subject("areaName"),
-            "n" to subject("areaQueueAtStart"),
+            "n" to subject("areaDrainedFrom"),
         ),
         family(
             Purpose.PULSE, "freshStart",
@@ -418,10 +422,12 @@ internal object SlotBindings {
             "m" to bind("focusStarted"),
             "sessions" to bind("focusStarted"),
         ),
+        // queueDrained, on the same reading as the Pulse family, with one line excepted in
+        // OVERRIDES because it is the only sentence in either volume that names the boundary.
         family(
             Purpose.REPORT_OBSERVATION, "queueDrained",
             "areaName" to subject("areaName"),
-            "n" to subject("areaQueueAtStart"),
+            "n" to subject("areaDrainedFrom"),
         ),
         family(
             Purpose.REPORT_OBSERVATION, "steadyPace",
@@ -584,6 +590,11 @@ internal object SlotBindings {
         "ob.day.l03" to mapOf("n" to bind("activeDays")),
         "ob.day.l05" to mapOf("n" to bind("quietDays")),
         "ob.aban.l05" to mapOf("n" to bind("focusSessions")),
+        // `It held {n} things on Sunday` is the one drain line that dates its count, so it
+        // reads the window boundary rather than the fall, and only when the two are the same
+        // thing. The measure answers null when the fall began after Sunday, which drops this
+        // lead off the bench and leaves the other four to speak.
+        "ob.drain.l01" to mapOf("n" to subject("areaDrainedFromAtStart")),
         "ob.stead.l05" to mapOf(
             "n" to weeksAgo("weekEventsAgo", 0),
             "m" to weeksAgo("weekEventsAgo", 1),

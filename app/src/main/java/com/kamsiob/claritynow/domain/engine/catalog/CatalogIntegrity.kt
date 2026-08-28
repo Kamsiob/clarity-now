@@ -51,20 +51,28 @@ internal object CatalogIntegrity {
 
     /**
      * Every family has at least one rule, or is listed in [RulesAwaitingFacts] with the
-     * fact it needs.
+     * fact it needs, or in [ReportRules.RENDERED_DIRECTLY] as a bench the Report renders
+     * itself.
      *
      * A family with authored language and no rule is silent, and a silent family looks
      * exactly like a family that never happened to qualify. This is the check that keeps
      * the difference visible.
+     *
+     * The two registers say different things and are kept apart on purpose.
+     * [RulesAwaitingFacts] is a rule that cannot be written because the fact it needs does
+     * not exist; [ReportRules.RENDERED_DIRECTLY] is a bench that should never have had a
+     * rule, because nothing in it is a claim about a person.
      */
     fun everyFamilyHasARule(catalog: ClarityCatalog): List<Finding> =
         catalog.families.mapNotNull { family ->
             if (catalog.rulesOf(family.purpose, family.key).isNotEmpty()) return@mapNotNull null
             if (family.key in RulesAwaitingFacts.FAMILIES_WITHOUT_RULES) return@mapNotNull null
+            if (family.key in ReportRules.RENDERED_DIRECTLY) return@mapNotNull null
             Finding(
                 "family with no rule",
                 "${family.purpose} ${family.key} has ${family.allVariants.size} authored lines and no " +
-                    "rule, and is not listed in RulesAwaitingFacts",
+                    "rule, and is listed neither in RulesAwaitingFacts nor in " +
+                    "ReportRules.RENDERED_DIRECTLY",
             )
         }
 

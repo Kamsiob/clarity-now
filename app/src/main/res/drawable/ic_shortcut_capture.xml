@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The Quick capture app shortcut's icon. MASTER_BUILD_PROMPT 13.5, design-v3.md 12.4.
+
+    The Material Symbols Rounded `add` glyph, weight 500, which is the same
+    drawable `ic_add.xml` ships and the same name design-v3.md section 7 maps this
+    meaning to. Apache License 2.0.
+
+    **It carries its own ground rather than borrowing the launcher's.** A shortcut icon
+    is drawn by the launcher into a popup whose background follows the phone's theme,
+    and it is not tinted, so a bare ink glyph is invisible in one of the two themes.
+    The disc is the app icon's own #141A2E with the mark's #F3F1EC on it, so the row of
+    three reads as this app in either theme and matches the icon they hang from.
+
+    The glyph sits in the same 72 of 108 units `ic_launcher_foreground.xml` insets the
+    mark to: the source viewport is 960 wide, 72/960 is the 0.075 scale below, and 18 is
+    half of what is left. Nothing about it is a stripe, a bar or an edge, per CLAUDE.md
+    rule 10.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:fillColor="@color/ic_launcher_background"
+        android:pathData="M54,54 m-54,0 a54,54 0 1,0 108,0 a54,54 0 1,0 -108,0 Z" />
+
+    <group
+        android:scaleX="0.075"
+        android:scaleY="0.075"
+        android:translateX="18"
+        android:translateY="18">
+        <group android:translateY="960">
+            <path
+                android:fillColor="#F3F1EC"
+                android:pathData="M434.5-434.5H237.37q-19.15 0-32.33-13.17-13.17-13.18-13.17-32.33t13.17-32.33q13.18-13.17 32.33-13.17H434.5v-197.13q0-19.15 13.17-32.33 13.18-13.17 32.33-13.17t32.33 13.17q13.17 13.18 13.17 32.33v197.13h197.13q19.15 0 32.33 13.17 13.17 13.18 13.17 32.33t-13.17 32.33q-13.18 13.17-32.33 13.17H525.5v197.13q0 19.15-13.17 32.33-13.18 13.17-32.33 13.17t-32.33-13.17q-13.17-13.18-13.17-32.33V-434.5Z" />
+        </group>
+    </group>
+</vector>

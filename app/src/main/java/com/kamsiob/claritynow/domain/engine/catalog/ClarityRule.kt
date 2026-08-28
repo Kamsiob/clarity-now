@@ -30,6 +30,32 @@ data class ClarityRule(
     val priority: Int,
     val horizonDays: Int,
     val unflattering: Boolean,
+    /**
+     * True when the thing this rule is about **is** an area's silence.
+     *
+     * Validator check 1 forbids naming an area with no events in the window being
+     * described, because such a sentence is a claim about a week the area had nothing to
+     * do with. Three rules exist to say exactly that the area had nothing to do with the
+     * week, and against the check as it was first written every one of their candidates
+     * was vetoed: 107 vetoes across a simulated year, all of them check 1, a silence with
+     * no reason anybody reading the output could find.
+     *
+     * **The check was right and the writing was wrong.** Check 1 exists to prevent a
+     * phantom area, meaning an area that never had activity being named as though it had.
+     * A family whose subject is the absence has to name an area with no events. So the
+     * check is narrowed rather than widened: a candidate from a rule carrying this flag
+     * may name an area with no events in the window, and only then, and only when that
+     * area has a real history behind the silence. `AbsenceSubject` in `domain.engine.validate`
+     * holds the three conditions and both check 1 implementations ask it.
+     *
+     * **Phantom protection survives untouched.** A new empty area still cannot be named,
+     * by any rule, flagged or not, because the flag buys a silence about a real history
+     * and nothing else.
+     *
+     * Only `neglectedArea`, `areaGoneQuiet` and `areaRevival` carry it. A rule that wants
+     * it because its candidates are being vetoed is a rule with the wrong criteria.
+     */
+    val absenceSubject: Boolean = false,
     val requiresCallback: CallbackRequirement? = null,
     /**
      * The escalation stage this rule points at, or null for a family with no ladder.
@@ -78,6 +104,35 @@ data class ClarityRule(
                 .thenByDescending { it.priority }
                 .thenBy { it.key }
     }
+}
+
+/**
+ * The keys of every rule carrying [ClarityRule.absenceSubject], for the one reader that
+ * holds a rule key and no catalog.
+ *
+ * Layer 5 is handed a `Candidate`, which records the key of the rule that produced it and
+ * not the rule itself, and `ClarityValidator` is constructed with a zone and nothing else
+ * at five call sites. Threading a catalog through all of them to read one boolean would
+ * make the validator's constructor a place where somebody could hand it a catalog whose
+ * flags disagreed with the one the engine selected from, which is a worse failure than the
+ * one it would solve.
+ *
+ * The rules are static. `ClarityCatalog.build` assembles exactly these three lists whatever
+ * corpus text it is given, so this set and the catalog's rules cannot be different rules.
+ *
+ * A key that is not in the catalog answers false, which is the safe direction: an unknown
+ * rule gets check 1 as it was written, and a hand built test candidate carrying an invented
+ * key is not quietly granted the exception.
+ */
+internal object AbsenceSubjectRules {
+
+    val KEYS: Set<RuleKey> =
+        (PulseRules.ALL + ReportRules.ALL + MomentumRules.ALL)
+            .filter { it.absenceSubject }
+            .map { it.key }
+            .toSet()
+
+    operator fun contains(ruleKey: RuleKey): Boolean = ruleKey in KEYS
 }
 
 /**

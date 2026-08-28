@@ -131,7 +131,7 @@ The platform sources this app uses:
 | iconography | Material Symbols wherever a symbol carries the right meaning. The SVGs in the visual references are illustrative and are not shipping assets. The mapping, including anything drawn by hand, is recorded in `design-v3.md` |
 | widgets | `androidx.glance`, per 13.3 |
 | the Live Update | `Notification.ProgressStyle`, per 14b.6 |
-| app shortcuts | the androidx.core shortcuts APIs, per 13.5 |
+| app shortcuts | the androidx.core shortcuts APIs, per 13.5. Built as the `res/xml/shortcuts.xml` resource those APIs parse, because no androidx entry point publishes a shortcut without making it dynamic and 13.5 rules dynamic out |
 | the quick settings tile | the platform `TileService`, per 13.5 |
 | fonts | Google Fonts, downloaded and committed as files per 3.1. Never the Downloadable Fonts API |
 
@@ -680,7 +680,7 @@ The goal for every one of them is **zero taps to see**, and where an action exis
 
 **Rules every widget follows.** Built with `androidx.glance`. Deep links open the right surface, except while a focus session is running, when any widget tap goes to the focus screen. If a configured area was deleted or archived, show a reconfigure prompt. Each one renders correctly in dark mode, honors calm mode, scales text without clipping at its smallest grid size, and shows a sensible state when it has nothing to show. Each one is usable with TalkBack and carries real content descriptions rather than a repeated label. **Every preview image in the widget picker is generated from the real widget and never from a mockup**, which is the same rule 16.6 applies to the README screenshots and for the same reason. The shared visual DNA is in `design-v3.md` 12; this section is the behavior.
 
-**Required in v1. All pending, phase 12.**
+**Required in v1. All six built, phase 12**, and described as built at the foot of this section.
 
 | widget | size | what it shows | tap |
 |---|---|---|---|
@@ -700,6 +700,32 @@ The goal for every one of them is **zero taps to see**, and where an action exis
 - **Quick Capture carries the whole capture principle.** Every decision between the thought and the record is a place the thought is lost, which is why it opens into the inbox and asks for nothing. The inbox count is plain text, **never a badge and never a dot**
 - **Focus Countdown reads as a shape before it reads as a number**, per `design-v3.md`. Glance updates are throttled by the system, so its refresh cadence is chosen deliberately and the reasoning is recorded rather than tuned until it looks right
 
+**Built, phase 12.** All six, in `widget/`, on `androidx.glance`, over one snapshot in
+`data/widget/`. The snapshot is written by a collector `ClarityApp` installs, which
+follows the projection and rewrites only when the content changed, plus
+`WidgetRefreshWorker` every six hours. `Next Up`, `First Step` and `All Areas` each name
+an optional configuration screen, so a widget is placed and drawn on the automatic area
+immediately and pinned to one afterward if the person wants that. An area archived or
+deleted under a widget is told apart from the other by the snapshot and named, rather
+than left stale or blank.
+
+**The boundary this phase was most likely to lose is intact.** `ClarityWidgetSnapshot`
+carries facts and finished sentences and nothing that could be realized on the far side:
+no key, no family, no stage, no fact reference. **No widget reads a corpus and no widget
+calls the engine**, which is 11.1's one path, and the accepted plan line the deferred One
+Thing widget will need is carried whole rather than as the four keys it was built from.
+
+**Two things it owes**, both named where they belong rather than dropped. **No widget has
+a preview image**, so the picker shows the loading layout: `design-v3.md` 12.1 requires
+one generated from the real widget, a hand written preview layout is exactly the mockup
+that rule forbids, and each resource file says so at the place the attribute would go.
+And **`MainActivity` routes only `ACTION_OPEN_FOCUS`**, so the taps that open an area,
+capture, Momentum or a session on one item reach the app and land on whatever tab it was
+left on. Every one of them is a predicate that already exists, in `WidgetIntents` and in
+`PulseIntents`, called from `onCreate` and `onNewIntent` beside the one call that is
+there. It is the same gap phase 6 left behind for the Pulse reminder, it is now six
+surfaces wide, and `docs/BUILD_STATE.md` carries it.
+
 ### 13.4 Notifications
 
 Channels: **Focus** (session complete, default importance, gentle sound), **Reminders** (Pulse reminder), **Ongoing** (silent, the running session chronometer).
@@ -712,11 +738,48 @@ Request `POST_NOTIFICATIONS` contextually, the first time the user starts a focu
 
 ### 13.5 App shortcuts and the quick settings tile
 
-**Both are pending, phase 12,** both are new in Addendum 01, and both supersede the line in section 18 that put home screen shortcuts out of scope for v1. The reasoning is the widgets' reasoning: fewer steps between an intention and an action.
+**Both are built, phase 12,** both are new in Addendum 01, and both supersede the line in section 18 that put home screen shortcuts out of scope for v1. The reasoning is the widgets' reasoning: fewer steps between an intention and an action.
 
 **Three static shortcuts** on a long press of the app icon, built with the androidx.core shortcuts APIs: `Quick capture`, `Start focus`, `Today's Pulse`. Each opens the destination its matching widget opens, so quick capture lands in the unfiled inbox and today's Pulse opens the Pulse surface in whatever state it is in, including its ambient state on a day the engine stayed silent. **Static, not dynamic.** A shortcut list that reordered itself around what the user did most would be a measurement of the user, and it would be one they never asked for.
 
 **One quick settings tile** that starts or ends a focus session from the notification shade, on the platform `TileService`, reflecting live session state. Tapping it with no active item anywhere opens the chooser rather than failing, which is the same degradation the Focus chip already performs in section 10.
+
+**Built, phase 12.** The shortcuts are `res/xml/shortcuts.xml` and one `meta-data` line
+on the launcher activity, with nothing behind them at runtime: they are published by the
+system from the manifest, so no code in this app creates them, ranks them or reports that
+one was used. `ShortcutManagerCompat.reportShortcutUsed` is never called and a test
+asserts it never will be, because that call exists to feed a launcher's ranking and a
+usage report is a usage record. Each shortcut sends the action the matching widget or
+notification already sends, `ShortcutContractTest` asserts the three strings in the
+resource still equal the three constants they were copied from, and the package inside
+each intent comes from a generated string resource because `${applicationId}` does not
+reach a resource file and a literal would be three dead shortcuts on every debug install.
+
+The tile is `tile/FocusTileService.kt`. It reads
+`ClarityRepository.runningFocusSession`, which is the persisted handle resolved against
+the log and the same flow the Focus surface and the ongoing notification read, so the
+three cannot disagree. Ending goes to the receiver the Live Update's `End` action already
+reaches, which is one more caller of one path rather than a second way to end a session,
+and an early end stays a completed short session per 14b.5. Both halves run behind
+`unlockAndRun`, so a locked phone asks for the passcode first and neither half has a
+different rule from the other.
+
+**Two open choices, decided here rather than left implicit.** `Start focus`, on the
+shortcut and on the tile, **opens the Focus surface rather than starting a session**,
+even when exactly one area has an active item and the choice would be unambiguous. A
+session is a row in a log that only ever gains rows, the person has not seen a screen
+yet, and the First Step widget already answers the same question the same way, so all
+three launcher surfaces say one thing. With a session already running the same action
+opens that session, so neither surface can start a second one. And **the tile carries no
+subtitle and no countdown**: the shade is readable over a lock screen and what somebody
+is working on is not for a passer by, while a number that only moves when the shade opens
+is worse than no number at all.
+
+**What the shortcuts still wait on is `MainActivity`.** `Start focus` works today because
+that Activity routes `ACTION_OPEN_FOCUS`. `Quick capture` and `Today's Pulse` send
+actions nothing routes yet, so both open the app at whatever tab it was left on. It is
+the same missing call the six widgets wait on, 13.3 names it, and it is two predicates
+that already exist.
 
 ---
 
@@ -1036,7 +1099,7 @@ Two per-device keys join the list in 5.4, and neither is engine state, so neithe
 
 **Calm mode** is a Settings toggle in addition to and independent of the OS reduce motion setting, which `design-v3.md` 8.3 already honors. It reduces motion to crossfades, reduces the saturation of washes and accents, disables the staggered list entrance and the breathing glow, and **applies to the widgets and the Live Update as well as to the app**. `design-v3.md` owns every value it changes. It is what makes Material 3 Expressive safe for this audience rather than overwhelming: **ship the expressive direction and the exit.**
 
-**What was built, and what closed it.** The switch, the color transform, the entrance rule and the three audits in `design-v3.md` 16.6 to 16.8 landed in phase 3b, and calm mode joins the one global motion flag with an `or` rather than adding a motion level beside it, so **reduce motion always wins on motion**. The `Calm mode` **row** landed in phase 11 with the screen it was waiting for, under Appearance, labeled and captioned as `design-v3.md` 16.1 states. One carry-forward is still open: the widgets honor it in phase 12, by reading it out of the widget snapshot rather than out of DataStore, which is not multi process safe. The Live Update's half was phase 4's.
+**What was built, and what closed it.** The switch, the color transform, the entrance rule and the three audits in `design-v3.md` 16.6 to 16.8 landed in phase 3b, and calm mode joins the one global motion flag with an `or` rather than adding a motion level beside it, so **reduce motion always wins on motion**. The `Calm mode` **row** landed in phase 11 with the screen it was waiting for, under Appearance, labeled and captioned as `design-v3.md` 16.1 states. The carry-forward closed in phase 12: every widget honors it, and it reaches them in the widget snapshot rather than out of DataStore, which is not multi process safe. A unit test asserts calm mode travels that way rather than being read on the far side. The Live Update's half was phase 4's.
 
 **The stored value stayed nullable through the row landing, and that is load bearing:** a `Boolean` defaulting to false would mean off for every person who has the system setting on and never opens Settings, which is precisely the person the feature exists for. Absence is a state the storage carries and the interface never shows, so `SettingsUiState` deliberately carries **no** calm mode field: the resolved two state value reaches the screen through `LocalCalmMode`, which is computed from the stored value and the live system setting, and a copy in the state would be a second answer that does not follow the system.
 
@@ -1280,6 +1343,22 @@ Phrasing of this shape: `Built for people who find long lists paralyzing. Design
 
 Sync of any kind, the data model is ready but the transport is not built. Any networking. Any permission beyond notifications, which includes `POST_PROMOTED_NOTIFICATIONS` and therefore permits the Live Update in 14b.6. Any account. Wear OS. Tablet layouts, though the phone layout must not break. Locales beyond English. Macrobenchmark harnesses. Analytics of any kind, permanently.
 
+**The permission line above is not true of the app as built, and phase 12 settled it rather than restating it.** `docs/BUILD_STATE.md` has carried the question since phase 2: section 3 requires WorkManager, 12.1 and 13.3 both schedule work with it, and its manifest contributes three permissions to the merge. The merged manifest was read for both variants rather than reasoned about, and it declares exactly this, on debug and on release:
+
+| permission | where it comes from | what it is |
+|---|---|---|
+| `POST_NOTIFICATIONS` | this app, 13.4 | runtime, requested contextually |
+| `POST_PROMOTED_NOTIFICATIONS` | this app, 14b.6 | normal, granted at install |
+| `VIBRATE` | this app, `design-v3.md` 9 | normal, granted at install |
+| `WAKE_LOCK` | work-runtime | normal, granted at install |
+| `RECEIVE_BOOT_COMPLETED` | work-runtime | normal, granted at install |
+| `FOREGROUND_SERVICE` | work-runtime | normal, granted at install |
+| `<applicationId>.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` | androidx.core | signature, declared and used by this app, held by nothing else |
+
+`ACCESS_NETWORK_STATE`, which work-runtime also declares, is removed with `tools:node="remove"` and appears in neither variant. **No network permission is in either merged manifest**, which is the claim 14.3 invites people to check and the one `verifyNoInternetPermission` fails the build over.
+
+**The decision is to ship that list and to say so here, rather than to keep a rule the build has never satisfied.** Four of the seven are beyond notifications, so the sentence above describes the app that was planned and not the app that exists. Dropping WorkManager instead would cost the Pulse reminder and the widget refresh, both of which are required by name; VIBRATE is required by name in `design-v3.md` 9; and the androidx.core entry is a signature permission this app both declares and uses, which nothing else on the phone can hold. None of the four is a runtime permission, none appears in the permission list a person is shown, and none of them is network. **What stays absolute is the network half**: adding a constraint to any work request in this app puts `ACCESS_NETWORK_STATE` back, which changes what the privacy policy invites people to verify, and that is a decision for the owner rather than a build fix.
+
 **Permanently out of scope, and now for a second reason.** Real time social presence of any kind, including body doubling, because it needs networking and would cost the no internet permission guarantee, which is this app's strongest claim. AI task breakdown, per non-negotiable 5; the first step field in 14b.2 is the deterministic version of the same idea. Streaks, badges, XP, levels, confetti and celebration, which were already forbidden by the design and are now also a documented abandonment trigger for this audience. DECISIONS.md holds the full reasoning for all four.
 
 ---
@@ -1361,7 +1440,13 @@ It ended up larger than the 40 rules the phase asked for and smaller than the co
 
 **The disclaimer sentence in About is deliberately absent**, not forgotten. 14.4 and 16.11 require it verbatim in the app and in the store listing at the same time, phase 13 writes the listing, and shipping it early puts it in the app before the thing it has to match.
 
-**Phase 12. Widgets and notifications.** Six required widgets and two optional ones per 13.3, the snapshot writer, the refresh job, real preview images, channels and contextual permission. **Plus Addendum 01:** three static app shortcuts and the quick settings tile (13.5), and the phase 12 extension of the Live Update (14b.6).
+**Phase 12. Widgets and notifications. Built, and awaiting the device check.** Issue #11. Six required widgets per 13.3, the snapshot they all read, the six hourly refresh job, the optional configuration screen behind three of them. **Plus Addendum 01:** three static app shortcuts and the quick settings tile (13.5).
+
+**Its notification half was already built and this phase confirmed rather than added.** The three channels and the contextual `POST_NOTIFICATIONS` request landed in phases 4, 6 and 11, and the Live Update was built whole in phase 4, promoted style, both actions, silent fallback and all. The extension this list expected of 14b.6 turned out to be nothing: what phase 12 added is a third caller of the same `End` path, the tile, rather than anything new on the notification itself.
+
+**Three things it owes**, all named where they belong rather than dropped. **No widget has a preview image**, because `design-v3.md` 12.1 wants one generated from the real widget and a hand written preview layout is the mockup that rule forbids. **`MainActivity` routes only `ACTION_OPEN_FOCUS`**, so four of the six widget taps and two of the three shortcuts open the app rather than a surface; the predicates exist and the calls do not. And **the two optional widgets, This Week and One Thing, were not built**, which 13.3 permits: the snapshot carries a slot for each so that building them later is a composer change and not a schema change.
+
+**What it settled that had been open since phase 2.** Section 18's permission rule was checked against the merged manifest for both variants rather than reasoned about, found to be describing an app that was never built, and rewritten to state the seven permissions that are actually there and why each one stays. The network half of that promise is unchanged and still gated on every build.
 
 **Phase 12b. Design surfaces, the second half of the polish pass.** Issue #54. Everything phase 3c deferred because it needs more than two screens on the table to judge: scroll edge treatment at the top of every scroller and above the floating tab bar, the sheet shadow `design-v3.md` 6.1 declares and nothing draws, the question of whether anything in this app moves at rest, what the Trail's event circle carries that the sentence beside it does not, whether an inactive tab keeps its label, and what a text field looks like, which section 10 never says. Three of those are open choices under `design-v3.md` 15 and get the section 15 treatment and a `DECISIONS.md` entry each.
 

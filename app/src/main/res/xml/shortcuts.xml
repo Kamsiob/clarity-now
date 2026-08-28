@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The three app shortcuts on a long press of the icon. MASTER_BUILD_PROMPT 13.5,
+    design-v3.md 12.4, Addendum 01 6i, issue #40.
+
+    ## Static, and that is the whole design
+
+    **Three shortcuts, declared here, in this order, forever.** No dynamic shortcuts,
+    no pinned shortcuts, no recents, and nothing that reorders itself. 13.5 gives the
+    reason and it is not a shrug: a list that rearranged itself around what somebody
+    did most would be a measurement of that person, taken without being asked for and
+    shown back to them every time they reached for the icon. This app does not do that
+    anywhere else and it does not start here.
+
+    A static list is also the only kind that exists **before the app has ever been
+    opened**, which is what makes `Quick capture` reachable on the day it is installed.
+
+    ## They are the androidx.core form
+
+    13.5 asks for the androidx.core shortcuts APIs. This file is what those APIs read:
+    `ShortcutManagerCompat.getShortcuts(context, FLAG_MATCH_MANIFEST)` parses this
+    resource, and the compat library's own pre-26 pinning path parses it too. There is
+    no androidx entry point that publishes a shortcut without making it dynamic, so the
+    two halves of that sentence are met the only way they can both be met at once.
+
+    ## Every intent here is explicit, and the package name is a resource
+
+    `targetPackage` and `targetClass` together make each intent explicit, so a shortcut
+    can only ever reach this app's own Activity and no filter has to be opened on
+    `MainActivity` for anything outside the app to match.
+
+    **`@string/clarity_application_id` rather than a literal**, because the debug
+    variant is `com.kamsiob.claritynow.debug` and a resource file is one of the few
+    places `${applicationId}` does not reach: manifest placeholders are substituted in
+    the manifest and nowhere else. The string is generated per build type in
+    `app/build.gradle.kts` from the same constant that sets `applicationId`, so the
+    suffix is written once. A literal here would have shipped three shortcuts that do
+    nothing on every debug install, which is the build every device check runs on.
+
+    ## The three actions are the app's existing ones
+
+    Each shortcut sends the action the matching notification or widget already sends,
+    so a destination has one way in rather than two. `ShortcutContractTest` asserts the
+    three strings below still equal the three constants they were copied from, because
+    an action string in XML is a copy and a copy is a thing that goes stale quietly.
+
+    Quick capture sends `WidgetIntents.ACTION_CAPTURE_UNFILED`, which the add sheet with
+    no area answers. Start focus sends `FocusIntents.ACTION_OPEN_FOCUS`, which the Focus
+    surface answers. Today's Pulse sends `PulseIntents.ACTION_OPEN_PULSE`, which the Pulse
+    sheet answers. There is no table here because an XML comment may not contain two
+    dashes in a row, which is also why nothing anywhere in this file is written as one.
+
+    **`Start focus` opens the chooser rather than starting a session**, which is the
+    choice #40 leaves to the builder under design-v3.md 15. The obvious answer is to
+    start one when exactly one area has an active item, and it is rejected: a session
+    is a write to a log that only ever gains rows, and a person who long pressed an
+    icon has not yet seen anything. It also keeps the three launcher surfaces saying
+    one thing, since the First Step widget asks for a session rather than appending
+    `FOCUS_STARTED` from outside a screen. While a session is already running the same
+    action opens that session, because the Focus surface shows what the log holds.
+
+    **`Today's Pulse` generates nothing.** The action opens the Pulse surface in
+    whatever state the day is in, including the ambient state of a day the engine
+    stayed silent on. Generation is the lifecycle's, MASTER_BUILD_PROMPT 11.3, and it
+    happens on foreground before any of this is reached.
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_capture"
+        android:shortcutId="quick_capture"
+        android:shortcutLongLabel="@string/shortcut_capture_long"
+        android:shortcutShortLabel="@string/shortcut_capture_short">
+        <intent
+            android:action="com.kamsiob.claritynow.action.CAPTURE_UNFILED"
+            android:targetClass="com.kamsiob.claritynow.MainActivity"
+            android:targetPackage="@string/clarity_application_id" />
+    </shortcut>
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_focus"
+        android:shortcutId="start_focus"
+        android:shortcutLongLabel="@string/shortcut_focus_long"
+        android:shortcutShortLabel="@string/shortcut_focus_short">
+        <intent
+            android:action="com.kamsiob.claritynow.action.OPEN_FOCUS"
+            android:targetClass="com.kamsiob.claritynow.MainActivity"
+            android:targetPackage="@string/clarity_application_id" />
+    </shortcut>
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_pulse"
+        android:shortcutId="todays_pulse"
+        android:shortcutLongLabel="@string/shortcut_pulse_long"
+        android:shortcutShortLabel="@string/shortcut_pulse_short">
+        <intent
+            android:action="com.kamsiob.claritynow.action.OPEN_PULSE"
+            android:targetClass="com.kamsiob.claritynow.MainActivity"
+            android:targetPackage="@string/clarity_application_id" />
+    </shortcut>
+</shortcuts>

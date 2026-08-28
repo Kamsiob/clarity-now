@@ -131,16 +131,22 @@ class ReportIntegrity(private val catalog: ClarityCatalog, private val zone: Zon
      * one a reader is most likely to think is harmless: the area exists, the person made it
      * this week, and a sentence naming it in a report about what happened is still a claim
      * about a week the area had nothing to do with.
+     *
+     * **It asks [AbsenceSubject] the same question section 8's check 1 asks**, and it has to.
+     * `neglectedArea` and `areaGoneQuiet` name an area precisely because it did nothing, and
+     * a page scope check that refused what the sentence scope check allowed would suppress
+     * the whole report rather than one line, which is the loudest possible way to disagree
+     * with the layer below. One narrowing, one file, both callers.
      */
     private fun areaHasEvents(report: Report): String? {
         for (line in report.lines) {
             for (areaId in line.candidate.namedAreaIds.sorted()) {
                 val area = report.facts.areas[areaId]
                     ?: return "${line.where()} names area $areaId, which is not in this window's facts"
-                if (area.eventsInWindow <= 0) {
-                    return "${line.where()} names ${area.nameSnapshot} ($areaId), which had " +
-                        "${area.eventsInWindow} events in the window this report describes"
-                }
+                if (area.eventsInWindow > 0) continue
+                val refusal = AbsenceSubject.refusalFor(line.candidate.ruleKey, area) ?: continue
+                return "${line.where()} names ${area.nameSnapshot} ($areaId), which had " +
+                    "${area.eventsInWindow} events in the window this report describes. $refusal"
             }
         }
         return null

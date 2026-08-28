@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The two launcher surfaces outside the app: the three static app shortcuts on a
+    long press of the icon, and the quick settings tile. MASTER_BUILD_PROMPT 13.5,
+    design-v3.md 12.4.
+
+    **Fixed interface labels only**, exactly as strings.xml is. Nothing here is an
+    observation about a person, and nothing on either surface is composed: a shortcut
+    label is a destination's name and the tile says which of its two things a tap
+    would do. Neither surface can reach the engine and neither has anything to say
+    about anybody's week.
+
+    **A second values file rather than lines in strings.xml, and the reason is the
+    day this was written.** Three builders were in this tree at once and strings.xml
+    was open in two of them. Resource merging does not care which file in values/ a
+    name arrives from, so the merge conflict is worth avoiding and the split costs
+    nothing but this comment. Everything here is a launcher surface, which is at
+    least a real seam and not an arbitrary one.
+-->
+<resources>
+
+    <!--
+        The three static shortcuts, MASTER_BUILD_PROMPT 13.5 and design-v3.md 12.4.
+
+        **The short label and the long label are the same three names**, because those
+        names are specified. A launcher shows the long label where it fits and falls
+        back to the short one where it does not, so a longer, more descriptive long
+        label would be the string most people actually see, and the three names the
+        design chose would appear only on a narrow screen. Sentence case, no counts,
+        and nothing that reports on the person.
+    -->
+    <string name="shortcut_capture_short">Quick capture</string>
+    <string name="shortcut_capture_long">Quick capture</string>
+    <string name="shortcut_focus_short">Start focus</string>
+    <string name="shortcut_focus_long">Start focus</string>
+    <string name="shortcut_pulse_short">Today\'s Pulse</string>
+    <string name="shortcut_pulse_long">Today\'s Pulse</string>
+
+    <!--
+        The quick settings tile, MASTER_BUILD_PROMPT 13.5 and design-v3.md 12.4.
+
+        `tile_focus_name` is the fixed name in the shade's tile picker, where the tile
+        is being chosen rather than used and has no state to reflect yet. The two
+        labels below it are the live ones, and which of them shows is the whole of what
+        the tile knows: a session is running, or one is not.
+    -->
+    <string name="tile_focus_name">Focus session</string>
+    <string name="tile_focus_start">Start focus</string>
+    <string name="tile_focus_end">End focus</string>
+
+    <!--
+        Read instead of the label by TalkBack, per design-v3.md 13. A sentence rather
+        than a label, which is the same rule the widgets' content descriptions follow.
+        Neither names the item: the shade is readable over a lock screen, and what a
+        person is working on is not for whoever is holding the phone.
+    -->
+    <string name="cd_tile_focus_start">Start a focus session</string>
+    <string name="cd_tile_focus_end">End the focus session that is running</string>
+</resources>

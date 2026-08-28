@@ -21,6 +21,11 @@ import com.kamsiob.claritynow.domain.engine.validate.ReportVerdict
  * beneath the ribbon, are interface labels and direct readouts of queried numbers, and
  * they live in `strings.xml`, per CLAUDE.md rule 8. An observation never does.
  *
+ * **The one exception is [patternNote], and it was decided rather than allowed.** It is the
+ * pattern section's empty state, it is a corpus line, and it does not come through rule
+ * selection because it is not an observation: it makes no claim about the person at all.
+ * `ReportComposer` carries the reasoning at the point the condition is read.
+ *
  * ## What the screen may add, and what it may not
  *
  * The screen chooses type, spacing, motion and the sideheads. It does not choose which
@@ -48,6 +53,19 @@ data class ClarityReport(
     val observations: List<ReportObservation>,
     /** At most one, and only with three weeks of data. Absent means the section is omitted. */
     val pattern: Candidate?,
+    /**
+     * `CORPUS_2_REPORT.md` 3.16. The pattern section's empty state, under three weeks.
+     *
+     * **Never set at the same time as [pattern]**: the two conditions are complements, so
+     * the section shows a pattern, or says that patterns need a few more weeks, or is
+     * omitted because there is a pattern's worth of history and no pattern in it.
+     *
+     * A [ReportNote] rather than a [Candidate] for the same reason the footer and the two
+     * edge states are: there is no number and no name in it, so there is nothing for the
+     * report scope checks to compare against facts, and it would enter them as a row of
+     * empty sets. It comes out of a corpus file and it has been through layer 5.
+     */
+    val patternNote: ReportNote? = null,
     /** The footer's basis line, or null when every clause of it would have been zero. */
     val basis: Candidate?,
     /**

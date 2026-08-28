@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Next Up, 2x2. design-v3.md 12.2.
+
+    updatePeriodMillis is zero on purpose. The platform's own period has a thirty minute
+    floor and would wake the app on a schedule of its own; every update this widget gets
+    is one the app asked for, when the snapshot changed or when the six hourly refresh
+    ran. MASTER_BUILD_PROMPT 13.3.
+
+    **configuration_optional beside configure is the whole placement behavior.** The
+    widget is placed and drawn immediately with the automatic area, and the screen named
+    below is reached afterward, from the launcher's edit affordance and from the line
+    this widget shows when the area it was pinned to has gone. reconfigurable is what
+    keeps that entrance open. See widget/WidgetConfiguration.kt.
+
+    There is no previewImage and no previewLayout yet. design-v3.md 12.1 requires the
+    picker preview to be generated from the real widget and never from a mockup, and a
+    hand written preview layout would be exactly the mockup that rule forbids. The
+    launcher shows the app icon and the label until a real one is captured on a device.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:configure="com.kamsiob.claritynow.widget.WidgetConfigurationActivity"
+    android:description="@string/widget_next_up_description"
+    android:initialLayout="@layout/glance_default_loading_layout"
+    android:minWidth="110dp"
+    android:minHeight="110dp"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="110dp"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellWidth="2"
+    android:targetCellHeight="2"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen"
+    android:widgetFeatures="reconfigurable|configuration_optional" />

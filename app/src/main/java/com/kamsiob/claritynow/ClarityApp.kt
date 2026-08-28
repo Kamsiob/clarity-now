@@ -12,6 +12,7 @@ import com.kamsiob.claritynow.domain.pulse.CorpusText
 import com.kamsiob.claritynow.domain.pulse.PulseCoordinator
 import com.kamsiob.claritynow.domain.pulse.PulseOutcome
 import com.kamsiob.claritynow.notifications.ClarityNotifications
+import com.kamsiob.claritynow.widget.ClarityWidgets
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -69,6 +70,11 @@ class ClarityApp : Application() {
         // Update actions reach this process through a broadcast receiver that can wake
         // it with no Activity at all. See ClarityNotifications.install.
         ClarityNotifications.install(this)
+        // The widget snapshot, MASTER_BUILD_PROMPT 13.3. Like the line above it, this
+        // posts nothing, shows nothing and needs no permission. It follows the
+        // projection and keeps the home screen in step with it, and a person with no
+        // widget placed pays one collector for it and nothing else.
+        ClarityWidgets.install(this)
         registerActivityLifecycleCallbacks(ForegroundPresence())
     }
 

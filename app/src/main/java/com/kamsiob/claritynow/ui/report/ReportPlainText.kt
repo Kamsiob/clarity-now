@@ -87,7 +87,12 @@ internal fun reportPlainText(
         blocks += (listOf(sidehead) + lines.map { it.rendered }).joinToString("\n")
     }
 
-    report.pattern?.let { blocks += "${labels.patternSidehead}\n${it.rendered}" }
+    // The pattern, or the section's empty state under three weeks. See ReportScreen's
+    // block 7 and `ReportComposer.patternNote`: the empty state is a corpus line the Report
+    // renders directly, and the two are complements.
+    (report.pattern?.rendered ?: report.patternNote?.text)?.let {
+        blocks += "${labels.patternSidehead}\n$it"
+    }
     closing?.let { blocks += "${labels.closingEyebrow}\n${it.line}" }
     report.generated?.let { blocks += it.text }
     report.basis?.let { blocks += it.rendered }

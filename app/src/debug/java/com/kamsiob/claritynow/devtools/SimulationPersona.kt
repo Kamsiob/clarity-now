@@ -22,6 +22,22 @@ import com.kamsiob.claritynow.domain.engine.StableHash
  * later day and the year would silently become a different year. A hash of the day depends
  * on nothing but the day.
  *
+ * ## Writing something down and getting it done are separate acts
+ *
+ * They were not, for the first four phases. Every persona reached the log through [work],
+ * [work] takes a capture count and a completion count side by side, and every call site
+ * wrote a completion count no greater than its capture count. Nobody chose that. It is what
+ * two adjacent parameters invite, and the result was a set of eleven lives in which
+ * `additions >= completions` held on every single day and therefore on every single week.
+ * A person who clears a backlog on a Sunday is completely ordinary and the instrument could
+ * not represent one, which made every silence reading taken through it a reading of the
+ * instrument as much as of the thing measured.
+ *
+ * [clearOut] is the act [work] could not express: a sitting down that finishes and captures
+ * nothing, whose size comes from what had piled up rather than from a literal. Four
+ * personas have one, each shaped to that life. **The one that must never have one is
+ * `acceptsEveryPlan`,** whose whole value is that it never completes.
+ *
  * ## What a persona is not
  *
  * It is not a test fixture aimed at a family. Nothing here reaches for a rule key or a
@@ -29,6 +45,11 @@ import com.kamsiob.claritynow.domain.engine.StableHash
  * plausible year of somebody's behavior, and which rules fire is the question the simulator
  * exists to answer rather than something arranged in advance. A persona built to trigger
  * `persistence` would prove that `persistence` can be triggered and nothing else.
+ *
+ * That applies to the clearing sessions above as strictly as to anything else, and it is
+ * the reason none of them completes a count written here. `burst` wants three in an area in
+ * a day and no session was sized to three; each is sized to what its person gets through in
+ * one sitting, and what that produces is the measurement.
  */
 abstract class SimulationPersona(
     /** Stable, and part of every [roll], so renaming one changes its whole year. */
@@ -122,6 +143,32 @@ abstract class SimulationPersona(
             }
         }
         if (focusMinutes > 0) log.focusRun(day, FOCUS_HOUR, areaId, focusMinutes, focusFinished)
+    }
+
+    /**
+     * A sitting down to finish what piled up. No capture, only completion.
+     *
+     * **This exists because [work] could not express it.** Every call site of [work] passed
+     * a completion count no greater than its capture count, so `additions >= completions`
+     * held on every simulated day and therefore on every simulated week, and no simulated
+     * life ever finished more than it wrote down. That was never a decision anybody made.
+     * It is a shape of the writer rather than of the person: a completion count written as
+     * a literal beside a capture count invites the two to be written together, and they
+     * were, in all eleven personas.
+     *
+     * So this one takes its count from the world instead. The person works through what is
+     * waiting, which is the queue plus whatever is already active, up to [upTo]. Nothing is
+     * captured, because writing a new thing down is not part of clearing a backlog, and the
+     * count is not a literal, because the whole defect was literals.
+     *
+     * [upTo] is how much of it this person gets through in one sitting, and it is stated at
+     * every call site: a session with no bound is a person with no evening.
+     */
+    protected fun clearOut(log: SimulatorLog, day: Int, areaId: String, upTo: Int) {
+        val active = if (log.activeItem(areaId) == null) 0 else 1
+        val waiting = log.queueSize(areaId) + active
+        if (waiting == 0) return
+        work(log, day, areaId, completions = minOf(waiting, upTo))
     }
 
     /**
@@ -275,11 +322,23 @@ private object BalancedAcrossFour : SimulationPersona(
     private const val TOUCHED_PER_DAY = 2
 }
 
-/** Bursts with long gaps. The `quietDay`, `quietWeek` and `burst` shape. */
+/**
+ * Bursts with long gaps. The `quietDay`, `quietWeek` and `burst` shape.
+ *
+ * **Writing something down and getting something done are separate acts in this life, and
+ * that separation is what makes a burst possible at all.** The old mood 0 captured two and
+ * finished two, which is a small balanced day rather than the day somebody sat down, so the
+ * persona named for `burst` peaked at two completions and could never reach the three its
+ * own family asks for. Intake here is frequent and cheap, a thought written down when it
+ * arrives; output is rare and expensive, an afternoon where the list is dealt with. How
+ * much the afternoon gets through is whatever had accumulated, which is why [clearOut]
+ * reads the queue rather than taking a number from here.
+ */
 private object Sporadic : SimulationPersona(
     key = "sporadic",
     title = "Sporadic",
-    why = "Long gaps with occasional bursts. Feeds quietDay, quietWeek, burst and comeback.",
+    why = "Long gaps, then an afternoon where the list is dealt with. Feeds quietDay, " +
+        "quietWeek, burst and comeback.",
 ) {
     override val areas = listOf(
         SimulatedArea("work", "Work"),
@@ -289,13 +348,23 @@ private object Sporadic : SimulationPersona(
     override fun opensOn(day: Int): Boolean = roll(day, "open", 3) != 0
 
     override fun act(log: SimulatorLog, day: Int) {
+        if (roll(day, "session", SESSION_ODDS) == 0) {
+            clearOut(log, day, "work", upTo = SESSION_ITEMS)
+            return
+        }
         when (roll(day, "mood", 7)) {
-            0 -> work(log, day, "work", captures = 2, completions = 2)
+            0 -> work(log, day, "work", captures = 2)
             1 -> work(log, day, "home", captures = 1, completions = 1)
             2 -> work(log, day, "work", captures = 1)
             else -> Unit
         }
     }
+
+    /** About every ninth day. Often enough to be a rhythm, rare enough to still be a session. */
+    private const val SESSION_ODDS = 9
+
+    /** What one afternoon gets through. Usually more than piled up, so the list ends empty. */
+    private const val SESSION_ITEMS = 5
 }
 
 /**
@@ -437,11 +506,25 @@ private object BrandNew : SimulationPersona(
     private const val FIRST_AREA_HOUR = 9
 }
 
-/** Two months on, five months off, then back. The `comeback`, `areaRevival` and `rebalance` shape. */
+/**
+ * Two months on, five months off, then back. The `comeback`, `areaRevival` and `rebalance`
+ * shape.
+ *
+ * **Coming back is a clearing job before it is anything else.** Two months of capture and
+ * five months of nothing leave a list of about thirty things, most of them stale, and a
+ * person who opened that and wrote a thirty first thing down before touching any of it is
+ * not the person who came back. The first days back go on the old list, and they are the
+ * one stretch in this year with output and no intake at all.
+ *
+ * It does not empty the list, deliberately. A return that cleared thirty items would be a
+ * fantasy, and the residue is what `queuePressure` and `accumulation` still have to read
+ * afterward.
+ */
 private object LongDormantRevival : SimulationPersona(
     key = "longDormantRevival",
     title = "Long dormant, then a revival",
-    why = "Two months on, five months away, then back. Feeds comeback, areaRevival and rebalance.",
+    why = "Two months on, five months away, then back to a list nobody kept. Feeds " +
+        "comeback, areaRevival, rebalance and the clearing a return begins with.",
 ) {
     override val areas = listOf(
         SimulatedArea("work", "Work"),
@@ -452,11 +535,28 @@ private object LongDormantRevival : SimulationPersona(
 
     override fun act(log: SimulatorLog, day: Int) {
         if (day in DORMANT) return
+        if (day in RETURN_CLEARING) {
+            clearOut(log, day, "work", upTo = CLEARED_PER_EVENING)
+            return
+        }
         work(log, day, "work", captures = 1, completions = roll(day, "done", 2))
         if (roll(day, "music", 4) == 0) work(log, day, "music", captures = 1, completions = 1)
     }
 
+    private const val RETURN_DAYS = 8
+
     private val DORMANT = 56..250
+
+    /**
+     * The day the app is opened again, and the week after it.
+     *
+     * Derived from [DORMANT] rather than written out, so moving the dormancy moves the
+     * return with it instead of leaving a clearing week stranded in the middle of it.
+     */
+    private val RETURN_CLEARING = (DORMANT.last + 1)..(DORMANT.last + RETURN_DAYS)
+
+    /** Three in an evening. Not the whole list, because most of a year old list is stale. */
+    private const val CLEARED_PER_EVENING = 3
 }
 
 /**
@@ -467,6 +567,14 @@ private object LongDormantRevival : SimulationPersona(
  * keeps unfiled captures out of `additionsPerArea` on purpose, so a hoarder who captured
  * into the inbox would produce a flat queue and none of the families this persona exists
  * to feed.
+ *
+ * **The pile does get dealt with sometimes, and it is still a pile afterward.** A person
+ * who writes everything down and never once has the Saturday where the household list gets
+ * worked through is a caricature rather than an extreme, and the purge below is the whole
+ * difference between the two. It takes one area, `home`, and it takes a fraction of it:
+ * `work` keeps its trickle of one at a time and `someday` is never touched, which is what
+ * makes it a Someday list. Home refills faster than the purge empties it, so every family
+ * this persona feeds still reads a queue that grew across the year.
  */
 private object QueueHoarder : SimulationPersona(
     key = "queueHoarder",
@@ -484,14 +592,34 @@ private object QueueHoarder : SimulationPersona(
         if (roll(day, "home", 2) == 0) work(log, day, "home", captures = 1)
         if (roll(day, "someday", 4) == 0) work(log, day, "someday", captures = 1)
         if (roll(day, "done", 7) == 0) work(log, day, "work", completions = 1, label = "workDone")
+        if (roll(day, "purge", PURGE_ODDS) == 0) clearOut(log, day, "home", upTo = PURGE_ITEMS)
     }
+
+    /** About once a month. A person, not a caricature, but still a hoarder afterward. */
+    private const val PURGE_ODDS = 26
+
+    /** An afternoon of household jobs. The pile is much longer than this and stays longer. */
+    private const val PURGE_ITEMS = 5
 }
 
-/** Nothing sits. The `throughput`, `clearing` and `queueDrained` shape. */
+/**
+ * Nothing sits at work, and the errands go in one trip. The `throughput`, `clearing` and
+ * `queueDrained` shape.
+ *
+ * **An errand has a week in it, and that is the whole change.** Finishing each errand on
+ * the day it occurred to you is not fast, it is implausible: nobody drives to the post
+ * office because one letter came up. They go on the list, the list is run on Saturday, and
+ * the list is empty again on Sunday. Work keeps the same day rhythm it always had, which is
+ * the part of this person that is actually fast.
+ *
+ * How long the list is on Saturday is whatever the week put on it, at the rate it always
+ * captured errands at. Some weeks that is one and the trip is barely a trip.
+ */
 private object FastCompleter : SimulationPersona(
     key = "fastCompleter",
     title = "Fast completer",
-    why = "Captured and finished the same day. Feeds throughput, clearing and queueDrained.",
+    why = "Work finished the day it was captured, errands finished in one trip on Saturday. " +
+        "Feeds throughput, clearing, burst and queueDrained.",
 ) {
     override val areas = listOf(
         SimulatedArea("work", "Work"),
@@ -501,8 +629,20 @@ private object FastCompleter : SimulationPersona(
     override fun act(log: SimulatorLog, day: Int) {
         val captures = 1 + roll(day, "captures", 2)
         work(log, day, "work", captures = captures, completions = captures)
-        if (roll(day, "errands", 3) == 0) work(log, day, "errands", captures = 1, completions = 1)
+        if (day % DAYS_PER_WEEK == ERRAND_RUN_DAY) {
+            clearOut(log, day, "errands", upTo = ERRANDS_PER_TRIP)
+            return
+        }
+        if (roll(day, "errands", 3) == 0) work(log, day, "errands", captures = 1)
     }
+
+    private const val DAYS_PER_WEEK = 7
+
+    /** Saturday. Day zero of a run is a Sunday, per `ClaritySimulator.DEFAULT_START_DATE`. */
+    private const val ERRAND_RUN_DAY = 6
+
+    /** A morning of errands, which is longer than the list usually is. */
+    private const val ERRANDS_PER_TRIP = 6
 }
 
 /**

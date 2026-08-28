@@ -299,11 +299,25 @@ private fun ComposedReport(
     }
 
     // 7. The one deliberate grid break, and the only element that escapes the measure.
-    report.pattern?.let { pattern ->
+    //
+    // Two sources, one block. `report.pattern` is a pattern the engine selected, realized
+    // and validated. `report.patternNote` is the section's empty state, shown under three
+    // weeks of history, and it is a corpus line the Report renders directly: no rule, no
+    // engine selection. That is an owner authorized exception to the rule that every
+    // sentence comes through the engine, and it is narrow. `insufficientData` says there
+    // are not three weeks of snapshots yet. It names nothing, counts nothing and claims
+    // nothing about the person, so it is an empty state rather than an observation, in the
+    // same family as `Nothing to report yet`. It has still been through layer 5.
+    // `ReportComposer.patternNote` holds the full reasoning. Do not move it into the
+    // engine: the composer only asks for a pattern when there are three weeks, so a rule
+    // for this could never fire, which is how it got here.
+    //
+    // The two are complements and never both present, so the section is drawn once.
+    (report.pattern?.rendered ?: report.patternNote?.text)?.let { line ->
         Spacer(Modifier.height(SECTION_GAP))
         PatternBreak(
             sidehead = labels.plainText.patternSidehead,
-            line = pattern.rendered,
+            line = line,
             modifier = Modifier.reveal(playing, sectionAt(step), RISE),
         )
         step++

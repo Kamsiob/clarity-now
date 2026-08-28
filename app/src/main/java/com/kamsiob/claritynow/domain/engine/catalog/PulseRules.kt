@@ -223,7 +223,43 @@ internal object PulseRules {
         )),
     )
 
-    /** `throughput`, over net flow. Stage 3's second branch reads the completions series. */
+    /**
+     * `throughput`, over net flow. Stage 3's second branch reads the completions series.
+     *
+     * **This family never qualified once across eleven simulated years and the window is
+     * not why.** The diagnosis worth ruling out first was that a weekly shape had been
+     * assigned to a one day surface, and the corpus refuses it: nine of the thirty five
+     * statements say `yesterday` outright, `More came out than went in yesterday` and
+     * `Your queues shrank by {n} yesterday` among them, and the family is dated in its own
+     * voice at stages 1 and 2. There is nowhere for it to move either. A Pulse bench
+     * carries questions and response pairs and a Report bench carries leads and
+     * extensions, so a purpose is not a field that can be edited across volumes, and the
+     * weekly reading of this shape is already authored twice, as `netOutflow` in
+     * `CORPUS_2_REPORT.md` 1.2 and as `intakeVsOutput` in 2.2.
+     *
+     * **What is actually true is that `netFlow >= 1` held zero times in 3,148 one day
+     * windows, and that is a property of the eleven personas rather than of this rule.**
+     * Every persona reaches the log through `SimulationPersona.work`, and every call site
+     * of it passes `completions` no greater than `captures`. The single exception,
+     * `QueueHoarder`'s completion only call, runs on a day that also captures. So
+     * `additions >= completions` on every simulated day, and therefore on every simulated
+     * week, which is the same reason `netOutflow` and `intakeVsOutput` stage 3 are dark.
+     * No life the simulator models finishes more than it writes down, and nearly every
+     * real backlog day does.
+     *
+     * **The thresholds are corpus stage headers and are not this file's to move.** `net of
+     * one to two`, `net of three to five` and `net of six or more` are parsed out of
+     * `CORPUS_1_PULSE.md` and asserted against by [StageRangeTest]. Lowering one to make
+     * the family speak would be a sentence about a day that did not happen.
+     *
+     * **The `netFlow >= 1` on the weekly branch of stage 3 is deliberate and is not the
+     * disjunction being lost.** 7.3 turns a compound header into two rules, and the second
+     * branch here is `three weeks of rising completions`. It still carries the family
+     * trigger from 6.1 because the whole stage 3 bench is shared: `You finished {n} things
+     * and added {m}` and `{n} out, {m} in, and the pattern is holding` sit on it, and a
+     * realizer free to choose one of those on a day that took in more than it put out
+     * would print the family's own shape backwards.
+     */
     private fun throughput(): List<ClarityRule> = listOf(
         pulse("pulse.throughput.s1", "throughput", 1, Subjects.NONE, WINDOW_HORIZON, criteria = listOf(
             window("throughput.net.1to2", "completions exceed additions by one or two") { it.window.netFlow in 1..2 },
@@ -398,6 +434,29 @@ internal object PulseRules {
      * Pulse window is one reflection period, so `completionsInWindow` is that day's count
      * rather than a week's. A Report rule reading the same field would be reading a week
      * and would need a different fact.
+     *
+     * **This family never qualified once across eleven simulated years, and the window is
+     * the one thing about it that is beyond doubt.** 6.1 says `in one day`, the corpus
+     * section heading says `Three or more completions in one area in one day`, and eight
+     * of the seventeen statements date themselves: `all in one day`, `in a single day`,
+     * `one area, one day`, `yesterday`. Nothing here reads weekly and nothing here moves.
+     *
+     * **The reason it is dark is the persona set.** No persona completes more than two
+     * things in one area on one day. `FastCompleter` captures `1 + roll(2)` and completes
+     * exactly what it captured, `Sporadic` peaks at two, and `BalancedAcrossFour` spreads
+     * its two calls across two different areas. So the criterion held zero times in 3,148
+     * windows while the areas cleared the event floor 2,171 times. Three completions in
+     * one area in one day is an ordinary Saturday and no simulated life has one.
+     *
+     * **The three and the five are corpus stage headers**, parsed by [StageRangeTest], so
+     * there is no threshold here to retarget even if that were the right instrument.
+     *
+     * The event floors are phantom guards rather than thresholds. Every area subject rule
+     * carries one so a candidate cannot name an area with nothing in it, per validator
+     * check 1, and here the completion count already implies it: a completion in an area
+     * is an event in that area. They are kept because `RuleCatalogTest` requires the
+     * guard by id on every area subject rule, and because the day the completion range
+     * changes is the day an implied floor stops being implied.
      */
     private fun burst(): List<ClarityRule> = listOf(
         pulse("pulse.burst.s1", "burst", 1, Subjects.AREA, WINDOW_HORIZON, criteria = listOf(
@@ -414,20 +473,57 @@ internal object PulseRules {
         )),
     )
 
-    /** `queueDrain`, over the queue size the area started the window with. */
+    /**
+     * `queueDrain`, over the queue the area fell from rather than the queue it opened with.
+     *
+     * **This was the one genuine window error among the nine families that never qualified
+     * once across eleven simulated years, and it is closed.** The measurement was anchored
+     * to the boundary the window opened on, and every line of this family describes a
+     * **transition**: `{areaName}'s queue went from {n} to nothing` is true of a queue built
+     * on a Tuesday and finished on a Saturday, and a boundary anchored fact reads zero for
+     * it while an unrelated pair of endpoints reads like a drain. `AreaFacts.queueDrainedFrom`
+     * is the fact 3.1 owed this family, the mirror of `dormantDaysBeforeReturn`: the height
+     * the queue fell from in one uninterrupted fall to nothing that has held to the window
+     * end, null when no such fall happened here.
+     *
+     * **The corpus is what settles that this family is not dated.** Not one of its fifteen
+     * statements carries a day or a week, and 6.1's trigger says only `an area went from 3
+     * or more queued to 0`. `burst` and `throughput` date themselves seventeen times
+     * between them, in the lines and in 6.1, and this family never does once. So the fall
+     * may begin anywhere inside the window and the family still says something true.
+     *
+     * **Two criteria left with the anchoring, and both were padding once the fact existed.**
+     * `queueDrain.toZero` restated that the queue is empty, which `queueDrainedFrom` cannot
+     * be non null without; that is the same free point of specificity `drained.hadAQueue`
+     * was deleted for, and `ClarityRule` says a free point is the one number nobody authors.
+     * The `queueLengthAtWindowStart` range became the fall's own height, which is the number
+     * the corpus stage headers were always about.
+     *
+     * **At a one day window this is no longer a strict subset of `burst`.** It used to be:
+     * the queue loses one item per promotion and a promotion follows a completion, so going
+     * from three queued to zero across one day's two boundaries required three completions
+     * in that area on that day, which is `burst` stage 1 with two more conditions on top.
+     * A fall that begins inside the day is a different shape, and the two families now
+     * separate on lives where one holds and the other does not.
+     *
+     * **The three and the five are corpus stage headers**, parsed by [StageRangeTest], so
+     * there was never a threshold here to retarget even when the family was dark. What
+     * moved is what the number is measured against, which is a fact and not a threshold.
+     * `SlotBindings` binds `{n}` to `areaDrainedFrom` and moved with the rule.
+     */
     private fun queueDrain(): List<ClarityRule> = listOf(
         pulse("pulse.queueDrain.s1", "queueDrain", 1, Subjects.AREA, WINDOW_HORIZON, criteria = listOf(
-            area("queueDrain.from.3to4", "the area started the window with a queue of three or four") {
-                it.queueLengthAtWindowStart in 3..4
+            area("queueDrain.from.3to4", "the area's queue fell to nothing from three or four") {
+                (it.queueDrainedFrom ?: 0) in 3..4
             },
-            area("queueDrain.toZero", "the area's queue is now empty") { it.queueLength == 0 },
+            drainedByFinishing(),
             areaHasEvents(),
         )),
         pulse("pulse.queueDrain.s2", "queueDrain", 2, Subjects.AREA, WINDOW_HORIZON, criteria = listOf(
-            area("queueDrain.from.5plus", "the area started the window with a queue of five or more") {
-                it.queueLengthAtWindowStart >= 5
+            area("queueDrain.from.5plus", "the area's queue fell to nothing from five or more") {
+                (it.queueDrainedFrom ?: 0) >= 5
             },
-            area("queueDrain.toZero", "the area's queue is now empty") { it.queueLength == 0 },
+            drainedByFinishing(),
             areaHasEvents(),
         )),
     )

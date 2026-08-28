@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Focus Countdown, 2x2. design-v3.md 12.2.
+
+    It does not resize below two by two: the arc is the primary carrier of the time,
+    Addendum 01 8d, and at one cell there is no ring left to read, only digits, which is
+    the hierarchy that entry exists to prevent.
+
+    updatePeriodMillis is zero, and the once a minute refresh while a session is running
+    is FocusCountdownRefresh instead. The platform's period has a thirty minute floor,
+    which is useless to a countdown, and it would keep firing when no session was running,
+    which is worse than useless.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_focus_countdown_description"
+    android:initialLayout="@layout/glance_default_loading_layout"
+    android:minWidth="110dp"
+    android:minHeight="110dp"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="110dp"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellWidth="2"
+    android:targetCellHeight="2"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen" />

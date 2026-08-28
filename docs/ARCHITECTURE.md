@@ -26,6 +26,7 @@ com.kamsiob.claritynow
   data.repo                  repositories, the only thing that writes
   data.prefs                 DataStore, per device settings only
   data.export                backup, export, import, the sync file format
+  data.widget                the one snapshot every widget reads, and nothing else
 
   domain                     ClarityClock, the single source of time
   domain.replay              reducer, invariants, conflict resolution, checkpoints
@@ -43,7 +44,8 @@ com.kamsiob.claritynow
   ui.settings ui.about ui.onboarding ui.tutorial
   ui.nav                     the shell and the tab bar
 
-  widget notifications
+  widget notifications work  the surfaces outside the app, and the jobs behind them
+  shortcuts tile             the launcher surfaces: three static shortcuts, one tile
   devtools                   the simulator: personas, the dump, the checks. Debug only
   di                         ClarityGraph, the hand written container
 ```

@@ -75,11 +75,16 @@ class ReportIntegrityVetoTest {
 
     @Test
     fun `check 1 vetoes an area that exists and had no events in the window`() {
+        // Not `neglectedArea`, which is now allowed to name exactly this area: see the two
+        // tests below. This is an ordinary family making the phantom claim check 1 has
+        // always refused, and `queueDrained` rather than `areaBalance` because the latter is
+        // an incompatible pair with `singleFocus` and would be reaching check 5 on a report
+        // built to reach check 1.
         val phantom = ReportFixture.observation(
-            family = "neglectedArea",
-            ruleKey = "report.observation.neglectedArea.s1",
-            variantKey = "ob.neg.s1.l01",
-            rendered = "Reading has been quiet.",
+            family = "queueDrained",
+            ruleKey = "report.observation.queueDrained",
+            variantKey = "ob.drain.l02",
+            rendered = "Reading cleared what was waiting.",
             namedAreaIds = setOf(ReportFixture.READING),
             subjectId = ReportFixture.READING,
         )
@@ -87,6 +92,46 @@ class ReportIntegrityVetoTest {
         assertEquals(ReportCheck.AREA_HAS_EVENTS, verdict.check)
         assertTrue(verdict.detail, "Reading" in verdict.detail)
     }
+
+    /**
+     * The page scope check asks `AbsenceSubject` the same question section 8 check 1 asks.
+     *
+     * It has to. `neglectedArea` names an area precisely because it did nothing, and a page
+     * scope check that refused what the sentence scope check allowed would suppress the
+     * whole report rather than one line: nothing shown, nothing written, and a person seeing
+     * no report at all in the weeks the family is most likely to speak.
+     */
+    @Test
+    fun `check 1 allows a long dormant area to the family whose subject is its silence`() {
+        passes(observations(ReportFixture.workShare(), neglect(ReportFixture.READING, "Reading")))
+    }
+
+    /**
+     * And the exception stops where the sentence scope one stops.
+     *
+     * A three day old area nothing has ever happened in, named by the flagged family. It has
+     * no lifetime events, it is still new, and its `daysSinceLastEvent` is the never
+     * sentinel, so there is no silence to describe and no history to describe it from.
+     */
+    @Test
+    fun `check 1 refuses a brand new empty area even to the family whose subject is a silence`() {
+        val garden = ValidateFixture.newAndEmpty()
+        val facts = ValidateFixture.facts(areas = ReportFixture.facts().areas + (garden.areaId to garden))
+        val verdict = veto(observations(neglect(garden.areaId, garden.nameSnapshot)), facts)
+        assertEquals(ReportCheck.AREA_HAS_EVENTS, verdict.check)
+        assertTrue(verdict.detail, "Garden" in verdict.detail)
+        assertTrue(verdict.detail, "absence" in verdict.detail)
+    }
+
+    /** A neglect line about [areaId], from the rule whose subject is that area's silence. */
+    private fun neglect(areaId: String, name: String): Candidate = ReportFixture.observation(
+        family = "neglectedArea",
+        ruleKey = "report.observation.neglectedArea.s2",
+        variantKey = "ob.neg.s2.l01",
+        rendered = "$name has been still for three weeks.",
+        namedAreaIds = setOf(areaId),
+        subjectId = areaId,
+    )
 
     @Test
     fun `check 1 vetoes a new area with no activity, which is the one that looks harmless`() {
