@@ -630,6 +630,10 @@ internal object SlotBindings {
             "stage 2 begins at fourteen days, so a fortnight would read as three weeks",
         "rebalance.s2.04" to "`came back after the longest gap it has had` is a record claim, " +
             "and no fact carries this area's earlier gaps to set this one against",
+        "queuedrain.s2.03" to "`That is the biggest queue you have cleared out` is a record " +
+            "claim, and no fact carries the queues this area cleared before this one",
+        "queuedrain.s2.05" to "`{areaName} is completely clear for the first time` is a first " +
+            "ever claim, and this rule reads a fall to nothing rather than FIRST_QUEUE_DRAIN",
         "mo.come.03" to "`Things started moving again {ageDays} ago` is the days since the " +
             "return, and `{ageDays}` here is the gap before it, which is its other end",
         "ob.flow.s1.e03" to "`{k} of what you added is still untouched` needs how much of " +
@@ -671,6 +675,14 @@ internal object SlotBindings {
         "ob.aban.l03" to "`averaged {minutes} minutes` needs the mean of the finished sessions, " +
             "and focusMinutesTotal is a total",
         "ob.aban.e02" to "`All of them were in {areaName}` claims every session was in one area",
+        "ob.drain.l03" to "`Two areas ended the week with nothing waiting` states a count in " +
+            "words, and this rule fires on one drained area as readily as on two",
+        "ob.drain.l04" to "`There is an area with nothing in it for the first time` is a first " +
+            "ever claim, and this rule reads a fall to nothing rather than FIRST_QUEUE_DRAIN",
+        "ob.drain.e01" to "`It still has an active item` and ob.drain.e02 are the two halves of " +
+            "a fact nothing chooses between here, so whichever the bench yields is a coin flip",
+        "ob.drain.e02" to "`It has nothing active either` is the other half of ob.drain.e01, and " +
+            "an area whose queue fell to nothing may hold an active item or may not",
         "ob.stead.e04" to "`has led every one of those weeks` needs the dominant area of four " +
             "weeks and dominantAreaLastThreeWeeks carries three",
         "ob.swi.l09" to "`{n} swaps, one area` claims the swaps were all in one area, which needs " +

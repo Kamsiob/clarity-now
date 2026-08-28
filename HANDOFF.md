@@ -30,9 +30,19 @@ Only the account holder can do these, and none of them affects the app itself.
 
 ### The store listing text, phase 13
 
-Drafted in the repository and ready to paste, but only the owner can publish it.
-`MASTER_BUILD_PROMPT.md` 16.11 holds the permitted keywords, the forbidden claim words
-verbatim, and the disclaimer sentence required in both the listing and About.
+**Written and final. It is in `docs/STORE_LISTING.md`.** The app name, the short
+description, the full description, the Health Apps Declaration answers, the Data Safety
+answers and a pre-submission checklist are all there as text to be pasted.
+
+**Paste it, do not retype it, and do not improve it in the console text box.** Every
+sentence was checked against the forbidden claim list in `MASTER_BUILD_PROMPT.md` 16.11
+and against this repository's language gate. Words typed into a Play Console field are
+outside every check this project has. The one that catches people is `manages`, which
+is forbidden by the health policy and is also the most ordinary verb in this category.
+
+The disclaimer sentence at the foot of the full description is character for character
+identical to `R.string.about_disclaimer`, which now renders on the About screen. If
+either is ever changed, both change in the same commit.
 
 ### Real device screenshots for the listing
 

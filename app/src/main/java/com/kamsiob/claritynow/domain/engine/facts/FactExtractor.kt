@@ -121,7 +121,7 @@ private class Extraction(
     // The queue's shape across the window rather than at its two ends. One fold, read by
     // every area, because the drain families describe a transition and two boundaries
     // cannot see one.
-    private val queueSeries: Map<String, List<Int>> = queries.queueSizeSeriesByArea(start, end)
+    private val queueSeriesByArea: Map<String, List<Int>> = queries.queueSizeSeriesByArea(start, end)
 
     private val totalEvents: Int = queries.totalEvents(start, end)
     private val eventsPerArea: Map<String, Int> = queries.eventsPerArea(start, end)
@@ -272,7 +272,7 @@ private class Extraction(
             queueLength = queueLength,
             queueLengthAtWindowStart = queueStart,
             queueDelta = queueLength - queueStart,
-            queueDrainedFrom = drainHeightOf(queueSeries[areaId].orEmpty()),
+            queueDrainedFrom = drainHeightOf(queueSeriesByArea[areaId].orEmpty()),
             daysSinceLastEvent = if (lastEventAt == null) Int.MAX_VALUE else daysTo(lastEventAt),
             dormantDaysBeforeReturn = dormantDaysBeforeReturn(areaId),
             lifetimeEvents = lifetimeEventsPerArea[areaId] ?: 0,

@@ -865,6 +865,9 @@
     <string name="about_name">Clarity Now</string>
     <string name="about_version">Version %1$s &#183; by Kamsiob</string>
     <string name="about_paragraph">One active item per area. Everything else waits its turn. No account, no cloud, no subscription, no ads, and nothing collected. Your history lives in one file on this phone until you delete it.</string>
+    <!-- MASTER_BUILD_PROMPT 14.4 and 16.11: verbatim, and identical to the sentence
+         in the store listing. Not to be reworded, shortened or softened. -->
+    <string name="about_disclaimer">Clarity Now is a productivity tool. It does not provide medical advice, diagnosis or treatment.</string>
     <string name="about_elsewhere">Elsewhere</string>
     <string name="about_link_youtube">YouTube</string>
     <string name="about_link_youtube_value">@kamsiob</string>

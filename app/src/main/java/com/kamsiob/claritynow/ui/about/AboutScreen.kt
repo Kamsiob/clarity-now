@@ -42,11 +42,19 @@ import com.kamsiob.claritynow.ui.theme.MarkForeground
  * found by somebody looking for it, and nothing under the paragraph competes with the
  * one element that is asking for something.
  *
- * **One sentence specified for this screen is deliberately absent.** 14.4 requires
- * `Clarity Now is a productivity tool. It does not provide medical advice, diagnosis or
- * treatment.` verbatim under the paragraph, and marks it pending phase 13, where 16.11
- * requires the identical sentence in the store listing at the same time. Shipping it
- * early would put it in the app before the listing it has to match.
+ * **The disclaimer arrives here in phase 13, with the listing it has to match.** 14.4
+ * requires `Clarity Now is a productivity tool. It does not provide medical advice,
+ * diagnosis or treatment.` verbatim under the paragraph, and 16.11 requires the
+ * identical sentence in the store listing. Both land together, because the risk 16.11
+ * describes is a mismatch between what the app says and what the listing says.
+ *
+ * **It is caption `inkTertiary` and sits under the paragraph rather than inside it**,
+ * because it is not addressed to the reader in the way the paragraph is. It is a legal
+ * fact about the category the app is in. Setting it in `bodySerif` alongside the
+ * paragraph would make the one warm, personal passage on the screen end on a
+ * disclaimer, and the obvious answer of a bordered notice card would give one sentence
+ * more weight than the support block, which is the only element on this screen allowed
+ * to ask for anything.
  */
 @Composable
 internal fun AboutScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
@@ -91,6 +99,12 @@ internal fun AboutScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             text = stringResource(R.string.about_paragraph),
             style = type.bodySerif,
             color = colors.inkSecondary,
+        )
+        Spacer(Modifier.height(14.dp))
+        Text(
+            text = stringResource(R.string.about_disclaimer),
+            style = type.caption,
+            color = colors.inkTertiary,
         )
 
         Spacer(Modifier.height(30.dp))

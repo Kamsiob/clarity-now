@@ -62,6 +62,11 @@ class RollupFactsTest {
         assertEquals(listOf("work"), rollup.dormantReturnedAreaIds)
     }
 
+    /**
+     * The list is `AreaFacts.queueDrainedFrom` with the corpus floor of three applied.
+     * `QueueDrainFactsTest` carries the shapes the boundary pair could not see; this holds
+     * the one it could, so the change is proved not to have moved it.
+     */
     @Test
     fun `an area that went from three queued to none is drained`() {
         val log = drainLog()
@@ -71,6 +76,11 @@ class RollupFactsTest {
         assertEquals(3, drain.queueLengthAtWindowStart)
         assertEquals(0, drain.queueLength)
         assertEquals(-3, drain.queueDelta)
+        assertEquals(
+            "the fall began at or before the boundary here, so the two readings agree",
+            3,
+            drain.queueDrainedFrom,
+        )
         assertTrue(FirstEver.FIRST_QUEUE_DRAIN in facts.history.firstEverFlags)
     }
 
