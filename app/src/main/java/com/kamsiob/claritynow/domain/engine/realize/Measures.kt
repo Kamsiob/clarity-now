@@ -317,6 +317,42 @@ internal object Measures {
             MeasureValue.Text(subject.nameSnapshot, namedArea = subject.areaId)
         },
 
+        // How many areas moved in a numbered week back. `narrowingFocus` and
+        // `broadeningFocus` both read it at two offsets in one sentence, `Three weeks ago
+        // you touched {n} areas. This week, {m}`, so both numbers are two readings of one
+        // measurement rather than one reading set against a different fact.
+        Measure("weekAreaCountAgo", "history", MeasureKind.COUNT, MeasureScope.OFFSET,
+            "areas that moved in a numbered week back from this one", "area", "areas") read@{ facts, offset, _ ->
+            count(seriesValue(facts.history.weekAreaCountSeries, offset))
+        },
+        // Focus sessions **started** in a numbered week back.
+        //
+        // There is deliberately no measure over `weekFocusCompletedSeries`. The two focus
+        // habit families claim sessions appearing and falling away, their rules read the
+        // started count, and `pt.fade.02` lists the three numbers under `pt.fade.01` in
+        // one bench. A list of finished sessions under a claim about sessions falling
+        // would be two quantities in one paragraph, and it is exactly true of somebody who
+        // started five a week and finished fewer each time. `HistoryFacts` keeps the two
+        // series apart for the same reason, and `abandonmentPattern` reads the other one.
+        Measure("weekFocusStartedAgo", "history", MeasureKind.COUNT, MeasureScope.OFFSET,
+            "focus sessions started in a numbered week back from this one", "session", "sessions") read@{ facts, offset, _ ->
+            count(seriesValue(facts.history.weekFocusStartedSeries, offset))
+        },
+        // The share of the last four weeks that fell on a weekday, for `weekendShift`.
+        //
+        // Both series count the same events over the same buckets, so this is a division
+        // rather than an estimate. Null under four buckets and null on a month with
+        // nothing in it, because `{pct} of your activity` needs activity to be a share of.
+        Measure("weekdayShareOfMonth", "history", MeasureKind.PERCENT, MeasureScope.WINDOW,
+            "the share of the last four weeks' activity that fell on a weekday") read@{ facts, _, _ ->
+            val total = facts.history.weekTotalEventsSeries.takeLast(WEEKEND_WEEKS)
+            val weekend = facts.history.weekWeekendEventsSeries.takeLast(WEEKEND_WEEKS)
+            if (total.size < WEEKEND_WEEKS || weekend.size < WEEKEND_WEEKS) return@read null
+            val events = total.sum()
+            if (events <= 0) return@read null
+            percent((events - weekend.sum()).toDouble() / events)
+        },
+
         // Items.
         Measure("medianDaysToComplete", "items", MeasureKind.DAYS, MeasureScope.WINDOW,
             "how long things usually take, null under three completions") read@{ facts, _, _ ->
@@ -420,6 +456,19 @@ internal object Measures {
             "how long this area's active item has been active") read@{ facts, id, _ ->
             days(area(facts, id)?.activeItemAgeDays)
         },
+        Measure("areaSwaps", "area", MeasureKind.COUNT, MeasureScope.AREA,
+            "how often this area changed its active item in the window", "swap", "swaps") read@{ facts, id, _ ->
+            count(area(facts, id)?.swapsInWindow)
+        },
+        // How long the area had been still before it moved again inside the window.
+        //
+        // Not `areaDaysSinceLastEvent`, and the difference is the whole of the `rebalance`
+        // family: that one is zero the moment the area moves, so it answers how long the
+        // area has been quiet since the return rather than before it.
+        Measure("areaDormancyDays", "area", MeasureKind.DAYS, MeasureScope.AREA,
+            "the gap this area returned from, inside the window") read@{ facts, id, _ ->
+            days(area(facts, id)?.dormantDaysBeforeReturn)
+        },
 
         // One item, always the active item of some area, because that is the only item
         // any family speaks about.
@@ -451,6 +500,9 @@ internal object Measures {
 
     /** How many earlier weeks an average is taken over, matching `MomentumRules`. */
     private const val AVERAGE_WEEKS = 8
+
+    /** `weekendShift` speaks about a month, per `CORPUS_2_REPORT.md` 3.13. */
+    private const val WEEKEND_WEEKS = 4
 
     private val measuresById: Map<String, Measure> = ALL.associateBy { it.id }
 

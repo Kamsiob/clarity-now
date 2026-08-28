@@ -13,6 +13,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kamsiob.claritynow.di.ClarityGraph
 import com.kamsiob.claritynow.notifications.FocusIntents
 import com.kamsiob.claritynow.ui.nav.ClarityShell
+import com.kamsiob.claritynow.ui.onboarding.FirstRunGate
 import com.kamsiob.claritynow.ui.theme.ClarityHaptics
 import com.kamsiob.claritynow.ui.theme.ClarityTheme
 import com.kamsiob.claritynow.ui.theme.ClarityThemeSetting
@@ -56,7 +57,16 @@ class MainActivity : ComponentActivity() {
                 .collectAsStateWithLifecycle(initialValue = null)
             ClarityTheme(setting = theme, calmMode = calmMode) {
                 CompositionLocalProvider(LocalClarityHaptics provides haptics) {
-                    ClarityShell(focusRequest = focusRequest)
+                    // design-v3.md 10.15's first launch rules, and nothing else, live in
+                    // FirstRunGate. This Activity asks it what a cold start does and
+                    // renders whatever it answers; the shell is what it answers with in
+                    // every case except an install that has never finished onboarding.
+                    FirstRunGate(preferences = ClarityGraph.preferences) { tutorialQueued ->
+                        ClarityShell(
+                            focusRequest = focusRequest,
+                            tutorialQueued = tutorialQueued,
+                        )
+                    }
                 }
             }
         }

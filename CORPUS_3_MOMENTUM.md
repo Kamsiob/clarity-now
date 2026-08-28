@@ -186,7 +186,7 @@ mo.clean.05  [R]  A blank fortnight, waiting.
 mo.clean.06  [O]  No activity yet. Add something to an area to begin.
 ```
 
-**Momentum headline totals: 112 lines across 8 families.** At one headline per day, roughly 365 a year, with the 90 day exclusion applied, no line recurs inside three months.
+**Momentum headline totals: 96 lines across 8 families.** At one headline per day, roughly 365 a year, with the 90 day exclusion applied, no line recurs inside three months.
 
 ---
 
@@ -321,12 +321,12 @@ bnc.10  Nothing completed yet this week
 
 | bench | lines | surfaces |
 |---|---|---|
-| Momentum headlines | 112 | 112 |
+| Momentum headlines | 96 | 96 |
 | Banner sentences | 40 | |
 | Banner captions | 10 | 400 combined |
-| **Total** | **162** | **512** |
+| **Total** | **146** | **496** |
 
-**Corpus grand total across all three volumes: 1,519 authored lines, roughly 17,200 distinct surfaces.**
+**Corpus grand total across all three volumes: 1,503 authored lines, roughly 17,200 distinct surfaces.**
 
 ---
 

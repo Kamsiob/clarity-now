@@ -22,6 +22,20 @@ data class AreaFacts(
     val completionsInWindow: Int,
     val additionsInWindow: Int,
     /**
+     * Swaps in this area in the window. `TrailQueries.swapsPerArea`.
+     *
+     * The `switching` family is given the area as its subject and the swap count as
+     * its escalation fact, per CLARITY_LOGIC_ENGINE.md 6.1, and all eighteen of its
+     * statements name an area. `WindowFacts.swaps` counts the whole window across
+     * every area, so a rule reading that one would say `you changed what is active
+     * in Work twice` on a week holding one swap in Work and one in Health.
+     *
+     * A swap is a promotion that displaced something, which is an ITEM_PROMOTED
+     * carrying a non null `demotedItemId`. The facade encodes that once, so the
+     * distinction between a promotion and a swap is not rediscovered here.
+     */
+    val swapsInWindow: Int,
+    /**
      * This area's share of `WindowFacts.totalEvents`, 0.0 to 1.0.
      *
      * **0.0 when the window holds no events at all.** Never a division by zero and
@@ -61,6 +75,24 @@ data class AreaFacts(
      * rule that must carry a criterion excluding the never case.
      */
     val daysSinceLastEvent: Int,
+    /**
+     * How long this area had been still before it moved again inside the window, in
+     * whole local days, or null when it did not come back here.
+     *
+     * The gap runs from the area's own previous event to its **first event inside
+     * the window**, never to the window start, so a return is a real return rather
+     * than an artifact of where the boundary fell. Null has two causes and a rule
+     * cannot tell them apart, deliberately: the area had no event in the window, or
+     * it had no event before its first one here. Nothing came back in either case.
+     *
+     * This is what `rebalance` escalates on, per CLARITY_LOGIC_ENGINE.md 6.1, and
+     * `CORPUS_1_PULSE.md` splits it at five to thirteen days and fourteen or more.
+     * [daysSinceLastEvent] cannot serve: it is zero the moment the area moves, so it
+     * answers how long the area has been quiet **since** the return rather than
+     * before it. `RollupFacts.dormantReturnedAreaIds` is this field with the corpus
+     * floor of five days applied.
+     */
+    val dormantDaysBeforeReturn: Int?,
     val lifetimeEvents: Int,
     val lifetimeCompletions: Int,
     /** Whole local days since AREA_CREATED, as of the window end. */
@@ -69,6 +101,25 @@ data class AreaFacts(
     val isNew: Boolean,
     val focusSecondsInWindow: Long,
     val focusSessionsInWindow: Int,
+    /**
+     * This area's user activity events in each weekly bucket, oldest first, up to 12.
+     *
+     * The same seven day buckets anchored at the window end that every series in
+     * `HistoryFacts` uses, so a week means one thing across the whole fact set. Read
+     * `HistoryFacts` for why those buckets are not Sunday aligned calendar weeks.
+     *
+     * It exists for `comebackPattern`, which claims an area has gone quiet and
+     * returned **twice**. `RollupFacts.dormantReturnedAreaIds` describes this window
+     * only and can therefore see one return, never a second, so the family had no
+     * fact and no rule. A second return is a second transition from a zero bucket to
+     * a non zero one in this list.
+     *
+     * A rule counting those transitions must require enough buckets to be looking at
+     * the area's real history rather than at its first fortnight, exactly as every
+     * pattern family requires `weeksOfData >= 3`. An area created three weeks ago has
+     * leading zeros here that are not silences: nothing had happened yet.
+     */
+    val weekEventsSeries: List<Int>,
 )
 
 /**

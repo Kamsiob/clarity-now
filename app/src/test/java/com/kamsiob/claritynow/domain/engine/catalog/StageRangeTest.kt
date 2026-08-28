@@ -92,7 +92,9 @@ class StageRangeTest {
             val gap = RulesAwaitingFacts.GAPS.any { it.family == family.key && it.stage == stage.index }
             val expected = if (gap) 1 else stage.header.conditions.size
             assertEquals(
-                "${family.key} stage ${stage.index} has ${stage.header.conditions.size} branches",
+                "${family.key} stage ${stage.index} has ${stage.header.conditions.size} branches " +
+                    "and 7.3 gives each of them its own rule at that stage. The register is empty, " +
+                    "so every branch of every compound header now has one",
                 expected,
                 rules.size,
             )
@@ -145,6 +147,12 @@ class StageRangeTest {
             "pulse.throughput.s1" to (1..2),
             "pulse.throughput.s2" to (3..5),
             "pulse.quietDay.s1" to (1..1),
+            "pulse.quietDay.s2" to (2..3),
+            "pulse.quietDay.s3" to (4..Int.MAX_VALUE),
+            "pulse.switching.s1" to (1..1),
+            "pulse.switching.s2" to (2..Int.MAX_VALUE),
+            "pulse.rebalance.s1" to (5..13),
+            "pulse.rebalance.s2" to (14..Int.MAX_VALUE),
             "pulse.spread.s1" to (3..3),
             "pulse.spread.s2" to (4..Int.MAX_VALUE),
             "pulse.burst.s1" to (3..4),
@@ -170,6 +178,32 @@ class StageRangeTest {
                 parsed,
             )
         }
+    }
+
+    /**
+     * The second branch of `concentration` stage 3, which the map above cannot cover.
+     *
+     * That test reads `conditions.first()`, which for a compound header is the first branch
+     * and is a percentage. The days branch is the second, and the rule written against it
+     * is a different rule pointing at the same stage.
+     */
+    @Test
+    fun `the days branch of concentration stage 3 has its own rule at the range the header states`() {
+        val rule = CorpusFixture.catalog.rules.single { it.key == "pulse.concentration.s3.days" }
+        val stage = requireNotNull(CorpusFixture.catalog.stageFor(rule))
+        assertEquals(
+            "the header reads `ninety five percent and above, or four or more consecutive days`",
+            4..Int.MAX_VALUE,
+            (stage.header.conditions[1] as StageCondition.Numeric).range,
+        )
+        assertEquals(3, rule.stage)
+        assertTrue(
+            "the days branch reads the single area run and pairs it to its own area, which is " +
+                "what StreakExceptionAudit requires of every rule reading that fact",
+            rule.criteria.map { it.id }.containsAll(
+                listOf("concentration.run.4plus", "concentration.run.isThisArea"),
+            ),
+        )
     }
 
     private fun single(header: String): IntRange {

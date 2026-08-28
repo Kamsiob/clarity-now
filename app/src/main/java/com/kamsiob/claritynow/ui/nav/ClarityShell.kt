@@ -62,6 +62,11 @@ import com.kamsiob.claritynow.ui.theme.TabEntrance
 import com.kamsiob.claritynow.ui.theme.clarityMotion
 import com.kamsiob.claritynow.ui.trail.TrailRoute
 import com.kamsiob.claritynow.ui.trail.TrailViewModel
+import com.kamsiob.claritynow.ui.tutorial.LocalTutorialTargets
+import com.kamsiob.claritynow.ui.tutorial.TutorialHost
+import com.kamsiob.claritynow.ui.tutorial.TutorialStep
+import com.kamsiob.claritynow.ui.tutorial.TutorialTargets
+import com.kamsiob.claritynow.ui.tutorial.tutorialTarget
 
 /**
  * The app shell. design-v3.md 10.15.
@@ -88,9 +93,28 @@ import com.kamsiob.claritynow.ui.trail.TrailViewModel
  * A counter rather than a boolean because a request is a moment and not a state: a
  * boolean would have to be cleared by whoever handled it, and the frame in which it
  * had not been cleared yet is the frame that re-opens a surface somebody just left.
+ *
+ * ## The tutorial, MASTER_BUILD_PROMPT 13.2
+ *
+ * [tutorialQueued] is what the first run gate decided on this cold start. The shell owns
+ * the tutorial for one reason: 13.2 requires the overlay to sit "above everything
+ * including the tab bar", and this is the only composable that has the tab bar and the
+ * tabs as siblings. It is the last child of the root box, after the tab bar and after the
+ * Focus surface, which is what makes that sentence true rather than nearly true.
+ *
+ * The registry of spotlight targets is provided here and read by `Modifier.tutorialTarget`
+ * wherever a target is. **The tab bar below wears one; the other four targets are on the
+ * Areas screen**, and until each of them wears one the tutorial does not start at all and
+ * `hasSeenTutorial` is not written, per `TutorialHost`. The four call sites are the FAB,
+ * the first area card, the Focus chip and the Pulse chip, and each needs exactly
+ * `.tutorialTarget(TutorialStep.FAB)` and its three counterparts in the modifier chain.
  */
 @Composable
-fun ClarityShell(focusRequest: Long, modifier: Modifier = Modifier) {
+fun ClarityShell(
+    focusRequest: Long,
+    tutorialQueued: Boolean,
+    modifier: Modifier = Modifier,
+) {
     val colors = LocalClarityColors.current
     val motion = clarityMotion()
     var selected by rememberSaveable { mutableStateOf(TAB_AREAS) }
@@ -187,95 +211,118 @@ fun ClarityShell(focusRequest: Long, modifier: Modifier = Modifier) {
     // must not count as a first open.
     val tabStates = rememberSaveableStateHolder()
 
-    Box(modifier = modifier.fillMaxSize().background(colors.canvas)) {
-        AnimatedContent(
-            targetState = selected,
-            transitionSpec = { fadeIn(tabFade) togetherWith fadeOut(tabFade) },
-            label = "tabContent",
-        ) { tab ->
-            tabStates.SaveableStateProvider(tab) {
-                TabEntrance {
-                    when (tab) {
-                        TAB_AREAS -> AreasRoute(
-                            viewModel = areasViewModel,
-                            onOpenFocus = { focusEntry = focusEntry.requested() },
-                            onOpenPulse = { pulseOpen = true },
-                        )
+    // One registry for the app, so a target reported anywhere under this shell reaches the
+    // overlay drawn at the bottom of this function. It is created here rather than in the
+    // host, because the elements that report into it are composed above the host.
+    val tutorialTargets = remember { TutorialTargets() }
 
-                        TAB_TRAIL -> {
-                            val trailViewModel: TrailViewModel =
-                                viewModel(factory = ClarityViewModelFactory)
-                            TrailRoute(viewModel = trailViewModel)
+    CompositionLocalProvider(LocalTutorialTargets provides tutorialTargets) {
+        Box(modifier = modifier.fillMaxSize().background(colors.canvas)) {
+            AnimatedContent(
+                targetState = selected,
+                transitionSpec = { fadeIn(tabFade) togetherWith fadeOut(tabFade) },
+                label = "tabContent",
+            ) { tab ->
+                tabStates.SaveableStateProvider(tab) {
+                    TabEntrance {
+                        when (tab) {
+                            TAB_AREAS -> AreasRoute(
+                                viewModel = areasViewModel,
+                                onOpenFocus = { focusEntry = focusEntry.requested() },
+                                onOpenPulse = { pulseOpen = true },
+                            )
+
+                            TAB_TRAIL -> {
+                                val trailViewModel: TrailViewModel =
+                                    viewModel(factory = ClarityViewModelFactory)
+                                TrailRoute(viewModel = trailViewModel)
+                            }
+
+                            // Phase 7. The tab's own ViewModel is resolved inside the route,
+                            // against the Activity's store, so this branch is the whole of the
+                            // wiring. TabEntrance above is what makes the dot cascade and the
+                            // number roll fire once per session, per design-v3.md 8.4.
+                            TAB_MOMENTUM -> MomentumRoute()
+
+                            // Phase 8. Like Momentum, the tab's own ViewModel is resolved
+                            // inside the route against the Activity's store, so this branch is
+                            // the whole of the wiring. **The Report reveal is deliberately not
+                            // driven by TabEntrance above.** design-v3.md 8.4 makes it the one
+                            // entrance that re-arms on a content change as well as on a session
+                            // change, which needs a key TabEntrance has none of and says so in
+                            // its own documentation, so ReportViewModel holds it instead.
+                            TAB_REPORT -> ReportRoute()
+
+                            else -> UnderConstruction()
                         }
-
-                        // Phase 7. The tab's own ViewModel is resolved inside the route,
-                        // against the Activity's store, so this branch is the whole of the
-                        // wiring. TabEntrance above is what makes the dot cascade and the
-                        // number roll fire once per session, per design-v3.md 8.4.
-                        TAB_MOMENTUM -> MomentumRoute()
-
-                        // Phase 8. Like Momentum, the tab's own ViewModel is resolved
-                        // inside the route against the Activity's store, so this branch is
-                        // the whole of the wiring. **The Report reveal is deliberately not
-                        // driven by TabEntrance above.** design-v3.md 8.4 makes it the one
-                        // entrance that re-arms on a content change as well as on a session
-                        // change, which needs a key TabEntrance has none of and says so in
-                        // its own documentation, so ReportViewModel holds it instead.
-                        TAB_REPORT -> ReportRoute()
-
-                        else -> UnderConstruction()
                     }
                 }
             }
-        }
 
-        if (pulseOpen) {
-            PulseRoute(onDismiss = { pulseOpen = false })
-        }
-
-        ClarityTabBar(
-            tabs = tabs,
-            selectedKey = selected,
-            onSelect = { selected = it },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(bottom = 17.dp),
-        )
-
-        if (focusEntry.open) {
-            // The tabs and the tab bar stay composed underneath, because design-v3.md
-            // 8.2 item 6 has the Contemplative surface fade in over the room it is
-            // replacing rather than over a bare canvas. Something has to stop a thumb
-            // reaching them through it, and this is that: a full size sibling drawn
-            // behind the surface and in front of everything else, which swallows every
-            // pointer event the surface itself did not want. It is behind rather than
-            // in front so that it can never starve the surface's own controls.
-            Spacer(Modifier.fillMaxSize().swallowsPointerInput())
-
-            // A ViewModel store of its own, cleared the moment the surface goes.
-            //
-            // **The Focus surface must be built fresh every time it is entered.** Its
-            // ViewModel reads the log and resolves an outstanding session in `init`,
-            // which is what puts a person back on the ring after a process death and on
-            // the completion screen after a session ran out while they were away, and
-            // it reaches a terminal state when they leave. Held in the Activity's store
-            // it would be entered once and be finished forever afterwards. This is what
-            // a navigation library gives a back stack entry, written out because this
-            // app has one destination that needs it.
-            val focusStore = remember { FocusSurfaceStore() }
-            DisposableEffect(focusStore) {
-                onDispose { focusStore.viewModelStore.clear() }
+            if (pulseOpen) {
+                PulseRoute(onDismiss = { pulseOpen = false })
             }
 
-            CompositionLocalProvider(LocalViewModelStoreOwner.provides(focusStore)) {
-                FocusRoute(
-                    // **This leaves the surface and it never ends a session.**
-                    // design-v3.md 10.15. The session keeps running, the ongoing
-                    // notification stays in the shade, and the Areas card keeps its
-                    // countdown; all this records is that the person went elsewhere.
-                    onExit = { focusEntry = focusEntry.left(focusPresence?.sessionId) },
-                )
+            ClarityTabBar(
+                tabs = tabs,
+                selectedKey = selected,
+                onSelect = { selected = it },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(bottom = 17.dp)
+                    // The tutorial's fifth step. The modifier goes after the padding so the
+                    // rectangle reported is the bar itself rather than the bar plus the inset
+                    // it floats above. MASTER_BUILD_PROMPT 13.2.
+                    .tutorialTarget(TutorialStep.TAB_BAR),
+            )
+
+            if (focusEntry.open) {
+                // The tabs and the tab bar stay composed underneath, because design-v3.md
+                // 8.2 item 6 has the Contemplative surface fade in over the room it is
+                // replacing rather than over a bare canvas. Something has to stop a thumb
+                // reaching them through it, and this is that: a full size sibling drawn
+                // behind the surface and in front of everything else, which swallows every
+                // pointer event the surface itself did not want. It is behind rather than
+                // in front so that it can never starve the surface's own controls.
+                Spacer(Modifier.fillMaxSize().swallowsPointerInput())
+
+                // A ViewModel store of its own, cleared the moment the surface goes.
+                //
+                // **The Focus surface must be built fresh every time it is entered.** Its
+                // ViewModel reads the log and resolves an outstanding session in `init`,
+                // which is what puts a person back on the ring after a process death and on
+                // the completion screen after a session ran out while they were away, and
+                // it reaches a terminal state when they leave. Held in the Activity's store
+                // it would be entered once and be finished forever afterwards. This is what
+                // a navigation library gives a back stack entry, written out because this
+                // app has one destination that needs it.
+                val focusStore = remember { FocusSurfaceStore() }
+                DisposableEffect(focusStore) {
+                    onDispose { focusStore.viewModelStore.clear() }
+                }
+
+                CompositionLocalProvider(LocalViewModelStoreOwner.provides(focusStore)) {
+                    FocusRoute(
+                        // **This leaves the surface and it never ends a session.**
+                        // design-v3.md 10.15. The session keeps running, the ongoing
+                        // notification stays in the shade, and the Areas card keeps its
+                        // countdown; all this records is that the person went elsewhere.
+                        onExit = { focusEntry = focusEntry.left(focusPresence?.sessionId) },
+                    )
+                }
+            }
+
+            // Last, so it is above the tabs, the Pulse sheet, the tab bar and the Focus
+            // surface. MASTER_BUILD_PROMPT 13.2 asks for "above everything including the tab
+            // bar" and this position is the whole of that guarantee.
+            //
+            // Not composed at all while the Focus surface is showing. A running session
+            // restored on a cold start covers the Areas screen, and pointing at a FAB nobody
+            // can see is worse than waiting: the tutorial has not been marked seen, so it runs
+            // on the next launch that reaches Areas.
+            if (!focusEntry.open) {
+                TutorialHost(queued = tutorialQueued)
             }
         }
     }

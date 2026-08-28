@@ -2,28 +2,42 @@
 
 Where the build actually is. Updated at the end of every phase.
 
-**Last updated:** August 27, 2026, end of phase 8.
-**Phases 4, 5, 6, 7 and 8 are all built and all awaiting the check that closes them.**
-Everything this file says about focus sessions, about the engine, about the Pulse, about
-Momentum and about the Report is true of the source and is not yet true of anything
+**Last updated:** August 27, 2026, end of the slot bindings phase.
+**Phases 4, 5, 6, 7, 8, 10 and 11, the facts phase and the slot bindings phase are all
+built and all awaiting the check that closes them.** Everything this file says about focus
+sessions, about the engine, about the Pulse, about Momentum, about the Report, about first
+run, about Settings, about the twelve facts and fourteen rules and about the nine families
+that gained a slot binding is true of the source and is not yet true of anything
 installed.
-**Version:** 0.8.0, versionCode 800.
-`MASTER_BUILD_PROMPT.md` 16.7 makes the number a deliberate choice at a release and the
-release is the orchestrator's closing step. The recommendation is **0.8.0, versionCode
-800**, one minor bump for the pair: two screens arrive that could not be reached before,
-no contract changes, and the event catalog is untouched.
+**Version:** the orchestrator chooses it at the release. `MASTER_BUILD_PROMPT.md` 16.7
+makes the number a deliberate choice and the release is the orchestrator's closing step.
+The recommendation is still **0.11.0, versionCode 1100**, one minor bump for all three
+rather than three: onboarding, the tutorial, Settings, About and the backup path all arrive
+as screens on contracts that already existed, the facts phase and the slot bindings phase
+between them change what the engine can say without adding a screen, a permission or an
+event type, the event catalog is untouched, and nothing in the log format moved. A major is not warranted before the ship phase.
 **Installed and verified on:** Pixel 8 (`shiba`), over USB, last at the end of phase 3c.
 
 **No device check has run since phase 3c, and none of them failed: none was attempted.**
-The Pixel was in use by another session, and no `adb` command was issued from phases 6, 7
-or 8. The orchestrator runs the closing build, install and device pass, so every claim in
-the phase 6, 7 and 8 sections below is a claim about source and unit tests. **Two of the three
-phase 6 integration gaps are closed**: `ClarityShell` hosts every tab, and phases 7 and 8
-hung Momentum and the Report on the two branches that read `UnderConstruction`. The corpus
-is packaged by a Gradle task into `assets/corpus/` and all three engine surfaces read the
-same packaged files, so a session must not add a second copy. **The third is still open:
-`MainActivity` does not route `PulseIntents.opensPulse`**, so tapping the Pulse reminder
-opens the app at whatever tab it was on.
+No `adb` command was issued from phases 6, 7, 8, 10 or 11, from the facts phase or from
+the slot bindings phase, and neither of those two ran a Gradle task either, because another
+workflow was building in the tree. The orchestrator runs the closing build, install and
+device pass, so every claim in the phase sections below is a claim about source and unit
+tests, and the readings from the facts and slot bindings phases are a claim about source
+alone. **Two of the three phase 6 integration gaps are
+closed**: `ClarityShell` hosts every tab, and phases 7 and 8 hung Momentum and the Report
+on the two branches that read `UnderConstruction`. The corpus is packaged by a Gradle task
+into `assets/corpus/` and all three engine surfaces read the same packaged files, so a
+session must not add a second copy. **The third is still open: `MainActivity` does not
+route `PulseIntents.opensPulse`**, so tapping the Pulse reminder opens the app at whatever
+tab it was on.
+
+**One thing phase 10 built is not reachable, and it is one line at four call sites.** The
+tutorial's five spotlight targets need `Modifier.tutorialTarget` at each of them; only the
+tab bar has it. Until the FAB, the first area card, the Focus chip and the Pulse chip wear
+it, the tutorial does not start and `hasSeenTutorial` is never written. That is by design
+rather than by accident and it fails safe, but it means **the phase 10 device check cannot
+pass as things stand.**
 
 **A note on the format of the lines above**, kept because it keeps being needed. Two
 successive edits once left this block stitched from two states, with each paragraph's
@@ -47,10 +61,12 @@ worse than either of them**, and the way to edit these is to replace the whole b
 | 6. Pulse | built, awaiting the device check and one integration gap | #4 |
 | 7. Momentum | built, awaiting the device check | #5 |
 | 8. Snapshots and the Report | built, awaiting the device check and one write | #6 |
-| 9. Corpus | not started | #7 |
+| Facts and rules, the facts phase | built, awaiting the closing build | no issue, owner approved |
+| Slot bindings, and the third simulator reading | built, awaiting the closing build | no issue, owner approved |
+| 9. Corpus | not started, gated on the two coverage readings, and now three pieces of work rather than one | #7 |
 | 9b. Guidance, layer six | not started | #8 |
-| 10. First run | not started | #9 |
-| 11. Settings, About, data | not started | #10 |
+| 10. First run | built, awaiting four modifiers and the device check | #9 |
+| 11. Settings, About, data | built, awaiting the device check | #10 |
 | 12. Widgets and notifications | not started | #11 |
 | 12b. Design surfaces, the polish pass | not started | #54 |
 | 13. Ship | not started | #12 |
@@ -274,9 +290,10 @@ Verified by hand on the device, not only in tests.
 - Give an item a first step and an estimate, on the add sheet or the edit sheet. Both
   are optional, both are the last fields on the sheet, and nothing anywhere asks for
   either
-- Calm mode, which today follows the OS reduce motion setting because there is no
-  Settings screen yet: less color in every wash, no list entrance, a shimmer that
-  holds still, and a bottom sheet that still travels
+- Calm mode: less color in every wash, no list entrance, a shimmer that holds still, and
+  a bottom sheet that still travels. It followed the OS reduce motion setting through
+  phases 3b to 8 because there was no Settings screen; **phase 11 built its row**, and it
+  still follows the system until somebody touches that row
 - The list entrance fires once per tab per app session rather than on every tab
   switch. Switching tabs twenty times should show it twice, once for Areas and once
   for the Trail
@@ -315,14 +332,12 @@ Each of these is a phase, not an oversight. See the linked issue for why.
 
 - The **Pulse chip** in the Areas header, which arrives with Pulse in phase 6 rather
   than sitting inert. The Focus chip beside it landed in phase 4 and is permanent.
-- The **`Session length` selector** and the **`Five minute warning`** row, both under
-  Focus in Settings, phase 11, issue #10. The preferences behind them are built and
-  honored, so every session today is the stored default of 25 minutes and the
-  transition warning is off and reachable only by writing the key by hand.
-- The **settings glyph** in the Areas header, which arrives with phase 11.
 - The **archived areas view**, issue #15. Archiving works and removes the area from
-  the list, but there is currently no way back. Worth knowing before archiving
-  anything you care about.
+  the list, but there is still no way back. **Phase 11 was supposed to carry it and did
+  not**, so this bullet has outlived the phase it was assigned to. The archive glyph is
+  in the Areas header and `AreasRoute` passes it an empty lambda. Unarchiving, the typed
+  permanent deletion and the `AREA_DELETED` tombstone go with the screen. Worth knowing
+  before archiving anything you care about.
 - **Momentum and the Report** are built, phases 7 and 8, and neither renders the honest
   placeholder line any more. Issue #16 is answered by the two sections below.
 - The **weekly banner** on Areas is built, phase 7. It had been recorded here as absent
@@ -333,19 +348,20 @@ Each of these is a phase, not an oversight. See the linked issue for why.
 - **Everything the engine says**, which is all of it. Phase 5 built layers 1 to 5 and no
   caller, so no sentence the engine produces has reached a device. Phase 6 is the first
   screen that asks it anything.
-- The **`Calm mode` Settings row**, phase 11, issue #10. The setting behind it is built
-  and honored everywhere in the app. Until the row exists the key has no stored value,
-  which means calm mode follows the OS reduce motion setting, which is its specified
-  default.
 - The **closing line on the Report**, with its accept pill and its decline. The block is
   built and always empty, because a closing line is layer six and layer six is phase 9b.
   Accept settles the pill and writes nothing; decline records nothing at all and never
   will, because there is no `PLAN_DECLINED` event and nothing that could count one.
 - **Past reports**, which are built and empty, because nothing writes `REPORT_GENERATED`.
   See the known defect below.
-- The **debug menu action and the export path** that rebuild the cache from event zero,
-  phase 11. `ClarityRepository.rebuildCacheFromLog` is built and answers what it found,
-  and has no caller.
+- The **debug menu action** that rebuilds the cache from event zero. Phase 11 built the
+  export half of this, so every export now runs a full rebuild from event zero as its
+  correctness check, and `ClarityRepository.rebuildCacheFromLog` itself still has no
+  caller.
+- The **medical disclaimer sentence in About**, phase 13. `MASTER_BUILD_PROMPT.md` 14.4
+  and 16.11 want it verbatim in the app and in the store listing at the same time, and
+  the listing is phase 13, so phase 11 left the place for it marked rather than shipping
+  it early.
 
 ## Known defects and open questions
 
@@ -491,26 +507,531 @@ Each of these is a phase, not an oversight. See the linked issue for why.
   Material's own, they honor the system animator scale and therefore reduce motion, and
   they expose no hook an app preference can reach. Recorded as a decision in
   `DECISIONS.md` and in `design-v3.md` 16.8 rather than left to be rediscovered.
-- **Three corpus totals disagree with the files beneath them**, found by counting at
-  catalog load rather than by reading. `CLARITY_LOGIC_ENGINE.md` 11.1 states 162 Momentum
-  and banner lines and 1,519 authored lines in total; the files carry 146 and 1,503.
-  `CORPUS_3_MOMENTUM.md` claims 112 Momentum headlines in two places and carries 96, and
-  inside `CORPUS_2_REPORT.md` section 1's prose says 176 headlines against its own table's
-  158 and section 3's says 128 patterns against 111. **Left as written**, because whether a
-  file grows to its total or a total is corrected to its file is a phase 9 question and a
-  builder quietly editing a specification to match what the code counted is the move the
-  authority order exists to prevent. The count is recorded at the point of the claim in
-  11.1 and the recommendation is in `DECISIONS.md`.
-- **Six of the ten simulator checks in `CLARITY_LOGIC_ENGINE.md` 12 fail**, by design and
-  with a date and an issue on each. They are not defects of phase 5 and they are listed
-  here so nobody has to rediscover which ones are expected. The numbers they measured are
-  in the phase 5 section below. **`accumulation` never reaching stage 2 across a year of
-  eleven personas is the one worth a second look**, because the other six failures are bench
-  depth and that one is a rule that may never fire.
-- **Three Pulse families have rules that never fired**, `throughput`, `burst` and
-  `queueDrain`, across eleven simulated years. Either the personas do not produce the
-  shape, or the criteria are tighter than the corpus stage headers they were built from.
-  Phase 9 has to know which before it grows those benches.
+- **The corpus totals were corrected by the facts phase and are no longer a defect.** Four
+  stated totals were wrong, all four are now the counted figure, no corpus line was added
+  or removed to reach it, and `CorpusTotalsAuditTest` recounts every stated total in the
+  three files and in 11.1 on every run. This bullet is kept rather than deleted because the
+  phase 5 entry below still records the finding as open, and the two would otherwise
+  disagree.
+- **Eight of the twelve simulator checks in `CLARITY_LOGIC_ENGINE.md` 12 fail**, by design
+  and with a date and an issue on each. Ten were built in phase 5 and the facts phase added
+  the family coverage reading and rewrote the stage one. They are listed here so nobody has
+  to rediscover which are expected. The current numbers are in the slot bindings section
+  below and the reasoning is in `DECISIONS.md`.
+- **Nine families and two hot family stages have rules that never qualified once**, across
+  eleven simulated years and three measurements. In the Pulse, `throughput`, `burst` and
+  `queueDrain`, unchanged since phase 5, and `accumulation` stage 2. In the Report,
+  `clearing`, `fragmented`, `netOutflow`, `queueDrained`, `weekendShift`,
+  `insufficientData` and `intakeVsOutput` stage 3. The criteria were evaluated one at a
+  time over the same years, so this is measured rather than inferred: `throughput` requires
+  completions to exceed additions inside the one day Pulse window and that criterion held
+  zero times all year. **A threshold or a window is wrong, and growing those benches would
+  change nothing.** `insufficientData` is worse than a threshold and is unreachable by
+  construction: 6.3 admits a pattern only with three weeks of data and its rule fires only
+  with fewer.
+- **`neglectedArea` and `areaGoneQuiet` are vetoed by the check that exists to stop phantom
+  areas**, and they are the only families vetoed anywhere in the run: 107 vetoes, every one
+  of them check 1, "names an area which had 0 events in this window". Both families exist
+  to observe an area that has stopped, so their rules require one to three weeks of silence
+  and check 1 forbids naming an area with no events in the window. **The rule's
+  precondition and the validator's are exact opposites.** This is a conflict between
+  section 8 and two families in `CORPUS_2_REPORT.md`, thirty seven authored lines, and it
+  is recorded as open in `DECISIONS.md` rather than settled by a builder.
+- **The tutorial cannot start**, phase 10. Four of its five spotlight targets do not wear
+  `Modifier.tutorialTarget`: only the tab bar does, and `TutorialTargets.ready` requires
+  all five. The overlay therefore waits and `hasSeenTutorial` is never written, which is
+  the mechanism failing safe rather than failing quietly. The fix is one line each at the
+  FAB, the first area card, the Focus chip and the Pulse chip in `ui/areas/`. **The phase
+  10 device check cannot pass before it lands.**
+- **Settings does not cover the floating tab bar**, phase 11. `design-v3.md` 10.15 makes
+  it a pushed screen; `ClarityShell` draws the bar as a sibling above the tab content and
+  the shell was outside phase 11's file list, so the surface is hosted from inside the
+  Areas tab and reserves room at the foot instead. Everything is reachable and readable.
+  The remedy is one branch in the shell beside the Focus surface.
+- **`SETTING_CHANGED` is never written**, phase 11. `After completing` is the one setting
+  the specification says writes an event, and it does not. The event type, the reducer
+  fold, the Trail row and `TrailFacts` all handle it already; what is missing is a method
+  on `ClarityRepository`, shaped like `recordSettingChanged(key, previousValue, newValue)`
+  beside `recordAppOpened`. `commit` is private, so the event is absent rather than written
+  down a second path, which is the right way round but is still a gap.
+- **The first run gate latches for the process**, phase 10, so `Replay the welcome`,
+  `Replay the tour` and the return to onboarding after an erase all take effect on the next
+  cold start rather than immediately. The erase itself is immediate. This is a consequence
+  of the rule that makes beat 3's write survive the reveal, not an oversight, but it is a
+  behavior a device check will notice and should not report as a defect.
+
+---
+
+## The slot bindings phase delivered
+
+**Not on the issue board.** The facts phase left the bindings out because
+`domain/engine/realize/` was outside its file list, and `SlotBindingsTest` recorded
+the cost in a sentence: **a family with a rule, markers in its lines and no binding
+can only ever speak through the lines that happen to have no marker in them.** Nine
+families were in that state. This phase bound them and measured the year again.
+
+- **Nine families gained a binding they did not have**, and three more gained a slot
+  inside one they already had. The nine: Pulse `switching` and `rebalance`, and the
+  Report patterns `narrowingFocus`, `broadeningFocus`, `focusHabitForming`,
+  `focusHabitFading`, `weekendShift`, `abandonmentPattern` and `comebackPattern`. The
+  three: Momentum `comeback`, the Report headline `comeback` and the Report
+  observation `areaRevival`, each of which can now render the gap an area came back
+  from.
+- **`SlotBindings.KNOWN_UNBOUND` still holds five entries and none of them is a
+  regression.** `PULSE quietDay` is now a refusal rather than a gap: the fact its
+  stages 2 and 3 wanted has arrived, and `{dayCount}` and `{sinceRef}` are exactly the
+  markers a capped run of absence may not fill.
+- **Thirteen more lines are held out in `EXCLUDED`**, taking it to 42, each with the
+  reason written where it is excluded. Four of the thirteen are a shape that did not
+  exist before: a line whose markers are bound correctly and whose **words** state a
+  count no rule fixes, `Three weeks of stillness` under a stage that begins at
+  fourteen days.
+- **Not one corpus line was written, added or edited.** The owner's condition is
+  unchanged and neither half of it is met yet.
+
+### What the simulator measured, beside the two earlier baselines
+
+The same eleven personas, a full simulated year each. 3,148 opens, 451 reports, 419
+pattern slots, 11,833 engine invocations.
+
+| gate | target | phase 5 | facts | after the bindings |
+|---|---|---|---|---|
+| Pulse silence, all personas | 8 to 25 percent of opened days | 76 percent | 73 percent | **68 percent** |
+| Pulse silence, per persona | the same band | 43 to 98 | 42 to 98 | **40 to 97** |
+| Pulse families that ever fired | 11 of 11 | 6 of 11 | 7 of 11 | **8 of 11** |
+| every family the corpus declares fires | 78 of 78 | not measured | 58 of 78 | **60 of 78** |
+| every stage of every hot family fires | all | 29 hot, one gap | 31 hot, two gaps | **33 hot, the same two gaps** |
+| no variant repeats inside ninety days | none | 7,384 | 7,430 | **7,445, tightest after 1 day** |
+| no family over a fifth of a year's Pulses | 20 percent | 27 to 60 | 25 to 57 | **25 to 51** |
+| no two consecutive leads share a band | none | 715 across 451 reports | 725 | **716** |
+| no three parallel numeric clauses | none | 27 runs | 37 runs | **36 runs** |
+| layer 6 silence | at least 15 percent | not measurable | not measurable | not measurable |
+
+The four enforced checks still pass. Family coverage in full: PULSE 8 of 11,
+REPORT_HEADLINE 13 of 17, REPORT_OBSERVATION 19 of 21, REPORT_PATTERN 8 of 16,
+MOMENTUM_HEADLINE 8 of 8, AREAS_BANNER 4 of 5. Per persona silence, worst last:
+`queueHoarder` 40, `brandNew` 42, `heavySingleArea` 61, `highFocus` 61, `sporadic`
+62, `lowFocus` 63, `acceptsEveryPlan` 63, `abandoning` 75, `longDormantRevival` 78,
+`fastCompleter` 92, `balancedAcrossFour` 97.
+
+**Pulse firing counts across the run**, which is the number that replaces a sentence
+somebody remembered: `persistence` 268, `quietDay` 243, `concentration` 170,
+`accumulation` 143, `rebalance` 111, `freshStart` 25, `switching` 16, `spread` 5, and
+`throughput`, `burst` and `queueDrain` at zero. `switching` fired nothing before this
+phase and `rebalance` fired 20 times at stage 2 only; it now fires 111 across both its
+stages. That is the binding doing exactly what the facts phase predicted it would.
+
+### The reading, and it is not the one a bigger corpus answers
+
+**Improved, and still nowhere near the band.** Eight points below phase 5, five below
+the facts phase, 68 against a ceiling of 25.
+
+**The split is arithmetic rather than judgment.** The 2,167 silent Pulse days are
+1,185 where a rule qualified and every candidate was filtered, 971 where nothing
+qualified at all, and 11 with too little data, against 1,348, 944 and 11 after the
+facts phase. Bench depth is the only fix for the first column. **If phase 9 emptied
+that column completely, silence would be 31 percent and still above the ceiling**,
+and six of the eleven personas would still be outside the band. Authoring is
+necessary and provably not sufficient, and that one sentence is what this measurement
+was for.
+
+**The eighteen dark families divide three ways**, and only the third is authoring.
+Nine never qualified once across eleven simulated years, so a threshold or a window is
+wrong rather than a bench being thin: `throughput` needs completions to exceed
+additions inside the one day Pulse window and that never happened at all, `burst`
+needs three completions in one area in one day, `queueDrain` needs a queue of three to
+reach zero inside a day, and `clearing`, `netOutflow`, `queueDrained`, `fragmented`
+and `weekendShift` are the same shape at the Report grain. `insufficientData` is worse
+than a threshold: 6.3 admits a pattern only with three weeks of data and that family's
+rule fires only with fewer, so it is unreachable by construction. Two more,
+`neglectedArea` and `areaGoneQuiet`, are **the only families vetoed anywhere in the
+run**, 107 times, every one of them check 1, because their rules require an area to
+have been silent for one to three weeks and check 1 forbids naming an area with no
+events in the window. The remaining seven qualify and lose a slot that exists once:
+419 pattern slots existed, 416 were filled, and three families took 402 of them.
+
+The full tables, the per criterion evidence and the open question that comes out of it
+are in `DECISIONS.md` under the entry of the same name.
+
+### What is deliberately not in this phase
+
+- **Not one corpus line.** Unchanged and deliberate.
+- **No threshold was touched.** Nine families never qualify and the fix is a rule
+  change, which is phase 9's to make with the personas open beside it. Changing a
+  threshold to make a family fire in a measurement run is the shape of tuning a
+  number until a gate goes green.
+- **The check 1 conflict is recorded, not resolved.** It is a conflict between section
+  8 and two families in `CORPUS_2_REPORT.md`, and CLAUDE.md says to stop and ask.
+
+### What the closing check still has to find
+
+**No Gradle task and no `adb` command was run in this phase either.** The readings
+were produced the way the facts phase produced its own: by compiling the domain, the
+devtools and a driver out of tree against the committed corpus files and running the
+year. **The unit suite has not been run on this work.** The closing build settles
+whether `verifyClarity` is green and whether `SimulatorTest` and `SlotBindingsTest`
+still pass.
+
+---
+
+## The facts phase delivered
+
+**Not on the issue board.** The owner approved it after reading the phase 5 readings and
+it ran before phase 9, for one reason: twelve families and stages had authored, approved
+language and **no rule at all**, because the fact their trigger names was not declared in
+`CLARITY_LOGIC_ENGINE.md` 3.1. Writing them more sentences would have changed nothing, and
+phase 9 is mostly writing sentences.
+
+- **Twelve facts, all of them declared in 3.1's terms and none of them approximated.**
+  `AreaFacts.swapsInWindow` and `AreaFacts.dormantDaysBeforeReturn`, the two that were
+  cheap and already specified. `AreaFacts.weekEventsSeries`, so a second return can be
+  counted. Five weekly series on `HistoryFacts`: `weekAreaCountSeries`,
+  `weekFocusStartedSeries`, `weekFocusCompletedSeries`, `weekFocusEndedEarlySeries` and
+  `weekWeekendEventsSeries`. And `currentQuietRunDays`, `currentSingleAreaRunDays` and
+  `currentSingleAreaRunAreaId`, which are the scoped exception to the streak ban.
+- **Started, finished and ended early are three series and not two.** The register asked
+  for one `weekFocusSessionSeries` and it was deliberately not built under that name: the
+  two families citing it read the started count, `abandonmentPattern` compares ended early
+  against completed, and a killed process leaves a session with no terminal event, so
+  subtracting one from another would attribute it to an ending the person did not choose.
+- **`weekendShift` reads its own series rather than `CueFacts`**, which the register left
+  open as a choice. 3.7 restricts `CueFacts` to layer 6, and its `weekdayOnly` is a twelve
+  week share under a ceiling: it cannot substantiate a claim that nothing happened, and it
+  answers over twelve weeks a family that speaks about four.
+- **One new function on `TrailQueries`**, `eventsPerAreaByDay`. Everything else came from
+  functions already on the facade, and no number is computed in the engine.
+- **Fourteen new rules, taking the catalog from 92 to 106** across the same 78 families.
+  Seven Pulse and seven Report patterns. `RulesAwaitingFacts.GAPS` is now empty, and the
+  empty list is load bearing: `CatalogIntegrity.everyFamilyHasARule` reads it, so a family
+  cannot go quiet again without somebody writing the entry that says so.
+- **`StreakExceptionAudit`**, four checks that keep the run facts scoped, run over the
+  shipped catalog and over deliberately wrong rules so that every failure branch has
+  executed. `DECISIONS.md` carries the exception, the owner's reasoning, and an explicit
+  warning against widening it.
+- **`CorpusTotalsAuditTest`**, which recounts every stated total in the three corpus files
+  and in 11.1 against the keyed lines beneath them. Four stated totals were wrong and are
+  corrected in the files; no corpus line was added or removed.
+- **The simulator reports two things it did not.** Pulse silence as a share of opened days
+  **per persona and for every persona together**, and a per family firing count against the
+  families the catalog declares, so "six of eleven families ever fired" is a number the
+  build prints rather than a sentence somebody remembered. Both are in
+  `SimulationAggregate`, both are checks in `SimulationChecks`, and both are deferred with
+  a date and the issue that lifts them.
+- **43 new unit tests**, 38 in four new classes and five added to the catalog and fact set
+  tests that were already there.
+
+### What the simulator measured after it, beside the phase 5 baseline
+
+The same eleven personas, a full simulated year each. 3,148 opens, 451 reports, 11,843
+engine invocations.
+
+| gate | target | phase 5 | after |
+|---|---|---|---|
+| Pulse silence, all personas | 8 to 25 percent of opened days | 76 percent | **73 percent** |
+| Pulse silence, per persona | the same band | 43 to 98 | **42 to 98** |
+| Pulse families that ever fired | 11 of 11 | **6 of 11** | **7 of 11** |
+| every family the corpus declares fires | 78 of 78 | not measured | **58 of 78** |
+| every stage of every hot family fires | all | 29 hot, one gap | **31 hot, two gaps** |
+| no variant repeats inside ninety days | none | 7,384, tightest after 1 day | 7,430, tightest after 1 day |
+| no family over a fifth of a year's Pulses | 20 percent | 27 to 60 | 25 to 57 |
+| no two consecutive leads share a band | none | 715 across 451 reports | 725 across 451 reports |
+| no three parallel numeric clauses | none | 27 runs | 37 runs |
+| layer 6 silence | at least 15 percent | not measurable | not measurable |
+
+The four enforced checks still pass. The family coverage reading in full: PULSE 7 of 11,
+REPORT_HEADLINE 13 of 17, REPORT_OBSERVATION 19 of 21, REPORT_PATTERN 7 of 16,
+MOMENTUM_HEADLINE 8 of 8, AREAS_BANNER 4 of 5. **Not one of the twenty quiet families
+lacks a rule**, which is the empty register seen from the other end.
+
+**The stage row changed what it measures and the two columns are not comparable.** Phase 5
+read a family's ladder off the stages that fired, so the highest stage anybody reached was
+the highest stage the check knew about. The denominator is now the stages that have a rule,
+which is askable only because the register is empty. `accumulation` never reaching stage 2
+is the phase 5 gap, still open. `intakeVsOutput` never reaching stage 3 was always true and
+is newly visible.
+
+### What this did not fix, and phase 9 should read it before authoring
+
+**Silence moved three points against a band of 8 to 25**, 2,383 silent days out of 3,148
+opens becoming 2,303. Seven of the fourteen new rules
+ever fired, for 87 firings, and Pulse silence fell by 80 days, so the phase delivered what
+its rules could deliver and the shortfall is elsewhere. The silent days now split **1,348
+where something qualified and every candidate was filtered, 944 where nothing qualified,
+and 11 with too little data**, against 1,238, 1,134 and 11 at phase 5.
+
+Three causes, and they are three different pieces of work:
+
+1. **A bench whose slots have no binding.** `switching` has two rules and fired zero times.
+   All eighteen of its statements name an area and `SlotBindings` has no entry for the
+   family, so the realizer drops every line for an unfilled marker. The fact and the rule
+   are two thirds of a working family; the third is one map entry. `rebalance` is the same
+   shape and fired only at stage 2, where some lines carry no marker.
+2. **A rule no simulated life satisfies.** `throughput`, `burst` and `queueDrain` have ten
+   rules between them and fired nothing across eleven simulated years, exactly as at
+   phase 5.
+3. **A selector that declines to speak on a qualifying day**, 1,348 times. This is the one
+   a bigger bench genuinely helps, because 7.6 excludes a variant for ninety days and a
+   family with four lines per stage runs out.
+
+### What is deliberately not in this phase
+
+- **Not one new corpus line.** The owner was explicit: none is written until silence is
+  inside the band and every family fires. This phase added facts and rules and corrected
+  four counts, and correcting a count is not authoring.
+- **The `switching` and `rebalance` slot bindings**, which are the difference between two
+  families qualifying and two families speaking. They are a corpus and realization question
+  rather than a fact question, and they belong with the work that reads the benches.
+- **Layer 6**, still phase 9b. `CueFacts` is still extracted and unread, and the new
+  weekend series exists precisely so that a Report pattern does not reach into it.
+
+### What the closing check still has to find
+
+**No Gradle task and no `adb` command was run in this phase.** Another workflow was
+building in the tree, so the orchestrator runs the build, the unit suite and the device
+pass. Everything above is a claim about source, and the simulator readings were produced
+by compiling the domain, the devtools and a driver out of tree and running the year
+against the committed corpus files. **The unit suite has not been run on this work**, so
+the first thing the closing build settles is whether `verifyClarity` is green, and the
+second is whether `SimulatorTest` still passes with two checks added to the report and one
+of them measuring against a new denominator.
+
+---
+
+## Phase 11 delivered
+
+Settings, About and the data controls, issue #10. `MASTER_BUILD_PROMPT.md` 14.1 to 14.5
+and 14b.7, `design-v3.md` 10.10, 10.11, 10.15, section 11 and 16.1.
+
+- **The screen**, `ui/settings/`. All seven groups in 14.1's order, rows directly on
+  canvas under sentence case sideheads with no card containers, the support block, and
+  the version line. The one card on it is the permission card, which 14.1 asks for by
+  name. It also landed the four rows that earlier phases wrote preferences for and had no
+  screen to put controls on: `Session length` and `Five minute warning` from phase 4,
+  `Calm mode` from phase 3b, and the reminder switch and hour from phase 6.
+- **The appearance picker**, `ui/settings/AppearancePicker.kt`. Three real miniatures of
+  the Areas screen at 84dp, 12dp radius, 9dp gaps, with the System tile clipped at 103
+  degrees and drawing both halves including the rows. It reads `ClarityLightColors` and
+  `ClarityDarkColors` rather than the four hex values in 10.10, three of which moved in
+  phase 3c; a miniature drawn from those numbers would be a picture of a screen this app
+  no longer has.
+- **The sheets**, `ui/settings/SettingsSheets.kt`. The Pulse explainer, session length,
+  the reminder hour, erase, export, the import password prompt, the import choice, the
+  privacy policy and the licenses. Each is a bottom sheet, which is a window of its own
+  and therefore genuinely above the floating tab bar.
+- **The backup path**, `data/export/`. `BackupCodec` reads and writes and cannot touch
+  the database; `BackupService.apply` takes a type only a passing validation can produce;
+  `BackupCrypto` and `Scrypt` are the optional password; `ImportRefusal` is six reasons
+  and no sentences; `ExportReminder` is the quiet 30 day line; `SyncTarget` is section 7's
+  seam with its one Storage Access Framework implementation.
+- **About**, `ui/about/`. The mark at 62dp on `#141A2E`, the paragraph in `bodySerif`, all
+  five `Elsewhere` rows, the support block and the license lines.
+- **Five new test classes.** `BackupRoundTripTest` and `BackupRefusalTest` are the two
+  14b.7 requires; `ScryptVectorsTest` asserts every intermediate step against RFC 7914;
+  `ExportReminderTest` holds both halves of the reminder rule; `EraseContractTest` reads
+  the source of both erase methods.
+
+### The privacy text is verbatim and has to stay that way
+
+The heading, the seven leads and the seven bodies in `strings.xml` were checked word for
+word against 14.3. **The builder still owes the identical text at a URL under
+kamsiob.com**, which the Play Console listing requires and which the app carrying it does
+not satisfy. That is phase 13's, and it is the one place in this project where a
+paraphrase would be visible to a reviewer rather than only to a reader.
+
+### The backup file, and the four choices inside it
+
+- **Two parts, one header line and then the body**, rather than one nested JSON document.
+  A checksum over a nested object is a checksum over somebody's canonical serialization,
+  and two writers that disagree about key order produce two checksums for the same data.
+  Split, the checksum is over exact bytes, which a second implementation can reproduce
+  with no rules to agree about. The unencrypted body is pretty printed JSON starting on
+  line 2, so the file still opens in a text editor and reads as what it is.
+- **scrypt, written out in the repository against RFC 7914**, rather than a dependency or
+  PBKDF2. `MASTER_BUILD_PROMPT.md` 3.3's check on August 27, 2026 put Argon2id first and
+  scrypt second on the OWASP list, and Android's providers offer neither. The other half
+  of the reason is `docs/EVENT_FORMAT.md`: scrypt is in the standard library of every
+  runtime the Linux companion could be written in and Argon2 is in almost none of them.
+- **N=2^15, r=8, p=3, OWASP's third equivalent row rather than its first.** The first row
+  wants 128 MiB in a single allocation, and a backup that cannot be opened on the phone
+  holding the only copy of a person's history is worse than one of five settings the same
+  reference calls equivalent. Every parameter travels in the file, so a later build can
+  raise them without making one earlier backup unreadable.
+- **A recorded projection that disagrees with this build's fold is reported, not
+  refused.** The log is the truth and the projection is a cache, so a later build whose
+  reducer improved would count differently from the build that wrote the file. Refusing
+  somebody their own history over a derived number would be the failure the whole feature
+  exists to prevent.
+
+### Ten decisions where the obvious answer was rejected
+
+`design-v3.md` 15, and each is recorded in the file that makes it.
+
+1. **The settings badge glyph is `inkSecondary`, not the group color.** The common
+   settings screen of 2026 puts a saturated glyph on a tinted square of the same hue,
+   which turns a column of rows into a column of badges on a screen whose whole content
+   is words.
+2. **The per group colors come from the mood groups in 3.4, never from the four function
+   colors.** A settings badge in `actionBlue` is the second meaning that scoping exists to
+   prevent.
+3. **`After completing` reuses `ClarityChip`'s ink fill rather than a sliding thumb.** A
+   thumb is a movement 8.2 has no token for, and it is a second way of saying chosen.
+4. **The erase confirmation is case insensitive.** Every field in this app sets sentence
+   capitalization, so an exact match would make this the one control that cannot be
+   operated without finding caps lock. The gate is that five specific letters were typed
+   on purpose, and they were either way.
+5. **The export password is visible while typed.** A shoulder surfer is not the threat
+   model for a backup of your own task list; a mistyped password is, because the file it
+   makes cannot be opened by anyone including its maker, and they find out on the day they
+   need it.
+6. **The reminder hour is a list of 24 hours, not a clock dial.** The preference stores an
+   hour and the reminder is WorkManager work rather than an exact alarm, so a dial would
+   promise a precision the scheduler is explicit about not having.
+7. **The appearance tiles read live tokens rather than 10.10's hex values.**
+8. **The import picker accepts every type rather than the backup type.** A file written by
+   this app and carried through a cloud drive or a chat app very often comes back as
+   `application/octet-stream`, and a filter that hid a person's own backup from them would
+   look correct and lose their data. Nothing is trusted from the type either way.
+9. **Import refusals collapse to six reasons rather than twelve.** Every distinction that
+   does not change what a person can do about it collapses: a truncation, a flipped bit
+   and an edited checksum are all `DAMAGED`, because the answer to all three is find
+   another copy.
+10. **The export reminder anchors on the oldest surviving item when nothing was ever
+    exported.** Most people never export anything, so a rule measured only from the last
+    export would be silent forever for exactly the people it exists for.
+
+### What is deliberately not in this phase
+
+- **The archived areas view, issue #15**, which this phase's issue said it closes. It did
+  not land. The glyph is in the header and `AreasRoute` hands it an empty lambda.
+- **`SETTING_CHANGED` on the `After completing` change.** The event type, the reducer fold
+  and the Trail row all exist. What is missing is a method on the only writer in the app,
+  shaped like `recordSettingChanged(key, previousValue, newValue)` beside
+  `recordAppOpened`. `ClarityRepository.commit` is private and the repository was outside
+  this phase's file list, so the event is absent rather than written down a second path.
+- **The medical disclaimer in About**, phase 13, per 14.4.
+- **The debug menu action** that rebuilds the cache from event zero. The export path calls
+  the same locked rebuild body; the menu has no caller.
+
+### What the device check still has to find
+
+- **Settings does not cover the floating tab bar.** It is hosted from inside the Areas tab
+  because `ClarityShell` draws the bar as a sibling above the tab content and the shell was
+  outside this phase's file list. The surface reserves room at the foot instead. Everything
+  is reachable and readable; it is visibly not what `design-v3.md` 10.15 describes, and the
+  remedy is one branch in the shell beside the Focus surface.
+- **The erase returns to onboarding on the next cold start, not immediately**, because the
+  first run gate latches its decision for the process. The erase itself is immediate. The
+  same is true of `Replay the welcome` and `Replay the tour`.
+- Whether the three appearance miniatures read as miniatures of this app's Areas screen at
+  84dp, which is the only claim in 10.10 that a ruler cannot settle.
+- Whether the export and import flows survive a real Storage Access Framework round trip
+  through a provider, which the unit tests deliberately do not touch.
+- Whether the support block reads as an offer rather than a request, in both placements.
+
+---
+
+## Phase 10 delivered
+
+First run, issue #9. `MASTER_BUILD_PROMPT.md` 13.1, 13.2 and 14b.11, `design-v3.md`
+10.15, section 11 and 8.2 items 18 and 19.
+
+- **Onboarding**, `ui/onboarding/`. Four beats, Contemplative from the first frame to the
+  last, one persistent nav overlay across all of them, tap or swipe left to advance and
+  swipe right to go back. Beat 1's four demo cards and the promotion inside nine seconds
+  with the model landed in five; beat 2's fork and picker; beat 3's write and iris; beat
+  4's four moments and the line announcing the Pulse.
+- **The tutorial**, `ui/tutorial/`. `TutorialStep` holds the order and the copy,
+  `Modifier.tutorialTarget` applies the stable test tag and reports `boundsInRoot`,
+  `TutorialTargets` holds the rectangles, `TutorialOverlay` derives everything it draws
+  from the rectangle. **There is no branch on which step is drawing anywhere in that
+  file**, which is what 13.2 means by one uniform mechanism.
+- **The first run gate**, `ui/onboarding/FirstRunGate.kt`. The two flags, in order, read
+  once and latched for the process.
+- **`ClarityShell` and `AreasScreen` changes.** The shell provides the target registry and
+  composes the overlay last, after the tab bar and the Focus surface. The Areas header
+  gained the settings glyph beside the archive glyph, both at `inkSecondary`, both on a
+  48dp target with a 22dp glyph.
+
+### The one thing that stops this phase closing
+
+**Four of the tutorial's five targets do not wear `tutorialTarget`.** Only the tab bar
+does. `TutorialTargets.ready` requires all five, so the tutorial never starts and
+`hasSeenTutorial` is never written.
+
+**It fails safe rather than silently, and that is the design.** A missing target means the
+overlay waits; it does not point at the wrong place and it does not mark itself seen. The
+same rule covers the real case it was written for, an install with no areas at all, where
+there is no card to point at. So the fix is four one line additions in `ui/areas/`, at the
+FAB, the first area card, the Focus chip and the Pulse chip, each exactly
+`.tutorialTarget(TutorialStep.FAB)` and its three counterparts. **The phase 10 device
+check cannot pass before they land.**
+
+### Beat 3 writes the flag, and that is required rather than early
+
+`design-v3.md` 10.15: a person who force quits after beat 3 and relaunches lands on a
+populated Areas screen rather than starting over. The flag is what decides that on the
+next cold start, and the areas are already real events by then, so onboarding is genuinely
+complete at that moment. Beat 4 is depth, and depth is not setup.
+
+**The gate latches its answer for the process for the same reason.** A route that
+recomputed itself from the flows would swap onboarding out for the app in the middle of
+the reveal, because beat 3 writes the flag while onboarding is still showing. The cost is
+that `Replay the welcome`, `Replay the tour` and the return to onboarding after an erase
+all take effect on the **next cold start**, which is the trade this phase took knowingly.
+
+**The app is composed underneath onboarding from the start of beat 3, not a few frames
+before the iris.** Composing it late lets the staggered card entrance play into the
+opening hole, which is prettier, and it also means the iris opening onto a screen still
+loading the log on any launch where that takes longer than the head start. A half drawn
+screen at the emotional peak of the flow is the worse outcome. Beat 3 gives it the whole
+of the closing line's hold, about 1.8 seconds.
+
+### Eight decisions where the obvious answer was rejected
+
+`design-v3.md` 15, and each is recorded in the file that makes it.
+
+1. **Beat 2 opens as a fork rather than as a form**, two stacked panels of identical width,
+   surface and type, one composable called twice with no role parameter. The area picker is
+   the second screen of one path rather than the beat with an escape hatch attached.
+2. **`Just start` sits on top.** The obvious order is the fuller path first, because it is
+   the original and the addendum is the addition. Vertical position is the only weight left
+   once the treatment is identical, and the tie goes to the path that costs nothing.
+3. **Beat 4's last moment holds rather than timing out.** A line announcing a behavior,
+   replaced on a timer, is the unannounced behavior 14b.11 objects to, one level up.
+4. **The tutorial starts on readiness rather than after a delay.** A delay guesses, and it
+   guesses differently on a cold start, on a slow device and on a phone with a long area
+   list. Readiness is the fact the delay stands in for.
+5. **The mood rows are a single row of six rather than 10.9's three by two grid.** Inside a
+   beat that also carries chips, a field and a list of selections, a second block of rows
+   pushes Continue off the bottom of a small phone.
+6. **Onboarding's controls are written in `ui/onboarding/` rather than reused from
+   `ui/components/`**, because every control in that package resolves Daylight colors and a
+   Daylight button on `deepBlack` looks plausible and is the wrong world.
+7. **The backdrop glow does not breathe.** 8.2 item 8 puts a breathing glow on the Focus
+   surface and nowhere else; a second one here is an ambient animation on a screen a person
+   reads once.
+8. **Beat 1's demo colors are the real first four from the mood walk in 3.4.** A set of
+   colors invented for a demo would be a promise the app breaks on the next screen.
+
+### What is deliberately not in this phase
+
+- **`design-v3.md` 10.15's third cold start check**, the re-entry route at fourteen days.
+  11.2 is still unowned. The gate leaves the place for it marked, after both branches,
+  never inside them.
+- **A paywall beat and a closing sheet**, both forbidden by 13.1 and both absent.
+
+### What the device check still has to find
+
+- Whether beat 1 really lands the model in five seconds, which is the only number in that
+  beat 13.1 calls non-negotiable and the only one a stopwatch can settle.
+- Whether the iris opens onto a settled Areas screen rather than a half drawn one, on a
+  cold start with a real log behind it.
+- **The force quit after beat 3.** `adb shell am force-stop` between the write and the end
+  of beat 4, then relaunch, and the app must land on a populated Areas screen.
+- Whether the tutorial spotlights align on the smallest and largest screens, which cannot
+  be checked until the four modifiers land.
+- Whether back is genuinely hidden on beat 1 and returns to the previous beat everywhere
+  else, and whether back inside the tutorial skips the whole thing.
 
 ---
 
@@ -1136,7 +1657,9 @@ written and the count is recorded at the point of the claim. The recommendation 
 - **The corpus at its target size.** Phase 9, issue #7.
 - **Rules for nine families and three single stages** whose escalation fact 3.1 does not
   declare. Listed in code with the missing fact and the corpus line that needs it, and a
-  catalog test fails if a family goes quiet without being on that list.
+  catalog test fails if a family goes quiet without being on that list. **Closed by the
+  facts phase, above**: all twelve facts are declared, all twelve entries are gone, and
+  `RulesAwaitingFacts.GAPS` is empty.
 
 ### What the closing check still has to find
 

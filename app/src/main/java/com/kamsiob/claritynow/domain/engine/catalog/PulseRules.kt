@@ -1,6 +1,7 @@
 package com.kamsiob.claritynow.domain.engine.catalog
 
 import com.kamsiob.claritynow.domain.engine.FamilyKey
+import com.kamsiob.claritynow.domain.engine.HistoryFacts
 
 /**
  * The Pulse rules. CLARITY_LOGIC_ENGINE.md 6.1, and every threshold from the stage
@@ -17,6 +18,18 @@ import com.kamsiob.claritynow.domain.engine.FamilyKey
  * 3 each have two rules here, one over the magnitude and one over the multi week shape,
  * both carrying `stage = 3`.
  *
+ * **Every family in 6.1 now has a rule, and every stage of every ladder has one.** The
+ * five that did not are the ones whose escalation fact 3.1 did not declare: `switching`
+ * wanted an area's own swap count, `rebalance` wanted the dormancy an area returned from,
+ * and `quietDay` stages 2 and 3 and `concentration` stage 3's second branch wanted a run
+ * of consecutive days. The facts phase declared all four and `RulesAwaitingFacts` is
+ * empty. Nothing below approximates anything.
+ *
+ * **Two of those facts are the scoped exception to the streak ban**, and the rules reading
+ * them are audited by [StreakExceptionAudit] rather than trusted. Read that file before
+ * writing a rule over `currentQuietRunDays` or `currentSingleAreaRunDays`: the exception
+ * is a shape, not a permission, and the audit is what keeps it from widening.
+ *
  * **`unflattering` is false throughout.** 7.4 enumerates the rules that carry it and every
  * one of them is a Report family. Pulse asks a question and offers two answers that are
  * equally valid read out of context, which is a different mechanism for the same problem
@@ -28,6 +41,19 @@ internal object PulseRules {
     /** Current window facts only. */
     private const val WINDOW_HORIZON = 7
 
+    /**
+     * A rule reading one of the two capped runs.
+     *
+     * `HistoryFacts.MAX_RUN_DAYS` is the oldest day either run can reach, so a rule over
+     * one of them references facts up to that many days old and declares a horizon that
+     * covers it. Section 4 defines a horizon as the age of the oldest fact referenced, and
+     * a shorter one here would be a rule quietly describing days outside what it declared.
+     */
+    private const val RUN_HORIZON = HistoryFacts.MAX_RUN_DAYS
+
+    /** The second branch of `concentration` stage 3, `four or more consecutive days`. */
+    private const val CONCENTRATION_RUN_DAYS = 4
+
     val ALL: List<ClarityRule> = buildList {
         addAll(persistence())
         addAll(concentration())
@@ -35,8 +61,10 @@ internal object PulseRules {
         addAll(throughput())
         addAll(quietDay())
         addAll(spread())
+        addAll(switching())
         addAll(burst())
         addAll(queueDrain())
+        addAll(rebalance())
         addAll(freshStart())
     }
 
@@ -104,11 +132,16 @@ internal object PulseRules {
      * nothing at all.
      *
      * Stage 3's header is compound: `ninety five percent and above, or four or more
-     * consecutive days`. Only the first branch has a rule. The second needs a count of
-     * consecutive days on which one area held the window, and 3.1 declares no such fact.
-     * It is recorded in [RulesAwaitingFacts] rather than approximated with `activeDays`,
-     * which counts days with any activity at all and would fire the stage on a shape it
-     * does not describe.
+     * consecutive days`, and both branches now have a rule pointing at stage 3, per 7.3.
+     *
+     * The days branch reads `HistoryFacts.currentSingleAreaRunDays`, which is one of the
+     * two facts the streak ban is scoped around. It carries **two** criteria over that
+     * run and not one, because the length alone is a claim with no subject: every stage 3
+     * statement names the area, and pairing a run with whichever area happened to lead
+     * the window would eventually print `{areaName} has held everything for four days`
+     * about an area that led the window without holding the run. `currentSingleAreaRunAreaId`
+     * is the run's own subject and the rule may claim it only for that area.
+     * [StreakExceptionAudit] enforces that pairing rather than leaving it to review.
      */
     private fun concentration(): List<ClarityRule> = listOf(
         pulse("pulse.concentration.s1", "concentration", 1, Subjects.AREA, WINDOW_HORIZON, criteria = listOf(
@@ -131,6 +164,19 @@ internal object PulseRules {
             },
             areaShareFloor(4),
             shareFloor(4),
+        )),
+        pulse("pulse.concentration.s3.days", "concentration", 3, Subjects.AREA, horizonDays = RUN_HORIZON, criteria = listOf(
+            criterion(
+                "concentration.run.4plus",
+                "one area has held every event of every day for four days or more, which is the " +
+                    "second branch of the stage 3 header",
+            ) { facts, _ -> facts.history.currentSingleAreaRunDays >= CONCENTRATION_RUN_DAYS },
+            criterion(
+                "concentration.run.isThisArea",
+                "the run belongs to this area, without which the days would be a length with no " +
+                    "subject and the sentence would name whichever area happened to lead",
+            ) { facts, subject -> subject != null && facts.history.currentSingleAreaRunAreaId == subject.id },
+            areaHasEvents(),
         )),
     )
 
@@ -211,11 +257,27 @@ internal object PulseRules {
     /**
      * `quietDay`, over consecutive quiet days.
      *
-     * Only stage 1 has a rule. Stages 2 and 3 are `two to three consecutive quiet days`
-     * and `four or more consecutive quiet days`, and 3.1 declares no consecutive quiet
-     * day count. Recorded in [RulesAwaitingFacts]. Nothing here approximates it: a stage 3
-     * fired on the wrong shape would tell someone they had been still for four days on
-     * the strength of one quiet afternoon.
+     * **Stage 1 is written against the family trigger and stages 2 and 3 against the
+     * ladder fact, and that is not an inconsistency.** 6.1 triggers the family on fewer
+     * than two events in the window, and stage 1's bench says so: `One thing happened
+     * yesterday` is a stage 1 line about a day that had an event in it. A day holding one
+     * event is not a quiet day to `currentQuietRunDays`, which counts days with nothing,
+     * so the run is zero there and stage 1 still has to fire. Every line at stages 2 and 3
+     * claims nothing moved, so those two read the run.
+     *
+     * **The consequence is that the three rungs do not exclude each other, and the
+     * escalation is carried by [priority] rather than by disjoint ranges.** On the second
+     * day of a quiet run the window is empty, so stage 1's criteria hold as well as stage
+     * 2's, and specificity cannot separate them: both require two things. Every other
+     * Pulse ladder in this file separates its rungs by writing disjoint ranges over one
+     * fact, and this one cannot, because the two facts disagree about what a quiet day is.
+     *
+     * The obvious repair is to bound stage 1 with `currentQuietRunDays <= 1`, and it is
+     * exactly what [StreakExceptionAudit] forbids. A criterion that fires when a run of
+     * absence is short is reading the fact as evidence that something has been kept up,
+     * which is the streak reading the fact was shaped to prevent. Priority is the honest
+     * instrument here: it says stage 3 outranks stage 2 outranks stage 1 when all three
+     * describe the same day, and it says nothing about anybody's week.
      */
     private fun quietDay(): List<ClarityRule> = listOf(
         pulse("pulse.quietDay.s1", "quietDay", 1, Subjects.NONE, WINDOW_HORIZON, criteria = listOf(
@@ -225,6 +287,89 @@ internal object PulseRules {
             window("quietDay.hasHistory", "there is at least a day of history, so this is a quiet day and not an empty install") {
                 it.history.daysSinceInstall >= 1
             },
+        )),
+        pulse("pulse.quietDay.s2", "quietDay", 2, Subjects.NONE, WINDOW_HORIZON, priority = 1, criteria = listOf(
+            window("quietDay.run.2to3", "two or three days running with nothing in them at all") {
+                it.history.currentQuietRunDays in 2..3
+            },
+            window("quietDay.hasHistory", "there is at least a day of history, so this is a quiet day and not an empty install") {
+                it.history.daysSinceInstall >= 1
+            },
+        )),
+        pulse("pulse.quietDay.s3", "quietDay", 3, Subjects.NONE, horizonDays = RUN_HORIZON, priority = 2, criteria = listOf(
+            window("quietDay.run.4plus", "four or more days running with nothing in them at all") {
+                it.history.currentQuietRunDays >= 4
+            },
+            window("quietDay.hasHistory", "there is at least a day of history, so this is a quiet day and not an empty install") {
+                it.history.daysSinceInstall >= 1
+            },
+        )),
+    )
+
+    /**
+     * `switching`, over the area's own swap count. 6.1 gives it the area as its subject.
+     *
+     * `WindowFacts.swaps` counts the whole window across every area and cannot serve: all
+     * eighteen of this family's statements name an area, so a rule reading the window
+     * total would say `You changed what is active in Work twice` about a week holding one
+     * swap in Work and one in Health. `AreaFacts.swapsInWindow` is the per area count, and
+     * the ids here are distinct from the `switching.swaps.*` pair in [ReportRules], which
+     * read the window total for `switchingBehavior` and are a different measurement.
+     *
+     * **All eighteen lines name the area and `SlotBindings` binds nothing for this
+     * family**, so the rule qualifies and the bench is empty until that entry exists. A
+     * line whose marker has no binding is dropped by the realizer, per 7.2's slot
+     * completeness rule, so the family is silent in exactly the way it was silent before,
+     * and the fact and the rule are the two thirds of it that belong here. The same is
+     * true of `rebalance` below.
+     */
+    private fun switching(): List<ClarityRule> = listOf(
+        pulse("pulse.switching.s1", "switching", 1, Subjects.AREA, WINDOW_HORIZON, criteria = listOf(
+            area("switching.area.swaps.1", "the area changed its active item exactly once") {
+                it.swapsInWindow == 1
+            },
+            areaHasEvents(),
+        )),
+        pulse("pulse.switching.s2", "switching", 2, Subjects.AREA, WINDOW_HORIZON, criteria = listOf(
+            area("switching.area.swaps.2plus", "the area changed its active item twice or more") {
+                it.swapsInWindow >= 2
+            },
+            areaHasEvents(2),
+        )),
+    )
+
+    /**
+     * `rebalance`, over the dormancy an area returned from. 6.1 names dormancy length as
+     * its escalation fact.
+     *
+     * `AreaFacts.dormantDaysBeforeReturn` is null in the two cases where nothing came
+     * back, and null is read as zero here so that neither stage can fire on an absence.
+     * `daysSinceLastEvent` cannot serve and the difference is the whole family: it is zero
+     * the moment the area moves, so it answers how long the area has been quiet **since**
+     * the return rather than before it.
+     *
+     * The horizons are long because the fact is. A stage 2 return names a gap of a
+     * fortnight or more and `CORPUS_1_PULSE.md` authors `Three weeks of stillness` at that
+     * stage, so the rule declares a horizon that reaches the oldest fact it references
+     * rather than the width of the window it fired in.
+     *
+     * Every line of this family carries a marker too, and `{ageDays}` here is the dormancy
+     * rather than an item's age, so the binding this family waits for is its own and not a
+     * copy of another family's. `AreaFacts.dormantDaysBeforeReturn` is the fact behind it
+     * and it now exists, which is what that entry was waiting for.
+     */
+    private fun rebalance(): List<ClarityRule> = listOf(
+        pulse("pulse.rebalance.s1", "rebalance", 1, Subjects.AREA, horizonDays = 14, criteria = listOf(
+            area("rebalance.dormant.5to13", "the area had been still five to thirteen days before it moved") {
+                (it.dormantDaysBeforeReturn ?: 0) in 5..13
+            },
+            areaHasEvents(),
+        )),
+        pulse("pulse.rebalance.s2", "rebalance", 2, Subjects.AREA, horizonDays = 180, criteria = listOf(
+            area("rebalance.dormant.14plus", "the area had been still fourteen days or more before it moved") {
+                (it.dormantDaysBeforeReturn ?: 0) >= 14
+            },
+            areaHasEvents(),
         )),
     )
 

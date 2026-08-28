@@ -75,6 +75,13 @@ import java.time.temporal.ChronoUnit
  * `daysInARow`. Their absence makes it structurally impossible for streak language
  * to appear by accident. Do not add them." [activeDayKeys] makes a streak three
  * lines of work. Those three lines must never be written here.
+ *
+ * The two capped runs of **absence** that `HistoryFacts` now carries are a scoped
+ * exception the owner approved, and they are computed in layer one out of the per
+ * day counts below rather than here, so nothing on this facade answers how long
+ * anything has been kept up. That is the shape the exception was granted in, and it
+ * is the reason this paragraph still reads as an absolute. Read `HistoryFacts` for
+ * what the exception covers and why a run of nothing cannot carry loss aversion.
  */
 class TrailQueries(
     events: List<ClarityEvent>,
@@ -461,6 +468,40 @@ class TrailQueries(
     /** The active days themselves, for the fourteen dot grid. */
     fun activeDayKeys(startMillis: Long, endMillis: Long): Set<String> =
         eventsPerDay(startMillis, endMillis).filterValues { it > 0 }.keys
+
+    /**
+     * User activity events by local day, and inside each day by resolved area.
+     *
+     * The per day refinement of [eventsPerArea], answered in one pass because its
+     * callers want the same fold at three grains: which areas moved in a week, how
+     * many events one area had in each of twelve weeks, and whether every event of a
+     * day belonged to a single area.
+     *
+     * **A day's per area counts can sum to less than [eventsPerDay] for that day**,
+     * and the difference is not a defect to be reconciled. An event on an unfiled
+     * item resolves to no area, exactly as [eventsPerArea] documents, so it is in the
+     * day's total and in no area's count. A caller asking whether one area held a
+     * whole day must compare against [eventsPerDay] rather than against the sum of
+     * this map's inner values, or it will call a day single area when something
+     * happened outside every area.
+     *
+     * Days with no user activity are absent, and so are areas with none inside a day
+     * that has some. Both maps are sorted, so two devices iterate alike.
+     */
+    fun eventsPerAreaByDay(
+        startMillis: Long,
+        endMillis: Long,
+    ): Map<String, Map<String, Int>> {
+        val byDay = HashMap<String, HashMap<String, Int>>()
+        for (event in eventsIn(startMillis, endMillis)) {
+            if (!event.type.isUserActivity) continue
+            val areaId = areaIdOf(event) ?: continue
+            val key = dateKeyOf(event.wallClock)
+            val counts = byDay.getOrPut(key) { HashMap() }
+            counts[areaId] = (counts[areaId] ?: 0) + 1
+        }
+        return byDay.mapValues { (_, counts) -> counts.toSortedMap() }.toSortedMap()
+    }
 
     // Presence ----------------------------------------------------------------
     //

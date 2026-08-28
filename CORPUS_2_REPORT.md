@@ -394,7 +394,7 @@ hd.fall.03  Seven days from {weekRef}.
 hd.fall.04  The week beginning {weekRef}.
 ```
 
-**Headline totals: 176 lines across 17 families.**
+**Headline totals: 158 lines across 17 families.**
 
 ---
 
@@ -1264,7 +1264,7 @@ pt.none.03  Not enough weeks yet to see a shape.
 pt.none.04  This section fills in after a few more weeks.
 ```
 
-**Pattern totals: 128 lines across 16 families.**
+**Pattern totals: 111 lines across 16 families.**
 
 ---
 

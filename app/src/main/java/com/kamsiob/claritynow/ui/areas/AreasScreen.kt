@@ -1,5 +1,6 @@
 package com.kamsiob.claritynow.ui.areas
 
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.EaseOutCubic
 import androidx.compose.animation.core.animateFloatAsState
@@ -39,12 +40,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -72,12 +75,15 @@ import com.kamsiob.claritynow.ui.components.rememberReorderState
 import com.kamsiob.claritynow.ui.components.rememberSwipeCoordinator
 import com.kamsiob.claritynow.ui.components.reorderableItem
 import com.kamsiob.claritynow.ui.momentum.AreasBanner
+import com.kamsiob.claritynow.ui.settings.SettingsSurface
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.clarityEntrance
 import com.kamsiob.claritynow.ui.theme.clarityMotion
 import com.kamsiob.claritynow.ui.theme.parseAreaColor
+import com.kamsiob.claritynow.ui.tutorial.TutorialStep
+import com.kamsiob.claritynow.ui.tutorial.tutorialTarget
 
 /** The height one area card settles at, used by the drag reorder arithmetic. */
 private val CARD_HEIGHT_ESTIMATE = 96.dp
@@ -127,6 +133,23 @@ fun AreasScreen(
     val swipe = rememberSwipeCoordinator()
     val reorder = rememberReorderState(listState) { key, toIndex -> onMoveArea(key, toIndex) }
 
+    // The Settings destination, design-v3.md 10.15, held here rather than in
+    // `ClarityShell`.
+    //
+    // **This is a seam and not the arrangement the design asks for.** 10.15 makes
+    // Settings a pushed screen over the tab it was entered from, which should cover the
+    // floating tab bar; the shell draws that bar as a sibling above the tab content, so
+    // hosting it there is the only way to cover it, and `ui/nav/ClarityShell.kt` was
+    // outside this phase's file list. Hosting it here keeps the glyph, the screen and
+    // everything under it working today and leaves the bar floating over the canvas.
+    // The remedy is one branch in the shell beside the Focus surface, and
+    // `SettingsSurface` and `PushedScreen` both carry it.
+    //
+    // `rememberSaveable` rather than `remember`, because a tab switch takes this
+    // screen's composition with it and coming back to a Settings screen that closed
+    // itself while you were reading the Report is a screen that cannot be trusted.
+    var settingsOpen by rememberSaveable { mutableStateOf(false) }
+
     // A drag owns the pointer, so a swipe must not also be listening.
     LaunchedEffect(reorder.isDragging) { swipe.enabled = !reorder.isDragging }
 
@@ -172,6 +195,7 @@ fun AreasScreen(
                     onOpenFocus = onOpenFocus,
                     onOpenPulse = onOpenPulse,
                     onOpenArchive = onOpenArchive,
+                    onOpenSettings = { settingsOpen = true },
                     onOpenInbox = onOpenInbox,
                     modifier = Modifier.clarityEntrance(HEADER_ENTRANCE_INDEX),
                 )
@@ -202,6 +226,16 @@ fun AreasScreen(
                             fadeOutSpec = motion.easeOut(),
                         )
                         .clarityEntrance(HEADER_ENTRANCE_INDEX + 1 + index)
+                        // Only the first card is a tutorial target. The step teaches
+                        // what a card is, not which card this is, so the registry
+                        // wants one rectangle rather than the topmost of several.
+                        .then(
+                            if (index == 0) {
+                                Modifier.tutorialTarget(TutorialStep.AREA_CARD)
+                            } else {
+                                Modifier
+                            },
+                        )
                         .offset {
                             if (dragging) IntOffset(0, reorder.dragOffset.toInt()) else IntOffset.Zero
                         }
@@ -240,12 +274,23 @@ fun AreasScreen(
                 if (state.isEmpty) R.string.fab_add_area else R.string.fab_add_item,
             ),
             modifier = Modifier
+                .tutorialTarget(TutorialStep.FAB)
                 .align(Alignment.BottomEnd)
                 .navigationBarsPadding()
                 // Clears the floating tab bar: its own 17dp inset, its height, and
                 // a gap so the two never read as one control.
                 .padding(end = 20.dp, bottom = TabBarHeight + 17.dp + 14.dp),
         )
+
+        // Above everything this screen draws, including the FAB. It is not above the
+        // floating tab bar, which is a sibling of this whole screen in `ClarityShell`
+        // and is the seam recorded on `settingsOpen`.
+        if (settingsOpen) {
+            SettingsSurface(
+                onDismiss = { settingsOpen = false },
+                modifier = Modifier.zIndex(2f),
+            )
+        }
     }
 }
 
@@ -327,6 +372,7 @@ private fun AreasHeader(
     onOpenFocus: () -> Unit,
     onOpenPulse: () -> Unit,
     onOpenArchive: () -> Unit,
+    onOpenSettings: () -> Unit,
     onOpenInbox: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -343,20 +389,19 @@ private fun AreasHeader(
                 style = type.displayTitle,
                 color = colors.inkPrimary,
             )
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .clarityClickable(onClickLabel = stringResource(R.string.areas_open_archive)) {
-                        onOpenArchive()
-                    },
-                contentAlignment = Alignment.Center,
-            ) {
-                ClarityIcon(
+            // design-v3.md 10.1: archive and settings, in that order, at inkSecondary.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                HeaderGlyph(
                     icon = ClarityIcons.archive,
-                    contentDescription = stringResource(R.string.areas_open_archive),
+                    label = stringResource(R.string.areas_open_archive),
                     tint = colors.inkSecondary,
-                    modifier = Modifier.size(22.dp),
+                    onClick = onOpenArchive,
+                )
+                HeaderGlyph(
+                    icon = ClarityIcons.settings,
+                    label = stringResource(R.string.cd_settings_open),
+                    tint = colors.inkSecondary,
+                    onClick = onOpenSettings,
                 )
             }
         }
@@ -386,6 +431,37 @@ private fun AreasHeader(
         // It draws nothing at all when the engine has said nothing, so the header keeps its
         // existing height on a week no family describes.
         AreasBanner(modifier = Modifier.padding(top = 14.dp))
+    }
+}
+
+/**
+ * One header control, design-v3.md 10.1 and section 13.
+ *
+ * The 48dp target and the 22dp glyph are separate on purpose, the same way
+ * `ClarityChip` separates the pill from the thing that is touched: 13 fixes the
+ * minimum target and section 7 fixes the glyph, and growing the glyph to fill the
+ * target would quietly overwrite a dimension the design already states.
+ */
+@Composable
+private fun HeaderGlyph(
+    @DrawableRes icon: Int,
+    label: String,
+    tint: Color,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .clarityClickable(onClickLabel = label, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        ClarityIcon(
+            icon = icon,
+            contentDescription = label,
+            tint = tint,
+            modifier = Modifier.size(22.dp),
+        )
     }
 }
 
@@ -436,13 +512,18 @@ private fun AreasChipRow(
         ClarityChip(
             label = stringResource(R.string.areas_chip_focus),
             onClick = onOpenFocus,
+            modifier = Modifier.tutorialTarget(TutorialStep.FOCUS_CHIP),
         )
 
         // design-v3.md 10.1, and the reason it was not here before this phase: phase 2
         // left it out rather than shipping a chip that opened nothing, the same
         // decision that held the Focus chip back until phase 4 built the surface
         // behind it. Both permanent chips are now real doors.
-        PulseChip(ready = pulseReady, onClick = onOpenPulse)
+        PulseChip(
+            ready = pulseReady,
+            onClick = onOpenPulse,
+            modifier = Modifier.tutorialTarget(TutorialStep.PULSE_CHIP),
+        )
 
         if (unfiledCount > 0) {
             InboxChip(count = unfiledCount, onClick = onOpenInbox)

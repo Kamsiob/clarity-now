@@ -134,6 +134,18 @@ class FamilyPolicyTest {
                 "growingQueues",
                 "areaGoneQuiet",
                 "persistentItem",
+                // The three below are neither progress nor a regression, and the difference
+                // matters because the message above reads every arrival as one. 7.4 has
+                // always enumerated all three, and `CORPUS_2_REPORT.md` has never authored
+                // an `[N]` line in a pattern family, so nothing about either side moved.
+                // What changed is that the facts phase gave each of them a rule, and an
+                // unflattering rule is what this test counts: before, they had authored
+                // language and no rule, so there was nothing here to notice them by. No
+                // line was removed and no bench got smaller. Phase 9 owes them the same
+                // neutral agent bench it owes the eight above.
+                "narrowingFocus",
+                "focusHabitFading",
+                "abandonmentPattern",
             ),
             withoutNeutralLines,
         )

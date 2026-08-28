@@ -114,6 +114,7 @@ class ClaritySimulator(
 
         return SimulationRun(
             persona = persona,
+            catalog = catalog,
             days = days,
             openDays = openDays,
             eventCount = log.eventCount,
@@ -556,9 +557,19 @@ private class RecordingValidator(private val delegate: ClarityValidator) : Candi
     }
 }
 
-/** One persona's simulated year. */
+/**
+ * One persona's simulated year.
+ *
+ * [catalog] is the one the year was run against, carried because a reading of what **did
+ * not** happen needs it. A firing count taken from the invocations alone can only list the
+ * families that fired, which is how "six of eleven families ever fired" stayed a sentence
+ * somebody remembered rather than a number something watched: the four that never fired
+ * leave no trace in a year of output. The catalog is where they are, so it travels with the
+ * run rather than being fetched again beside it and drifting.
+ */
 data class SimulationRun(
     val persona: SimulationPersona,
+    val catalog: ClarityCatalog,
     val days: Int,
     val openDays: Int,
     val eventCount: Int,
@@ -569,14 +580,23 @@ data class SimulationRun(
         invocations.filter { it.surface == surface }
 }
 
-/** The six surfaces the engine speaks on, named as section 12's dump names them. */
-enum class SimulatedSurface(val label: String) {
-    PULSE("pulse"),
-    MOMENTUM("momentum"),
-    BANNER("banner"),
-    REPORT_HEADLINE("report headline"),
-    REPORT_OBSERVATION("report observation"),
-    REPORT_PATTERN("report pattern"),
+/**
+ * The six surfaces the engine speaks on, named as section 12's dump names them.
+ *
+ * [purpose] is carried rather than derived at each call site, because counting how many of
+ * a purpose's families ever fired means putting a firing back beside the families the
+ * catalog declares for it, and a surface is the only thing an invocation records. The
+ * mapping is one to one and is the same one [ClaritySimulator.openTheApp] makes on the way
+ * in, so a surface that ever stopped agreeing with the purpose it was invoked with would
+ * make every coverage reading below quietly wrong.
+ */
+enum class SimulatedSurface(val label: String, val purpose: Purpose) {
+    PULSE("pulse", Purpose.PULSE),
+    MOMENTUM("momentum", Purpose.MOMENTUM_HEADLINE),
+    BANNER("banner", Purpose.AREAS_BANNER),
+    REPORT_HEADLINE("report headline", Purpose.REPORT_HEADLINE),
+    REPORT_OBSERVATION("report observation", Purpose.REPORT_OBSERVATION),
+    REPORT_PATTERN("report pattern", Purpose.REPORT_PATTERN),
 }
 
 /**

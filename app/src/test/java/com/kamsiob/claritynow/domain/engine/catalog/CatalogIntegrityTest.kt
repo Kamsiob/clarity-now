@@ -39,12 +39,19 @@ class CatalogIntegrityTest {
             .map { it.key }
             .toSet()
         assertEquals(
-            "these nine families have authored language and no rule, because the fact their " +
-                "trigger names is not declared in CLARITY_LOGIC_ENGINE.md 3.1. Each is listed in " +
-                "RulesAwaitingFacts with the fact it needs. A family leaving this set is the fact " +
-                "arriving; a family joining it is a rule being lost",
+            "a family with authored language and no rule is silent, and a silent family looks " +
+                "exactly like one that never happened to qualify. Nine of them were, and the " +
+                "facts phase declared what their triggers named, so the register is empty and " +
+                "every family in the corpus now has a rule. A family appearing in this set is a " +
+                "rule being lost; a family appearing in RulesAwaitingFacts is a decision that " +
+                "one may be",
             RulesAwaitingFacts.FAMILIES_WITHOUT_RULES,
             silent,
+        )
+        assertTrue(
+            "no family is silent, which is the state the facts phase was for. If this ever " +
+                "fails, read the message above before adding a register entry to make it pass",
+            silent.isEmpty(),
         )
     }
 

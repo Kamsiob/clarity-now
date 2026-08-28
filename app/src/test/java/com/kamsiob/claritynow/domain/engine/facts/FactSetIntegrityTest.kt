@@ -216,6 +216,55 @@ class FactSetIntegrityTest {
     }
 
     /**
+     * The scoped exception, held to its scope by the build rather than by its own
+     * documentation.
+     *
+     * The owner approved two runs of **absence**, on the reasoning that a run of
+     * nothing has nothing to accumulate and nothing to break, so the loss aversion
+     * the ban prevents cannot occur. The exception was granted in a shape: the
+     * current run only, ending today, capped, with no per day series behind it. This
+     * list is that shape. A third run, or a longest, or a best, fails here, and it
+     * fails whatever it is called, because the name is not the thing that makes a run
+     * safe.
+     */
+    @Test
+    fun `the only run facts are the two capped current runs and the subject of one`() {
+        val expected = listOf(
+            "HistoryFacts" to "currentQuietRunDays",
+            "HistoryFacts" to "currentSingleAreaRunAreaId",
+            "HistoryFacts" to "currentSingleAreaRunDays",
+        )
+        val found = instanceFieldNames()
+            .filter { it.second.contains("run", ignoreCase = true) }
+            .sortedBy { it.second }
+        assertEquals("a run fact appeared that nobody approved", expected, found)
+    }
+
+    /**
+     * Neither run is a series, and neither may become one.
+     *
+     * A single capped current value cannot be used to reconstruct an active run,
+     * which is what the ban actually protects against. A list of them could, and a
+     * list would also let a later phase find the longest one, which is the record the
+     * cap exists to make unreachable.
+     */
+    @Test
+    fun `no run fact is a collection`() {
+        val collections = factClasses.flatMap { type ->
+            type.declaredFields
+                .filterNot { Modifier.isStatic(it.modifiers) }
+                .filter { it.name.contains("run", ignoreCase = true) }
+                .filter {
+                    Collection::class.java.isAssignableFrom(it.type) ||
+                        Map::class.java.isAssignableFrom(it.type) ||
+                        it.type.isArray
+                }
+                .map { "${type.simpleName}.${it.name}" }
+        }
+        assertTrue("a run fact was declared as a series: $collections", collections.isEmpty())
+    }
+
+    /**
      * Nothing in the fact classes is lazily evaluated.
      *
      * Section 3: "No lazy evaluation; a fact computed at validation time could

@@ -114,6 +114,26 @@ class RuleCatalogTest {
         }
     }
 
+    /**
+     * The register is empty, and the shape checks below still run so that a future entry
+     * cannot be a placeholder.
+     *
+     * It held twelve entries when phase 5 wrote it and the facts phase declared every fact
+     * they named, so an entry appearing here again is a rule being given up rather than a
+     * gap being recorded for the first time. That is a decision somebody has to make on
+     * purpose, which is what the citation and the missing fact are for.
+     */
+    @Test
+    fun `the register of families awaiting a fact is empty`() {
+        assertEquals(
+            "every family the register held has its fact and its rule. An entry here means a " +
+                "family has been allowed to go quiet, and the only reason that is ever right is " +
+                "a trigger naming a fact 3.1 genuinely does not declare",
+            emptyList<String>(),
+            RulesAwaitingFacts.GAPS.map { "${it.family} stage ${it.stage}" },
+        )
+    }
+
     @Test
     fun `every recorded gap names a family the corpus actually holds`() {
         val known = CorpusFixture.catalog.families.map { it.key }.toSet()
@@ -138,6 +158,36 @@ class RuleCatalogTest {
                 rules.size <= 1,
             )
         }
+    }
+
+    /**
+     * No criterion id carries two different descriptions.
+     *
+     * Ids are reused on purpose: `accumulation.additions` is the same requirement in four
+     * rules and is written once and read four times. Two **different** conditions under one
+     * id is the case that breaks something, because section 14's discrimination report is
+     * keyed by id and would merge them, and the pass rate it printed would be of neither.
+     * The Pulse `switching` family and the Report `switchingBehavior` family both count
+     * swaps, at two grains, and this is what keeps their ids apart.
+     */
+    @Test
+    fun `a criterion id always means the same condition`() {
+        val descriptions = mutableMapOf<String, MutableSet<String>>()
+        for (rule in CorpusFixture.catalog.rules) {
+            for (criterion in rule.criteria) {
+                descriptions.getOrPut(criterion.id) { mutableSetOf() }.add(criterion.describe)
+            }
+        }
+        val collisions = descriptions.filterValues { it.size > 1 }
+        assertTrue(
+            "one criterion id, two conditions:\n" +
+                collisions.entries.joinToString("\n") { "${it.key}: ${it.value}" },
+            collisions.isEmpty(),
+        )
+        assertTrue(
+            "ids are shared across rules on purpose, so this test is not asserting uniqueness",
+            descriptions.size < CorpusFixture.catalog.rules.sumOf { it.criteria.size },
+        )
     }
 
     @Test

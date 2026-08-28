@@ -1231,7 +1231,7 @@ Counted from the keyed lines in this file, not estimated. Surfaces are statement
 | Queue drain | 35 | 375 |
 | Fresh start | 20 | 250 |
 | Acknowledgments | 12 | 12 |
-| **Total** | **620** | **10,557** |
+| **Total** | **620** | **10,569** |
 
 At roughly 365 pulses a year, with the 90 day variant exclusion and per family cooldowns applied on top, a user would need to run the app for many years before a statement repeats, and would never see the same statement, question and response combination twice.
 

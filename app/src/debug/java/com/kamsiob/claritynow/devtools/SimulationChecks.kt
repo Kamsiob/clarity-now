@@ -1,11 +1,20 @@
 package com.kamsiob.claritynow.devtools
 
+import com.kamsiob.claritynow.domain.engine.catalog.Purpose
 import com.kamsiob.claritynow.domain.engine.validate.ValidatorVocabulary
 
 /**
- * The ten automated checks over the dump. CLARITY_LOGIC_ENGINE.md 12.
+ * The twelve automated checks over the dump. CLARITY_LOGIC_ENGINE.md 12.
  *
- * ## Why six of them are deferred, and why that is not a skip
+ * Ten of them are the ten section 12 names. The other two are the coverage readings the
+ * facts phase added, `familyCoverage` and the rewritten `stageCoverage`, and they are here
+ * rather than in a report because the owner's condition on phase 9 is stated as two
+ * numbers: no corpus line is written until Pulse silence is inside the band and every
+ * family fires. A condition on a phase that nothing measures on every run is a condition
+ * somebody has to remember, and phase 5 already proved that one does not survive a phase
+ * boundary.
+ *
+ * ## Why eight of them are deferred, and why that is not a skip
  *
  * Section 12 lists these checks in the phase that builds the simulator, and issue #3 says
  * plainly that the statistical ones cannot pass here: the corpus is not grown until phase 9,
@@ -46,6 +55,7 @@ object SimulationChecks {
             noVisibleSlotSyntax(runs),
             pulseSilenceInBand(runs),
             layerSixSilence(runs),
+            everyFamilyFires(runs),
             noFamilyOverOneFifth(runs),
             everyStageOfEveryHotFamilyFires(runs),
             noTwoConsecutiveLeadsShareABand(runs),
@@ -97,18 +107,23 @@ object SimulationChecks {
      *
      * Measured over the days the app was opened, because a day nobody opened the app had no
      * Pulse to suppress and counting it as silence would flatter the number.
+     *
+     * **Every persona, and then every persona together**, because the band is a claim about
+     * how often the app speaks to a person and eleven separate percentages cannot be
+     * averaged by eye: the personas open the app between 21 and 365 times, so the unweighted
+     * mean of the eleven is not the share of days that were silent. The last row is that
+     * share, it is measured against the same band, and it is the number the phase 5 baseline
+     * recorded as 76 percent.
      */
     private fun pulseSilenceInBand(runs: List<SimulationRun>): CheckOutcome {
         val failures = mutableListOf<String>()
         val readings = mutableListOf<String>()
-        for (run in runs) {
-            val pulses = run.of(SimulatedSurface.PULSE)
-            if (pulses.isEmpty()) continue
-            val silent = pulses.count { it.spoken == null }
-            val share = SimulationSummary.percent(silent, pulses.size)
-            readings += "${run.persona.key} $share"
-            if (share !in SILENCE_FLOOR..SILENCE_CEILING) {
-                failures += "${run.persona.key} is silent on $share percent of ${pulses.size} opened days"
+        for (reading in SimulationAggregate.pulseSilence(runs)) {
+            if (reading.opened == 0) continue
+            readings += "${reading.label} ${reading.percent}"
+            if (!reading.inBand) {
+                failures += "${reading.label} is silent on ${reading.percent} percent of " +
+                    "${reading.opened} opened days, which is ${reading.verdict}"
             }
         }
         return CheckOutcome(
@@ -169,6 +184,62 @@ object SimulationChecks {
     }
 
     /**
+     * Every family the corpus declares speaks at least once across the run.
+     *
+     * **The check phase 5 did not have, and the one number the facts phase was measured
+     * by.** Phase 5 read "of the eleven Pulse families in 6.1, six ever fired" out of a
+     * dump by hand, wrote it in `DECISIONS.md`, and nothing watched it afterward. A family
+     * that never fires leaves no trace in a year of output, so every other check here is
+     * blind to it: the silence figure counts the days it was quiet on without ever
+     * attributing them, and the family share check divides a year's Pulses among the
+     * families that did speak.
+     *
+     * The denominator is the catalog. Every family, at every purpose, whether or not it has
+     * a rule, so that the two ways of never firing are separated in the reading rather than
+     * summed: a family with no rule at all is a gap `RulesAwaitingFacts` is supposed to be
+     * holding, and a family with rules that fired nothing is a rule no simulated life
+     * satisfies or a bench whose slots cannot be filled.
+     *
+     * **A quiet family is not automatically a defect**, which is why this is a reading with
+     * a threshold rather than an assertion. `CORPUS_1_PULSE.md` authors families for lives
+     * none of the eleven personas lead. What the number is for is the owner's condition on
+     * phase 9: no corpus line is written until silence is in band and every family fires, so
+     * the thing that gates the corpus phase has to be a number the build prints on every
+     * run.
+     */
+    private fun everyFamilyFires(runs: List<SimulationRun>): CheckOutcome {
+        val readings = SimulationAggregate.familyFirings(runs)
+        val failures = mutableListOf<String>()
+        val measured = mutableListOf<String>()
+        for (purpose in Purpose.entries) {
+            val ofPurpose = readings.filter { it.purpose == purpose }
+            if (ofPurpose.isEmpty()) continue
+            val fired = ofPurpose.count { it.fired }
+            measured += "${purpose.name} $fired of ${ofPurpose.size}"
+            for (quiet in ofPurpose.filterNot { it.fired }) {
+                failures += when (quiet.rules) {
+                    0 -> "${purpose.name} ${quiet.family} never fired, and has no rule at all"
+                    1 -> "${purpose.name} ${quiet.family} never fired, and has 1 rule"
+                    else -> "${purpose.name} ${quiet.family} never fired, and has ${quiet.rules} rules"
+                }
+            }
+        }
+        return CheckOutcome(
+            id = "familyCoverage",
+            name = "every family the corpus declares fires at least once",
+            citation = "CLARITY_LOGIC_ENGINE.md 12 and 11.1",
+            passed = failures.isEmpty() && readings.isNotEmpty(),
+            measured = if (readings.isEmpty()) {
+                "no catalog reached the checks, so nothing could be counted"
+            } else {
+                measured.joinToString(", ")
+            },
+            failures = failures,
+            deferral = COVERAGE_WORK,
+        )
+    }
+
+    /**
      * Every stage of every hot family fires at least once.
      *
      * **Hot is measured rather than authored.** 11.1 defines the tiers by expected firing
@@ -179,23 +250,28 @@ object SimulationChecks {
      * frequency lives, it would drift the first time a rule changed, and it would let a
      * family be called hot without ever having fired.
      *
-     * A family's stages come from the rules that fired for it anywhere in the run, so a
-     * stage that has language and no rule, per `RulesAwaitingFacts`, is not counted against
-     * it here. That gap is already a failure of `CatalogIntegrity` if nobody recorded it.
+     * **The denominator is the stages that have a rule, and it used to be the stages that
+     * fired.** Reading the ladder off the firings meant the highest stage anybody reached
+     * was the highest stage the check knew about, so a family whose stage 3 never fired
+     * passed by never being asked: the gap and the ceiling were the same number. That was
+     * the honest reading while `RulesAwaitingFacts` held twelve entries, because a stage
+     * with language and no rule cannot fire and is a different finding with its own home.
+     * The facts phase emptied that register, so every authored stage has a rule and the
+     * question the check was always for, whether a ladder is reachable end to end, is now
+     * askable. It is asked against the rules rather than against the corpus so that if a
+     * stage ever loses its rule again, this check stays quiet about it and
+     * `CatalogIntegrity` is the one that fails.
      */
     private fun everyStageOfEveryHotFamilyFires(runs: List<SimulationRun>): CheckOutcome {
-        val firings = runs.flatMap { it.invocations }.mapNotNull { it.spoken }
-        val byFamily = firings.groupBy { it.familyKey }
-        val hot = byFamily.filterValues { it.size >= HOT_FAMILY_FIRINGS }
+        val hot = SimulationAggregate.hotFamilies(runs)
         val failures = mutableListOf<String>()
         val readings = mutableListOf<String>()
-        for ((family, lines) in hot.entries.sortedBy { it.key }) {
-            val stages = lines.map { it.stage }.toSortedSet()
-            val highest = stages.maxOrNull() ?: continue
-            val missing = (1..highest).filterNot { it in stages }
-            readings += "$family ${lines.size} firings, stages ${stages.joinToString("/")}"
-            if (missing.isNotEmpty()) {
-                failures += "$family never reached stage ${missing.joinToString(", ")}"
+        for (reading in hot) {
+            readings += "${reading.family} ${reading.firings} firings, " +
+                "rules at ${reading.stagesWithARule.joinToString("/")}, " +
+                "fired ${reading.stagesFired.joinToString("/")}"
+            if (!reading.complete) {
+                failures += "${reading.family} never reached stage ${reading.missing.joinToString(", ")}"
             }
         }
         return CheckOutcome(
@@ -209,7 +285,7 @@ object SimulationChecks {
                 readings.joinToString("; ")
             },
             failures = failures,
-            deferral = CORPUS_PHASE,
+            deferral = COVERAGE_WORK,
         )
     }
 
@@ -487,9 +563,16 @@ object SimulationChecks {
     /** 7.6 step 1. */
     private const val EXCLUSION_DAYS = 90
 
-    /** 12, and `MASTER_BUILD_PROMPT.md` 11.4. */
-    private const val SILENCE_FLOOR = 8
-    private const val SILENCE_CEILING = 25
+    /**
+     * 12, and `MASTER_BUILD_PROMPT.md` 11.4.
+     *
+     * Public because [SimulationAggregate] prints the same band over the same numbers, and
+     * a report that stated a band the gate did not enforce would be worse than no report.
+     */
+    const val SILENCE_FLOOR = 8
+
+    /** The top of the band. See [SILENCE_FLOOR]. */
+    const val SILENCE_CEILING = 25
 
     /** 12, and 10.7. */
     private const val GUIDANCE_SILENCE_FLOOR = 15
@@ -497,8 +580,13 @@ object SimulationChecks {
     /** 12. */
     private const val FAMILY_SHARE_CEILING = 20
 
-    /** 11.1, the hot tier: forty firings a year or more. */
-    private const val HOT_FAMILY_FIRINGS = 40
+    /**
+     * 11.1, the hot tier: forty firings a year or more.
+     *
+     * Public for the same reason the band is: [SimulationAggregate] measures which families
+     * are hot and this is the line it measures against.
+     */
+    const val HOT_FAMILY_FIRINGS = 40
 
     /** 9.2. */
     private const val PARALLEL_CLAUSE_CEILING = 2
@@ -518,6 +606,25 @@ object SimulationChecks {
         why = "the bench is the size phase 5 found it. 11.1 grows the hot families from " +
             "four to eight lines per stage to sixty to a hundred, and every check below " +
             "measures a property that a bench that small cannot have",
+    )
+
+    /**
+     * The two coverage readings, deferred because what they measure is not written yet.
+     *
+     * **Not the same deferral as the corpus one, and the difference is the whole finding of
+     * the facts phase.** A bench too small to hold ninety days of variants is fixed by
+     * authoring lines. A family that never fires is not: either no simulated life satisfies
+     * its rule, or its bench names something no binding can fill, and neither of those gets
+     * better by writing more sentences. The owner has gated phase 9 on exactly these two
+     * numbers, so they are measured on every run and reported whether they pass or fail,
+     * and the day both pass is the day the corpus phase may begin.
+     */
+    private val COVERAGE_WORK = Deferral(
+        since = "2026-08-27",
+        until = "issue #7, phase 9, which the owner has gated on these two readings",
+        why = "a family or a stage that never fires is a rule no simulated life satisfies, " +
+            "or a bench whose slots have no binding. Both are addressed in phase 9, and " +
+            "neither is fixed by the authoring that phase is mostly made of",
     )
 
     /** Layer 6 is phase 9b and is the last thing built, per section 10. */

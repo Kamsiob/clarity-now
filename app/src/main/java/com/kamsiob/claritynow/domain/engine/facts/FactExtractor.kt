@@ -127,6 +127,7 @@ private class Extraction(
         queries.completionsPerArea(Long.MIN_VALUE, end)
     private val focusSecondsPerArea: Map<String, Long> = queries.focusSecondsPerArea(start, end)
     private val focusSessionsPerArea: Map<String, Int> = queries.focusSessionsPerArea(start, end)
+    private val swapsPerArea: Map<String, Int> = queries.swapsPerArea(start, end)
 
     // Lifetime day maps, read once and bucketed here rather than one windowed call
     // per week. A year of history is one pass instead of fifty two.
@@ -135,6 +136,18 @@ private class Extraction(
     private val eventsByDay: Map<String, Int> = queries.eventsPerDay(Long.MIN_VALUE, end)
     private val focusSecondsByDay: Map<String, Long> =
         queries.focusSecondsPerDay(Long.MIN_VALUE, end)
+
+    /**
+     * The same events as [eventsByDay], split inside each day by area.
+     *
+     * One fold serving three grains, because all three want the same pass: an area's
+     * own weekly series, how many areas moved in each week, and whether one area held
+     * a whole day. Its inner values can sum to less than [eventsByDay] for the same
+     * day, which is what an event on an unfiled item looks like: it happened in no
+     * area. The single area run relies on exactly that difference.
+     */
+    private val areaEventsByDay: Map<String, Map<String, Int>> =
+        queries.eventsPerAreaByDay(Long.MIN_VALUE, end)
 
     /**
      * Seven day buckets ending with the window, index 0 newest.
@@ -149,6 +162,16 @@ private class Extraction(
         val span = FactDates.daysBetween(install, endDate)
         if (span < 0) 0 else ((span / 7) + 1).coerceAtMost(FactExtractor.MAX_BUCKETS)
     }
+
+    /**
+     * The buckets every weekly series is built over, **oldest first**, newest last.
+     *
+     * Held once rather than rebuilt per series, because an area's own series and the
+     * history's series have to line up entry by entry: a rule reading the third entry
+     * of both is reading one week.
+     */
+    private val seriesIndices: List<Int> =
+        (0 until minOf(bucketCount, FactExtractor.SERIES_LENGTH)).reversed().toList()
 
     fun extract(): FactSet {
         val windowFacts = windowFacts()
@@ -235,6 +258,7 @@ private class Extraction(
             eventsInWindow = events,
             completionsInWindow = completionsPerArea[areaId] ?: 0,
             additionsInWindow = additionsPerArea[areaId] ?: 0,
+            swapsInWindow = swapsPerArea[areaId] ?: 0,
             shareOfEvents = if (totalEvents == 0) 0.0 else events.toDouble() / totalEvents,
             hasActiveItem = activeItemId != null,
             activeItemId = activeItemId,
@@ -244,12 +268,14 @@ private class Extraction(
             queueLengthAtWindowStart = queueStart,
             queueDelta = queueLength - queueStart,
             daysSinceLastEvent = if (lastEventAt == null) Int.MAX_VALUE else daysTo(lastEventAt),
+            dormantDaysBeforeReturn = dormantDaysBeforeReturn(areaId),
             lifetimeEvents = lifetimeEventsPerArea[areaId] ?: 0,
             lifetimeCompletions = lifetimeCompletionsPerArea[areaId] ?: 0,
             ageDays = ageDays,
             isNew = ageDays < FactExtractor.NEW_AREA_DAYS,
             focusSecondsInWindow = focusSecondsPerArea[areaId] ?: 0L,
             focusSessionsInWindow = focusSessionsPerArea[areaId] ?: 0,
+            weekEventsSeries = seriesIndices.map { bucketAreaEvents(it, areaId) },
         )
     }
 
@@ -280,8 +306,9 @@ private class Extraction(
                     it.daysSinceLastEvent >= FactExtractor.NEGLECT_QUIET_DAYS &&
                     !it.isNew
             }.map { it.areaId },
-            dormantReturnedAreaIds = areas.values.filter { returnedFromDormancy(it.areaId) }
-                .map { it.areaId },
+            dormantReturnedAreaIds = areas.values.filter {
+                (it.dormantDaysBeforeReturn ?: 0) >= FactExtractor.DORMANT_DAYS
+            }.map { it.areaId },
             queueDrainedAreaIds = areas.values.filter {
                 it.queueLengthAtWindowStart >= FactExtractor.DRAIN_FROM_QUEUE && it.queueLength == 0
             }.map { it.areaId },
@@ -291,21 +318,25 @@ private class Extraction(
     }
 
     /**
-     * True when this area's activity resumed inside the window after a real gap.
+     * How long this area had been still before it moved again inside the window.
      *
      * The gap is measured from the area's own previous event to its first event in
      * the window, never to the window start, so a revival is a revival rather than an
      * artifact of where the boundary fell. An area with no event before its first one
      * here has not returned from anything, and is a fresh start instead.
+     *
+     * Null rather than zero for both of the cases where nothing came back, so that
+     * `rebalance` reading it for a length cannot render the absence as a number. The
+     * five day floor lives in the rollup rather than here: this is the measurement
+     * and that is the family's own threshold.
      */
-    private fun returnedFromDormancy(areaId: String): Boolean {
-        val firstIn = queries.firstEventForArea(areaId, start, end) ?: return false
-        val previous = queries.lastEventForArea(areaId, firstIn) ?: return false
-        val gap = FactDates.daysBetween(
+    private fun dormantDaysBeforeReturn(areaId: String): Int? {
+        val firstIn = queries.firstEventForArea(areaId, start, end) ?: return null
+        val previous = queries.lastEventForArea(areaId, firstIn) ?: return null
+        return FactDates.daysBetween(
             FactDates.dateOf(previous, zone),
             FactDates.dateOf(firstIn, zone),
         )
-        return gap >= FactExtractor.DORMANT_DAYS
     }
 
     /** Both shapes of `CORPUS_1_PULSE.md` family 11: a new area, or a first item in an empty one. */
@@ -373,12 +404,13 @@ private class Extraction(
 
     private fun historyFacts(windowFacts: WindowFacts, rollup: RollupFacts): HistoryFacts {
         val daysSinceInstall = installAt?.let { daysTo(it) } ?: 0
-        val seriesIndices = (0 until minOf(bucketCount, FactExtractor.SERIES_LENGTH))
-            .reversed()
-            .toList()
         val completionsSeries = seriesIndices.map { bucketSum(it, completionsByDay) }
         val eventsSeries = seriesIndices.map { bucketSum(it, eventsByDay) }
         val queueSeries = seriesIndices.map { queries.queueSizeAt(bucketEndMillis(it)) }
+        val focusPerBucket = seriesIndices.map {
+            queries.focusSessionCounts(bucketStartMillis(it), bucketEndMillis(it))
+        }
+        val singleAreaRun = currentSingleAreaRun()
 
         val thisBucket = if (bucketCount > 0) bucketSum(0, completionsByDay) else 0
         val lastBucket = if (bucketCount > 1) bucketSum(1, completionsByDay) else null
@@ -410,6 +442,11 @@ private class Extraction(
             weekCompletionsSeries = completionsSeries,
             weekQueueSizeSeries = queueSeries,
             weekTotalEventsSeries = eventsSeries,
+            weekAreaCountSeries = seriesIndices.map { bucketAreaCount(it) },
+            weekFocusStartedSeries = focusPerBucket.map { it.started },
+            weekFocusCompletedSeries = focusPerBucket.map { it.completed },
+            weekFocusEndedEarlySeries = focusPerBucket.map { it.endedEarly },
+            weekWeekendEventsSeries = seriesIndices.map { bucketWeekendEvents(it) },
             weekOverWeekDelta = lastBucket?.let { thisBucket - it },
             completionsTrend = Trend.of(completionsSeries),
             queueSizeTrend = Trend.of(queueSeries),
@@ -431,7 +468,67 @@ private class Extraction(
             longestEverActiveItemId = longestEver?.first,
             personalBestFocusMinutesWeek = bestFocusMinutes,
             firstEverFlags = firstEverFlags(windowFacts, rollup),
+            currentQuietRunDays = currentQuietRunDays(),
+            currentSingleAreaRunDays = singleAreaRun.days,
+            currentSingleAreaRunAreaId = singleAreaRun.areaId,
         )
+    }
+
+    /**
+     * Days with nothing at all, counted back from the last day the window describes.
+     *
+     * Walks the per day counts the facade already produced rather than asking it for
+     * a run, which is the arrangement the scoped exception in `HistoryFacts` was
+     * granted in: the facade answers how many events fell on a day, and nothing
+     * anywhere answers how long anything has been kept up.
+     *
+     * Three things stop the walk, and each one matters. A day with any user activity
+     * ends the run, because every statement the run supports claims nothing moved.
+     * The oldest event in the log ends it, because the days before somebody installed
+     * the app are not days they were quiet. And [HistoryFacts.MAX_RUN_DAYS] ends it,
+     * so the number can never grow into a record.
+     */
+    private fun currentQuietRunDays(): Int {
+        val install = installDate ?: return 0
+        var days = 0
+        var date = endDate
+        while (days < HistoryFacts.MAX_RUN_DAYS && !date.isBefore(install)) {
+            if ((eventsByDay[FactDates.keyOf(date)] ?: 0) > 0) break
+            days++
+            date = date.minusDays(1)
+        }
+        return days
+    }
+
+    /**
+     * The run of days one area held everything, ending with the window.
+     *
+     * A day qualifies when it had events and every one of them resolved to the same
+     * area, which is why the day's own total is compared against that area's count:
+     * an event belonging to no area, which is what an unfiled capture is, makes
+     * `everything yesterday was {areaName}` false and ends the run.
+     *
+     * The area is dropped when it is not live at the window end, leaving a length
+     * with no subject. That is a run nothing can claim, which is prohibition 3 doing
+     * its work: the days happened, and there is no longer anybody to name them for.
+     */
+    private fun currentSingleAreaRun(): SingleAreaRun {
+        val install = installDate ?: return SingleAreaRun(0, null)
+        var runAreaId: String? = null
+        var days = 0
+        var date = endDate
+        while (days < HistoryFacts.MAX_RUN_DAYS && !date.isBefore(install)) {
+            val key = FactDates.keyOf(date)
+            val dayTotal = eventsByDay[key] ?: 0
+            if (dayTotal == 0) break
+            val only = areaEventsByDay[key]?.entries?.singleOrNull() ?: break
+            if (only.value != dayTotal) break
+            if (runAreaId != null && only.key != runAreaId) break
+            runAreaId = only.key
+            days++
+            date = date.minusDays(1)
+        }
+        return SingleAreaRun(days, runAreaId?.takeIf { it in liveAreas })
     }
 
     /**
@@ -754,13 +851,44 @@ private class Extraction(
         end,
     )
 
-    private fun bucketDayKeys(index: Int): List<String> {
+    private fun bucketDates(index: Int): List<LocalDate> {
         val first = bucketFirstDate(index)
-        return (0L until 7L).map { FactDates.keyOf(first.plusDays(it)) }
+        return (0L until 7L).map { first.plusDays(it) }
     }
+
+    private fun bucketDayKeys(index: Int): List<String> =
+        bucketDates(index).map { FactDates.keyOf(it) }
 
     private fun bucketSum(index: Int, byDay: Map<String, Int>): Int =
         bucketDayKeys(index).sumOf { byDay[it] ?: 0 }
+
+    /** One area's events in one bucket. The per area series is this across the buckets. */
+    private fun bucketAreaEvents(index: Int, areaId: String): Int =
+        bucketDayKeys(index).sumOf { areaEventsByDay[it]?.get(areaId) ?: 0 }
+
+    /**
+     * How many live areas had an event in one bucket.
+     *
+     * Areas archived or deleted since the bucket are excluded, so the count is of
+     * areas the person can still see. `HistoryFacts.weekAreaCountSeries` states what
+     * that costs and why the alternative is worse.
+     */
+    private fun bucketAreaCount(index: Int): Int {
+        val moved = HashSet<String>()
+        for (key in bucketDayKeys(index)) moved += areaEventsByDay[key].orEmpty().keys
+        return moved.count { it in liveAreas }
+    }
+
+    /**
+     * Events on the Saturday and the Sunday of one bucket.
+     *
+     * A bucket is seven consecutive local days, so it holds exactly one of each
+     * however it is aligned, and a bucket at zero is a weekend with nothing in it.
+     */
+    private fun bucketWeekendEvents(index: Int): Int =
+        bucketDates(index)
+            .filter { Weekday.of(it.dayOfWeek).isWeekend }
+            .sumOf { eventsByDay[FactDates.keyOf(it)] ?: 0 }
 
     /** The seconds variant. Named apart because the two erase to one JVM signature. */
     private fun bucketSeconds(index: Int, byDay: Map<String, Long>): Long =
@@ -773,6 +901,15 @@ private class Extraction(
 
 /** A cue that cleared its thresholds: what it is, how big, and how often it held. */
 private data class CueReading<T>(val key: T, val count: Int, val confidence: Double)
+
+/**
+ * A run of single area days: how long, and whose.
+ *
+ * A pair of two values that must be read together, named so neither can be read
+ * alone. The length without the area is a claim with no subject, and the area
+ * without the length is not a claim at all.
+ */
+private data class SingleAreaRun(val days: Int, val areaId: String?)
 
 /**
  * The single greatest element, or null when nothing is greatest on its own.

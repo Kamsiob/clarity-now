@@ -33,6 +33,8 @@ import com.kamsiob.claritynow.data.event.ItemReordered
 import com.kamsiob.claritynow.data.event.ItemStatus
 import com.kamsiob.claritynow.data.event.PulseAnswered
 import com.kamsiob.claritynow.data.event.PulseGenerated
+import com.kamsiob.claritynow.data.export.ClarityBackupStore
+import com.kamsiob.claritynow.data.export.ExportSnapshot
 import com.kamsiob.claritynow.data.prefs.AfterCompleting
 import com.kamsiob.claritynow.data.prefs.ClarityPreferences
 import com.kamsiob.claritynow.domain.ClarityClock
@@ -88,7 +90,7 @@ class ClarityRepository(
     private val db: ClarityDatabase,
     private val prefs: ClarityPreferences,
     private val clock: ClarityClock,
-) {
+) : ClarityBackupStore {
 
     private val events = db.events()
     private val cache = db.cache()
@@ -1183,8 +1185,46 @@ class ClarityRepository(
      * and the next cold start is still fast.
      */
     suspend fun rebuildCacheFromLog(): RebuildCheck = mutex.withLock {
-        val all = events.allInOrder().mapNotNull { it.toEvent() }
-        val rebuilt = ClarityReplay.checkpoint(all)
+        rebuildFromLogLocked().check
+    }
+
+    /**
+     * The whole database at one instant, for [ClarityBackupStore] and the export
+     * path. MASTER_BUILD_PROMPT 6.4 and 14b.7.
+     *
+     * **The rebuild and the read of the log happen under one lock, and that is the
+     * point of this method existing rather than the caller making two calls.** An
+     * export writes the events and the state that was folded from them, and this
+     * class is the only writer in the app, so taking the two under one lock is what
+     * makes the pair inside the file consistent with each other. Two calls could be
+     * separated by a completion, and the file would carry a state one event ahead
+     * of the log beside it, which nothing downstream would ever notice.
+     */
+    override suspend fun exportSnapshot(): ExportSnapshot = mutex.withLock {
+        val rebuilt = rebuildFromLogLocked()
+        ExportSnapshot(
+            events = rebuilt.events,
+            state = rebuilt.check.state,
+            rebuildMatched = rebuilt.check.matched,
+        )
+    }
+
+    /** MASTER_BUILD_PROMPT 14b.7. Settings reads it back to show the date. */
+    override suspend fun recordExport(atMillis: Long) = prefs.setLastExportAt(atMillis)
+
+    /**
+     * When the oldest item this person still has was created, or null when they
+     * have none. `data.export.ExportReminder` turns it into the quiet line, and the
+     * note there says why an item and not an area is what counts as real data.
+     */
+    fun dataWorthKeepingSince(): Long? = _state.value.items.values
+        .filter { it.deletedAt == null }
+        .minOfOrNull { it.createdAt }
+
+    /** The body of the rebuild, so the export path and the debug action share one. */
+    private suspend fun rebuildFromLogLocked(): RebuiltLog {
+        val logged = events.allInOrder().mapNotNull { it.toEvent() }
+        val rebuilt = ClarityReplay.checkpoint(logged)
         val matched = if (loaded) rebuilt.state.canonical() == _state.value.canonical() else null
 
         db.withTransaction {
@@ -1195,10 +1235,13 @@ class ClarityRepository(
         _state.value = rebuilt.state
         closeWeekIfNeededLocked(rebuilt)
 
-        RebuildCheck(
-            state = rebuilt.state,
-            eventCount = rebuilt.state.eventsApplied,
-            matched = matched,
+        return RebuiltLog(
+            events = logged,
+            check = RebuildCheck(
+                state = rebuilt.state,
+                eventCount = rebuilt.state.eventsApplied,
+                matched = matched,
+            ),
         )
     }
 
@@ -1231,7 +1274,10 @@ class ClarityRepository(
      * because the next writer happens to repair it is a counter that is wrong in
      * between.
      */
-    suspend fun ingestForeignLog(incoming: List<ClarityEvent>, mode: IngestMode): RebuildCheck =
+    override suspend fun ingestForeignLog(
+        incoming: List<ClarityEvent>,
+        mode: IngestMode,
+    ): RebuildCheck =
         mutex.withLock {
             check(loaded) { "ingest before load" }
             val rebuilt = db.withTransaction {
@@ -1564,6 +1610,9 @@ class ClarityRepository(
         private const val MAX_BOUND_IDS = 900
     }
 }
+
+/** The two halves one rebuild produces: the log it read, and what it found. */
+private class RebuiltLog(val events: List<ClarityEvent>, val check: RebuildCheck)
 
 /**
  * What a full rebuild from event zero found. MASTER_BUILD_PROMPT 6.4.

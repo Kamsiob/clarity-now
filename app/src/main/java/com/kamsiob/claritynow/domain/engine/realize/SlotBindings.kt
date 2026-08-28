@@ -171,9 +171,43 @@ internal object SlotBindings {
             "areaName" to subject("areaName"),
             "itemTitle" to subject("areaActiveItemTitle"),
         ),
+        // switching, over the area's own swaps. `{itemTitle}` is read through the area
+        // rather than through an item subject, because 6.1 gives this family the area: the
+        // one line naming an item, `switching.s1.02`, names what is at the front now, and a
+        // swap inside the window is what put it there.
+        family(
+            Purpose.PULSE, "switching",
+            "areaName" to subject("areaName"),
+            "itemTitle" to subject("areaActiveItemTitle"),
+            "n" to subject("areaSwaps"),
+        ),
+        // rebalance. `{ageDays}` is the gap the area returned from and never the days since
+        // it returned, which is the distinction `AreaFacts.dormantDaysBeforeReturn` exists
+        // to hold. `{sinceRef}` is the month the area was last active **before** that gap
+        // and stays unbound: `areaLastEventRef` reads the last event of any kind, and the
+        // return is one of them, so it would answer with the month of the return itself.
+        family(
+            Purpose.PULSE, "rebalance",
+            "areaName" to subject("areaName"),
+            "ageDays" to subject("areaDormancyDays"),
+        ),
         // quietDay stage 1 is written without a marker in it, which is why nothing is
-        // declared here. Stages 2 and 3 count consecutive quiet days, the fact
-        // RulesAwaitingFacts records as missing, and have no rule to reach them anyway.
+        // declared for it. Stages 2 and 3 have a rule now, over
+        // `HistoryFacts.currentQuietRunDays`, and still bind nothing. That is a refusal
+        // rather than a gap, and it is worth stating in full because the fact those stages
+        // waited for has arrived.
+        //
+        // `{dayCount}` is the run itself. `StreakExceptionAudit` asserts that no measure's
+        // value moves when only a run moves, and the run is capped at thirty, so at the cap
+        // it means at least thirty and `thirty days` would be false as well as forbidden.
+        //
+        // `{sinceRef}` is the day that run began, which is the same fact read as a date.
+        // The audit's differential covers every measure and not only the numeric ones, so a
+        // month name derived from the run is the same violation in another type.
+        //
+        // `{itemTitle}` appears only beside `{dayCount}` in `quietday.s2.10` and
+        // `quietday.s3.08`, and this family's subject is NONE, so there is no item to reach
+        // even if the other marker were fillable.
     )
 
     // ------------------------------------------------------------------ Momentum
@@ -192,12 +226,15 @@ internal object SlotBindings {
             "n" to bind("completions"),
             "areaName" to dominant("areaName"),
         ),
-        // comeback names the area that returned. The length of the gap it returned from is
-        // the fact RulesAwaitingFacts records as missing, so `{ageDays}` is unbound and the
-        // four lines that render it wait.
+        // comeback names the area that returned and, since the facts phase, the gap it
+        // returned from. The rule requires its subject to be in `dormantReturnedAreaIds`,
+        // which is `dormantDaysBeforeReturn` at five days or more, so the gap is always
+        // there to read. `mo.come.03` is in EXCLUDED because it renders the days **since**
+        // the return, which is the other end of the same gap.
         family(
             Purpose.MOMENTUM_HEADLINE, "comeback",
             "areaName" to subject("areaName"),
+            "ageDays" to subject("areaDormancyDays"),
             "n" to subject("areaCompletions"),
         ),
         family(
@@ -246,9 +283,14 @@ internal object SlotBindings {
         family(Purpose.REPORT_HEADLINE, "focusProtected", "sessions" to bind("focusSessions")),
         family(Purpose.REPORT_HEADLINE, "personalBest", "n" to bind("completions")),
         family(Purpose.REPORT_HEADLINE, "mostActiveSince", "sinceRef" to bind("mostRecentBetterWeekRef")),
-        // The comeback headline names its subject area and nothing else. `{ageDays}` would
-        // be the length of the gap, which no fact carries.
-        family(Purpose.REPORT_HEADLINE, "comeback", "areaName" to subject("areaName")),
+        // The comeback headline names its subject area and the gap it came back from. Its
+        // rule reads the same `dormantReturnedAreaIds` the Momentum family does, so
+        // `hd.back.04`, `{areaName}, after {ageDays}`, is that gap and not the wait since.
+        family(
+            Purpose.REPORT_HEADLINE, "comeback",
+            "areaName" to subject("areaName"),
+            "ageDays" to subject("areaDormancyDays"),
+        ),
         family(Purpose.REPORT_HEADLINE, "datedFallback", "weekRef" to bind("weekRef")),
         family(Purpose.REPORT_HEADLINE, "queuePressure", "n" to bind("queueTotal")),
         // The clearing headline names the area that emptied, which is the one fact that
@@ -327,10 +369,15 @@ internal object SlotBindings {
             "areaCount" to bind("areasWithQueue"),
             "areaName" to bind("areaName", EntitySource.LONGEST_QUEUE_AREA),
         ),
-        // areaRevival can name the area and say it came back. How long it had been away is
-        // the missing dormancy fact, and how much of its queue went is not knowable from a
-        // completion count, because the active item is not part of the queue.
-        family(Purpose.REPORT_OBSERVATION, "areaRevival", "areaName" to subject("areaName")),
+        // areaRevival names the area, says it came back, and now says how long it had been
+        // away. How much of its queue went is still not knowable from a completion count,
+        // because the active item is not part of the queue, which is why `ob.rev.e01` is in
+        // EXCLUDED and `{n}` stays unbound here.
+        family(
+            Purpose.REPORT_OBSERVATION, "areaRevival",
+            "areaName" to subject("areaName"),
+            "ageDays" to subject("areaDormancyDays"),
+        ),
         family(
             Purpose.REPORT_OBSERVATION, "persistentItem",
             "itemTitle" to subject("itemTitle"),
@@ -358,9 +405,12 @@ internal object SlotBindings {
             "n" to bind("busiestDayCount"),
             "m" to bind("totalEvents"),
         ),
-        // switchingBehavior counts swaps across the window. Six of its nine leads name the
-        // area that did the swapping, which needs the per area swap count ReportRules
-        // already records as missing, so `{areaName}` stays unbound here.
+        // switchingBehavior counts swaps across the window. `AreaFacts.swapsInWindow` now
+        // exists and `{areaName}` still stays unbound, because this rule's subject is NONE
+        // and stays NONE by decision: the Pulse `switching` family is the per area reading
+        // of the same behavior, and 9.1 exists to stop two families sitting on one fact at
+        // two grains. There is no area here to name, so the six leads that name one stay
+        // out of the bench.
         family(Purpose.REPORT_OBSERVATION, "switchingBehavior", "n" to bind("swaps")),
         family(
             Purpose.REPORT_OBSERVATION, "focusAbandonment",
@@ -428,6 +478,58 @@ internal object SlotBindings {
             "sinceRef" to subject("areaLastEventRef"),
         ),
         family(Purpose.REPORT_PATTERN, "consistentRhythm", "n" to bind("activityBandWidth")),
+        // The area count series, read at both ends of the sentence the two families share:
+        // `Three weeks ago you touched {n} areas. This week, {m}`. Both numbers come from
+        // one series, so the comparison is between two readings of one measurement, and
+        // that series counts only areas live at the window end in every bucket, which is
+        // what stops a week three back being counted with an area the person can no longer
+        // see. `{sinceRef}` is the week the movement began in both families and is
+        // unbound, and `pt.narrow.02` is in EXCLUDED.
+        family(
+            Purpose.REPORT_PATTERN, "narrowingFocus",
+            "n" to weeksAgo("weekAreaCountAgo", 2),
+            "m" to weeksAgo("weekAreaCountAgo", 0),
+        ),
+        family(
+            Purpose.REPORT_PATTERN, "broadeningFocus",
+            "n" to weeksAgo("weekAreaCountAgo", 2),
+            "m" to weeksAgo("weekAreaCountAgo", 0),
+        ),
+        // The two focus habit families read sessions **started**, which is what their rules
+        // read and what `pt.fade.01` claims. `{k}, then {m}, then {n} sessions` sits in the
+        // same bench as that line, so binding these three to the finished count would list
+        // one series under a headline about another, and that is the exact shape of a
+        // person who started five a week and finished fewer each time.
+        family(
+            Purpose.REPORT_PATTERN, "focusHabitForming",
+            "k" to weeksAgo("weekFocusStartedAgo", 2),
+            "m" to weeksAgo("weekFocusStartedAgo", 1),
+            "n" to weeksAgo("weekFocusStartedAgo", 0),
+        ),
+        family(
+            Purpose.REPORT_PATTERN, "focusHabitFading",
+            "k" to weeksAgo("weekFocusStartedAgo", 2),
+            "m" to weeksAgo("weekFocusStartedAgo", 1),
+            "n" to weeksAgo("weekFocusStartedAgo", 0),
+        ),
+        // `{pct} of your activity has been on weekdays for a month` is the weekend series
+        // against the total series over the four buckets this family speaks about. The two
+        // count the same events over the same days, so the share is a division and not an
+        // estimate.
+        family(Purpose.REPORT_PATTERN, "weekendShift", "pct" to bind("weekdayShareOfMonth")),
+        // `{n} of your last {m} sessions ended before the timer` is this week's pair, and
+        // the same two counts `focusAbandonment` reads for the same sentence. The family's
+        // claim spans three weeks and this line does not: it names sessions, and the week
+        // the report covers is the week they were started in.
+        family(
+            Purpose.REPORT_PATTERN, "abandonmentPattern",
+            "n" to bind("focusEndedEarly"),
+            "m" to bind("focusStarted"),
+        ),
+        // comebackPattern names its subject area. The two other markers it carries are
+        // quantities nothing holds: `{sinceRef}` is the week the first of the two silences
+        // began, and `{ageDays}` in `pt.come.05` is how long a return usually lasts.
+        family(Purpose.REPORT_PATTERN, "comebackPattern", "areaName" to subject("areaName")),
     )
 
     private val FAMILIES: List<FamilyBinding> = PULSE + MOMENTUM + HEADLINES + OBSERVATIONS + PATTERNS
@@ -499,8 +601,26 @@ internal object SlotBindings {
      * Each one uses a marker the family binds, in a sense the bound fact does not carry.
      * `ob.neg.s1.e05`, *Its last completion was {ageDays} ago*, would render the days since
      * the area's last **event**, which is a different day and a claim the person can check.
+     *
+     * **A second shape arrived with the facts phase.** A line whose every marker is bound
+     * correctly and whose **words** state a count no rule fixes: *Three weeks of stillness*
+     * under a stage that begins at fourteen days, *This is the second time* under a rule
+     * that requires two or more. Nothing about the binding is wrong and the sentence is
+     * still false, and the marker is what makes the line reachable, so this is where it is
+     * held out. `ReportRules` names four of them where it writes the rule and points here,
+     * because holding a line out of a bench belongs to the realizer and not to a criterion.
      */
     val EXCLUDED: Map<VariantKey, String> = mapOf(
+        "switching.s2.02" to "`{areaName} has had {n} different priorities recently` counts " +
+            "the items that reached the front, and two swaps leave three of them there",
+        "switching.s2.04" to "`Three items have taken turns being active` states a count in " +
+            "words that holds at exactly two swaps, and stage 2 is two swaps or more",
+        "rebalance.s2.03" to "`Three weeks of stillness` fixes the gap at three weeks while " +
+            "stage 2 begins at fourteen days, so a fortnight would read as three weeks",
+        "rebalance.s2.04" to "`came back after the longest gap it has had` is a record claim, " +
+            "and no fact carries this area's earlier gaps to set this one against",
+        "mo.come.03" to "`Things started moving again {ageDays} ago` is the days since the " +
+            "return, and `{ageDays}` here is the gap before it, which is its other end",
         "ob.flow.s1.e03" to "`{k} of what you added is still untouched` needs how much of " +
             "the intake is still queued, and the queue delta is a net figure",
         "ob.flow.s2.e03" to "reads the intake into one area and that area's earlier queue, " +
@@ -550,6 +670,23 @@ internal object SlotBindings {
         "pt.shift.10" to "`led, then handed over, twice` counts handovers across weeks",
         "pt.rva.03" to "`Three times you have said` states a count in words that no fact backs",
         "pt.rva.05" to "`in each of the last three weeks` needs the answers bucketed by week",
+        "pt.narrow.02" to "`{areaName}'s share has gone {k}, {m}, {pct}` reads `{m}` as one " +
+            "area's share of a week, and it is bound here to how many areas moved in one",
+        "pt.broad.03" to "`No area has held a majority for three weeks` needs a dominant " +
+            "share per week, and the history carries each week's leader by id and not its share",
+        "pt.hab.03" to "`Protected time has increased every week for three weeks` is minutes " +
+            "and the series behind this family is sessions, and five short ones are less time",
+        "pt.fade.04" to "`There has been no focus time in two weeks` and `pt.fade.01`, " +
+            "sessions falling every week for three, cannot both be true of one series: " +
+            "falling needs the last two weeks to differ and two empty weeks need them equal",
+        "pt.ab.02" to "`Sessions have been getting shorter each week` is the length of a " +
+            "session, and every focus fact behind this family is a count of them",
+        "pt.come.01" to "`has gone quiet and returned twice` fixes the count at two while " +
+            "the rule requires two or more, so a third return would print as the second",
+        "pt.come.02" to "`This is the second time {areaName} has come back` makes the same " +
+            "claim as pt.come.01 and is false in the same way on a third return",
+        "pt.come.04" to "`has never been active two weeks in a row` is not implied by two " +
+            "returns: three, four, zero, two, zero, five satisfies the rule and contradicts it",
     )
 
     /** The bindings for one variant: the family's, the stage's, and the line's own. */

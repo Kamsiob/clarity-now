@@ -125,6 +125,9 @@ internal object ValidateFixture {
         ageDays: Int = 200,
         focusSecondsInWindow: Long = 0L,
         focusSessionsInWindow: Int = 0,
+        swapsInWindow: Int = 0,
+        dormantDaysBeforeReturn: Int? = null,
+        weekEventsSeries: List<Int> = emptyList(),
     ): AreaFacts = AreaFacts(
         areaId = areaId,
         nameSnapshot = nameSnapshot,
@@ -132,6 +135,7 @@ internal object ValidateFixture {
         eventsInWindow = eventsInWindow,
         completionsInWindow = completionsInWindow,
         additionsInWindow = additionsInWindow,
+        swapsInWindow = swapsInWindow,
         shareOfEvents = shareOfEvents,
         hasActiveItem = activeItemId != null,
         activeItemId = activeItemId,
@@ -141,12 +145,14 @@ internal object ValidateFixture {
         queueLengthAtWindowStart = queueLengthAtWindowStart,
         queueDelta = queueLength - queueLengthAtWindowStart,
         daysSinceLastEvent = daysSinceLastEvent,
+        dormantDaysBeforeReturn = dormantDaysBeforeReturn,
         lifetimeEvents = lifetimeEvents,
         lifetimeCompletions = lifetimeCompletions,
         ageDays = ageDays,
         isNew = ageDays < 14,
         focusSecondsInWindow = focusSecondsInWindow,
         focusSessionsInWindow = focusSessionsInWindow,
+        weekEventsSeries = weekEventsSeries,
     )
 
     /** Nine of the twelve events, an item active nine days, a queue that halved. */
@@ -260,6 +266,14 @@ internal object ValidateFixture {
         longestEverActiveItemId: ItemId? = RECORD_ITEM,
         personalBestFocusMinutesWeek: Int = 140,
         firstEverFlags: Set<FirstEver> = emptySet(),
+        weekAreaCountSeries: List<Int> = emptyList(),
+        weekFocusStartedSeries: List<Int> = emptyList(),
+        weekFocusCompletedSeries: List<Int> = emptyList(),
+        weekFocusEndedEarlySeries: List<Int> = emptyList(),
+        weekWeekendEventsSeries: List<Int> = emptyList(),
+        currentQuietRunDays: Int = 0,
+        currentSingleAreaRunDays: Int = 0,
+        currentSingleAreaRunAreaId: AreaId? = null,
     ): HistoryFacts = HistoryFacts(
         daysSinceInstall = daysSinceInstall,
         weeksOfData = weeksOfData,
@@ -269,6 +283,11 @@ internal object ValidateFixture {
         weekCompletionsSeries = weekCompletionsSeries,
         weekQueueSizeSeries = weekQueueSizeSeries,
         weekTotalEventsSeries = weekTotalEventsSeries,
+        weekAreaCountSeries = weekAreaCountSeries,
+        weekFocusStartedSeries = weekFocusStartedSeries,
+        weekFocusCompletedSeries = weekFocusCompletedSeries,
+        weekFocusEndedEarlySeries = weekFocusEndedEarlySeries,
+        weekWeekendEventsSeries = weekWeekendEventsSeries,
         weekOverWeekDelta = weekOverWeekDelta,
         completionsTrend = Trend.of(weekCompletionsSeries),
         queueSizeTrend = Trend.of(weekQueueSizeSeries),
@@ -282,6 +301,9 @@ internal object ValidateFixture {
         longestEverActiveItemId = longestEverActiveItemId,
         personalBestFocusMinutesWeek = personalBestFocusMinutesWeek,
         firstEverFlags = firstEverFlags,
+        currentQuietRunDays = currentQuietRunDays,
+        currentSingleAreaRunDays = currentSingleAreaRunDays,
+        currentSingleAreaRunAreaId = currentSingleAreaRunAreaId,
     )
 
     /** Two answers, both stored with the label the person actually saw. */

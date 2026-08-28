@@ -614,4 +614,408 @@
     <string name="cd_report_ribbon">The week, %1$d days of activity</string>
     <string name="cd_report_ribbon_busiest">The week, %1$d days of activity. Busiest on %2$s.</string>
 
+
+    <!--
+        ============================================================
+        Phase 11: Settings, About, the privacy policy, the licenses
+        and the support block.
+
+        MASTER_BUILD_PROMPT 14.1 to 14.5 and 14b.7, design-v3.md
+        10.10, 10.11, 10.12 and 16.1.
+
+        **Everything in this block is a fixed interface label, a
+        direct readout of a stored value, or a statement about the
+        app or about a file.** Nothing here is an observation about
+        a person. The two places that come closest are named where
+        they are written: the import refusal, which MASTER_BUILD_PROMPT
+        14b.7 explicitly excludes from rule 11.1 because it is about a
+        file, and the export age line, which is a readout of the
+        `lastExportAt` preference and nothing more.
+        ============================================================
+    -->
+
+    <!-- The screen, design-v3.md 10.15 -->
+    <string name="settings_title">Settings</string>
+    <string name="cd_settings_open">Settings</string>
+    <string name="cd_settings_back">Back</string>
+
+    <!-- Sideheads, sentence case, design-v3.md 10.12 -->
+    <string name="settings_group_daily">Daily routine</string>
+    <string name="settings_group_focus">Focus</string>
+    <string name="settings_group_after">After completing</string>
+    <string name="settings_group_appearance">Appearance</string>
+    <string name="settings_group_data">Your data</string>
+    <string name="settings_group_privacy">Privacy</string>
+    <string name="settings_group_help">Help</string>
+
+    <!-- Daily routine, MASTER_BUILD_PROMPT 14.1 -->
+    <string name="settings_daily_reflection">Daily reflection</string>
+    <string name="settings_pulse_reminder">Pulse reminder</string>
+    <string name="settings_remind_at">Remind me at</string>
+
+    <!--
+        The explainer sheet behind the Daily reflection row.
+
+        Fixed copy about how the app works, which MASTER_BUILD_PROMPT 11.2
+        puts here rather than in a corpus, and 14b.11 says the same thing
+        about the onboarding line that announces the Pulse: predictability
+        matters, and describing a behavior before it arrives is not an
+        observation about anybody.
+    -->
+    <string name="settings_reflection_sheet_title">The daily Pulse</string>
+    <string name="settings_reflection_body_1">Once a day, Clarity Now asks one question about something in your own history. One tap answers it, and that is the whole of it.</string>
+    <string name="settings_reflection_body_2">Your answers are only ever used to describe your own weeks back to you. Nothing is sent anywhere, because there is nowhere for it to go.</string>
+    <string name="settings_reflection_body_3">A question you skip is not chased, counted or mentioned. The reminder can be turned off here, and the question still waits on the Areas screen for whenever you want it.</string>
+
+    <!-- Focus, MASTER_BUILD_PROMPT 14.1 and Addendum 01 4f and 4g -->
+    <string name="settings_focus_highlight">Highlight the active session</string>
+    <string name="settings_session_length">Session length</string>
+    <string name="settings_session_length_value">%1$d minutes</string>
+    <string name="settings_session_length_title">Session length</string>
+    <string name="settings_transition_warning">Five minute warning</string>
+    <string name="settings_transition_warning_caption">A mark on the ring, five minutes before the end</string>
+
+    <!--
+        After completing, MASTER_BUILD_PROMPT 14.1 and 8.2.
+
+        The explanatory line reflects the current selection and describes
+        what the app will do next, which is a statement about a setting
+        rather than about the person.
+    -->
+    <string name="settings_after_promote">Promote next</string>
+    <string name="settings_after_choose">Choose from queue</string>
+    <string name="settings_after_promote_explainer">Completing an item promotes the next one in that area\'s queue straight away.</string>
+    <string name="settings_after_choose_explainer">Completing an item opens that area\'s queue so you can pick what comes next. Dismissing it leaves the area idle, which is a real state.</string>
+
+    <!-- Appearance, design-v3.md 10.10 and 16.1 -->
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_appearance_note">Focus, Pulse and Report are always dark by design.</string>
+    <!-- `settings_calm_mode` and `settings_calm_mode_caption` were written in
+         phase 3b beside the preference itself and are used from here unchanged. -->
+
+    <!-- Your data, MASTER_BUILD_PROMPT 14.1, 14.2 and 14b.7 -->
+    <string name="settings_export">Export everything</string>
+    <string name="settings_export_never">Never exported</string>
+    <string name="settings_import">Import from a file</string>
+    <string name="settings_erase">Erase all data</string>
+    <string name="settings_export_working">Writing the file</string>
+    <string name="settings_import_working">Reading the file</string>
+    <string name="settings_erase_working">Erasing</string>
+    <!--
+        MASTER_BUILD_PROMPT 14b.7: one quiet line, in Settings only, when nothing
+        has been exported in a month and there is real data to lose. Never a
+        notification, never a nag, never a badge, never a card on Areas.
+
+        **The wording has to be true in both of the cases `ExportReminder` fires in,
+        and the obvious sentence is not.** `data.export.ExportReminder` anchors on
+        the oldest item a person still has when there has never been an export, so
+        `it has been 30 days since the last export` would be a sentence about an
+        export that never happened. This form is true either way, and it is a
+        readout of a stored date rather than an observation about anybody.
+
+        Addendum 01 4h asks the export screen to say plainly that an unencrypted
+        file is readable. That line is `settings_export_password_none` and it lives
+        on the export sheet, where it is conditional on what the password field
+        holds. An unconditional version of it on the Settings screen was written
+        first and removed: once the password is real, a permanent line saying the
+        file is not encrypted is false for everybody who used one.
+    -->
+    <string name="settings_export_stale">Nothing here has been exported in the last 30 days.</string>
+    <string name="settings_export_done">Exported %1$d events to a readable file.</string>
+    <string name="settings_export_done_encrypted">Exported %1$d events to an encrypted file.</string>
+    <string name="settings_import_done">Imported. The log now holds %1$d events.</string>
+    <string name="settings_erase_done">Everything on this phone has been erased.</string>
+
+    <!--
+        The import refusals, MASTER_BUILD_PROMPT 14b.7.
+
+        **One plain sentence saying what was wrong, and it is a fixed string
+        rather than a corpus line.** 14b.7 states the exception and the reason
+        for it in the same breath: these sentences are about a file, not about
+        the person\'s own data, so rule 11.1 does not reach them. That is
+        written here as well as there, because a session that finds a bare
+        sentence about data in strings.xml is meant to be suspicious of it.
+    -->
+    <string name="import_refused_not_a_backup">This is not a Clarity Now backup file.</string>
+    <string name="import_refused_newer_version">This backup was written by a newer version of Clarity Now.</string>
+    <string name="import_refused_damaged">This backup is damaged or incomplete.</string>
+    <string name="import_refused_password_required">This backup is protected by a password.</string>
+    <string name="import_refused_wrong_password">That password did not open this backup.</string>
+    <string name="import_refused_inconsistent">This backup does not hold the history it says it holds.</string>
+    <string name="settings_export_error">That file could not be written.</string>
+
+    <!--
+        The export sheet, MASTER_BUILD_PROMPT 14b.7 and Addendum 01 4h.
+
+        The password is optional and the sheet says which of the two files it is
+        about to write, plainly, rather than implying a safety it does not provide.
+        The unencrypted sentence is unconditional in its own row on the screen and
+        this pair reflects what the field currently holds.
+    -->
+    <string name="settings_export_title">Export everything</string>
+    <string name="settings_export_password_label">Password, optional</string>
+    <string name="settings_export_password_none">This file will be readable. Anyone who opens it can read everything in it.</string>
+    <string name="settings_export_password_set">This file will be encrypted with this password. There is no way to open it without the password, and no way to recover it.</string>
+    <string name="settings_export_choose">Choose where to save</string>
+
+    <!--
+        The password prompt when a file turns out to be protected.
+
+        Nothing has been written by the time this appears, and nothing can have been:
+        the reading half of the backup path holds no store. The sentence above the
+        field is the refusal itself, from `ImportRefusal`.
+    -->
+    <string name="settings_import_password_title">This backup is protected</string>
+    <string name="settings_import_password_label">Password</string>
+    <string name="settings_import_password_open">Open the backup</string>
+
+    <!-- The import choice, MASTER_BUILD_PROMPT 14b.7 -->
+    <string name="settings_import_title">Import from a file</string>
+    <string name="settings_import_summary">%1$d events, written %2$s.</string>
+    <string name="settings_import_replace">Replace everything</string>
+    <string name="settings_import_merge">Merge with what is here</string>
+    <string name="settings_import_replace_explainer">Everything on this phone is removed and the file becomes your whole history. This cannot be undone.</string>
+    <string name="settings_import_merge_explainer">The two histories are joined. Nothing on this phone is lost, and anything the file already holds is not duplicated.</string>
+    <string name="settings_import_confirm_word">REPLACE</string>
+    <string name="settings_import_confirm_prompt">Type REPLACE to confirm</string>
+    <string name="settings_import_cancel">Never mind</string>
+
+    <!-- Erase all data, MASTER_BUILD_PROMPT 14.2 -->
+    <string name="settings_erase_title">Erase everything?</string>
+    <string name="settings_erase_body_1">This removes every area, every item, your whole history, every reflection and every report from this phone. The event log goes, and so does everything built from it.</string>
+    <string name="settings_erase_body_2">It cannot be undone. There is no copy on a server, so nobody can restore it for you, and that includes the person who made this app.</string>
+    <string name="settings_erase_nudge">If you want to keep any of it, export it first.</string>
+    <string name="settings_erase_prompt">Type ERASE to confirm</string>
+    <string name="settings_erase_word">ERASE</string>
+    <string name="settings_erase_confirm">Erase everything</string>
+    <string name="settings_erase_keep">Keep my data</string>
+
+    <!-- Privacy, MASTER_BUILD_PROMPT 14.1 -->
+    <string name="settings_privacy_policy">Privacy policy</string>
+    <string name="settings_licenses">Open source licenses</string>
+
+    <!--
+        The privacy policy, MASTER_BUILD_PROMPT 14.3, word for word.
+
+        **Do not paraphrase, tighten or improve any line below.** The builder
+        publishes this identical text at a URL under kamsiob.com for the Play
+        Console listing, and a Play listing whose hosted policy differs from
+        the one in the app is a listing problem rather than a copy problem.
+
+        Each block is a bold lead-in followed by its paragraph, which is how
+        14.3 writes it. They are separate strings so the lead-in can be set in
+        bold inside one paragraph without a markup parser, and the rendered
+        sentence is byte for byte what 14.3 states.
+    -->
+    <string name="privacy_title">Privacy policy</string>
+    <string name="privacy_heading">Nothing leaves this device.</string>
+    <string name="privacy_body_1">Clarity Now collects no personal data, has no analytics, no crash reporting, no advertising, no third party services, no accounts and no servers. The developer cannot see anything you write, because there is nowhere for it to go.</string>
+    <string name="privacy_lead_2">What is stored, and where.</string>
+    <string name="privacy_body_2">Your areas, items, history, reflections and reports are written to a database inside this app\'s private storage on this phone. Android prevents other apps from reading it. It is never uploaded.</string>
+    <string name="privacy_lead_3">Network access.</string>
+    <string name="privacy_body_3">This app does not declare the internet permission. Android will refuse any attempt it makes to open a connection. You can verify this yourself in the app info screen.</string>
+    <string name="privacy_lead_4">Deleting your data.</string>
+    <string name="privacy_body_4">Erase all data in Settings removes everything permanently. Uninstalling the app does the same. There is no copy anywhere else, and no request to make of anyone.</string>
+    <string name="privacy_lead_5">Children.</string>
+    <string name="privacy_body_5">Clarity Now is not directed at children and collects no data from anyone, of any age.</string>
+    <string name="privacy_lead_6">Changes.</string>
+    <string name="privacy_body_6">If this policy ever changes, the updated version ships with the app and is dated. Previous versions remain in the public repository history.</string>
+    <string name="privacy_lead_7">Contact.</string>
+    <string name="privacy_body_7">hello@kamsiob.com. The full source is public, so every claim on this page can be checked rather than trusted.</string>
+
+    <!--
+        The permission card, MASTER_BUILD_PROMPT 14.1, verbatim.
+
+        This is the claim `verifyNoInternetPermission` exists to keep true, on
+        the merged manifest of every variant, on every build. If the gate ever
+        has to be relaxed, this card comes off the screen first.
+    -->
+    <string name="permission_card_heading">This app has no internet permission.</string>
+    <string name="permission_card_body">Not a promise, a fact your phone enforces. Clarity Now cannot open a network connection even if it wanted to. Check it in Android settings.</string>
+
+    <!-- Open source licenses, MASTER_BUILD_PROMPT 14.1 -->
+    <string name="licenses_title">Open source licenses</string>
+    <string name="licenses_app">Clarity Now</string>
+    <string name="licenses_app_terms">AGPL-3.0</string>
+    <string name="licenses_newsreader">Newsreader</string>
+    <string name="licenses_hanken">Hanken Grotesk</string>
+    <string name="licenses_font_terms">SIL Open Font License 1.1</string>
+    <string name="licenses_symbols">Material Symbols</string>
+    <string name="licenses_androidx">AndroidX and Jetpack Compose</string>
+    <string name="licenses_apache_terms">Apache License 2.0</string>
+
+    <!-- Help, MASTER_BUILD_PROMPT 14.1 -->
+    <string name="settings_replay_tour">Replay the tour</string>
+    <string name="settings_replay_welcome">Replay the welcome</string>
+    <string name="settings_about">About Clarity Now</string>
+
+    <!--
+        The version line, MASTER_BUILD_PROMPT 14.1. The middle dot is the one
+        character above ASCII the hygiene gate allows, and it is allowed
+        because this line and the Report eyebrow are the two places both
+        authority documents specify it.
+    -->
+    <string name="settings_version_line">Clarity Now by Kamsiob &#183; %1$s</string>
+    <string name="settings_license_line">AGPL-3.0 &#183; free and open source</string>
+
+    <!-- About, MASTER_BUILD_PROMPT 14.4 -->
+    <string name="about_title">About</string>
+    <string name="about_name">Clarity Now</string>
+    <string name="about_version">Version %1$s &#183; by Kamsiob</string>
+    <string name="about_paragraph">One active item per area. Everything else waits its turn. No account, no cloud, no subscription, no ads, and nothing collected. Your history lives in one file on this phone until you delete it.</string>
+    <string name="about_elsewhere">Elsewhere</string>
+    <string name="about_link_youtube">YouTube</string>
+    <string name="about_link_youtube_value">@kamsiob</string>
+    <string name="about_link_source">Source code</string>
+    <string name="about_link_source_value">github.com/kamsiob</string>
+    <string name="about_link_website">Website</string>
+    <string name="about_link_website_value">kamsiob.com</string>
+    <string name="about_link_lab">Kamsiob Lab</string>
+    <string name="about_link_lab_value">telegram</string>
+    <string name="about_link_feedback">Feedback</string>
+    <string name="about_link_feedback_value">hello@kamsiob.com</string>
+    <string name="about_license_app">Clarity Now is free software under the AGPL-3.0. The full source is public.</string>
+    <string name="about_license_fonts">Newsreader and Hanken Grotesk are used under the SIL Open Font License 1.1.</string>
+    <string name="about_license_symbols">Material Symbols, AndroidX and Jetpack Compose are used under the Apache License 2.0.</string>
+
+    <!--
+        The support block, MASTER_BUILD_PROMPT 14.5, verbatim.
+
+        **The only money related element in the entire app, and it appears at
+        the bottom of Settings and of About and nowhere else.** No coffee or
+        caffeine reference in the label or the body. No amount, no counter, no
+        goal, no urgency, no `if you enjoy`, no exclamation mark. Never a
+        dialog, never an interstitial, never after completing a task. The
+        destination is a Kotlin constant rather than a string resource, so the
+        one word this copy may not contain cannot reach a screen through a
+        resource somebody rendered by mistake.
+    -->
+    <string name="support_heading">Support this work</string>
+    <string name="support_body">Built and carried by one person. If software made this way matters to you, there is a place to stand behind it. Either way, it is yours.</string>
+    <string name="support_button">Support this work</string>
+
+    <!--
+        Onboarding and the tutorial. MASTER_BUILD_PROMPT 13.1, 13.2 and 14b.11.
+
+        **Every line below is fixed copy, and 11.2 says so by name:** "the tutorial and
+        onboarding use fixed strings". Nothing here is an observation about a person, and
+        nothing here could be, because at this point the app knows nothing about them.
+
+        Two of them are the kind a later session will be tempted to move. The Pulse
+        announcement at the foot of beat 4 is a statement about how the app behaves rather
+        than about the reader, and 14b.11 warns in as many words that it will look like an
+        engine sentence and must not become one. And the two samples in beat 4, the Pulse
+        line and the Report headline, deliberately describe their surfaces instead of
+        imitating one: 13.1 makes onboarding replayable from Settings, so a plausible
+        looking observation here would one day be shown to somebody with a year of history
+        behind them and would read as a claim about it.
+    -->
+    <string name="onboarding_jump_in">Jump in</string>
+    <string name="cd_onboarding_back">Back</string>
+    <string name="onboarding_continue">Continue</string>
+    <string name="onboarding_start">Start</string>
+
+    <!-- Beat 1, See It Work. The sentence is stated verbatim in 13.1. -->
+    <string name="onboarding_beat_one_line">One thing at a time. The next one is ready when you are.</string>
+    <string name="onboarding_demo_area_one">Work</string>
+    <string name="onboarding_demo_item_one">Send the quarterly update</string>
+    <string name="onboarding_demo_next_one">Book a room for Thursday</string>
+    <string name="onboarding_demo_area_two">Health</string>
+    <string name="onboarding_demo_item_two">Walk after lunch</string>
+    <string name="onboarding_demo_area_three">Learning</string>
+    <string name="onboarding_demo_item_three">Finish chapter three</string>
+    <string name="onboarding_demo_area_four">Family</string>
+    <string name="onboarding_demo_item_four">Plan the weekend</string>
+
+    <!--
+        Beat 2, and the fork Addendum 01 8a requires.
+
+        The two panels are written to the same length and the same shape on purpose. One
+        of them is not an escape from the other, and copy is half of what makes that true:
+        a detail line that sold one path and apologized for the other would undo the
+        arrangement the composable is built to guarantee.
+    -->
+    <string name="onboarding_beat_two_question">How do you want to start?</string>
+    <string name="onboarding_just_start_title">Just start</string>
+    <string name="onboarding_just_start_detail">One area called Today. Names and colors can come later.</string>
+    <string name="onboarding_pick_areas_title">Pick a few areas</string>
+    <string name="onboarding_pick_areas_detail">Two to four parts of your life to keep track of.</string>
+
+    <!--
+        The Just start path. 14b.11 drops the person straight into adding their first
+        item, and 14b.1 makes a capture something that never requires a decision, so the
+        field is optional and the placeholder is an example rather than an instruction.
+    -->
+    <string name="onboarding_just_start_heading">What is on your mind?</string>
+    <string name="onboarding_just_start_note">One thing is enough, and you can leave it empty and add something later.</string>
+    <string name="onboarding_just_start_field">First item</string>
+    <string name="onboarding_just_start_placeholder">Anything you do not want to lose</string>
+
+    <!--
+        The area picker. `Pick two to four` is the copy MASTER_BUILD_PROMPT 8.1 names, and
+        8.1 also says the philosophy is carried by copy and layout rather than by a cap,
+        which is why nothing refuses a fifth selection.
+    -->
+    <string name="onboarding_areas_heading">Pick two to four</string>
+    <string name="onboarding_areas_detail">An area is a part of your life you want to keep track of.</string>
+    <string name="onboarding_areas_custom_label">Something else</string>
+    <string name="onboarding_areas_custom_placeholder">Garden, band, the move</string>
+    <string name="onboarding_suggestion_work">Work</string>
+    <string name="onboarding_suggestion_personal">Personal</string>
+    <string name="onboarding_suggestion_health">Health</string>
+    <string name="onboarding_suggestion_family">Family</string>
+    <string name="onboarding_suggestion_learning">Learning</string>
+    <string name="onboarding_suggestion_side_project">Side project</string>
+    <string name="cd_onboarding_remove_area">Remove %1$s</string>
+    <string name="cd_onboarding_swatch">Use this color</string>
+
+    <!-- The name the Just start path gives its one area. 14b.11. -->
+    <string name="onboarding_today_area">Today</string>
+
+    <!-- Beat 3. Stated verbatim in 13.1. -->
+    <string name="onboarding_beat_three_line">Your clarity starts here.</string>
+
+    <!-- Beat 4. The four captions are stated verbatim in 13.1. -->
+    <string name="onboarding_depth_philosophy_one">You just organized your focus.</string>
+    <string name="onboarding_depth_philosophy_two">Now let the app learn how you work.</string>
+    <string name="onboarding_depth_pulse_sample">Some days there will be a question waiting here.</string>
+    <string name="onboarding_depth_pulse_option_one">That sounds right</string>
+    <string name="onboarding_depth_pulse_option_two">Not quite</string>
+    <string name="onboarding_depth_pulse_caption">One question a day. One tap.</string>
+    <string name="onboarding_depth_momentum_caption">Your rhythm, without the guilt.</string>
+    <string name="onboarding_depth_report_eyebrow">Clarity Report</string>
+    <string name="onboarding_depth_report_headline">Your week, in one page.</string>
+    <string name="onboarding_depth_report_caption">Every week, an honest mirror. Written on your device.</string>
+
+    <!--
+        Addendum 01 8b, and the one line the whole item is about. It names the cadence, the
+        cost and the way out, because predictability matters enormously to autistic users
+        and interface behavior that arrives unannounced is a real cost rather than a
+        delightful surprise.
+    -->
+    <string name="onboarding_pulse_announcement">The Pulse asks one question a day, and one tap answers it. You can turn it off in Settings.</string>
+
+    <!--
+        The tutorial, MASTER_BUILD_PROMPT 13.2.
+
+        Five steps, one title and one line each, and every one of them says what the
+        element does rather than telling anybody what to do with it. The step indicator is
+        a count in words rather than a row of dots, for the reason `TutorialOverlay` gives.
+    -->
+    <string name="tutorial_skip">Skip</string>
+    <string name="tutorial_advance">Tap to continue</string>
+    <string name="tutorial_step_indicator">%1$d of %2$d</string>
+    <string name="tutorial_fab_title">Add anything</string>
+    <string name="tutorial_fab_body">Write it down without choosing where it goes. It waits in your inbox until you file it.</string>
+    <string name="tutorial_area_title">One active item</string>
+    <string name="tutorial_area_body">Each area shows the one thing you are on. Swipe right to complete it, left to swap it.</string>
+    <string name="tutorial_focus_title">Focus</string>
+    <string name="tutorial_focus_body">A timer on one item, on a screen with nothing else on it.</string>
+    <string name="tutorial_pulse_title">Pulse</string>
+    <string name="tutorial_pulse_body">One question a day, once there are a few days for it to read.</string>
+    <string name="tutorial_tabs_title">Four views</string>
+    <string name="tutorial_tabs_body">Areas, Momentum, Report and Trail. Nothing is hidden anywhere else.</string>
+
 </resources>

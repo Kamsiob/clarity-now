@@ -70,6 +70,15 @@ internal object ReportRules {
     /** The first three weeks, which is the whole of what `insufficientData` looks at. */
     private const val EARLY_HORIZON = 30
 
+    /**
+     * The fewest weeks `comebackPattern` can see two returns across.
+     *
+     * Active, quiet, active, quiet, active. Derived rather than chosen: it is the length
+     * of the shortest series the family's own claim can occupy, so a shorter requirement
+     * would be a criterion that never separates anything.
+     */
+    private const val COMEBACK_WEEKS = 5
+
     /** A comparison against every week since install. */
     private const val RECORD_HORIZON = 180
 
@@ -410,10 +419,14 @@ internal object ReportRules {
          * The split point is two swaps, which is where the Pulse `switching` family's
          * stage 2 begins.
          *
-         * Subject is `NONE` rather than the area, and that is a limitation rather than a
-         * choice: 3.1 declares no per area swap count, so a rule with an area subject
-         * could not honestly say which area did the swapping. Six of this family's nine
-         * leads name an area and are unproducible until that fact exists.
+         * Subject is `NONE` rather than the area, and it stays that way now that
+         * `AreaFacts.swapsInWindow` exists. The fact was the reason it could not be an
+         * area rule; it is not on its own a reason to make it one. The Pulse `switching`
+         * family is the per area reading of the same behavior and it now has both stages,
+         * so an area subject here would put two families on one fact at two grains, which
+         * 9.1 exists to prevent. What is left for this family is a binding: six of its
+         * nine leads name an area and `SlotBindings` declares nothing for `{areaName}`
+         * here, so those six stay out of the bench either way.
          */
         report("report.observation.switchingBehavior.low", Purpose.REPORT_OBSERVATION, "switchingBehavior", 1, WEEK_HORIZON,
             unflattering = false,
@@ -551,6 +564,190 @@ internal object ReportRules {
                 it.history.weeksOfData >= 4
             },
             window("pattern.equilibrium.notEmpty", "there is a queue to be in balance") { it.totalQueueLength() >= 2 },
+        )),
+        /**
+         * `narrowingFocus`. The area count has fallen every week for three weeks.
+         *
+         * **Line 01 of a pattern family states its trigger, and that convention decides
+         * every rule below.** `pt.narrow.01` reads `Your attention has concentrated
+         * further each week for three weeks`, `pt.broad.01` says the same in the other
+         * direction, `pt.hab.01` names appearing every week and `pt.ab.01` names three
+         * weeks running. A bench is chosen from freely, so the rule has to make every
+         * line in it true, and line 01 is the line that says which claim that is.
+         *
+         * The second criterion is what keeps a narrowing apart from a stop. A series of
+         * three, two, zero is strictly falling and the week behind it had nothing in it,
+         * and `The spread keeps shrinking` about an empty week is a `quietWeek` sentence
+         * wearing the wrong family's clothes.
+         *
+         * **Four of the seven pattern families this phase gave a rule hold one line the
+         * rule cannot make true**, and each is recorded on its own family below. They are
+         * lines that name a quantity no fact carries rather than lines the rule is too
+         * weak for, so a stronger criterion would not reach them. The mechanism for
+         * holding a line out of a bench is `SlotBindings.EXCLUDED`, which belongs to the
+         * realizer and not here, so each is named where a reader of the rule will find it
+         * and none is silently tolerated.
+         */
+        report("report.pattern.narrowingFocus", Purpose.REPORT_PATTERN, "narrowingFocus", 1, PATTERN_HORIZON, criteria = listOf(
+            window("pattern.narrowing", "fewer areas have moved in each of the last three weeks") {
+                strictlyFalling(it.history.weekAreaCountSeries, 3)
+            },
+            window("pattern.narrowing.stillMoving", "an area still moved this week, so this is a narrowing and not a stop") {
+                (it.history.weekAreaCountSeries.lastOrNull() ?: 0) >= 1
+            },
+            threeWeeksOfData,
+        )),
+        /**
+         * `broadeningFocus`, the mirror of the one above, over the same series.
+         *
+         * **`pt.broad.03`, `No area has held a majority for three weeks`, is not made true
+         * by this rule and no criterion could make it so.** A rising area count says
+         * nothing about shares: two areas becoming four is compatible with one of them
+         * holding sixty percent throughout. It needs a dominant share per week, and
+         * `HistoryFacts` carries the leader of each of the last three weeks by id and not
+         * its share. The line waits for that fact, exactly as this family waited for the
+         * area count.
+         */
+        report("report.pattern.broadeningFocus", Purpose.REPORT_PATTERN, "broadeningFocus", 1, PATTERN_HORIZON, criteria = listOf(
+            window("pattern.broadening", "more areas have moved in each of the last three weeks") {
+                strictlyRising(it.history.weekAreaCountSeries, 3)
+            },
+            threeWeeksOfData,
+        )),
+        /**
+         * `focusHabitForming`, over sessions **started** in each week.
+         *
+         * `HistoryFacts.weekFocusStartedSeries` is deliberately not the finished count the
+         * register asked for, and its own documentation says why: a person who starts five
+         * every week and finishes fewer each time has a habit and a finishing problem, and
+         * `abandonmentPattern` is the family that speaks about the second one.
+         *
+         * Four weeks rather than three, because `pt.hab.04`, `pt.hab.06` and `pt.hab.07`
+         * all claim a month and the bench is chosen from freely. Four consecutive weeks
+         * makes the three week lines true as well; three would leave three lines in the
+         * bench claiming a month that had not happened.
+         *
+         * **`pt.hab.03`, `Protected time has increased every week for three weeks`, is not
+         * made true by this rule.** Protected time is minutes and this series is sessions,
+         * and more sessions is not more minutes: five ten minute sessions are fewer
+         * minutes than three forty minute ones. It needs a weekly focus minutes series,
+         * which 3.1 does not declare, and requiring a rising session count here would put
+         * a number behind the line without making it true.
+         */
+        report("report.pattern.focusHabitForming", Purpose.REPORT_PATTERN, "focusHabitForming", 1, PATTERN_HORIZON, criteria = listOf(
+            window("pattern.habit.everyWeek", "a focus session was started in each of the last four weeks") {
+                tail(it.history.weekFocusStartedSeries, 4)?.all { started -> started >= 1 } == true
+            },
+            window("pattern.habit.weeks", "there are four weeks to see it across") { it.history.weeksOfData >= 4 },
+        )),
+        /**
+         * `focusHabitFading`, over the same started count falling.
+         *
+         * **This family holds two claims that cannot both be true, and the rule implements
+         * the one line 01 states.** `pt.fade.01` says sessions have fallen every week for
+         * three weeks; `pt.fade.04` says there has been no focus time in two weeks. A
+         * series can satisfy either and never both: falling strictly across three weeks
+         * requires the last two to differ, and two weeks of nothing requires them to be
+         * equal. So `pt.fade.04` is out of reach of any rule for this family, and it is a
+         * corpus split rather than a missing fact: the shape it describes is real and
+         * belongs to a family of its own.
+         *
+         * The second criterion is what makes a fall a fading. A series of two, one, zero
+         * is strictly falling from a person who started twice, and `Focus sessions have
+         * fallen every week for three weeks` about that is technically true and reads as
+         * an accusation about a habit that never existed.
+         */
+        report("report.pattern.focusHabitFading", Purpose.REPORT_PATTERN, "focusHabitFading", 1, PATTERN_HORIZON, criteria = listOf(
+            window("pattern.fading", "fewer focus sessions were started in each of the last three weeks") {
+                strictlyFalling(it.history.weekFocusStartedSeries, 3)
+            },
+            window("pattern.fading.hadAHabit", "the oldest of those weeks held sessions, so something is fading rather than never having started") {
+                (tail(it.history.weekFocusStartedSeries, 3)?.firstOrNull() ?: 0) >= 2
+            },
+            threeWeeksOfData,
+        )),
+        /**
+         * `weekendShift`. Nothing on a Saturday or a Sunday for four weeks.
+         *
+         * **A report pattern reads `HistoryFacts` here and not `CueFacts`, and the
+         * decision was taken in the facts phase rather than here.** 3.7 restricts the cue
+         * facts to layer 6, and `weekdayOnly` there is a twelve week weekend share under a
+         * ceiling: it cannot substantiate a claim of nothing, and it answers over twelve
+         * weeks a family that speaks about four. `weekWeekendEventsSeries` is the fact
+         * that was declared instead, and its own documentation carries the reasoning.
+         *
+         * The second criterion is the one that stops this from firing on an empty month.
+         * Four weekends with nothing in them is only a shape if the weekdays had
+         * something, and `Your weeks end on Friday, consistently` about somebody who did
+         * nothing at all for four weeks is a false claim with correct arithmetic behind
+         * it.
+         */
+        report("report.pattern.weekendShift", Purpose.REPORT_PATTERN, "weekendShift", 1, PATTERN_HORIZON, criteria = listOf(
+            window("pattern.weekend.silent", "no event fell on a Saturday or a Sunday in any of the last four weeks") {
+                tail(it.history.weekWeekendEventsSeries, 4)?.all { weekend -> weekend == 0 } == true
+            },
+            window("pattern.weekend.weekdaysMoved", "each of those four weeks held activity, so the weekends are a shape and not an empty month") {
+                tail(it.history.weekTotalEventsSeries, 4)?.all { events -> events >= 1 } == true
+            },
+            window("pattern.weekend.weeks", "there are four weeks to see it across") { it.history.weeksOfData >= 4 },
+        )),
+        /**
+         * `abandonmentPattern`. More sessions ended early than finished, three weeks
+         * running, which is `pt.ab.01` word for word.
+         *
+         * **The two series are compared and never subtracted.** A killed process leaves a
+         * session with no terminal event, which is a legal state and in neither count, and
+         * inferring an early ending from started minus finished would attribute it to an
+         * ending the person did not choose. `HistoryFacts.weekFocusEndedEarlySeries` says
+         * the same thing about itself.
+         *
+         * **`pt.ab.02`, `Sessions have been getting shorter each week`, is not made true by
+         * this rule.** It is about the length of a session and every fact here is a count
+         * of them. A weekly focus minutes series and a weekly session count would together
+         * give a mean length, and neither the series nor the division exists.
+         */
+        report("report.pattern.abandonmentPattern", Purpose.REPORT_PATTERN, "abandonmentPattern", 1, PATTERN_HORIZON, criteria = listOf(
+            window("pattern.abandon.threeWeeks", "more sessions ended early than finished in each of the last three weeks") {
+                val early = tail(it.history.weekFocusEndedEarlySeries, 3)
+                val finished = tail(it.history.weekFocusCompletedSeries, 3)
+                early != null && finished != null && early.zip(finished).all { (e, f) -> e > f }
+            },
+            window("pattern.abandon.enoughSessions", "each of those weeks started at least two sessions, so the comparison is over something") {
+                tail(it.history.weekFocusStartedSeries, 3)?.all { started -> started >= 2 } == true
+            },
+            threeWeeksOfData,
+        )),
+        /**
+         * `comebackPattern`. This area has gone quiet and come back twice.
+         *
+         * Counted over the area's own weekly series, which is the only fact that can see a
+         * second return: `RollupFacts.dormantReturnedAreaIds` describes one window and
+         * therefore sees at most one. [returnsAfterSilence] carries the counting and the
+         * reason its leading zeros are skipped.
+         *
+         * Five weeks rather than the section's three, because two returns need at least
+         * five buckets to sit in: active, quiet, active, quiet, active. Three weeks of
+         * data cannot hold the pattern this family names, so requiring three would be a
+         * criterion that never decides anything.
+         *
+         * **`pt.come.04`, `{areaName} has never been active two weeks in a row`, is not
+         * made true by this rule.** Two returns say the area went quiet twice; they say
+         * nothing about whether it ever ran two weeks together, and a series of three,
+         * four, zero, two, zero, five satisfies the rule and contradicts the line.
+         *
+         * **Every line of this family names its area and `SlotBindings` binds nothing for
+         * it**, so the family qualifies and produces no sentence until that entry exists.
+         * That is the same shape the family was in before this rule, and the rule is the
+         * half of it that belongs here.
+         */
+        report("report.pattern.comebackPattern", Purpose.REPORT_PATTERN, "comebackPattern", 1, PATTERN_HORIZON, Subjects.AREA, criteria = listOf(
+            area("pattern.comeback.twice", "this area has gone quiet and come back twice in its weekly series") {
+                returnsAfterSilence(it.weekEventsSeries) >= 2
+            },
+            window("pattern.comeback.weeks", "there are five weeks of history, which is the fewest two returns can sit in") {
+                it.history.weeksOfData >= COMEBACK_WEEKS
+            },
+            areaHasEvents(),
         )),
         /**
          * The faint line shown when there are fewer than three weeks of snapshots. It is

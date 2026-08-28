@@ -15,10 +15,12 @@ import com.kamsiob.claritynow.ui.areas.AreasViewModel
 import com.kamsiob.claritynow.ui.focus.FocusViewModel
 import com.kamsiob.claritynow.ui.momentum.AreasBannerViewModel
 import com.kamsiob.claritynow.ui.momentum.MomentumViewModel
+import com.kamsiob.claritynow.ui.onboarding.OnboardingViewModel
 import com.kamsiob.claritynow.ui.pulse.PulseViewModel
 import com.kamsiob.claritynow.ui.report.ReportCoordinator
 import com.kamsiob.claritynow.ui.report.ReportViewModel
 import com.kamsiob.claritynow.ui.trail.TrailViewModel
+import com.kamsiob.claritynow.ui.tutorial.TutorialViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -47,6 +49,20 @@ object ClarityViewModelFactory : ViewModelProvider.Factory {
 
             FocusViewModel::class.java -> FocusViewModel(
                 repository = ClarityGraph.repository,
+                preferences = ClarityGraph.preferences,
+            ) as T
+
+            // Phase 10. It holds the beats, the transient starter areas and the one
+            // write beat 3 makes, MASTER_BUILD_PROMPT 13.1, so it needs both the only
+            // writer in the app and the per device flags.
+            OnboardingViewModel::class.java -> OnboardingViewModel(
+                repository = ClarityGraph.repository,
+                preferences = ClarityGraph.preferences,
+            ) as T
+
+            // Phase 10. One flag, and it exists so that a composable does not reach a
+            // store directly. MASTER_BUILD_PROMPT 5.5.
+            TutorialViewModel::class.java -> TutorialViewModel(
                 preferences = ClarityGraph.preferences,
             ) as T
 

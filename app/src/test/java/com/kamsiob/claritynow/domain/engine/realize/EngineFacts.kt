@@ -110,6 +110,9 @@ internal object EngineFacts {
         ageDays: Int = 100,
         focusSessions: Int = 0,
         focusMinutes: Int = 0,
+        swapsInWindow: Int = 0,
+        dormantDaysBeforeReturn: Int? = null,
+        weekEventsSeries: List<Int> = emptyList(),
     ) = AreaFacts(
         areaId = areaId,
         nameSnapshot = name,
@@ -117,6 +120,7 @@ internal object EngineFacts {
         eventsInWindow = events,
         completionsInWindow = completions,
         additionsInWindow = additions,
+        swapsInWindow = swapsInWindow,
         shareOfEvents = share,
         hasActiveItem = activeItemId != null,
         activeItemId = activeItemId,
@@ -126,12 +130,14 @@ internal object EngineFacts {
         queueLengthAtWindowStart = queueLengthAtWindowStart,
         queueDelta = queueLength - queueLengthAtWindowStart,
         daysSinceLastEvent = daysSinceLastEvent,
+        dormantDaysBeforeReturn = dormantDaysBeforeReturn,
         lifetimeEvents = lifetimeEvents,
         lifetimeCompletions = lifetimeCompletions,
         ageDays = ageDays,
         isNew = ageDays < NEW_AREA_DAYS,
         focusSecondsInWindow = focusMinutes * SECONDS_PER_MINUTE,
         focusSessionsInWindow = focusSessions,
+        weekEventsSeries = weekEventsSeries,
     )
 
     private const val NEW_AREA_DAYS = 14
@@ -197,6 +203,14 @@ internal object EngineFacts {
         longestEverActiveItemId: String? = null,
         personalBestFocusMinutesWeek: Int = 0,
         firstEverFlags: Set<FirstEver> = emptySet(),
+        weekAreaCounts: List<Int> = emptyList(),
+        weekFocusStarted: List<Int> = emptyList(),
+        weekFocusCompleted: List<Int> = emptyList(),
+        weekFocusEndedEarly: List<Int> = emptyList(),
+        weekWeekendEvents: List<Int> = emptyList(),
+        currentQuietRunDays: Int = 0,
+        currentSingleAreaRunDays: Int = 0,
+        currentSingleAreaRunAreaId: AreaId? = null,
     ) = HistoryFacts(
         daysSinceInstall = daysSinceInstall,
         weeksOfData = daysSinceInstall / DAYS_PER_WEEK,
@@ -206,6 +220,11 @@ internal object EngineFacts {
         weekCompletionsSeries = weekCompletions,
         weekQueueSizeSeries = weekQueueSizes,
         weekTotalEventsSeries = weekTotalEvents,
+        weekAreaCountSeries = weekAreaCounts,
+        weekFocusStartedSeries = weekFocusStarted,
+        weekFocusCompletedSeries = weekFocusCompleted,
+        weekFocusEndedEarlySeries = weekFocusEndedEarly,
+        weekWeekendEventsSeries = weekWeekendEvents,
         weekOverWeekDelta = null,
         completionsTrend = Trend.of(weekCompletions),
         queueSizeTrend = Trend.of(weekQueueSizes),
@@ -219,6 +238,9 @@ internal object EngineFacts {
         longestEverActiveItemId = longestEverActiveItemId,
         personalBestFocusMinutesWeek = personalBestFocusMinutesWeek,
         firstEverFlags = firstEverFlags,
+        currentQuietRunDays = currentQuietRunDays,
+        currentSingleAreaRunDays = currentSingleAreaRunDays,
+        currentSingleAreaRunAreaId = currentSingleAreaRunAreaId,
     )
 
     private const val DAYS_PER_WEEK = 7

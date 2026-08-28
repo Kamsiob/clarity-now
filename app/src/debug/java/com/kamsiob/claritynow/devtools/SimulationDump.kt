@@ -31,8 +31,17 @@ package com.kamsiob.claritynow.devtools
  */
 object SimulationDump {
 
-    /** Every persona's year, one after another. */
-    fun of(runs: List<SimulationRun>): String = runs.joinToString("\n") { of(it) }
+    /**
+     * Every persona's year, one after another, then the readings across all of them.
+     *
+     * The aggregate goes at the foot rather than the head deliberately. A reader opening
+     * this file is reading sentences in order, and the counts are what they check the
+     * sentences against once they have read some; a header of eleven percentages would be
+     * read before anything it describes. `SimulationChecks` prints the same numbers as
+     * verdicts for a reader who wants only those.
+     */
+    fun of(runs: List<SimulationRun>): String =
+        runs.joinToString("\n") { of(it) } + "\n" + SimulationAggregate.of(runs)
 
     /** One persona's year: a header, every invocation in order, then the counts. */
     fun of(run: SimulationRun): String = buildString {

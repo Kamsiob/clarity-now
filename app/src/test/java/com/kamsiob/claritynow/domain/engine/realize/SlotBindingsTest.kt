@@ -179,6 +179,15 @@ class SlotBindingsTest {
             weekCompletions = listOf(4, 5, 6, 8),
             weekQueueSizes = listOf(3, 4, 5, 6),
             weekTotalEvents = listOf(12, 15, 18, 20),
+            // Every weekly series ends on the number the window itself holds, because the
+            // newest bucket **is** the window on the shape the Report uses. A series whose
+            // last entry disagreed with the window would let a family fill a line here
+            // from a week that never happened.
+            weekAreaCounts = listOf(1, 2, 3, 3),
+            weekFocusStarted = listOf(1, 2, 3, 4),
+            weekFocusCompleted = listOf(1, 1, 2, 2),
+            weekFocusEndedEarly = listOf(0, 1, 1, 2),
+            weekWeekendEvents = listOf(1, 2, 1, 2),
             dominantAreaLastThreeWeeks = listOf("health", "work", "work"),
             personalBestWeekCompletions = 7,
             personalBestWeekKey = "2026-01-04",
@@ -201,13 +210,21 @@ class SlotBindingsTest {
 
     private companion object {
 
-        /** Three areas: one busy, one steady, one that emptied its queue this week. */
+        /**
+         * Three areas: one busy, one steady, one that emptied its queue this week.
+         *
+         * Work carries the window's two swaps and Home the dormancy it returned from, so
+         * the two facts the Pulse `switching` and `rebalance` families read are on the
+         * areas whose other numbers make those families plausible, rather than sprinkled
+         * over all three to make a test pass.
+         */
         val RICH_AREAS = listOf(
             EngineFacts.area(
                 "work", "Work", events = 12, completions = 5, additions = 7, share = 0.6,
                 activeItemId = "item-1", activeItemTitle = "Rewrite the proposal intro",
                 activeItemAgeDays = 16, queueLength = 4, queueLengthAtWindowStart = 2,
                 daysSinceLastEvent = 1, focusSessions = 2, focusMinutes = 50,
+                swapsInWindow = 2,
             ),
             EngineFacts.area(
                 "health", "Health", events = 8, completions = 3, additions = 5, share = 0.3,
@@ -217,6 +234,7 @@ class SlotBindingsTest {
             EngineFacts.area(
                 "home", "Home", events = 3, completions = 3, share = 0.1,
                 queueLength = 0, queueLengthAtWindowStart = 3, daysSinceLastEvent = 3,
+                dormantDaysBeforeReturn = 9,
             ),
         )
 
@@ -227,23 +245,38 @@ class SlotBindingsTest {
          * lines and stays quiet on the rest, which is the safe half of the tradeoff in
          * [SlotBindings]: a marker nothing fills costs a line, and a marker filled from the
          * wrong fact costs the credibility of everything else the app says.
+         *
+         * **The membership is unchanged and every entry means something different.** The
+         * facts phase gave nine families a rule and would have added all nine here; each
+         * was given a binding instead, so none joined. What did not change is that these
+         * five have nothing to fill, and `PULSE quietDay` now says so for a new reason.
          */
         val KNOWN_UNBOUND: Set<String> = setOf(
-            // Stages 2 and 3 count consecutive quiet days, which 3.1 does not declare and
-            // RulesAwaitingFacts already records. Stage 1, the one with a rule, is authored
-            // without a marker in it and speaks.
+            // Stages 2 and 3 have a rule now, over `HistoryFacts.currentQuietRunDays`, and
+            // this is the one entry that is a refusal rather than a gap. `{dayCount}` is the
+            // run itself; `{sinceRef}` is the day it began, which is the same fact read as a
+            // date; `{itemTitle}` appears only beside `{dayCount}`. `StreakExceptionAudit`
+            // asserts that no measure's value moves when only a run moves, over every measure
+            // and not only the numeric ones, and the run is capped at thirty, so at the cap it
+            // means at least thirty and `thirty days` would be false as well as forbidden.
+            // Stage 1 is authored without a marker in it and speaks. Neither progress nor a
+            // regression: the fact arrived, and the sentences that would print it are exactly
+            // the ones it may not fill.
             "PULSE quietDay",
             // The first focus session's own length, and the days from adding an item to
-            // finishing it. WindowFacts carries a total and ItemFacts a median.
+            // finishing it. WindowFacts carries a total and ItemFacts a median. Unchanged:
+            // no fact this phase declared is either quantity.
             "REPORT_OBSERVATION firstMilestone",
             // `{pct} of your activity was after 5pm` needs a share of the day that stops at
-            // midnight, and PartOfDay.NIGHT runs to five in the morning.
+            // midnight, and PartOfDay.NIGHT runs to five in the morning. Unchanged.
             "REPORT_OBSERVATION timeOfDay",
             // `since {sinceRef}` here means the week the queues stopped moving, which no
-            // fact records.
+            // fact records. `weekQueueSizeSeries` says the queues held their length and not
+            // which week they stopped moving in, so this is unchanged too.
             "REPORT_PATTERN queueEquilibrium",
             // Counts an answer given in each of three separate weeks. PulseFacts carries
-            // the answers and not the weeks they fall in.
+            // the answers and not the weeks they fall in, and its subject is NONE, so
+            // `{itemTitle}` in `pt.rva.01` has nothing to resolve through either. Unchanged.
             "REPORT_PATTERN reportedVsActual",
         )
     }

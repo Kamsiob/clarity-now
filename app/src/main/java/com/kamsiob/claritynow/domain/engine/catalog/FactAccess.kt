@@ -68,3 +68,33 @@ internal fun withinBand(series: List<Int>, count: Int, tolerance: Int): Boolean 
     val high = window.max()
     return high - low <= tolerance
 }
+
+/**
+ * How many times [series] went from a zero bucket back to a non zero one, counting only
+ * after its first non zero bucket.
+ *
+ * `comebackPattern` claims an area has gone quiet and returned **twice**, and a return is
+ * exactly this transition. `RollupFacts.dormantReturnedAreaIds` describes one window and
+ * can therefore see one return and never a second, which is why the family had no rule
+ * until `AreaFacts.weekEventsSeries` existed.
+ *
+ * **The leading zeros are skipped and that is the whole subtlety.** An area created three
+ * weeks ago has zeros in every bucket before it existed, and those are not silences:
+ * nothing had happened yet, so nothing had gone quiet. Counting them would tell somebody
+ * their newest area keeps coming back from gaps it was never in.
+ */
+internal fun returnsAfterSilence(series: List<Int>): Int {
+    val firstActive = series.indexOfFirst { it > 0 }
+    if (firstActive < 0) return 0
+    var returns = 0
+    var wasQuiet = false
+    for (index in firstActive until series.size) {
+        if (series[index] == 0) {
+            wasQuiet = true
+        } else {
+            if (wasQuiet) returns++
+            wasQuiet = false
+        }
+    }
+    return returns
+}

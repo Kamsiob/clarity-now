@@ -545,8 +545,22 @@ Tile height 84dp, 12dp radius, 9dp gaps. The selected tile carries a 2dp actionB
 
 Below the row, one caption line: `Focus, Pulse and Report are always dark by design.`
 
+**Built, phase 11**, as `ui/settings/AppearancePicker.kt`. Every dimension above is on the screen: 84dp tall, 12dp radius, 9dp gaps, the 2dp `actionBlue` ring, the 14dp filled check badge, the labels at 9.5sp going `actionBlue` at weight 700 when selected, and the System tile clipped at 103 degrees with both halves drawing their own rows.
+
+**The tiles read the tokens rather than the four hex values written above, and that is deliberate.** Three of those four moved in phase 3c, and the light card in particular moved because sections 1 and 14 both forbid a pure white background while the old 3.1 specified one. A miniature drawn from `#F1F1F6` on `#FFFFFF` today would be a picture of a screen this app no longer has, which defeats the one thing the word **real** in this section is doing. The tiles resolve `ClarityLightColors` and `ClarityDarkColors` instead, so a later token change reaches them with nobody remembering the file. The three dots come from the mood groups in 3.4 for the same reason, and they take no calm mode transform, because 16.2 excludes the area dot by name and a miniature of a dot is a picture of the same thing.
+
+**The angle is read as it is written on paper**, counterclockwise from the positive x axis, so 103 degrees leans thirteen degrees off vertical. Screen coordinates grow downward and the implementation negates the y component at the point of drawing rather than in the caller, because an angle in a design document is not a quantity in a canvas.
+
 ### 10.11 Settings rows
 **No card containers.** Rows sit directly on the canvas separated by hairlines, grouped under sideheads. Each row carries a 26dp rounded-square icon badge tinted at 11 to 14 percent of a per-group color, a title at 15sp semibold, a trailing value at caption inkTertiary, and a chevron where it navigates.
+
+**Built, phase 11**, as `ui/settings/SettingsComponents.kt`. The tint is 12.5 percent, the midpoint of the range, so that neither end of it is a rounding accident. The hairline is the row's **one** separation device per 6.1, which is also the reason the group is not a card: a card would be a second one, and the last row in a group is passed its divider explicitly rather than deriving it, because a hairline under the last row is a rule under the group instead of between two rows.
+
+**The per group colors are none of the four function colors.** 3.1 scopes `actionBlue`, `positiveGreen`, `warnAmber` and `deleteMuted` to one job each, and a settings badge in any of them is the second meaning that scoping exists to prevent. They come from the mood groups in 3.4 instead, one hue apart, and they are never the color of a real area on a real card, because an area accent reaches the screen only through the four forms 3.4 permits and a 26dp badge is none of them. What is shared is a hex value, not a meaning.
+
+**The glyph is `inkSecondary` rather than the group color, which is the deliberate choice under section 15.** The statistically common settings screen of 2026 puts a saturated glyph on a tinted square of the same hue, which turns a column of rows into a column of badges and makes color the first thing read on a screen whose whole content is words. Holding the glyph in ink leaves the tint as a quiet grouping signal under the icon that carries the meaning, which is also what section 13 asks: color is never the only signal, and here it is not a signal at all.
+
+**The whole row is the target, not the control on it.** A toggle row hands its switch a null callback so the switch can never take a tap the row was going to handle, which is what makes the target the full width rather than a control at the trailing edge.
 
 ### 10.12 Sideheads
 A **sentence-case label** at sidehead spec, followed by a hairline running to the trailing edge, vertically centered on the label. Gold in the Report, inkSecondary in the Daylight world.
@@ -611,6 +625,14 @@ Four tabs at the root: Areas, Momentum, Report, Trail. Everything else is a bott
 ### First launch
 
 Cold start reads two flags in order. `hasCompletedOnboarding` false routes to onboarding. Otherwise, `hasSeenTutorial` false routes to Areas with the tutorial queued to start once the first frame has settled. Otherwise, Areas. **Onboarding beat 3 writes the selected areas as real events**, so a user who force-quits after beat 3 and relaunches lands on a populated Areas screen rather than starting over.
+
+**Built, phase 10**, as `ui/onboarding/FirstRunGate.kt`, and three things about how are worth carrying forward.
+
+**The two flags are read once and the answer is latched for the process.** That is what makes the force quit rule above work rather than a decoration on top of it: beat 3 writes `hasCompletedOnboarding` while onboarding is still showing, and a route that recomputed itself from the flows would swap onboarding out for the app in the middle of the reveal. It also means `Replay the welcome`, `Replay the tour` and the return to onboarding after an erase all take effect on the next cold start.
+
+**"Once the first frame has settled" is implemented as a fact rather than as a delay.** The tutorial starts when every one of its five targets has reported a rectangle, which is the thing a delay was standing in for, and a delay guesses differently on a cold start, on a slow device and on a phone with a long area list. Four of the five targets are on the Areas screen, so readiness cannot be true before Areas has laid out. It also handles the zero areas state above with no special case: there is no card to point at, so the tutorial waits until there is one.
+
+**The third check below is not built and the gate leaves its place marked**, after both branches, never inside them.
 
 **A third check joins them, after both flags. Pending, phase 6.** When onboarding and the tutorial are both behind the user and the gap since the last recorded open is 14 days or more, cold start routes to the re-entry state in 11.2 instead of to Areas. It runs once, on that open, and the ordinary route resumes afterward. It is checked last so that it can never delay or replace a first run.
 
@@ -737,21 +759,45 @@ The background gradient extends under the status bar to the very top edge.
 
 **The day header outranks its rows by size as well as weight**, which 5.3 only made possible in phase 3c. `body` and `bodyStrong` were both 16sp, so this section's instruction to set the header in one and the rows in the other bought a weight change and nothing else, and four events read as a wall at 12 and 16sp. With `body` at 15 and `bodyStrong` at 17 the screen reads 30, 17, 15, 12.
 
-**Settings.** Rows on canvas under sideheads. Order: Daily routine, Focus, After completing, Appearance, Your data, Privacy, Help, then the support block, then the version line.
+**Settings. Built, phase 11.** Rows on canvas under sideheads. Order: Daily routine, Focus, After completing, Appearance, Your data, Privacy, Help, then the support block, then the version line.
 
-**About.** App mark at 62dp, name in displayTitle, version and `by Kamsiob`, one paragraph in bodySerif, a quiet link list under an `Elsewhere` sidehead, then the support block, then license lines. Links findable but subordinate; the support block is the only warm colored element on the screen.
+**The one card on the screen is the permission card**, which `MASTER_BUILD_PROMPT.md` 14.1 asks for by name. It is not a row and it is not a container for rows, so 10.11's no card containers rule survives it.
+
+**One thing is not as 10.15 describes it.** Settings is hosted from inside the Areas tab rather than from `ClarityShell`, so it does not cover the floating tab bar the way a pushed screen should; it reserves room at the foot instead. The shell draws that bar as a sibling above the tab content, so covering it means hosting the surface there, and the remedy is one branch beside the Focus surface. `ui/settings/PushedScreen.kt` and `ui/settings/SettingsSurface.kt` both carry the note, and `docs/BUILD_STATE.md` carries it as owed work.
+
+**The `After completing` choice reuses the app's one selection language rather than inventing a second.** The statistically common segmented control of 2026 is a pill track with a thumb that slides between halves. It loses twice here: a sliding thumb is a movement section 8.2 gives no token for, which calm mode would then have to suppress separately, and it is a second way of saying **this one is chosen** beside `ClarityChip`'s ink fill with an inverted label, which the app already uses on every chip. Section 15.
+
+**About. Built, phase 11.** App mark at 62dp, name in displayTitle, version and `by Kamsiob`, one paragraph in bodySerif, a quiet link list under an `Elsewhere` sidehead, then the support block, then license lines. Links findable but subordinate; the support block is the only warm colored element on the screen.
+
+**The mark is drawn at the full 62dp badge size rather than inset**, because the artwork carries its own margin: 4.1 lays it out on a 100 unit square whose content spans 14 to 86, so a 62dp glyph puts the front card at 44.6dp with 8.7dp of air around it, which is the launcher icon's proportion. Insetting it here would inset it twice. The tint blends `SrcIn`, so the 26 and 50 percent fills on the two cards behind survive it and the mark keeps the depth 4.1 calls load bearing.
+
+**The `Elsewhere` rows carry no accent and no chevron.** A chevron in this design means a screen inside the app and every one of these leaves it, and an accent would compete with the one element on the page that is asking for something.
+
+**One sentence this screen will carry is deliberately not on it yet.** `MASTER_BUILD_PROMPT.md` 14.4 and 16.11 require the medical disclaimer verbatim in the app and in the store listing at the same time, and the listing is phase 13, so shipping the sentence now would put it in the app before the thing it has to match.
 
 **Paywall.** Does not exist.
 
-**Onboarding and tutorial.** Contemplative. The tutorial uses a 56 percent black radial dim, a cutout with an 8dp feathered edge, a slowly pulsing 2dp white ring at 38 percent, and tooltip cards in surfaceRaised with a step indicator.
+**Onboarding and tutorial. Built, phase 10.** Contemplative. The tutorial uses a 56 percent black radial dim, a cutout with an 8dp feathered edge, a slowly pulsing 2dp white ring at 38 percent, and tooltip cards in surfaceRaised with a step indicator.
 
-**Two additions to the beats. Pending, phase 10.** Addendum 01 8a and 8b.
+**The tutorial is complete and does not yet run.** Four of its five targets do not wear the modifier that reports their bounds, and the mechanism requires all five before it starts. That is the designed failure rather than a silent one: with a target missing the overlay waits and `hasSeenTutorial` is never written, so it runs correctly on the first launch after the four modifiers land in `ui/areas/`. `MASTER_BUILD_PROMPT.md` 13.2 and `docs/BUILD_STATE.md` carry it.
+
+**Onboarding's room is one ground, one glow and eight to fourteen specks**, per 3.3, with the glow the only thing that changes between beats. It crossfades on `easeSlow`, which 8.1 gives to a world transition and which is what moving between beats is. **It does not breathe**: 8.2 item 8 puts a breathing glow on the Focus surface and nowhere else, and a second one here would be an ambient animation on a screen a person reads once. Beat 3 passes no glow at all, because the reveal's light is the Areas screen coming up through the iris and a second center of light would compete with it.
+
+**Onboarding's controls are written in `ui/onboarding/` rather than reused from `ui/components/`.** Every control in that package resolves its colors from the Daylight world, and section 2 makes onboarding Contemplative from the first frame to the last. A Daylight button on `deepBlack` is not a theming bug that shows up in a screenshot: it is `actionBlue` fill and a white label, which looks plausible and is the wrong world. The Pulse surface made the same call for the same reason. What is shared is everything that is not color: the press scale, the focus ring, the click handling and the haptics.
+
+**Beat 2's mood rows are a single row of six rather than 10.9's three by two grid**, which is the one place the beat departs from that section. The grid is right in a sheet that has the screen to itself; inside a beat that also carries chips, a field and a list of selections, a second block of rows pushes the Continue control off the bottom of a small phone. Six squares in a row still clear section 13's 48dp minimum at the narrowest width the app supports. The live preview 10.9 puts above the rows is already on the screen as the mini card that opened them, so it is not drawn twice.
+
+**Two additions to the beats. Built, phase 10.** Addendum 01 8a and 8b.
 
 First, a `Just start` path. Onboarding currently asks for two to four area names and a color for each, which is up to twelve decisions demanded of people whose central difficulty is deciding, before anything has happened. `Just start` creates one area named `Today` at the first default color, 3.4, and goes straight to adding the first item. Areas, names and colors become things discovered later.
 
 It is offered as a genuine equal alternative and not buried. Both paths take the **same** button treatment, 10.7 Secondary, stacked, the shorter one on top, and neither carries a recommended label or a heavier weight: a fork with a styled winner is not a fork. This is the one screen in the app that deliberately has no primary button.
 
+**As built, that is one composable called twice**, with no role parameter that could make either louder, and the area picker became the second screen of one path rather than the beat with an escape hatch attached. `Just start` sits on top: some order has to exist, vertical position is the only weight left once the treatment is identical, and the tie goes to the path that costs nothing, because the person who most needs a zero decision start is the least likely to read past the first option. Section 15.
+
 Second, one line at the end of onboarding announcing Pulse before it ever appears: once a day, one question, one tap, and it can be turned off in Settings. Predictability is worth a line of copy. Interface behavior that arrives unannounced is a real cost for autistic users, and the cheapest possible fix is telling someone first.
+
+**The line brought one motion consequence with it.** Beat 4's last moment holds rather than timing out into the app, because a line that announces a behavior and is then replaced on a timer is the unannounced behavior this addition objects to, one level up. The three paced moments before it spend the twenty to twenty five seconds `MASTER_BUILD_PROMPT.md` 13.1 gives the beat; the fourth waits.
 
 ### 11.2 The re-entry state
 
@@ -1004,7 +1050,9 @@ Each entry names the fix first, because that is the form it will arrive in, and 
 
 **Built in phase 3b, the executive function retrofit.** Addendum 01 8c assigned calm mode to phase 1, which closed in August 2026, and phases 2 and 3 shipped the motion system and the surfaces it had to reach back into. The move to a retrofit phase is recorded in `DECISIONS.md` as conflict C3.
 
-The switch, the transform, the entrance rule and the three audits in 16.6 to 16.8 are in the code. **The one thing that is not is the Settings row itself**, 16.1, because the Settings screen arrives in phase 11 and there is no screen to put a row on yet. Until then the setting has no stored value, which means it follows the system reduce-motion setting, which is its specified default. Everything below is otherwise true of the running app.
+The switch, the transform, the entrance rule and the three audits in 16.6 to 16.8 are in the code.
+
+**The Settings row is built too, phase 11, and this paragraph used to say it was not.** It recorded that the row could not be built because no Settings screen existed to put it on. That screen was built in phase 11, the row went on it under Appearance with the label and caption 16.1 states, and the record is corrected here rather than left to be found by somebody reading a stale sentence. Everything below is true of the running app.
 
 Material 3 Expressive is this app's motion model, adopted in phase 2 and recorded in `docs/DESIGN_RESEARCH.md`. Expressive motion is the right direction for this product, and it is the wrong thing to impose on a person for whom movement and saturation are expensive. Both are true at once, and calm mode is how both stay true: **ship the expressive direction, and ship the exit.**
 
@@ -1016,6 +1064,8 @@ That is also what makes an expressive direction defensible in the first place. W
 
 One row in Settings under Appearance, 10.11, labeled `Calm mode`, with a caption reading `Less motion, softer color`. A plain two-state switch, `toggle` haptic, section 9.
 
+**Built, phase 11.** The row sits under the appearance tiles and the caption line about the always dark surfaces, which is where the appearance group ends and the one preference that is not a theme begins.
+
 **The default follows the system.** While the user has never touched the switch, calm mode is on whenever the system reduce-motion setting is on and off when it is not, live, with no restart. The first time the user touches it, it takes a value of its own and stops following.
 
 The obvious answer here is a three-state control, On, Off, Follow system, matching the appearance picker in 10.10. It is rejected. A third state is a third decision on a settings screen already full of them, for the audience whose central difficulty is deciding, and the two-state switch already produces the correct behavior for everyone who never opens it. Section 15.
@@ -1023,6 +1073,8 @@ The obvious answer here is a three-state control, On, Off, Follow system, matchi
 **Once set, it stays set, and there is no way back to following the system.** The alternative, keeping the switch tracking the system whenever the two happen to agree, was rejected: a control that silently changes state because something outside the app changed is a control this audience cannot rely on, and predictability is worth more here than saving somebody one tap. Storing the setting as absent-or-a-value rather than as a boolean is what makes both halves of this true: absence is a state the storage carries and the interface never shows. Section 15, and recorded in `DECISIONS.md`.
 
 **Why the row is not a bare boolean in code.** A `Boolean` defaulting to `false` would mean off for every person who has the system setting on and never opens Settings, which is precisely the person calm mode exists for. The stored value is nullable and the resolution is one function, so the default can be asserted in a test rather than hoped for.
+
+**That is also why the Settings state carries no calm mode field.** The row reads the resolved two-state value out of `LocalCalmMode`, which the theme computes from the stored value and the live system setting. A copy inside the screen's own state would be a second answer to a question that already has one, and it would be the answer that stops following the system.
 
 **Reduce motion always wins on motion.** Calm mode is a superset of 8.3, never an override of it. Turning calm mode **off** while the system asks for reduced motion restores color, not movement. The app never animates against an accessibility setting because a preference inside the app said it could.
 
@@ -1142,7 +1194,7 @@ Eight of the twenty eight now belong to surfaces that phases 6 and later build, 
 | parchment | unchanged | 0 |
 | deleteMuted | **excluded by name** | 0 |
 
-**3.3, Contemplative.** **The Focus rows are built, phase 4, and are measurements.** The Pulse, Report and Onboarding rows below them belong to phases 6, 8 and 10 and are still specifications.
+**3.3, Contemplative.** **The Focus rows are built, phase 4, and the Onboarding row is built, phase 10; both are measurements.** Onboarding applies the transform to its beat glow and holds the glow's geometry, because a Contemplative surface with no center of light is not calmer, it is a black rectangle, and it takes the low end of the speck range like the Focus and Pulse backdrops. The Pulse and Report rows below belong to phases 6 and 8, which built those surfaces without revisiting this table.
 
 | token | calm mode | number |
 |---|---|---|

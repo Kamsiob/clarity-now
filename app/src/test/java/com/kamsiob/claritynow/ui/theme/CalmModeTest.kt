@@ -255,6 +255,20 @@ class CalmModeTest {
             // The filter chip's dot, excluded; the event circle's 12 percent tint,
             // transformed.
             "ui/trail/TrailScreen.kt" to 2,
+            // Onboarding. The preview card's accent is atmosphere and takes the
+            // transform; the 7dp dot beside the name is identity and never does. Both
+            // files already read LocalCalmMode at the site, which is where the split
+            // is actually made.
+            "ui/onboarding/OnboardingBeatOne.kt" to 1,
+            "ui/onboarding/OnboardingControls.kt" to 2,
+            // The mood strip's slivers and the swatch a person taps. **Not
+            // transformed**, on the precedent phase 3c set for the color picker: a
+            // swatch is a choice, and showing a desaturated version of a color while
+            // someone is choosing that color would be showing them the wrong answer.
+            "ui/onboarding/OnboardingColorRows.kt" to 2,
+            // The appearance picker's miniature dots. Identity, and its own KDoc says
+            // so: a miniature of a dot is a picture of the same thing.
+            "ui/settings/AppearancePicker.kt" to 1,
             // Both are the area dot: the one on a chooser row and the one above the
             // ring. Identity, so both excluded. The Focus surface takes no area wash
             // at all, because design-v3.md 11 allows it six elements and a tinted
