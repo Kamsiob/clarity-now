@@ -75,15 +75,15 @@ worse than either of them**, and the way to edit these is to replace the whole b
 | Slot bindings, and the third simulator reading | done | no issue, owner approved |
 | The rules pass, and the fourth simulator reading | done | no issue, owner approved |
 | The persona repair, and the fifth simulator reading | done | no issue, owner approved |
-| The executive function engine gaps, 14b.3, 14b.4, 14b.8, 14b.9 | in progress | #27, #42, #43, #45 |
+| The executive function engine gaps, 14b.3, 14b.4, 14b.8, 14b.9 | done | closed |
 | 9. Corpus | done. 3,230 lines. It halved repeats, moved silence by zero, and named why | closed |
 | 9b. Guidance, layer six | done. All four readings pass and section 19's reservation is not exercised | closed |
-| 10. First run | built, all five tutorial targets landed, awaiting the device check | #9 |
-| 11. Settings, About, data | built, awaiting the device check | #10 |
-| 12. Widgets and notifications | built, all six routes landed, awaiting the device check and the preview captures | #11 |
-| 12b. Design surfaces, the polish pass | built, awaiting the device check | #54 |
+| 10. First run | done, device checked. All five tutorial spotlights walked | closed |
+| 11. Settings, About, data | done, device checked. Export and import need the file picker | closed |
+| 12. Widgets and notifications | built, all six routes landed, all six providers register. The picker previews need a device capture | #11 |
+| 12b. Design surfaces, the polish pass | done, device checked | closed |
 | 12c. The re-entry screen | built, awaiting the device check | #56 |
-| The archive view | built | closed |
+| The archive view | built. Restore, the typed delete, and a row that reads nothing | closed |
 | The reach passes, and the tenth measurement | done. Silence 65.7 to 56.0 percent, repeats 7,370 to 2,286 | no issue |
 | 13. Ship | the buildable half is done. What is left needs a Play Console account and a keystore, and is in `HANDOFF.md` | #12 |
 
