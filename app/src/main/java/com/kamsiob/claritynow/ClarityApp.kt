@@ -2,14 +2,9 @@ package com.kamsiob.claritynow
 
 import android.app.Activity
 import android.app.Application
-import android.content.res.AssetManager
 import android.os.Bundle
 import android.util.Log
 import com.kamsiob.claritynow.di.ClarityGraph
-import com.kamsiob.claritynow.domain.engine.catalog.CorpusVolume
-import com.kamsiob.claritynow.domain.pulse.CorpusSource
-import com.kamsiob.claritynow.domain.pulse.CorpusText
-import com.kamsiob.claritynow.domain.pulse.PulseCoordinator
 import com.kamsiob.claritynow.domain.pulse.PulseOutcome
 import com.kamsiob.claritynow.notifications.ClarityNotifications
 import com.kamsiob.claritynow.widget.ClarityWidgets
@@ -17,7 +12,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class ClarityApp : Application() {
 
@@ -35,29 +29,6 @@ class ClarityApp : Application() {
      * and the person is trying to look at their queue.
      */
     private val presenceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-
-    /**
-     * The Pulse lifecycle, built once for the process. MASTER_BUILD_PROMPT 11.3.
-     *
-     * **The catalog inside it is built once and held**, per 11.7: it parses three
-     * markdown files and runs its integrity checks, so it is not a per invocation cost.
-     * The firing history inside it is the opposite and is rebuilt on every invocation,
-     * because it derives from a log that merges.
-     *
-     * **It belongs in [ClarityGraph] and is here instead**, because that file was not
-     * this slice's to edit. It is a process scoped singleton built out of the graph's own
-     * repository and clock, which is exactly what the graph holds, and every other screen
-     * in the app reaches its dependencies through it rather than through the Application.
-     * Moving it is one lazy binding there and [AssetCorpus] moving with it, since the only
-     * thing it needs from this class is the asset manager.
-     */
-    val pulse: PulseCoordinator by lazy {
-        PulseCoordinator(
-            repository = ClarityGraph.repository,
-            clock = ClarityGraph.clock,
-            corpus = AssetCorpus(assets),
-        )
-    }
 
     override fun onCreate() {
         super.onCreate()
@@ -131,6 +102,12 @@ class ClarityApp : Application() {
      * It is one call because generation is idempotent by construction: an entry for
      * today stops it, and that check is a lookup in the in memory projection. The
      * second foreground of a day costs a map read.
+     *
+     * **The coordinator is `ClarityGraph.pulse` rather than a field on this class.** It was
+     * built here while `ClarityGraph` was outside the file list of the phase that wrote it,
+     * along with a private asset reader it needed; both moved to the graph with issue #55, so
+     * that the catalog behind it is shared with Momentum and the Report rather than being the
+     * first of three.
      */
     private inner class ForegroundPresence : Application.ActivityLifecycleCallbacks {
 
@@ -142,7 +119,7 @@ class ClarityApp : Application() {
                 val repository = ClarityGraph.repository
                 repository.load()
                 repository.recordAppOpened()
-                report(pulse.generateOnForeground())
+                report(ClarityGraph.pulse.generateOnForeground())
             }
         }
 
@@ -190,33 +167,6 @@ class ClarityApp : Application() {
             is PulseOutcome.Unavailable ->
                 Log.w(PULSE_TAG, "no Pulse: ${outcome.reason}")
         }
-    }
-
-    /**
-     * The three corpus files, read out of the packaged assets.
-     *
-     * They are assets rather than Kotlin constants because CLAUDE.md's authority order
-     * gives the corpus the last word on the wording of every sentence, and a copy of a
-     * corpus embedded in code is a second corpus that drifts. The build copies the three
-     * committed markdown files into `assets/corpus/` so that the file an author edits is
-     * the file the app reads.
-     *
-     * A missing or malformed asset throws, and [PulseCoordinator] turns that into
-     * [PulseOutcome.Unavailable] rather than into a crash. The app is entirely usable
-     * with no Pulse.
-     */
-    private class AssetCorpus(private val assets: AssetManager) : CorpusSource {
-
-        override suspend fun read(): CorpusText = withContext(Dispatchers.IO) {
-            CorpusText(
-                pulse = read(CorpusVolume.PULSE),
-                report = read(CorpusVolume.REPORT),
-                momentum = read(CorpusVolume.MOMENTUM),
-            )
-        }
-
-        private fun read(volume: CorpusVolume): String =
-            assets.open(CorpusSource.assetPathOf(volume)).bufferedReader().use { it.readText() }
     }
 
     private companion object {

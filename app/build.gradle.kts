@@ -61,9 +61,13 @@ plugins {
 // now do something it could not: end a report with one optional, completable thing and
 // remember it in the person's own words if they take it. Not a major bump because 1.0 is
 // the release and the closing device pass has not run.
+// 0.11.1: one catalog for the process, issue #55. A patch because nothing new can be
+// done with the app, and the finding underneath it is a correction rather than a feature:
+// the corpus parse was running on the main thread while three code comments said it was
+// not.
 val versionMajor = 0
 val versionMinor = 11
-val versionPatch = 0
+val versionPatch = 1
 
 // The application id and the one suffix that changes it, written once.
 //

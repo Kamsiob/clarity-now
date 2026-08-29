@@ -18,7 +18,7 @@ import java.io.File
  * Three details of the mechanism are load bearing. Each of them, got wrong, makes
  * this test either fail on correct code or pass on broken code.
  *
- * 1. **It scans the four pure subdirectories, never `domain` as a whole.**
+ * 1. **It scans the pure subdirectories, never `domain` as a whole.**
  *    `ClarityClock` sits in the root `domain` package and calls
  *    `System.currentTimeMillis()`. It is the one place in the app allowed to, and
  *    the point of the layering is that everything under it takes the instant as a
@@ -39,6 +39,13 @@ import java.io.File
  * a package that could be deleted without this test noticing, and layer 6 is the one part
  * of the engine `MASTER_BUILD_PROMPT.md` 19 says may one day be deliberately removed. When
  * that day comes, this line is the one that says so out loud.
+ *
+ * **`domain.corpus` was added with issue #55 and is the fifth.** It holds the seam the three
+ * corpus files arrive through and the one catalog the process builds from them, and it is
+ * scanned because that is the whole of what makes it usable at once from `domain.pulse`,
+ * from `domain.momentum` and from `ui.report`. It was written pure; a scan is what keeps it
+ * that way when somebody reaches for an `AssetManager` in it rather than for the platform
+ * half that is already private to `ClarityGraph`.
  */
 class DomainPurityTest {
 
@@ -47,9 +54,10 @@ class DomainPurityTest {
         "src/main/java/com/kamsiob/claritynow/domain/guidance",
         "src/main/java/com/kamsiob/claritynow/domain/replay",
         "src/main/java/com/kamsiob/claritynow/domain/query",
+        "src/main/java/com/kamsiob/claritynow/domain/corpus",
     )
 
-    /** All four. A missing one is a broken test, not a clean package. */
+    /** All five. A missing one is a broken test, not a clean package. */
     private val required = pureDirs
 
     private val clockPath = "src/main/java/com/kamsiob/claritynow/domain/ClarityClock.kt"
@@ -114,7 +122,7 @@ class DomainPurityTest {
             Regex("""^\s*import\s+androidx\."""),
         )
         assertTrue(
-            "an Android import in a pure package. These four packages have to compile " +
+            "an Android import in a pure package. These five packages have to compile " +
                 "and run on a desktop JVM with no Android at all:\n" + found.joinToString("\n"),
             found.isEmpty(),
         )

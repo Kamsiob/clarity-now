@@ -4,11 +4,11 @@ import androidx.compose.runtime.Immutable
 import com.kamsiob.claritynow.data.repo.ClarityRepository
 import com.kamsiob.claritynow.domain.ClarityClock
 import com.kamsiob.claritynow.domain.engine.FactExtractor
+import com.kamsiob.claritynow.domain.corpus.CatalogLoad
+import com.kamsiob.claritynow.domain.corpus.SharedCatalog
 import com.kamsiob.claritynow.domain.engine.FiringHistory
-import com.kamsiob.claritynow.domain.engine.catalog.ClarityCatalog
 import com.kamsiob.claritynow.domain.engine.realize.Measures
 import com.kamsiob.claritynow.domain.parseDateKey
-import com.kamsiob.claritynow.domain.pulse.CorpusSource
 import com.kamsiob.claritynow.domain.query.TrailQueries
 import com.kamsiob.claritynow.domain.replay.ReportState
 import com.kamsiob.claritynow.data.event.PlanOffered
@@ -19,10 +19,7 @@ import com.kamsiob.claritynow.domain.report.ReportComposer
 import com.kamsiob.claritynow.domain.report.ReportLanguage
 import com.kamsiob.claritynow.domain.report.ReportSchedule
 import com.kamsiob.claritynow.domain.report.ReportWeek
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.ZoneId
@@ -133,23 +130,17 @@ data class PastReport(
  * - **Past reports are empty.** [pastReports] reads the projection, which is fed by the
  *   log, which is the right way round and has nothing in it
  *
- * ## The catalog is built here, and it is the third one in the process
+ * ## The catalog is not built here
  *
- * `MASTER_BUILD_PROMPT.md` 11.7 wants one for the process and this makes a third, for the
- * reason `MomentumCoordinator` states at length about the second: the one lazy binding that
- * would serve all three belongs in `ClarityGraph`, which no surface phase has owned. The
- * cost is one extra parse of three files, on a background dispatcher, the first time this
- * tab is opened.
+ * It arrives as [SharedCatalog], the one catalog for the process per `MASTER_BUILD_PROMPT.md`
+ * 11.7. This class built a third one of its own until issue #55, behind a mutex and a cached
+ * field that were character for character the two other coordinators' copies.
  */
 class ReportCoordinator(
     private val repository: ClarityRepository,
     private val clock: ClarityClock,
-    private val corpus: CorpusSource,
+    private val catalog: SharedCatalog,
 ) {
-
-    private val catalogLock = Mutex()
-    private var cached: ClarityCatalog? = null
-    private var failure: String? = null
 
     /**
      * One report for the trailing seven days ending today. 11.3 steps 1 to 6.
@@ -169,8 +160,14 @@ class ReportCoordinator(
         val queries = TrailQueries(repository.allEvents(), zone)
         val ribbon = ribbonOf(queries, week)
 
-        val catalog = catalogOrNull()
-            ?: return ReportGeneration(week, ribbon, outcome = null, languageFailure = failure)
+        // The catalog and the reason it is missing come back in one value, so the page can
+        // never report a failure that belongs to some other surface or, worse, render no
+        // sentences and name no reason. See `CatalogLoad`.
+        val language = when (val load = catalog.load()) {
+            is CatalogLoad.Ready -> load.catalog
+            is CatalogLoad.Failed ->
+                return ReportGeneration(week, ribbon, outcome = null, languageFailure = load.reason)
+        }
 
         // 2 to 6. Extraction folds the whole log and composition realizes and validates
         // every line, so both run off the main thread. Neither touches Android.
@@ -181,7 +178,7 @@ class ReportCoordinator(
             // An offer with no acceptance beside it leaves no entry, so a declined plan
             // reaches the ranking as an empty set.
             val plans = PlanHistory.from(queries, now)
-            ReportComposer(catalog, zone).compose(facts, history, week.weekStartKey, plans)
+            ReportComposer(language, zone).compose(facts, history, week.weekStartKey, plans)
         }
         // 7. Step 9's second half. The plan is recorded when it is **offered**, not when it
         // is accepted, because `FiringHistory` reads the frame, cue and action keys out of
@@ -336,28 +333,4 @@ class ReportCoordinator(
             val value = report.factSnapshot[ref.toString()]?.toIntOrNull() ?: return@mapNotNull null
             id to value
         }.toMap()
-
-    // ------------------------------------------------------------------ the catalog
-
-    /**
-     * The catalog, built once for the process, or null with [failure] set to why.
-     *
-     * Held as a field rather than thrown, for the reason both other coordinators give: the
-     * caller wants to render everything that does not need language.
-     */
-    private suspend fun catalogOrNull(): ClarityCatalog? = catalogLock.withLock {
-        cached?.let { return@withLock it }
-        try {
-            val text = corpus.read()
-            ClarityCatalog.build(text.pulse, text.report, text.momentum).also {
-                cached = it
-                failure = null
-            }
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (cause: Exception) {
-            failure = "${cause::class.java.simpleName}: ${cause.message ?: "no detail"}"
-            null
-        }
-    }
 }

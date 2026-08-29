@@ -2,12 +2,10 @@ package com.kamsiob.claritynow.domain.momentum
 
 import com.kamsiob.claritynow.data.repo.ClarityRepository
 import com.kamsiob.claritynow.domain.ClarityClock
+import com.kamsiob.claritynow.domain.corpus.CatalogLoad
+import com.kamsiob.claritynow.domain.corpus.SharedCatalog
 import com.kamsiob.claritynow.domain.engine.catalog.ClarityCatalog
-import com.kamsiob.claritynow.domain.pulse.CorpusSource
 import com.kamsiob.claritynow.domain.query.TrailQueries
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import java.time.ZoneId
 
 /**
@@ -23,22 +21,12 @@ import java.time.ZoneId
  * nothing, which is what makes the once an hour banner throttle a rate limit on work
  * rather than a correctness rule.
  *
- * ## The catalog is built here, and it is the second one in the process
+ * ## The catalog is not built here
  *
- * **Recorded rather than hidden.** `MASTER_BUILD_PROMPT.md` 11.7 says to build the catalog
- * once and hold it, because building it parses three markdown files and runs the integrity
- * checks. `PulseCoordinator` already holds one, built from the same three assets, and the
- * right arrangement is one lazy binding in `ClarityGraph` that both coordinators take as a
- * parameter. That was not reachable from this phase: `ClarityGraph` and `ClarityApp` are
- * outside the file list this slice was given, and `PulseCoordinator` hands its catalog to
- * nobody. So this builds its own, once for the process, behind the same lock and with the
- * same failure behavior.
- *
- * **What it costs and what it does not.** One extra parse of three files, on a background
- * dispatcher, the first time the Areas banner or the Momentum tab asks for language. It is
- * not a per invocation cost and it is not on the main thread. The fix is a one line binding
- * and a constructor parameter, and phase 6's note on `ClarityApp.pulse` is the same note
- * about the same file.
+ * It arrives as [SharedCatalog], the one catalog for the process per `MASTER_BUILD_PROMPT.md`
+ * 11.7. Both Momentum surfaces resolve through one coordinator, so the tab and the Areas
+ * banner shared a catalog with each other from the start; what issue #55 closed is that they
+ * did not share one with the Pulse or with the Report.
  *
  * ## Losing the corpus costs the sentences and nothing else
  *
@@ -52,15 +40,20 @@ import java.time.ZoneId
 class MomentumCoordinator(
     private val repository: ClarityRepository,
     private val clock: ClarityClock,
-    private val corpus: CorpusSource,
+    private val catalog: SharedCatalog,
 ) {
 
-    private val catalogLock = Mutex()
-    private var cached: ClarityCatalog? = null
-    private var failure: String? = null
-
-    /** Why the corpus could not be read, or null while it has not failed. */
-    fun languageFailure(): String? = failure
+    /**
+     * Why the corpus could not be read, or null when it can be.
+     *
+     * **Asked rather than remembered.** It was a field set by the last load attempt, which
+     * was correct while this class owned the only catalog it could report on and is not
+     * correct over a catalog three surfaces share: a field would answer with whichever
+     * surface failed last. This asks its own question and gets the reason for its own answer.
+     * Loading again is what [momentum] and [banner] already do and costs nothing once the
+     * catalog is held.
+     */
+    suspend fun languageFailure(): String? = (catalog.load() as? CatalogLoad.Failed)?.reason
 
     /**
      * The whole Momentum surface, as of now.
@@ -96,25 +89,12 @@ class MomentumCoordinator(
     private suspend fun composer(zone: ZoneId) = MomentumComposer(catalogOrNull(), zone)
 
     /**
-     * The catalog, built once for the process, or null with [failure] set to why.
+     * The process's catalog, or null when it could not be built.
      *
-     * Held as a field rather than thrown for the reason `PulseCoordinator` gives: two
-     * callers want two different things from a failure, and here the caller wants to
-     * render everything that does not need language.
+     * Reported rather than thrown, for the reason `SharedCatalog` gives: the caller wants to
+     * render everything that does not need language. [MomentumComposer] takes the null and
+     * drops the headline and the banner, and every number on the screen is untouched.
      */
-    private suspend fun catalogOrNull(): ClarityCatalog? = catalogLock.withLock {
-        cached?.let { return@withLock it }
-        try {
-            val text = corpus.read()
-            ClarityCatalog.build(text.pulse, text.report, text.momentum).also {
-                cached = it
-                failure = null
-            }
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (cause: Exception) {
-            failure = "${cause::class.java.simpleName}: ${cause.message ?: "no detail"}"
-            null
-        }
-    }
+    private suspend fun catalogOrNull(): ClarityCatalog? =
+        (catalog.load() as? CatalogLoad.Ready)?.catalog
 }

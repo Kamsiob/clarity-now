@@ -37,6 +37,7 @@ com.kamsiob.claritynow
   domain.engine.validate     layer five
   domain.guidance            layer six, the plan composer
   domain.query               TrailQueries, the only path from data to a number
+  domain.corpus              the corpus seam, and the one catalog for the process
 
   ui.theme                   colors, type, shape, motion tokens, haptics
   ui.components              shared composables
@@ -339,7 +340,8 @@ removes entirely rather than shortening.
 | `Migration2To3Test` | the golden log replays across the Room 2 to 3 migration |
 | `CalmModeTest` | the default resolution, the transform, and that every area color reaching the screen was routed deliberately |
 | `CalmModeContrastTest` | 4.5:1 on all 48 area colors, both worlds, ordinary and calm, computed rather than judged |
-| `DomainPurityTest` | `domain.engine`, `domain.guidance`, `domain.replay` and `domain.query` import no Android, no clock, no random and no `String.hashCode` |
+| `DomainPurityTest` | `domain.engine`, `domain.guidance`, `domain.replay`, `domain.query` and `domain.corpus` import no Android, no clock, no random and no `String.hashCode` |
+| `SharedCatalogTest`, `CatalogSharingTest` | the corpus is read and parsed once however many surfaces ask and however many ask at once, a failure is reported with its reason and retried rather than held, and exactly one place in the app builds a catalog |
 | `CorpusParseTest`, `StageRangeTest`, `LengthBandTest` | the three corpus files parse, stage ranges are contiguous per family, and every computed length band matches the words in the line |
 | `RuleCatalogTest`, `CatalogIntegrityTest`, `FamilyPolicyTest` | every rule points at a family that exists, every family has a rule or a recorded reason for having none, no duplicate keys, and every share based rule carries an event floor |
 | `FactExtractorTest`, `FactSetIntegrityTest` | the facts are what the queries say, and an archived or tombstoned area is absent from the fact set rather than filtered later |

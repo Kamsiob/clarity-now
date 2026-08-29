@@ -126,10 +126,11 @@ These are enforced by tests or gates, not by proofreading.
 4. **No monetization, no accounts, no analytics, no AI or ML of any kind.** Not one
    library, not one call. The only money related element is one link to Buy Me a
    Coffee in Settings and About.
-5. **`domain.engine`, `domain.guidance` and `domain.replay` are pure Kotlin.** No
-   Android imports, no `System.currentTimeMillis`, no `Random`, no
-   `String.hashCode()`. Use `StableHash`, which is FNV-1a 64 bit, and the injected
-   `ClarityClock`.
+5. **`domain.engine`, `domain.guidance`, `domain.query`, `domain.replay` and
+   `domain.corpus` are pure Kotlin.** No Android imports, no `System.currentTimeMillis`,
+   no `Random`, no `String.hashCode()`. Use `StableHash`, which is FNV-1a 64 bit, and the
+   injected `ClarityClock`. `DomainPurityTest` scans all five, and that list is the one
+   that counts.
 6. **No engine state in DataStore.** Variation history, escalation stages, personal
    records, first ever flags and plan history all derive from the event log, or two
    devices silently disagree. This does not fail loudly if you get it wrong.

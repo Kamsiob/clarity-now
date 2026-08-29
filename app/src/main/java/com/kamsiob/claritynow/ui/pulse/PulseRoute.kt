@@ -63,9 +63,12 @@ import com.kamsiob.claritynow.ui.theme.LocalContemplativeColors
  *
  * Unlike the Focus surface, which builds a store of its own because its ViewModel resolves
  * an outstanding session in `init` and must be built fresh on every entry, this one has no
- * such work: it reads a flow and writes one answer. It therefore takes the ordinary store,
- * which also means `ClarityViewModelFactory` receives the Activity's creation extras and
- * can reach the Application. See `di/ViewModels.kt`.
+ * such work: it reads a flow and writes one answer. It therefore takes the ordinary store.
+ *
+ * **It once had to.** `ClarityViewModelFactory` reached the Pulse lifecycle through the
+ * `Application` in the Activity's creation extras, so a store of this route's own would have
+ * failed the check there. That coordinator is on `ClarityGraph` since issue #55 and the
+ * factory reads no extras at all, so this is now a preference and no longer a constraint.
  */
 @Composable
 fun PulseRoute(

@@ -3,9 +3,9 @@ package com.kamsiob.claritynow.domain.pulse
 import com.kamsiob.claritynow.data.repo.ClarityRepository
 import com.kamsiob.claritynow.domain.ClarityClock
 import com.kamsiob.claritynow.domain.dateKey
+import com.kamsiob.claritynow.domain.corpus.CatalogLoad
+import com.kamsiob.claritynow.domain.corpus.SharedCatalog
 import com.kamsiob.claritynow.domain.engine.SilenceReason
-import com.kamsiob.claritynow.domain.engine.catalog.ClarityCatalog
-import com.kamsiob.claritynow.domain.engine.catalog.CorpusVolume
 import com.kamsiob.claritynow.domain.engine.catalog.ResponseOption
 import com.kamsiob.claritynow.domain.query.TrailQueries
 import com.kamsiob.claritynow.domain.replay.PulseEntryState
@@ -13,32 +13,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import java.util.UUID
-
-/** The three corpus files, as text. Nothing else is ever read from them. */
-data class CorpusText(val pulse: String, val report: String, val momentum: String)
-
-/**
- * Where the three corpus files come from on this platform.
- *
- * A seam rather than a call, because `ClarityCatalog.build` takes text and the catalog
- * package deliberately opens no file: that is what lets phase 9 test a corpus edit
- * against the real rules from a string. On the phone the text is an asset, in a test it
- * is the committed file read off disk, and neither of those belongs in `domain`.
- */
-fun interface CorpusSource {
-
-    /** Reads all three volumes. Throws when one cannot be read; see [PulseOutcome.Unavailable]. */
-    suspend fun read(): CorpusText
-
-    companion object {
-
-        /** The asset path a volume is packaged at. See `ClarityApp` and the build file. */
-        fun assetPathOf(volume: CorpusVolume): String = "corpus/${volume.fileName}"
-    }
-}
 
 /**
  * One day's Pulse, with everything a screen needs and nothing it has to assemble.
@@ -91,12 +66,16 @@ sealed interface PulseOutcome {
  * clock, the log, the corpus text and the one write. [PulseGenerator] holds the decision
  * and can be tested; this holds the plumbing and cannot.
  *
- * ## The catalog is built once and held
+ * ## The catalog is not built here
  *
- * 11.7: building it parses three markdown files and runs its integrity checks, so it is
- * not a per invocation cost. **The firing history is the opposite and is rebuilt every
- * time**, inside the generator, because it is derived from a log that merges and caching
- * it is how two devices drift apart silently.
+ * It arrives as [SharedCatalog], which is the one catalog for the process per 11.7 and is
+ * built at most once however many surfaces ask for it. This class held its own until issue
+ * #55, along with the mutex and the cached field that made it once, and so did the two other
+ * coordinators; the three of them parsed the corpus three times between them.
+ *
+ * **The firing history is the opposite and is rebuilt every time**, inside the generator,
+ * because it is derived from a log that merges and caching it is how two devices drift apart
+ * silently.
  *
  * ## Where it is called from
  *
@@ -112,15 +91,9 @@ sealed interface PulseOutcome {
 class PulseCoordinator(
     private val repository: ClarityRepository,
     private val clock: ClarityClock,
-    private val corpus: CorpusSource,
+    private val catalog: SharedCatalog,
     private val newPulseId: () -> String = { UUID.randomUUID().toString() },
 ) {
-
-    private val catalogLock = Mutex()
-    private var cached: PulseLanguage? = null
-
-    /** Why the corpus could not be loaded, last time it was tried. */
-    private var unavailable: String = "the corpus has not been read"
 
     /**
      * Runs the sequence for today, and appends `PULSE_GENERATED` if the engine spoke.
@@ -145,7 +118,10 @@ class PulseCoordinator(
         // every foreground after the first one of the day off the log entirely.
         repository.pulseFor(day.dateKey)?.let { return present(it, justGenerated = false) }
 
-        val language = languageOrNull() ?: return PulseOutcome.Unavailable(unavailable)
+        val language = when (val load = catalog.load()) {
+            is CatalogLoad.Ready -> PulseLanguage(load.catalog)
+            is CatalogLoad.Failed -> return PulseOutcome.Unavailable(load.reason)
+        }
         val decision = try {
             val queries = TrailQueries(repository.allEvents(), zone)
             PulseGenerator(language.catalog, zone, newPulseId).decide(queries, now)
@@ -258,26 +234,19 @@ class PulseCoordinator(
     }
 
     /**
-     * The catalog and its two benches, built once for the process, or null with [unavailable]
-     * set to why.
+     * The two benches over the process's catalog, or null when the corpus cannot be read.
      *
-     * The failure is held as a field rather than thrown because two callers want two
-     * different things from it: [generateOnForeground] reports it, and [dailyPulse] renders
-     * what it can without it.
+     * [PulseLanguage] holds nothing but a reference to the catalog and resolves both benches
+     * on demand, so wrapping the shared catalog on each ask costs an allocation and no parse.
+     * It is not cached for that reason: a cached wrapper would be a second thing that has to
+     * be invalidated with the catalog, and there is nothing in it to save.
+     *
+     * **The failure is not asked for here and that is the difference from [generateOnForeground].**
+     * That one reports the reason, so it reads the whole [CatalogLoad]; this one renders what
+     * it can without language, so a failure is simply an absence.
      */
-    private suspend fun languageOrNull(): PulseLanguage? = catalogLock.withLock {
-        cached?.let { return@withLock it }
-        try {
-            val text = corpus.read()
-            PulseLanguage(ClarityCatalog.build(text.pulse, text.report, text.momentum))
-                .also { cached = it }
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (failure: Exception) {
-            unavailable = describe(failure)
-            null
-        }
-    }
+    private suspend fun languageOrNull(): PulseLanguage? =
+        (catalog.load() as? CatalogLoad.Ready)?.let { PulseLanguage(it.catalog) }
 
     private fun describe(cause: Throwable): String =
         "${cause::class.java.simpleName}: ${cause.message ?: "no detail"}"

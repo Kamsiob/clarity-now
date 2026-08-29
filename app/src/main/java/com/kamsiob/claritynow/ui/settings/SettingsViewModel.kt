@@ -367,11 +367,12 @@ internal class SettingsViewModel(
          * `ClarityViewModelFactory`.
          *
          * **`di/ViewModels.kt` and `di/ClarityGraph.kt` were both outside phase 11's file
-         * list**, so this is the same arrangement `MomentumGraph` and `ReportGraph` are in
-         * over there, recorded the same way: the binding belongs in that `when`, the
-         * `BackupService` belongs beside the repository in `ClarityGraph`, and moving both
-         * is a paste and a delete. Nothing here reads the `CreationExtras`, so it can be
-         * resolved against any store owner, including one that supplies no Application.
+         * list**: the binding belongs in that `when`, the `BackupService` belongs beside the
+         * repository in `ClarityGraph`, and moving both is a paste and a delete. Momentum and
+         * the Report were in the same position and are out of it since issue #55, so this is
+         * now the last local factory in the app. Nothing here reads the `CreationExtras`, so
+         * it can be resolved against any store owner, including one that supplies no
+         * Application.
          *
          * **One `BackupService` per ViewModel is correct rather than a leak.** It holds
          * three references and a `SecureRandom` and no state of its own; the state that

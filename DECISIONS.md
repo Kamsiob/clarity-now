@@ -3221,7 +3221,9 @@ length, in which case the silent mark's size moves before its opacity does.
 
 **Decided.** The three committed corpus files are read at runtime through a `CorpusSource`
 seam, which on the phone reads `assets/corpus/` and in a test reads the committed file off
-disk. Implemented in `domain/pulse/PulseCoordinator.kt` and `ClarityApp.kt`.
+disk. Implemented in `domain/corpus/CorpusSource.kt`, with the platform half private to
+`di/ClarityGraph.kt`. It was in `domain/pulse/PulseCoordinator.kt` and `ClarityApp.kt` until
+issue #55.
 
 **Why.** CLAUDE.md's authority order gives the corpora the last word on the wording of
 every sentence. A copy of a corpus embedded in Kotlin is a second corpus, and a second
@@ -5484,6 +5486,109 @@ in prose beside a table that grows goes stale silently, and it did. It now reads
 and names all ten. 10.7's own figure was likewise still the 43 percent layer 6 measured
 before the guidance language pass revived two cues; it reads 41 now, which is the
 figure taken over all three lanes together.
+
+---
+
+## August 28, 2026: one catalog for the process, and the four choices inside that
+
+Issue #55. `PulseCoordinator`, `MomentumCoordinator` and `ReportCoordinator` each held a
+`Mutex`, a cached catalog and a failure field that were character for character the same
+code, so the three corpus volumes were read and parsed three times per process.
+
+**None of the three builders was wrong.** `ClarityGraph` is the file where the three would
+have met and it was outside every surface phase's file list, so each phase did the correct
+local thing and the duplication existed only between them. All three found it, all three
+left a note at their own construction site, and all three named this fix. What is recorded
+below is only what none of them could reach.
+
+### The holder is in a new package, `domain.corpus`, and not beside the seam it uses
+
+**Decided.** `CorpusText`, `CorpusSource` and the new `SharedCatalog` are in
+`domain/corpus/`. The platform half, the class that opens the three packaged assets, is a
+private class at the foot of `di/ClarityGraph.kt`.
+
+**The two losing options.** The seam was in `domain/pulse/PulseCoordinator.kt`, so the
+smallest change was to put the holder there beside it; Momentum and the Report already
+imported `CorpusSource` from `domain.pulse` and would have imported the holder from there
+too. That reads as though reaching the corpus were a Pulse idea two other surfaces had
+borrowed, and it is nobody's idea in particular. The other option was `di`, next to the one
+binding that builds it. `di` imports Android, `domain.momentum` may not, and a coordinator
+in `domain` taking a type from `di` inverts the layering for the convenience of one file.
+
+**What decides it.** The three callers are in `domain.pulse`, `domain.momentum` and
+`ui.report`, and the type has to be reachable from all three without an Android import
+landing in `domain`. A pure package below all three is the only shape that is true of every
+caller. `domain.corpus` is now in `DomainPurityTest`, which is what makes that a check
+rather than a claim.
+
+### The load returns one value, and not a nullable catalog beside a failure field
+
+**Decided.** `SharedCatalog.load()` returns `CatalogLoad.Ready` or `CatalogLoad.Failed`.
+
+**The losing option is the obvious one and it was nearly taken:** keep each coordinator's
+shape exactly and share it, one nullable catalog and one failure string. It reads as a
+faithful extraction, and it carries a race that three separate holders made almost
+impossible and one shared holder would make ordinary. Every caller reads twice, the catalog
+and then the reason. Between those two reads another surface can succeed and clear the
+reason, and the first caller then renders nothing while reporting that nothing is wrong.
+That failure is silent, it is on the path a person hits when the corpus is missing, and it
+is exactly the path nobody exercises. One value cannot be half read.
+
+**The property that had to survive the merge** is the one all three coordinators state in
+their own words: the failure is held rather than thrown, because the caller wants to render
+everything that does not need language. It survives. Nothing throws, the Pulse still reports
+its reason, and Momentum and the Report still draw every number they counted from the log.
+
+### A mutex, not a lazy delegate and not a double checked field
+
+**Decided.** One `Mutex`, held across the read and the parse together, with no fast path
+outside it.
+
+**Why not `by lazy`.** Reading the corpus suspends and a lazy delegate takes a blocking
+initializer. The spelling that compiles wraps `runBlocking`, which blocks whichever thread
+arrives first, and on a cold start that is the thread drawing the first frame.
+
+**Why no double checked read outside the lock.** It is the standard optimization and it buys
+nothing here: an uncontended `withLock` is a compare and swap with no suspension, and the
+callers ask a handful of times per screen. What it costs is that the correctness of the
+class stops depending on the lock and starts depending on the memory model.
+
+**Two surfaces asking at once is the ordinary case rather than the exotic one.** A cold start
+generates the Pulse on the foreground callback while the shell is already building the tab
+the person left the app on. `SharedCatalogTest` runs eight callers into it and asserts one
+read between them; without the lock that test reads eight times.
+
+### The catalog is held and the failure is not
+
+**Decided.** A successful parse is cached for the life of the process. A failure is reported
+and forgotten, so the next ask reads again.
+
+**The losing option** is to cache the failure too, on the argument that a missing asset will
+still be missing in four seconds. It is true and it is the wrong trade: the cheap failure to
+recover from is a transient one, and the expensive one is a broken build, which a retry
+cannot make worse and which costs one failed open per ask.
+
+### One finding, which is a defect this issue did not set out to fix
+
+**The parse was running on the main thread and three separate notes said it was not.**
+`CorpusSource` puts the file read on an IO dispatcher and `withContext` returns to the
+caller, so the parse itself ran wherever the caller stood. All three surfaces reach it from a
+`viewModelScope`, which is the main dispatcher. Every one of the three notes, and the issue
+written from them, described the cost as being on a background dispatcher; the read was, and
+the parse was not. `SharedCatalog` dispatches the parse to `Dispatchers.Default`, so the
+claim those notes made is now true of the code.
+
+**It is recorded rather than folded in quietly** because it is the reason the issue mattered
+more than it read: three parses of a corpus that grew from 1,503 authored lines to roughly
+4,800 were three chances at a visible stall on the main thread, on surfaces meant to feel
+calm, and not three cheap background parses.
+
+### One correction to CLAUDE.md
+
+Rule 5 listed `domain.engine`, `domain.guidance` and `domain.replay` as the pure packages.
+`DomainPurityTest` has scanned `domain.query` as well since it was written, so the rule
+understated itself by one package before this change and by two after it. It now names all
+five and says that the test's list is the one that counts.
 
 ---
 

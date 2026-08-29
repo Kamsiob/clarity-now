@@ -542,16 +542,15 @@ Each of these is a phase, not an oversight. See the linked issue for why.
   the other direction. `ReportInvariants` therefore does not assert it, so neither the ten
   thousand week run nor the persona year measures it. The 715 collisions across 451 reports
   from phase 5 remain the baseline and phase 9 is what moves them.
-- **There are now three engine catalogs in the process** where 11.7 asks for one, one per
-  coordinator. Phase 6 recorded the second, phase 8 added the third, and the cause is the
-  same each time: the one lazy binding that would serve all three belongs in `ClarityGraph`,
-  which has been outside every surface phase's file list. The cost is two extra parses of
-  three markdown files, on a background dispatcher, the first time each tab is opened. The
-  fix is one binding and a constructor parameter, at which point `MomentumGraph`,
-  `ReportGraph` and `AssetCorpus` all go away together.
 - **`ReportCoordinator` is in `ui.report` and belongs in `domain.report`**, beside
-  `PulseCoordinator` and `MomentumCoordinator`. Nothing in it depends on Android. It is a
-  package line and an import.
+  `PulseCoordinator` and `MomentumCoordinator`. **It is not the package line and the import
+  this list has said twice that it is**: the file also declares `RibbonDay`,
+  `ReportGeneration` and `PastReport`, all three annotated `@Immutable` from
+  `androidx.compose.runtime`, so the move is blocked until those three either lose the
+  annotation, which costs recomposition skipping on the Report's own state, or move out into
+  a file of their own in `ui.report` while the coordinator goes down. Found while closing
+  issue #55, which had to answer the same question about a different file and found this
+  claim untrue.
 - **The banner's caption binding table is in `domain/momentum/BannerCaptions.kt` and belongs
   in `domain/engine/realize/SlotBindings.kt`**, which is where layer 4 authors every other
   slot binding. The caption bench has slots and is not a family, so `bindingsFor` has nowhere
