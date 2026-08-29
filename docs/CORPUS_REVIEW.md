@@ -2,9 +2,9 @@
 
 Three simulated years, in order, with every sentence annotated by the family, the stage,
 the register and the variant key that produced it. Taken on August 28, 2026, over the
-corpus and the engine as they now stand: **4,785 authored lines** across the three
+corpus and the engine as they now stand: **4,942 authored lines** across the three
 volumes, recounted from the files rather than claimed. The corpus held 1,503 lines before
-phase 9, so phase 9 wrote 3,230 of them and the passes since have added 52 to volume 3.
+phase 9, so phase 9 wrote 3,230 of them and the passes since have added 209 to volume 3.
 
 **This is the artifact phase 9 is judged on, and the judgment is a reading rather than a
 number.** Every mechanical gate in the build is green and every reading is in
@@ -19,7 +19,7 @@ app said nothing left in.
 author touching volume 1 or volume 2.** Two passes since phase 9 changed which sentence
 the engine picks. The register became a tier chosen among rather than a fallback order,
 and the Pulse repeat filter was bounded to the one day the specification always said it
-covered. Volume 3 grew by 52 lines in the same window. So every year below reads
+covered. Volume 3 grew by 209 lines in the same window. So every year below reads
 differently from the copy phase 9 shipped, and the second of those two changes moves the
 reading this project had failed to move across three measurements. What changed and what
 did not is the section before section 1.
@@ -118,8 +118,8 @@ line is in Appendix A with the rest.
    would make a reader defensive is wrong, and that decline and neglect families are read
    twice.
 3. **The silence, and what is left of it.** It is left in on purpose: a day the app said
-   nothing is part of what this reads like, and there are 1,762 of them across the eleven.
-   Its shape is what changed. 907 of those days had nothing that qualified at all and 844
+   nothing is part of what this reads like, and there are 1,758 of them across the eleven.
+   Its shape is what changed. 898 of those days had nothing that qualified at all and 849
    had something qualify and held it back, which is the first run in nine measurements
    where the held back column is the smaller one. Silence is a rule coverage question now
    rather than a filter question.
@@ -147,12 +147,13 @@ reached exactly one before.
 
 | surface | firings in the run | registers reached |
 |---|---|---|
-| pulse | 1,386 | plain 694, observational 692 |
-| momentum | 3,133 | plain 1,055, observational 999, reflective 1,079 |
-| banner | 2,603 | plain 777, observational 836, reflective 756, neutral agent 234 |
+| pulse | 1,390 | plain 697, observational 693 |
+| momentum | 3,133 | plain 1,050, observational 1,008, reflective 1,075 |
+| banner | 2,606 | plain 777, observational 834, reflective 753, neutral agent 242 |
 | report headline | 448 | plain 448 |
-| report observation | 1,594 | plain 352, observational 348, editorial 390, neutral agent 504 |
+| report observation | 1,594 | plain 351, observational 348, editorial 392, neutral agent 503 |
 | report pattern | 399 | plain 399 |
+| report closing | 445 | plain 445 |
 
 Three of those rows are a property of the corpus rather than of the engine and no author
 can change them from here. `CORPUS_2_REPORT.md` carries a register tag in section 2 alone
@@ -181,8 +182,8 @@ writes no `PULSE_GENERATED`, so the fact never advances, so the block renews its
 morning. The silent year in section 3 was that loop. It spoke nine times between January 5
 and January 20 and was then held silent for 348 consecutive days by the family of a Pulse
 from January 20. With the bound in place, silence across the eleven falls from 65.7
-percent to 56.0 percent, 2,067 silent days to 1,762, and the filtered column of that
-silence drops below the column for days where nothing qualified at all: 907 against 844.
+percent to 55.8 percent, 2,067 silent days to 1,758, and the filtered column of that
+silence drops below the column for days where nothing qualified at all: 898 against 849.
 
 **Three. Volume 3's quiet week bench went from eight lines to sixty**, which is the one
 corpus change in this window and the only reason the line count moved. The Areas banner's
@@ -197,15 +198,15 @@ was fixed a stage of sixty lines bought the variety of twenty. Measured where th
 is actually made, the hottest Pulse benches in this run reach:
 
 - `persistence s1`, 238 firings across 52 distinct lines, the most said one 8 times
-- `quietDay s1`, 206 firings across 46 distinct lines, the most said one 9 times
-- `concentration s3`, 180 firings across 41 distinct lines, the most said one 8 times
+- `quietDay s1`, 209 firings across 47 distinct lines, the most said one 10 times
+- `concentration s3`, 181 firings across 41 distinct lines, the most said one 8 times
 - `persistence s2`, 153 firings across 54 distinct lines, the most said one 7 times
 - `accumulation s3`, 147 firings across 43 distinct lines, the most said one 6 times
 - `rebalance s1`, 80 firings across 36 distinct lines, the most said one 6 times
 - `quietDay s3`, 59 firings across 37 distinct lines, the most said one 4 times
 
 Variant repeats inside ninety days have fallen from 7,370 before phase 9 to 3,898 after it
-and to 2,286 here, and the last of those two steps was taken with no line written into
+and to 2,328 here, and the last of those two steps was taken with no line written into
 volumes 1 or 2. That is what the first reading of this file predicted from the other end:
 the benches were always that deep and the chooser could not see them. **Section 12's ninth
 column reads 2,407 for this row**, taken over the same run before volume 3's quiet week
@@ -227,12 +228,12 @@ thing a deep bench is asked to do anywhere in this app.
 ```text
 persona: queueHoarder, Queue hoarder
 why:     Far more arrives than leaves. Feeds accumulation, queuePressure and growingQueues.
-span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
+span:    365 simulated days, 365 opens, 1673 events, 1456 engine invocations
 ```
 
 ### January 2026
 
-28 days on screen, 20 Pulses spoken, 8 Pulse days silent, 85 sentences in all.
+28 days on screen, 20 Pulses spoken, 8 Pulse days silent, 88 sentences in all.
 
 ```text
 2026-01-04  [momentum]  SILENT (INSUFFICIENT_DATA)
@@ -366,6 +367,9 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   fired: three or more pulses were answered in the window, there are completions for the answers to be about
   facts: n=5 [pulse.answeredInWindow], priorCount=2 [pulse.labelCountInWindow:A small one], priorLabel=A small one
   > 5 answers this week, 2 of them A small one, and the week had completions in it.
+2026-01-11  [report closing]  guidance.closing / stage 1 / plain / cls.new.06
+  rule:  guidance.closing
+  > Nothing repeats often enough yet to point at.
 
 2026-01-12  [momentum]  firstDays / stage 1 / observational / mo.first.47
   rule:  momentum.firstDays
@@ -485,6 +489,9 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.observation.intakeVsOutput.s2
   fired: intake exceeds output by five or more, there are additions to count
   > A collecting week.
+2026-01-18  [report closing]  guidance.closing / stage 1 / plain / cls.new.02
+  rule:  guidance.closing
+  > Not enough of a pattern yet to say anything useful.
 
 2026-01-19  [momentum]  balancedWeek / stage 1 / plain / mo.bal.63
   rule:  momentum.balancedWeek
@@ -608,6 +615,9 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   fired: intake exceeds output by five or more, there are additions to count
   facts: k=12 [rollup.queueGrowth]
   > The queues hold 12 more things than they held on the first day of the week.
+2026-01-25  [report closing]  guidance.closing / stage 1 / plain / cls.new.09
+  rule:  guidance.closing
+  > There is no hour or day here that the app can lean on yet.
 
 2026-01-26  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.23
   rule:  momentum.balancedWeek
@@ -699,7 +709,7 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
 
 ### February 2026
 
-28 days on screen, 20 Pulses spoken, 8 Pulse days silent, 89 sentences in all.
+28 days on screen, 20 Pulses spoken, 8 Pulse days silent, 93 sentences in all.
 
 ```text
 2026-02-01  [momentum]  balancedWeek / stage 1 / plain / mo.bal.62
@@ -745,6 +755,9 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > Three answers about one kind of moment is not a verdict on anything, and it is a record that the moment kept happening.
+2026-02-01  [report closing]  guidance.closing / stage 1 / plain / cls.new.13
+  rule:  guidance.closing
+  > This page fills in as the days do.
 
 2026-02-02  [momentum]  balancedWeek / stage 1 / observational / mo.bal.36
   rule:  momentum.balancedWeek
@@ -876,6 +889,9 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   facts: m=33 [history.weekQueueSizeAgo:1], n=43 [history.weekQueueSizeAgo:0]
   > 43 now, up from 33.
+2026-02-08  [report closing]  guidance.closing / stage 1 / plain / cls.new.15
+  rule:  guidance.closing
+  > There is not a repeating hour in the record yet.
 
 2026-02-09  [momentum]  steadyStretch / stage 1 / observational / mo.steady.04
   rule:  momentum.steadyStretch
@@ -994,6 +1010,9 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > The same kind of question has come around three times, which says more about the situation than about the answers.
+2026-02-15  [report closing]  guidance.closing / stage 1 / plain / cls.rev.13
+  rule:  guidance.closing
+  > The item at the front of an area is the one the week will meet.
 
 2026-02-16  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.28
   rule:  momentum.balancedWeek
@@ -1104,6 +1123,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.growingQueues
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > The total is higher than last week, and last week was higher than the one before it.
+2026-02-22  [report closing]  guidance.plan / stage 1 / plain / frm.12+cue.bound.09+act.fin.18
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > If you want somewhere to start in the last hour of the week: closing an item rather than reordering one.
 
 2026-02-23  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.13
   rule:  momentum.balancedWeek
@@ -1187,7 +1210,7 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
 
 ### March 2026
 
-31 days on screen, 18 Pulses spoken, 13 Pulse days silent, 100 sentences in all.
+31 days on screen, 18 Pulses spoken, 13 Pulse days silent, 105 sentences in all.
 
 ```text
 2026-03-01  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.17
@@ -1225,6 +1248,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > An answer is a reading taken at a moment, and this app now holds five of yours or more.
+2026-03-01  [report closing]  guidance.plan / stage 1 / plain / frm.12+cue.hab.06+act.fin.04
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > If you want somewhere to start the next time you open the app: clearing one item before adding another.
 
 2026-03-02  [momentum]  balancedWeek / stage 1 / observational / mo.bal.47
   rule:  momentum.balancedWeek
@@ -1338,6 +1365,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.growingQueues
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > More arrives than leaves, and has for three weeks.
+2026-03-08  [report closing]  guidance.plan / stage 1 / plain / frm.10+cue.bound.07+act.fin.10
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > There is time at the end of the week for fifteen minutes on whatever is nearest to finished.
 
 2026-03-09  [momentum]  comeback / stage 1 / observational / mo.come.33
   rule:  momentum.comeback
@@ -1458,6 +1489,9 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.consistentRhythm
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   > The four weeks are the same week, near enough.
+2026-03-15  [report closing]  guidance.closing / stage 1 / plain / cls.trust.20
+  rule:  guidance.closing
+  > Nothing is asking to be picked up.
 
 2026-03-16  [momentum]  balancedWeek / stage 1 / observational / mo.bal.11
   rule:  momentum.balancedWeek
@@ -1569,6 +1603,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > The app kept asking.
+2026-03-22  [report closing]  guidance.plan / stage 1 / plain / frm.03+cue.hab.02+act.fin.04
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > After your next focus session might be the moment for clearing one item before adding another.
 
 2026-03-23  [momentum]  balancedWeek / stage 1 / plain / mo.bal.64
   rule:  momentum.balancedWeek
@@ -1692,6 +1730,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.growingQueues
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > Two weekly readings in a row came in above the one before them, which is the whole of what this section is saying.
+2026-03-29  [report closing]  guidance.plan / stage 1 / plain / frm.03+cue.band.04+act.brk.14
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > Your first hour might be the moment for the smallest version of Label the storage boxes that would still count.
 
 2026-03-30  [momentum]  balancedWeek / stage 1 / observational / mo.bal.45
   rule:  momentum.balancedWeek
@@ -1718,7 +1760,7 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
 
 ### April 2026
 
-30 days on screen, 22 Pulses spoken, 8 Pulse days silent, 96 sentences in all.
+30 days on screen, 22 Pulses spoken, 8 Pulse days silent, 100 sentences in all.
 
 ```text
 2026-04-01  [momentum]  balancedWeek / stage 1 / observational / mo.bal.08
@@ -1814,6 +1856,9 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > Nothing here compares what you said against what happened. It records that you said something, three times.
+2026-04-05  [report closing]  guidance.closing / stage 1 / plain / cls.trust.07
+  rule:  guidance.closing
+  > That week does not need a note from anyone.
 
 2026-04-06  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.12
   rule:  momentum.balancedWeek
@@ -1938,6 +1983,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.decliningActivity
   fired: total activity has fallen three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > Three consecutive weeks of less.
+2026-04-12  [report closing]  guidance.plan / stage 1 / plain / frm.06+cue.hab.08+act.fin.08
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > There is room after the next thing is finished for letting one thing leave before the next arrives.
 
 2026-04-13  [momentum]  balancedWeek / stage 1 / plain / mo.bal.09
   rule:  momentum.balancedWeek
@@ -2070,6 +2119,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > The same question, three times.
+2026-04-19  [report closing]  guidance.plan / stage 1 / plain / frm.05+cue.bound.11+act.brk.04
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > A small one after this report is closed: deciding whether Read the design chapter is one thing or several.
 
 2026-04-20  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.24
   rule:  momentum.balancedWeek
@@ -2184,6 +2237,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.growingQueues
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > Two increases in a row.
+2026-04-26  [report closing]  guidance.plan / stage 1 / plain / frm.11+cue.bound.11+act.fin.08
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > One possibility after this report is closed: letting one thing leave before the next arrives.
 
 2026-04-27  [momentum]  comeback / stage 1 / plain / mo.come.50
   rule:  momentum.comeback
@@ -2237,7 +2294,7 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
 
 ### May 2026
 
-31 days on screen, 18 Pulses spoken, 13 Pulse days silent, 98 sentences in all.
+31 days on screen, 18 Pulses spoken, 13 Pulse days silent, 103 sentences in all.
 
 ```text
 2026-05-01  [momentum]  steadyStretch / stage 1 / observational / mo.steady.38
@@ -2300,6 +2357,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > The record holds five answers.
+2026-05-03  [report closing]  guidance.plan / stage 1 / plain / frm.04+cue.hab.12+act.fin.08
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > Something to consider after the first completion of the week: letting one thing leave before the next arrives.
 
 2026-05-04  [momentum]  comeback / stage 1 / reflective / mo.come.07
   rule:  momentum.comeback
@@ -2422,6 +2483,9 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.growingQueues
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > A rise, then another rise.
+2026-05-10  [report closing]  guidance.closing / stage 1 / plain / cls.trust.09
+  rule:  guidance.closing
+  > Nothing here needs a decision.
 
 2026-05-11  [momentum]  steadyStretch / stage 1 / reflective / mo.steady.20
   rule:  momentum.steadyStretch
@@ -2541,6 +2605,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > You have answered at least five pulses since you started.
+2026-05-17  [report closing]  guidance.plan / stage 1 / plain / frm.05+cue.bound.08+act.fin.16
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > A small one before Monday: one focus session spent finishing rather than starting.
 
 2026-05-18  [momentum]  comeback / stage 1 / reflective / mo.come.29
   rule:  momentum.comeback
@@ -2656,6 +2724,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.growingQueues
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > Longer than last week. Longer than the week before that.
+2026-05-24  [report closing]  guidance.plan / stage 1 / plain / frm.01+cue.hab.04+act.fin.06
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > One option for the next time you finish something: finishing something before writing anything down.
 
 2026-05-25  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.26
   rule:  momentum.balancedWeek
@@ -2760,11 +2832,15 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > Five answers or more sit in the record now.
+2026-05-31  [report closing]  guidance.plan / stage 1 / plain / frm.12+cue.hab.11+act.brk.03
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > If you want somewhere to start once Home is open: twenty minutes on Book the dentist and nothing else.
 ```
 
 ### June 2026
 
-30 days on screen, 21 Pulses spoken, 9 Pulse days silent, 92 sentences in all.
+30 days on screen, 21 Pulses spoken, 9 Pulse days silent, 96 sentences in all.
 
 ```text
 2026-06-01  [momentum]  comeback / stage 1 / reflective / mo.come.66
@@ -2878,6 +2954,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.growingQueues
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > The number has climbed twice.
+2026-06-07  [report closing]  guidance.plan / stage 1 / plain / frm.03+cue.band.10+act.fin.21
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > Early in the day might be the moment for finishing something that fits in one sitting.
 
 2026-06-08  [momentum]  comeback / stage 1 / reflective / mo.come.21
   rule:  momentum.comeback
@@ -2990,6 +3070,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > You have answered at least five pulses, and three of them were about the same kind of moment.
+2026-06-14  [report closing]  guidance.plan / stage 1 / plain / frm.06+cue.hab.08+act.fin.20
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > There is room after the next thing is finished for ten minutes on the item nearest the front.
 
 2026-06-15  [momentum]  steadyStretch / stage 1 / observational / mo.steady.14
   rule:  momentum.steadyStretch
@@ -3109,6 +3193,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.growingQueues
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > More is waiting than a week ago.
+2026-06-21  [report closing]  guidance.plan / stage 1 / plain / frm.09+cue.band.04+act.fin.04
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > Your first hour is one place for clearing one item before adding another.
 
 2026-06-22  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.17
   rule:  momentum.balancedWeek
@@ -3240,6 +3328,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > A question the app has asked you more than twice.
+2026-06-28  [report closing]  guidance.plan / stage 1 / plain / frm.06+cue.hab.03+act.brk.10
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > There is room before you add anything new for one hour on Finish the tax folder with the app closed.
 
 2026-06-29  [momentum]  comeback / stage 1 / plain / mo.come.49
   rule:  momentum.comeback
@@ -3266,7 +3358,7 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
 
 ### July 2026
 
-31 days on screen, 19 Pulses spoken, 12 Pulse days silent, 93 sentences in all.
+31 days on screen, 19 Pulses spoken, 12 Pulse days silent, 97 sentences in all.
 
 ```text
 2026-07-01  [momentum]  comeback / stage 1 / reflective / mo.come.27
@@ -3353,6 +3445,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.growingQueues
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > The queues took on more than they gave back.
+2026-07-05  [report closing]  guidance.plan / stage 1 / plain / frm.09+cue.band.11+act.fin.10
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > The first hour of the day is one place for fifteen minutes on whatever is nearest to finished.
 
 2026-07-06  [momentum]  steadyStretch / stage 1 / reflective / mo.steady.23
   rule:  momentum.steadyStretch
@@ -3468,6 +3564,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > Answers, and then more answers.
+2026-07-12  [report closing]  guidance.plan / stage 1 / plain / frm.04+cue.band.09+act.fin.04
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > Something to consider the morning, before the day fills up: clearing one item before adding another.
 
 2026-07-13  [momentum]  comeback / stage 1 / reflective / mo.come.16
   rule:  momentum.comeback
@@ -3590,6 +3690,9 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.growingQueues
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > Still rising.
+2026-07-19  [report closing]  guidance.closing / stage 1 / plain / cls.trust.02
+  rule:  guidance.closing
+  > The week worked. Do that again.
 
 2026-07-20  [momentum]  balancedWeek / stage 1 / plain / mo.bal.59
   rule:  momentum.balancedWeek
@@ -3713,6 +3816,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > One subject, answered more than twice.
+2026-07-26  [report closing]  guidance.plan / stage 1 / plain / frm.04+cue.hab.08+act.fin.06
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > Something to consider after the next thing is finished: finishing something before writing anything down.
 
 2026-07-27  [momentum]  balancedWeek / stage 1 / observational / mo.bal.42
   rule:  momentum.balancedWeek
@@ -3777,7 +3884,7 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
 
 ### August 2026
 
-31 days on screen, 18 Pulses spoken, 13 Pulse days silent, 101 sentences in all.
+31 days on screen, 18 Pulses spoken, 13 Pulse days silent, 106 sentences in all.
 
 ```text
 2026-08-01  [momentum]  balancedWeek / stage 1 / plain / mo.bal.58
@@ -3835,6 +3942,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.growingQueues
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > More arrives than leaves, and has for three weeks.
+2026-08-02  [report closing]  guidance.plan / stage 1 / plain / frm.06+cue.bound.04+act.fin.08
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > There is room before Friday for letting one thing leave before the next arrives.
 
 2026-08-03  [momentum]  comeback / stage 1 / plain / mo.come.59
   rule:  momentum.comeback
@@ -3949,6 +4060,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.consistentRhythm
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   > Your activity has stayed within a narrow band for four weeks.
+2026-08-09  [report closing]  guidance.plan / stage 1 / plain / frm.12+cue.hab.02+act.fin.10
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > If you want somewhere to start after your next focus session: fifteen minutes on whatever is nearest to finished.
 
 2026-08-10  [momentum]  comeback / stage 1 / reflective / mo.come.61
   rule:  momentum.comeback
@@ -4050,6 +4165,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > The app kept asking.
+2026-08-16  [report closing]  guidance.plan / stage 1 / plain / frm.08+cue.band.03+act.fin.20
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > One thing that would fit before midday, where most of your completions land: ten minutes on the item nearest the front.
 
 2026-08-17  [momentum]  comeback / stage 1 / reflective / mo.come.20
   rule:  momentum.comeback
@@ -4166,6 +4285,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.consistentRhythm
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   > A month with no week larger than the rest by much.
+2026-08-23  [report closing]  guidance.plan / stage 1 / plain / frm.03+cue.bound.06+act.fin.07
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > Before the weekend might be the moment for moving one queued item all the way through.
 
 2026-08-24  [momentum]  steadyStretch / stage 1 / observational / mo.steady.33
   rule:  momentum.steadyStretch
@@ -4301,6 +4424,9 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > You have given this app more than a handful of answers.
+2026-08-30  [report closing]  guidance.closing / stage 1 / plain / cls.trust.18
+  rule:  guidance.closing
+  > The week did not need managing.
 
 2026-08-31  [momentum]  balancedWeek / stage 1 / plain / mo.bal.65
   rule:  momentum.balancedWeek
@@ -4316,7 +4442,7 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
 
 ### September 2026
 
-30 days on screen, 23 Pulses spoken, 7 Pulse days silent, 105 sentences in all.
+30 days on screen, 23 Pulses spoken, 7 Pulse days silent, 109 sentences in all.
 
 ```text
 2026-09-01  [momentum]  balancedWeek / stage 1 / observational / mo.bal.46
@@ -4429,6 +4555,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.growingQueues
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > Two weeks, two increases.
+2026-09-06  [report closing]  guidance.plan / stage 1 / plain / frm.12+cue.hab.02+act.fin.21
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > If you want somewhere to start after your next focus session: finishing something that fits in one sitting.
 
 2026-09-07  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.26
   rule:  momentum.balancedWeek
@@ -4564,6 +4694,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > An answer is a reading taken at a moment, and this app now holds five of yours or more.
+2026-09-13  [report closing]  guidance.plan / stage 1 / plain / frm.03+cue.hab.07+act.brk.04
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > Before Work is opened might be the moment for deciding whether Schedule the eye test is one thing or several.
 
 2026-09-14  [momentum]  balancedWeek / stage 1 / plain / mo.bal.63
   rule:  momentum.balancedWeek
@@ -4697,6 +4831,9 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.growingQueues
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > The direction has been one way for two weeks.
+2026-09-20  [report closing]  guidance.closing / stage 1 / plain / cls.trust.21
+  rule:  guidance.closing
+  > Nothing needs a hand this week.
 
 2026-09-21  [momentum]  comeback / stage 1 / plain / mo.come.64
   rule:  momentum.comeback
@@ -4828,6 +4965,9 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > There are three weeks of history here and five answers or more inside them, three of them about one subject.
+2026-09-27  [report closing]  guidance.closing / stage 1 / plain / cls.trust.10
+  rule:  guidance.closing
+  > This week can stand as it is.
 
 2026-09-28  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.14
   rule:  momentum.balancedWeek
@@ -4871,7 +5011,7 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
 
 ### October 2026
 
-31 days on screen, 21 Pulses spoken, 10 Pulse days silent, 98 sentences in all.
+31 days on screen, 21 Pulses spoken, 10 Pulse days silent, 102 sentences in all.
 
 ```text
 2026-10-01  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.17
@@ -4953,6 +5093,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   facts: k=370 [history.weekQueueSizeAgo:2], m=382 [history.weekQueueSizeAgo:1], n=394 [history.weekQueueSizeAgo:0]
   > From 370 to 382 to 394.
+2026-10-04  [report closing]  guidance.plan / stage 1 / plain / frm.04+cue.hab.09+act.fin.22
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > Something to consider before anything new is written down: choosing one queued item and finishing only that.
 
 2026-10-05  [momentum]  balancedWeek / stage 1 / observational / mo.bal.50
   rule:  momentum.balancedWeek
@@ -5075,6 +5219,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > Three answers about one family of question, over three weeks or more.
+2026-10-11  [report closing]  guidance.plan / stage 1 / plain / frm.02+cue.bound.10+act.fin.22
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > If you want one thing to aim at before the next report: choosing one queued item and finishing only that.
 
 2026-10-12  [momentum]  steadyStretch / stage 1 / reflective / mo.steady.25
   rule:  momentum.steadyStretch
@@ -5139,7 +5287,7 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  momentum.steadyStretch
   fired: active on nine or more of the last fourteen days, there are fourteen days to have been active across, the app has existed for the 14 days being described
   facts: m=1 [window.quietDays]
-  > Fourteen days, one of them quiet.
+  > 14 days, one of them quiet.
 2026-10-16  [banner]  weekMixed / stage 1 / plain / bn.mixed.05
   rule:  banner.weekMixed
   fired: two or more areas were active, one of them holds half the week or more, the window holds at least 4 events, so a share is describing something real
@@ -5207,6 +5355,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   fired: total activity has fallen three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   facts: k=20 [history.weekEventsAgo:2], m=16 [history.weekEventsAgo:1], n=15 [history.weekEventsAgo:0]
   > 20, then 16, then 15.
+2026-10-18  [report closing]  guidance.plan / stage 1 / plain / frm.04+cue.hab.08+act.fin.08
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > Something to consider after the next thing is finished: letting one thing leave before the next arrives.
 
 2026-10-19  [momentum]  steadyStretch / stage 1 / reflective / mo.steady.56
   rule:  momentum.steadyStretch
@@ -5315,6 +5467,9 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > A question the app has asked you more than twice.
+2026-10-25  [report closing]  guidance.closing / stage 1 / plain / cls.trust.19
+  rule:  guidance.closing
+  > What worked is still working.
 
 2026-10-26  [momentum]  comeback / stage 1 / observational / mo.come.02
   rule:  momentum.comeback
@@ -5402,7 +5557,7 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
 
 ### November 2026
 
-30 days on screen, 18 Pulses spoken, 12 Pulse days silent, 100 sentences in all.
+30 days on screen, 18 Pulses spoken, 12 Pulse days silent, 105 sentences in all.
 
 ```text
 2026-11-01  [momentum]  balancedWeek / stage 1 / observational / mo.bal.49
@@ -5443,6 +5598,9 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   facts: m=426 [history.weekQueueSizeAgo:1], n=438 [history.weekQueueSizeAgo:0]
   > 426 became 438.
+2026-11-01  [report closing]  guidance.closing / stage 1 / plain / cls.trust.23
+  rule:  guidance.closing
+  > The week can be left alone.
 
 2026-11-02  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.30
   rule:  momentum.balancedWeek
@@ -5567,6 +5725,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > This was not the first asking.
+2026-11-08  [report closing]  guidance.plan / stage 1 / plain / frm.12+cue.hab.02+act.fin.04
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > If you want somewhere to start after your next focus session: clearing one item before adding another.
 
 2026-11-09  [momentum]  balancedWeek / stage 1 / observational / mo.bal.37
   rule:  momentum.balancedWeek
@@ -5680,6 +5842,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   fired: total activity has fallen three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   facts: sinceRef=2026-10-25
   > Activity has been declining since October.
+2026-11-15  [report closing]  guidance.plan / stage 1 / plain / frm.09+cue.hab.04+act.fin.20
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > The next time you finish something is one place for ten minutes on the item nearest the front.
 
 2026-11-16  [momentum]  balancedWeek / stage 1 / plain / mo.bal.59
   rule:  momentum.balancedWeek
@@ -5799,6 +5965,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > You have answered at least five pulses since you started.
+2026-11-22  [report closing]  guidance.plan / stage 1 / plain / frm.08+cue.band.10+act.fin.06
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > One thing that would fit early in the day: finishing something before writing anything down.
 
 2026-11-23  [momentum]  balancedWeek / stage 1 / observational / mo.bal.02
   rule:  momentum.balancedWeek
@@ -5915,6 +6085,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.growingQueues
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > The queues have not given anything back.
+2026-11-29  [report closing]  guidance.plan / stage 1 / plain / frm.03+cue.band.11+act.fin.22
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > The first hour of the day might be the moment for choosing one queued item and finishing only that.
 
 2026-11-30  [momentum]  balancedWeek / stage 1 / plain / mo.bal.57
   rule:  momentum.balancedWeek
@@ -5935,7 +6109,7 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
 
 ### December 2026
 
-31 days on screen, 17 Pulses spoken, 14 Pulse days silent, 88 sentences in all.
+31 days on screen, 17 Pulses spoken, 14 Pulse days silent, 92 sentences in all.
 
 ```text
 2026-12-01  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.27
@@ -6030,6 +6204,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > Three answers about one kind of moment is not a verdict on anything, and it is a record that the moment kept happening.
+2026-12-06  [report closing]  guidance.plan / stage 1 / plain / frm.12+cue.bound.09+act.fin.21
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > If you want somewhere to start in the last hour of the week: finishing something that fits in one sitting.
 
 2026-12-07  [momentum]  comeback / stage 1 / observational / mo.come.62
   rule:  momentum.comeback
@@ -6145,6 +6323,9 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.growingQueues
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > The last two weeks both ended with more.
+2026-12-13  [report closing]  guidance.closing / stage 1 / plain / cls.trust.08
+  rule:  guidance.closing
+  > Keep the shape. It suits you.
 
 2026-12-14  [momentum]  comeback / stage 1 / observational / mo.come.08
   rule:  momentum.comeback
@@ -6258,6 +6439,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > The same situation has come up enough times to have answers stacked against it.
+2026-12-20  [report closing]  guidance.plan / stage 1 / plain / frm.07+cue.hab.04+act.fin.04
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > The next time you finish something would suit clearing one item before adding another.
 
 2026-12-21  [momentum]  comeback / stage 1 / plain / mo.come.01
   rule:  momentum.comeback
@@ -6381,6 +6566,9 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   facts: n=2 [history.activityBandWidth]
   > Four weeks in a row within a band of 2.
+2026-12-27  [report closing]  guidance.closing / stage 1 / plain / cls.trust.01
+  rule:  guidance.closing
+  > Nothing here needs fixing. Carry on.
 
 2026-12-28  [momentum]  steadyStretch / stage 1 / observational / mo.steady.57
   rule:  momentum.steadyStretch
@@ -6428,7 +6616,7 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
 
 ### January 2027
 
-3 days on screen, 2 Pulses spoken, 1 Pulse day silent, 12 sentences in all.
+3 days on screen, 2 Pulses spoken, 1 Pulse day silent, 13 sentences in all.
 
 ```text
 2027-01-01  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.22
@@ -6493,6 +6681,10 @@ span:    365 simulated days, 365 opens, 1673 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > Five answers or more sit in the record now.
+2027-01-03  [report closing]  guidance.plan / stage 1 / plain / frm.04+cue.bound.09+act.fin.22
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > Something to consider in the last hour of the week: choosing one queued item and finishing only that.
 ```
 
 ### The year in counts
@@ -6514,7 +6706,7 @@ report observation: 208 invocations, 208 spoken
 report pattern: 49 invocations, 49 spoken
   families: reportedVsActual 24, growingQueues 18, consistentRhythm 4, decliningActivity 3
 layer 5 vetoes: 0
-distinct variants used: 692
+distinct variants used: 744
 ```
 
 ## 2. Abandoning, the difficult year
@@ -6534,12 +6726,12 @@ failure of the system you set up." It is banner flagged in place below.
 ```text
 persona: abandoning, Abandoning
 why:     Strong for two months, then trailing away. Feeds decliningActivity, focusAbandonment, hardStretch and the difficulty register in 6.4.
-span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
+span:    365 simulated days, 153 opens, 652 events, 585 engine invocations
 ```
 
 ### January 2026
 
-28 days on screen, 7 Pulses spoken, 21 Pulse days silent, 69 sentences in all.
+28 days on screen, 7 Pulses spoken, 21 Pulse days silent, 72 sentences in all.
 
 ```text
 2026-01-04  [momentum]  SILENT (INSUFFICIENT_DATA)
@@ -6658,6 +6850,9 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   rule:  report.observation.timeOfDay
   fired: one part of the day holds most of the week, the week was not confined to a single part of one day
   > Half of the week's activity sat inside one part of the day, and the rest was spread over the others.
+2026-01-11  [report closing]  guidance.closing / stage 1 / plain / cls.new.06
+  rule:  guidance.closing
+  > Nothing repeats often enough yet to point at.
 
 2026-01-12  [momentum]  firstDays / stage 1 / observational / mo.first.47
   rule:  momentum.firstDays
@@ -6743,6 +6938,9 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   rule:  report.observation.timeOfDay
   fired: one part of the day holds most of the week, the week was not confined to a single part of one day
   > A busy part of the day.
+2026-01-18  [report closing]  guidance.closing / stage 1 / plain / cls.new.02
+  rule:  guidance.closing
+  > Not enough of a pattern yet to say anything useful.
 
 2026-01-19  [momentum]  steadyStretch / stage 1 / observational / mo.steady.36
   rule:  momentum.steadyStretch
@@ -6775,7 +6973,7 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   rule:  momentum.steadyStretch
   fired: active on nine or more of the last fourteen days, there are fourteen days to have been active across, the app has existed for the 14 days being described
   facts: m=1 [window.quietDays]
-  > Fourteen days, one of them quiet.
+  > 14 days, one of them quiet.
 2026-01-21  [banner]  weekMixed / stage 1 / reflective / bn.mixed.11
   rule:  banner.weekMixed
   fired: two or more areas were active, one of them holds half the week or more, the window holds at least 4 events, so a share is describing something real
@@ -6838,6 +7036,9 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   rule:  report.observation.timeOfDay
   fired: one part of the day holds most of the week, the week was not confined to a single part of one day
   > More than one part of the day had something in it.
+2026-01-25  [report closing]  guidance.closing / stage 1 / plain / cls.new.09
+  rule:  guidance.closing
+  > There is no hour or day here that the app can lean on yet.
 
 2026-01-26  [momentum]  comeback / stage 1 / observational / mo.come.38
   rule:  momentum.comeback
@@ -6915,7 +7116,7 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
 
 ### February 2026
 
-28 days on screen, 3 Pulses spoken, 25 Pulse days silent, 73 sentences in all.
+28 days on screen, 3 Pulses spoken, 25 Pulse days silent, 77 sentences in all.
 
 ```text
 2026-02-01  [momentum]  steadyStretch / stage 1 / observational / mo.steady.06
@@ -6949,6 +7150,9 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > Three answers about one kind of moment is not a verdict on anything, and it is a record that the moment kept happening.
+2026-02-01  [report closing]  guidance.closing / stage 1 / plain / cls.new.13
+  rule:  guidance.closing
+  > This page fills in as the days do.
 
 2026-02-02  [momentum]  steadyStretch / stage 1 / reflective / mo.steady.16
   rule:  momentum.steadyStretch
@@ -7048,6 +7252,9 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   fired: total activity has fallen three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   facts: k=37 [history.weekEventsAgo:2], m=34 [history.weekEventsAgo:1], n=33 [history.weekEventsAgo:0]
   > 37, then 34, then 33.
+2026-02-08  [report closing]  guidance.closing / stage 1 / plain / cls.new.15
+  rule:  guidance.closing
+  > There is not a repeating hour in the record yet.
 
 2026-02-09  [momentum]  comeback / stage 1 / observational / mo.come.31
   rule:  momentum.comeback
@@ -7138,6 +7345,10 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > The same kind of question has come around three times, which says more about the situation than about the answers.
+2026-02-15  [report closing]  guidance.plan / stage 1 / plain / frm.06+cue.bound.03+act.rep.07
+  rule:  guidance.plan
+  fired: motivated by timeOfDay
+  > There is room at the start of next week for putting the hardest item where the good hours are.
 
 2026-02-16  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.28
   rule:  momentum.balancedWeek
@@ -7235,6 +7446,10 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   fired: one part of the day holds most of the week, the week was not confined to a single part of one day
   > The week had a busy stretch.
 2026-02-22  [report pattern]  SILENT (ALL_QUALIFIED_RULES_FILTERED)
+2026-02-22  [report closing]  guidance.plan / stage 1 / plain / frm.12+cue.bound.09+act.rep.02
+  rule:  guidance.plan
+  fired: motivated by timeOfDay
+  > If you want somewhere to start in the last hour of the week: the same hours that worked.
 
 2026-02-23  [momentum]  steadyStretch / stage 1 / observational / mo.steady.41
   rule:  momentum.steadyStretch
@@ -7302,7 +7517,7 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
 
 ### March 2026
 
-13 days on screen, 4 Pulses spoken, 9 Pulse days silent, 31 sentences in all.
+13 days on screen, 4 Pulses spoken, 9 Pulse days silent, 32 sentences in all.
 
 ```text
 2026-03-01  [momentum]  comeback / stage 1 / plain / mo.come.53
@@ -7333,6 +7548,10 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > An answer is a reading taken at a moment, and this app now holds five of yours or more.
+2026-03-01  [report closing]  guidance.plan / stage 1 / plain / frm.12+cue.hab.06+act.rep.02
+  rule:  guidance.plan
+  fired: motivated by timeOfDay
+  > If you want somewhere to start the next time you open the app: the same hours that worked.
 
 2026-03-02  [momentum]  comeback / stage 1 / observational / mo.come.33
   rule:  momentum.comeback
@@ -7472,7 +7691,7 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
 
 ### April 2026
 
-12 days on screen, 5 Pulses spoken, 7 Pulse days silent, 44 sentences in all.
+12 days on screen, 5 Pulses spoken, 7 Pulse days silent, 48 sentences in all.
 
 ```text
 2026-04-05  [momentum]  quietStretch / stage 1 / observational / mo.quiet.47
@@ -7507,6 +7726,10 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   fired: the area has had nothing in it for three weeks, it used to move, so this is a stop rather than an empty heading, there are at least three weeks of snapshots, without which no pattern may fire
   facts: areaName=Health, sinceRef=2026-03-05
   > Health still exists. It has not done anything since March.
+2026-04-05  [report closing]  guidance.plan / stage 1 / plain / frm.12+cue.bound.07+act.neg.07
+  rule:  guidance.plan
+  fired: motivated by neglectedArea
+  > If you want somewhere to start at the end of the week: putting one new thing at the front of Work.
 
 2026-04-08  [momentum]  quietStretch / stage 1 / plain / mo.quiet.56
   rule:  momentum.quietStretch
@@ -7561,6 +7784,10 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   fired: the area has had nothing in it for three weeks, it used to move, so this is a stop rather than an empty heading, there are at least three weeks of snapshots, without which no pattern may fire
   facts: areaName=Side project, sinceRef=2026-03-03
   > Whatever Side project was for, it has not been for it since March.
+2026-04-12  [report closing]  guidance.plan / stage 1 / plain / frm.06+cue.hab.08+act.neg.23
+  rule:  guidance.plan
+  fired: motivated by neglectedArea
+  > There is room after the next thing is finished for one visit to Health with nothing expected of it.
 
 2026-04-14  [momentum]  quietStretch / stage 1 / observational / mo.quiet.48
   rule:  momentum.quietStretch
@@ -7622,6 +7849,10 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   fired: the area has had nothing in it for three weeks, it used to move, so this is a stop rather than an empty heading, there are at least three weeks of snapshots, without which no pattern may fire
   facts: areaName=Health, sinceRef=2026-03-05
   > Health has been silent since March.
+2026-04-19  [report closing]  guidance.plan / stage 1 / plain / frm.02+cue.bound.11+act.fin.21
+  rule:  guidance.plan
+  fired: motivated by queuePressure
+  > If you want one thing to aim at after this report is closed: finishing something that fits in one sitting.
 
 2026-04-20  [momentum]  quietStretch / stage 1 / observational / mo.quiet.53
   rule:  momentum.quietStretch
@@ -7699,6 +7930,10 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   fired: the area has had nothing in it for three weeks, it used to move, so this is a stop rather than an empty heading, there are at least three weeks of snapshots, without which no pattern may fire
   facts: ageDays=54 [area.areaDaysSinceLastEvent:side], areaName=Side project
   > Side project went quiet 1 month ago. It has not moved since.
+2026-04-26  [report closing]  guidance.plan / stage 1 / plain / frm.11+cue.bound.11+act.rep.03
+  rule:  guidance.plan
+  fired: motivated by dayShape
+  > One possibility after this report is closed: starting at the time you usually finish things.
 
 2026-04-28  [momentum]  quietStretch / stage 1 / observational / mo.quiet.51
   rule:  momentum.quietStretch
@@ -7710,7 +7945,7 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
 
 ### May 2026
 
-10 days on screen, 5 Pulses spoken, 5 Pulse days silent, 26 sentences in all.
+10 days on screen, 5 Pulses spoken, 5 Pulse days silent, 27 sentences in all.
 
 ```text
 2026-05-05  [momentum]  quietStretch / stage 1 / reflective / mo.quiet.33
@@ -7838,6 +8073,10 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   fired: the area has had nothing in it for three weeks, it used to move, so this is a stop rather than an empty heading, there are at least three weeks of snapshots, without which no pattern may fire
   facts: areaName=Health
   > Health used to move every week. It has not moved in three.
+2026-05-24  [report closing]  guidance.plan / stage 1 / plain / frm.01+cue.hab.04+act.neg.12
+  rule:  guidance.plan
+  fired: motivated by neglectedArea
+  > One option for the next time you finish something: writing a first step under whatever is at the front of Work.
 
 2026-05-26  [momentum]  quietStretch / stage 1 / reflective / mo.quiet.08
   rule:  momentum.quietStretch
@@ -7948,7 +8187,7 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
 
 ### July 2026
 
-11 days on screen, 5 Pulses spoken, 6 Pulse days silent, 31 sentences in all.
+11 days on screen, 5 Pulses spoken, 6 Pulse days silent, 32 sentences in all.
 
 ```text
 2026-07-04  [momentum]  quietStretch / stage 1 / observational / mo.quiet.04
@@ -8074,6 +8313,9 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   fired: the queues have held the same length for four weeks, there are four weeks to see it across, there is a queue to be in balance
   facts: sinceRef=2026-06-28
   > The backlog has neither grown nor shrunk since June.
+2026-07-26  [report closing]  guidance.closing / stage 1 / plain / cls.new.12
+  rule:  guidance.closing
+  > The app is looking for a day that repeats and has not found one.
 
 2026-07-28  [momentum]  quietStretch / stage 1 / plain / mo.quiet.09
   rule:  momentum.quietStretch
@@ -8109,7 +8351,7 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
 
 ### August 2026
 
-10 days on screen, 5 Pulses spoken, 5 Pulse days silent, 29 sentences in all.
+10 days on screen, 5 Pulses spoken, 5 Pulse days silent, 30 sentences in all.
 
 ```text
 2026-08-01  [momentum]  quietStretch / stage 1 / observational / mo.quiet.04
@@ -8169,6 +8411,10 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   fired: the area has had nothing in it for three weeks, it used to move, so this is a stop rather than an empty heading, there are at least three weeks of snapshots, without which no pattern may fire
   facts: ageDays=24 [area.areaDaysSinceLastEvent:work], areaName=Work
   > Work went quiet 3 weeks ago. It has not moved since.
+2026-08-09  [report closing]  guidance.plan / stage 1 / plain / frm.12+cue.hab.02+act.neg.03
+  rule:  guidance.plan
+  fired: motivated by neglectedArea
+  > If you want somewhere to start after your next focus session: the smallest thing Work is holding.
 
 2026-08-10  [momentum]  quietStretch / stage 1 / reflective / mo.quiet.23
   rule:  momentum.quietStretch
@@ -8234,7 +8480,7 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   rule:  momentum.quietStretch
   fired: active on four or fewer of the last fourteen days, active on at least one, so no day count renders as zero, the app has existed for the 14 days being described, there are fourteen days to have been quiet across
   facts: dayCount=3 [window.activeDays]
-  > Active three of the last fourteen days.
+  > three days of the fortnight saw a change.
 2026-08-26  [banner]  weekQuiet / stage 1 / neutral_agent / bn.quiet.07
   rule:  banner.weekQuiet
   fired: fewer events than days so far this week, the week is under way, so this is quiet rather than not yet begun
@@ -8296,7 +8542,7 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   rule:  momentum.quietStretch
   fired: active on four or fewer of the last fourteen days, active on at least one, so no day count renders as zero, the app has existed for the 14 days being described, there are fourteen days to have been quiet across
   facts: dayCount=1 [window.activeDays]
-  > Active one of the last fourteen days.
+  > one day of the fortnight saw a change.
 2026-09-16  [banner]  weekQuiet / stage 1 / neutral_agent / bn.quiet.23
   rule:  banner.weekQuiet
   fired: fewer events than days so far this week, the week is under way, so this is quiet rather than not yet begun
@@ -8332,7 +8578,7 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   rule:  momentum.quietStretch
   fired: active on four or fewer of the last fourteen days, active on at least one, so no day count renders as zero, the app has existed for the 14 days being described, there are fourteen days to have been quiet across
   facts: dayCount=2 [window.activeDays]
-  > Active two of the last fourteen days.
+  > two days of the fortnight saw a change.
 2026-09-21  [banner]  weekQuiet / stage 1 / neutral_agent / bn.quiet.34
   rule:  banner.weekQuiet
   fired: fewer events than days so far this week, the week is under way, so this is quiet rather than not yet begun
@@ -8357,7 +8603,7 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
 
 ### October 2026
 
-12 days on screen, 6 Pulses spoken, 6 Pulse days silent, 45 sentences in all.
+12 days on screen, 6 Pulses spoken, 6 Pulse days silent, 47 sentences in all.
 
 ```text
 2026-10-01  [momentum]  quietStretch / stage 1 / reflective / mo.quiet.23
@@ -8442,6 +8688,10 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   fired: the area has had nothing in it for three weeks, it used to move, so this is a stop rather than an empty heading, there are at least three weeks of snapshots, without which no pattern may fire
   facts: areaName=Work, sinceRef=2026-08-16
   > Work has been silent since August.
+2026-10-11  [report closing]  guidance.plan / stage 1 / plain / frm.02+cue.bound.10+act.neg.02
+  rule:  guidance.plan
+  fired: motivated by neglectedArea
+  > If you want one thing to aim at before the next report: opening Work and reading what is in it.
 
 2026-10-12  [momentum]  quietStretch / stage 1 / observational / mo.quiet.47
   rule:  momentum.quietStretch
@@ -8497,6 +8747,10 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   rule:  report.pattern.queueEquilibrium
   fired: the queues have held the same length for four weeks, there are four weeks to see it across, there is a queue to be in balance
   > Your queues have held the same length for four weeks.
+2026-10-18  [report closing]  guidance.plan / stage 1 / plain / frm.04+cue.hab.08+act.fin.08
+  rule:  guidance.plan
+  fired: motivated by queuePressure
+  > Something to consider after the next thing is finished: letting one thing leave before the next arrives.
 
 2026-10-20  [momentum]  quietStretch / stage 1 / plain / mo.quiet.60
   rule:  momentum.quietStretch
@@ -8588,7 +8842,7 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
 
 ### November 2026
 
-10 days on screen, 5 Pulses spoken, 5 Pulse days silent, 39 sentences in all.
+10 days on screen, 5 Pulses spoken, 5 Pulse days silent, 43 sentences in all.
 
 ```text
 2026-11-01  [momentum]  quietStretch / stage 1 / observational / mo.quiet.45
@@ -8612,6 +8866,10 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   facts: ageDays=7 [area.areaDaysSinceLastEvent:work], areaName=Work
   > 7 days without an event in Work.
 2026-11-01  [report pattern]  SILENT (ALL_QUALIFIED_RULES_FILTERED)
+2026-11-01  [report closing]  guidance.plan / stage 1 / plain / frm.02+cue.bound.01+act.neg.20
+  rule:  guidance.plan
+  fired: motivated by neglectedArea
+  > If you want one thing to aim at before the week ends: looking at what Work was holding a month ago.
 
 2026-11-06  [momentum]  quietStretch / stage 1 / plain / mo.quiet.64
   rule:  momentum.quietStretch
@@ -8666,6 +8924,10 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   rule:  report.pattern.queueEquilibrium
   fired: the queues have held the same length for four weeks, there are four weeks to see it across, there is a queue to be in balance
   > The queues have been stable for a month.
+2026-11-08  [report closing]  guidance.plan / stage 1 / plain / frm.12+cue.hab.02+act.neg.07
+  rule:  guidance.plan
+  fired: motivated by neglectedArea
+  > If you want somewhere to start after your next focus session: putting one new thing at the front of Work.
 
 2026-11-16  [momentum]  cleanSlate / stage 1 / observational / mo.clean.43
   rule:  momentum.cleanSlate
@@ -8735,6 +8997,10 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   fired: the area has had nothing in it for three weeks, it used to move, so this is a stop rather than an empty heading, there are at least three weeks of snapshots, without which no pattern may fire
   facts: ageDays=28 [area.areaDaysSinceLastEvent:work], areaName=Work
   > Work went quiet 4 weeks ago. It has not moved since.
+2026-11-22  [report closing]  guidance.plan / stage 1 / plain / frm.08+cue.bound.01+act.neg.07
+  rule:  guidance.plan
+  fired: motivated by neglectedArea
+  > One thing that would fit before the week ends: putting one new thing at the front of Work.
 
 2026-11-27  [momentum]  quietStretch / stage 1 / reflective / mo.quiet.06
   rule:  momentum.quietStretch
@@ -8783,11 +9049,15 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   rule:  report.pattern.queueEquilibrium
   fired: the queues have held the same length for four weeks, there are four weeks to see it across, there is a queue to be in balance
   > Four weeks of balance between intake and output.
+2026-11-29  [report closing]  guidance.plan / stage 1 / plain / frm.12+cue.bound.06+act.fin.22
+  rule:  guidance.plan
+  fired: motivated by queuePressure
+  > If you want somewhere to start before the weekend: choosing one queued item and finishing only that.
 ```
 
 ### December 2026
 
-6 days on screen, 4 Pulses spoken, 2 Pulse days silent, 21 sentences in all.
+6 days on screen, 4 Pulses spoken, 2 Pulse days silent, 23 sentences in all.
 
 ```text
 2026-12-06  [momentum]  quietStretch / stage 1 / observational / mo.quiet.46
@@ -8810,6 +9080,9 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > Three answers about one kind of moment is not a verdict on anything, and it is a record that the moment kept happening.
+2026-12-06  [report closing]  guidance.closing / stage 1 / plain / cls.new.01
+  rule:  guidance.closing
+  > A few more weeks and this page will know your rhythm.
 
 2026-12-09  [momentum]  quietStretch / stage 1 / reflective / mo.quiet.27
   rule:  momentum.quietStretch
@@ -8825,7 +9098,7 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   rule:  momentum.quietStretch
   fired: active on four or fewer of the last fourteen days, active on at least one, so no day count renders as zero, the app has existed for the 14 days being described, there are fourteen days to have been quiet across
   facts: dayCount=1 [window.activeDays]
-  > Active one of the last fourteen days.
+  > one day of the fortnight saw a change.
 2026-12-11  [banner]  weekQuiet / stage 1 / neutral_agent / bn.quiet.48
   rule:  banner.weekQuiet
   fired: fewer events than days so far this week, the week is under way, so this is quiet rather than not yet begun
@@ -8895,6 +9168,9 @@ span:    365 simulated days, 153 opens, 652 events, 562 engine invocations
   fired: the queues have held the same length for four weeks, there are four weeks to see it across, there is a queue to be in balance
   facts: sinceRef=2026-11-29
   > The backlog has neither grown nor shrunk since November.
+2026-12-27  [report closing]  guidance.closing / stage 1 / plain / cls.new.06
+  rule:  guidance.closing
+  > Nothing repeats often enough yet to point at.
 ```
 
 ### The year in counts
@@ -8916,7 +9192,7 @@ report observation: 56 invocations, 55 spoken
 report pattern: 22 invocations, 20 spoken
   families: areaGoneQuiet 9, queueEquilibrium 5, reportedVsActual 5, decliningActivity 1
 layer 5 vetoes: 0
-distinct variants used: 324
+distinct variants used: 346
 ```
 
 ## 3. Balanced across four, the silent year
@@ -8941,12 +9217,12 @@ weeks out of 52.
 ```text
 persona: balancedAcrossFour, Balanced across four
 why:     Four areas, none dominant. Feeds balanced, spread and areaBalance.
-span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
+span:    365 simulated days, 365 opens, 2218 events, 1456 engine invocations
 ```
 
 ### January 2026
 
-28 days on screen, 14 Pulses spoken, 14 Pulse days silent, 76 sentences in all.
+28 days on screen, 14 Pulses spoken, 14 Pulse days silent, 79 sentences in all.
 
 ```text
 2026-01-04  [momentum]  SILENT (INSUFFICIENT_DATA)
@@ -9075,6 +9351,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   fired: intake exceeds output by five or more, there are additions to count
   facts: k=4 [rollup.queueGrowth]
   > 4 net, into the queues.
+2026-01-11  [report closing]  guidance.closing / stage 1 / plain / cls.new.06
+  rule:  guidance.closing
+  > Nothing repeats often enough yet to point at.
 
 2026-01-12  [momentum]  firstDays / stage 1 / observational / mo.first.47
   rule:  momentum.firstDays
@@ -9184,6 +9463,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.observation.timeOfDay
   fired: one part of the day holds most of the week, the week was not confined to a single part of one day
   > Two or more parts of the day had activity in them.
+2026-01-18  [report closing]  guidance.closing / stage 1 / plain / cls.new.02
+  rule:  guidance.closing
+  > Not enough of a pattern yet to say anything useful.
 
 2026-01-19  [momentum]  balancedWeek / stage 1 / plain / mo.bal.63
   rule:  momentum.balancedWeek
@@ -9291,6 +9573,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   fired: three or more pulses were answered in the window, there are completions for the answers to be about
   facts: k=1 [pulse.flaggedInWindow], m=2 [pulse.positiveInWindow], n=3 [pulse.answeredInWindow]
   > 3 answers this week: 2 of them took the positive option and 1 took the other one.
+2026-01-25  [report closing]  guidance.closing / stage 1 / plain / cls.new.09
+  rule:  guidance.closing
+  > There is no hour or day here that the app can lean on yet.
 
 2026-01-26  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.23
   rule:  momentum.balancedWeek
@@ -9370,7 +9655,7 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
 
 ### February 2026
 
-28 days on screen, 14 Pulses spoken, 14 Pulse days silent, 86 sentences in all.
+28 days on screen, 14 Pulses spoken, 14 Pulse days silent, 90 sentences in all.
 
 ```text
 2026-02-01  [momentum]  balancedWeek / stage 1 / plain / mo.bal.62
@@ -9417,6 +9702,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > Three answers about one kind of moment is not a verdict on anything, and it is a record that the moment kept happening.
+2026-02-01  [report closing]  guidance.closing / stage 1 / plain / cls.new.13
+  rule:  guidance.closing
+  > This page fills in as the days do.
 
 2026-02-02  [momentum]  balancedWeek / stage 1 / observational / mo.bal.36
   rule:  momentum.balancedWeek
@@ -9532,6 +9820,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   facts: n=1 [history.activityBandWidth]
   > The busiest week of the last four and the quietest are 1 event apart.
+2026-02-08  [report closing]  guidance.closing / stage 1 / plain / cls.new.15
+  rule:  guidance.closing
+  > There is not a repeating hour in the record yet.
 
 2026-02-09  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.12
   rule:  momentum.balancedWeek
@@ -9651,6 +9942,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > The same kind of question has come around three times, which says more about the situation than about the answers.
+2026-02-15  [report closing]  guidance.plan / stage 1 / plain / frm.06+cue.hab.07+act.brk.12
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > There is room before Personal is opened for moving Order new running shoes back and putting something finishable in front.
 
 2026-02-16  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.28
   rule:  momentum.balancedWeek
@@ -9763,6 +10058,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.consistentRhythm
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   > The totals have sat close together for a month.
+2026-02-22  [report closing]  guidance.plan / stage 1 / plain / frm.12+cue.hab.07+act.brk.18
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > If you want somewhere to start before Personal is opened: dropping Order new running shoes and writing the real one.
 
 2026-02-23  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.13
   rule:  momentum.balancedWeek
@@ -9844,7 +10143,7 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
 
 ### March 2026
 
-31 days on screen, 16 Pulses spoken, 15 Pulse days silent, 100 sentences in all.
+31 days on screen, 16 Pulses spoken, 15 Pulse days silent, 105 sentences in all.
 
 ```text
 2026-03-01  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.17
@@ -9888,6 +10187,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > An answer is a reading taken at a moment, and this app now holds five of yours or more.
+2026-03-01  [report closing]  guidance.closing / stage 1 / plain / cls.trust.06
+  rule:  guidance.closing
+  > No adjustment needed this week.
 
 2026-03-02  [momentum]  balancedWeek / stage 1 / observational / mo.bal.47
   rule:  momentum.balancedWeek
@@ -10004,6 +10306,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   facts: n=2 [history.activityBandWidth]
   > The four weekly totals are within 2 of each other.
+2026-03-08  [report closing]  guidance.plan / stage 1 / plain / frm.10+cue.bound.07+act.fin.10
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > There is time at the end of the week for fifteen minutes on whatever is nearest to finished.
 
 2026-03-09  [momentum]  balancedWeek / stage 1 / plain / mo.bal.09
   rule:  momentum.balancedWeek
@@ -10125,6 +10431,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > Three weeks of answers.
+2026-03-15  [report closing]  guidance.plan / stage 1 / plain / frm.06+cue.hab.05+act.brk.18
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > There is room before you start on Home again for dropping Finish the tax folder and writing the real one.
 
 2026-03-16  [momentum]  balancedWeek / stage 1 / observational / mo.bal.11
   rule:  momentum.balancedWeek
@@ -10237,6 +10547,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.consistentRhythm
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   > The month kept one pace.
+2026-03-22  [report closing]  guidance.closing / stage 1 / plain / cls.trust.13
+  rule:  guidance.closing
+  > A week that asks for nothing is a reading too.
 
 2026-03-23  [momentum]  balancedWeek / stage 1 / plain / mo.bal.65
   rule:  momentum.balancedWeek
@@ -10357,6 +10670,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > One subject has produced three answers of its own.
+2026-03-29  [report closing]  guidance.plan / stage 1 / plain / frm.03+cue.band.04+act.brk.14
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > Your first hour might be the moment for the smallest version of Plan the trip route that would still count.
 
 2026-03-30  [momentum]  balancedWeek / stage 1 / observational / mo.bal.45
   rule:  momentum.balancedWeek
@@ -10388,7 +10705,7 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
 
 ### April 2026
 
-30 days on screen, 15 Pulses spoken, 15 Pulse days silent, 91 sentences in all.
+30 days on screen, 15 Pulses spoken, 15 Pulse days silent, 95 sentences in all.
 
 ```text
 2026-04-01  [momentum]  balancedWeek / stage 1 / observational / mo.bal.08
@@ -10478,6 +10795,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.consistentRhythm
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   > Your activity has stayed within a narrow band for four weeks.
+2026-04-05  [report closing]  guidance.closing / stage 1 / plain / cls.trust.07
+  rule:  guidance.closing
+  > That week does not need a note from anyone.
 
 2026-04-06  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.12
   rule:  momentum.balancedWeek
@@ -10596,6 +10916,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > The same ground, more than twice.
+2026-04-12  [report closing]  guidance.plan / stage 1 / plain / frm.06+cue.hab.08+act.fin.08
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > There is room after the next thing is finished for letting one thing leave before the next arrives.
 
 2026-04-13  [momentum]  balancedWeek / stage 1 / plain / mo.bal.09
   rule:  momentum.balancedWeek
@@ -10708,6 +11032,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   facts: n=2 [history.activityBandWidth]
   > The totals did not move by more than 2.
+2026-04-19  [report closing]  guidance.plan / stage 1 / plain / frm.05+cue.bound.11+act.brk.04
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > A small one after this report is closed: deciding whether Read the design chapter is one thing or several.
 
 2026-04-20  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.24
   rule:  momentum.balancedWeek
@@ -10826,6 +11154,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > You have been asked repeatedly.
+2026-04-26  [report closing]  guidance.closing / stage 1 / plain / cls.rev.12
+  rule:  guidance.closing
+  > Whether each active item is still the right item is worth one pass.
 
 2026-04-27  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.30
   rule:  momentum.balancedWeek
@@ -10884,7 +11215,7 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
 
 ### May 2026
 
-31 days on screen, 15 Pulses spoken, 16 Pulse days silent, 97 sentences in all.
+31 days on screen, 15 Pulses spoken, 16 Pulse days silent, 102 sentences in all.
 
 ```text
 2026-05-01  [momentum]  balancedWeek / stage 1 / observational / mo.bal.34
@@ -10946,6 +11277,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   facts: n=2 [history.activityBandWidth]
   > The difference between the fullest of the last four weeks and the emptiest of them is 2 events.
+2026-05-03  [report closing]  guidance.closing / stage 1 / plain / cls.trust.01
+  rule:  guidance.closing
+  > Nothing here needs fixing. Carry on.
 
 2026-05-04  [momentum]  balancedWeek / stage 1 / observational / mo.bal.38
   rule:  momentum.balancedWeek
@@ -11067,6 +11401,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > A question the app has asked you more than twice.
+2026-05-10  [report closing]  guidance.closing / stage 1 / plain / cls.rev.16
+  rule:  guidance.closing
+  > Every active item was chosen on some earlier day.
 
 2026-05-11  [momentum]  balancedWeek / stage 1 / observational / mo.bal.37
   rule:  momentum.balancedWeek
@@ -11181,6 +11518,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.consistentRhythm
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   > A month of one size.
+2026-05-17  [report closing]  guidance.closing / stage 1 / plain / cls.trust.23
+  rule:  guidance.closing
+  > The week can be left alone.
 
 2026-05-18  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.26
   rule:  momentum.balancedWeek
@@ -11301,6 +11641,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > Five answers is enough for the record to have a shape, and three of them point at the same kind of moment.
+2026-05-24  [report closing]  guidance.plan / stage 1 / plain / frm.01+cue.hab.04+act.fin.06
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > One option for the next time you finish something: finishing something before writing anything down.
 
 2026-05-25  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.26
   rule:  momentum.balancedWeek
@@ -11412,11 +11756,15 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.consistentRhythm
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   > A month without a big week or a small one.
+2026-05-31  [report closing]  guidance.plan / stage 1 / plain / frm.12+cue.hab.11+act.brk.03
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > If you want somewhere to start once Home is open: twenty minutes on Clear the garage shelf and nothing else.
 ```
 
 ### June 2026
 
-30 days on screen, 15 Pulses spoken, 15 Pulse days silent, 91 sentences in all.
+30 days on screen, 15 Pulses spoken, 15 Pulse days silent, 95 sentences in all.
 
 ```text
 2026-06-01  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.10
@@ -11538,6 +11886,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > A subject that keeps returning.
+2026-06-07  [report closing]  guidance.plan / stage 1 / plain / frm.03+cue.band.10+act.fin.21
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > Early in the day might be the moment for finishing something that fits in one sitting.
 
 2026-06-08  [momentum]  balancedWeek / stage 1 / plain / mo.bal.60
   rule:  momentum.balancedWeek
@@ -11650,6 +12002,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.growingQueues
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > Higher again.
+2026-06-14  [report closing]  guidance.closing / stage 1 / plain / cls.trust.14
+  rule:  guidance.closing
+  > The shape held all week.
 
 2026-06-15  [momentum]  balancedWeek / stage 1 / observational / mo.bal.52
   rule:  momentum.balancedWeek
@@ -11770,6 +12125,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > Three moments, all about one thing.
+2026-06-21  [report closing]  guidance.plan / stage 1 / plain / frm.11+cue.hab.01+act.brk.11
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > One possibility before you open Personal: writing the next physical step of Call the bank under it.
 
 2026-06-22  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.17
   rule:  momentum.balancedWeek
@@ -11884,6 +12243,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.growingQueues
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > More arrives than leaves, and has for three weeks.
+2026-06-28  [report closing]  guidance.plan / stage 1 / plain / frm.06+cue.hab.03+act.fin.06
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > There is room before you add anything new for finishing something before writing anything down.
 
 2026-06-29  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.15
   rule:  momentum.balancedWeek
@@ -11915,7 +12278,7 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
 
 ### July 2026
 
-31 days on screen, 16 Pulses spoken, 15 Pulse days silent, 93 sentences in all.
+31 days on screen, 16 Pulses spoken, 15 Pulse days silent, 97 sentences in all.
 
 ```text
 2026-07-01  [momentum]  balancedWeek / stage 1 / observational / mo.bal.03
@@ -12010,6 +12373,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.consistentRhythm
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   > Four weeks of the same weight.
+2026-07-05  [report closing]  guidance.closing / stage 1 / plain / cls.trust.11
+  rule:  guidance.closing
+  > Nothing in the record is out of place.
 
 2026-07-06  [momentum]  balancedWeek / stage 1 / observational / mo.bal.39
   rule:  momentum.balancedWeek
@@ -12120,6 +12486,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > Answers, and then more answers.
+2026-07-12  [report closing]  guidance.plan / stage 1 / plain / frm.04+cue.hab.07+act.brk.11
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > Something to consider before Home is opened: writing the next physical step of Cancel the old subscription under it.
 
 2026-07-13  [momentum]  balancedWeek / stage 1 / observational / mo.bal.08
   rule:  momentum.balancedWeek
@@ -12240,6 +12610,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   facts: n=1 [history.activityBandWidth]
   > Four weeks that sit within 1 event of one another is a pace, and a pace is a different fact from a total.
+2026-07-19  [report closing]  guidance.closing / stage 1 / plain / cls.trust.02
+  rule:  guidance.closing
+  > The week worked. Do that again.
 
 2026-07-20  [momentum]  balancedWeek / stage 1 / plain / mo.bal.59
   rule:  momentum.balancedWeek
@@ -12350,6 +12723,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > One subject, answered more than twice.
+2026-07-26  [report closing]  guidance.closing / stage 1 / plain / cls.trust.22
+  rule:  guidance.closing
+  > This is a page with no note on it.
 
 2026-07-27  [momentum]  balancedWeek / stage 1 / observational / mo.bal.42
   rule:  momentum.balancedWeek
@@ -12422,7 +12798,7 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
 
 ### August 2026
 
-31 days on screen, 15 Pulses spoken, 16 Pulse days silent, 98 sentences in all.
+31 days on screen, 15 Pulses spoken, 16 Pulse days silent, 103 sentences in all.
 
 ```text
 2026-08-01  [momentum]  balancedWeek / stage 1 / plain / mo.bal.58
@@ -12475,6 +12851,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   facts: n=2 [history.activityBandWidth]
   > The last four weeks are within 2 events top to bottom.
+2026-08-02  [report closing]  guidance.plan / stage 1 / plain / frm.06+cue.bound.04+act.fin.08
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > There is room before Friday for letting one thing leave before the next arrives.
 
 2026-08-03  [momentum]  balancedWeek / stage 1 / observational / mo.bal.52
   rule:  momentum.balancedWeek
@@ -12588,6 +12968,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > The app asked, you answered, and then the app asked again, and that has happened three times about one subject.
+2026-08-09  [report closing]  guidance.closing / stage 1 / plain / cls.trust.18
+  rule:  guidance.closing
+  > The week did not need managing.
 
 2026-08-10  [momentum]  balancedWeek / stage 1 / plain / mo.bal.54
   rule:  momentum.balancedWeek
@@ -12705,6 +13088,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.consistentRhythm
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   > A month of similar weeks.
+2026-08-16  [report closing]  guidance.plan / stage 1 / plain / frm.08+cue.hab.01+act.brk.16
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > One thing that would fit before you open Personal: deciding whether Draft the quarterly summary belongs in Personal at all.
 
 2026-08-17  [momentum]  balancedWeek / stage 1 / plain / mo.bal.56
   rule:  momentum.balancedWeek
@@ -12817,6 +13204,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > What you said at the time is stored exactly as you said it, and there are five of those at least.
+2026-08-23  [report closing]  guidance.closing / stage 1 / plain / cls.trust.19
+  rule:  guidance.closing
+  > What worked is still working.
 
 2026-08-24  [momentum]  balancedWeek / stage 1 / plain / mo.bal.64
   rule:  momentum.balancedWeek
@@ -12934,6 +13324,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.consistentRhythm
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   > Four weeks of the same size.
+2026-08-30  [report closing]  guidance.closing / stage 1 / plain / cls.trust.18
+  rule:  guidance.closing
+  > The week did not need managing.
 
 2026-08-31  [momentum]  balancedWeek / stage 1 / plain / mo.bal.65
   rule:  momentum.balancedWeek
@@ -12949,7 +13342,7 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
 
 ### September 2026
 
-30 days on screen, 15 Pulses spoken, 15 Pulse days silent, 91 sentences in all.
+30 days on screen, 15 Pulses spoken, 15 Pulse days silent, 95 sentences in all.
 
 ```text
 2026-09-01  [momentum]  balancedWeek / stage 1 / observational / mo.bal.46
@@ -13056,6 +13449,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > A repeated question.
+2026-09-06  [report closing]  guidance.plan / stage 1 / plain / frm.12+cue.hab.02+act.brk.02
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > If you want somewhere to start after your next focus session: replacing Update the resume with the first step of it.
 
 2026-09-07  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.26
   rule:  momentum.balancedWeek
@@ -13173,6 +13570,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.consistentRhythm
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   > There is no week in the last four that the other three do not resemble.
+2026-09-13  [report closing]  guidance.plan / stage 1 / plain / frm.03+cue.hab.07+act.brk.04
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > Before Home is opened might be the moment for deciding whether Update the resume is one thing or several.
 
 2026-09-14  [momentum]  balancedWeek / stage 1 / plain / mo.bal.63
   rule:  momentum.balancedWeek
@@ -13286,6 +13687,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > One kind of moment has come around three times.
+2026-09-20  [report closing]  guidance.plan / stage 1 / plain / frm.07+cue.hab.04+act.fin.04
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > The next time you finish something would suit clearing one item before adding another.
 
 2026-09-21  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.07
   rule:  momentum.balancedWeek
@@ -13407,6 +13812,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.consistentRhythm
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   > A month that reads as one thing.
+2026-09-27  [report closing]  guidance.plan / stage 1 / plain / frm.04+cue.hab.07+act.brk.05
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > Something to consider before Personal is opened: adding a note to Schedule the eye test saying what is in the way.
 
 2026-09-28  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.14
   rule:  momentum.balancedWeek
@@ -13448,7 +13857,7 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
 
 ### October 2026
 
-31 days on screen, 16 Pulses spoken, 15 Pulse days silent, 92 sentences in all.
+31 days on screen, 16 Pulses spoken, 15 Pulse days silent, 96 sentences in all.
 
 ```text
 2026-10-01  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.17
@@ -13526,6 +13935,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > Three answers, one subject.
+2026-10-04  [report closing]  guidance.closing / stage 1 / plain / cls.trust.06
+  rule:  guidance.closing
+  > No adjustment needed this week.
 
 2026-10-05  [momentum]  balancedWeek / stage 1 / observational / mo.bal.50
   rule:  momentum.balancedWeek
@@ -13646,6 +14058,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   facts: n=1 [history.activityBandWidth]
   > The four weeks behind this one came in within 1 event of each other, top to bottom.
+2026-10-11  [report closing]  guidance.closing / stage 1 / plain / cls.trust.13
+  rule:  guidance.closing
+  > A week that asks for nothing is a reading too.
 
 2026-10-12  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.33
   rule:  momentum.balancedWeek
@@ -13757,6 +14172,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > An answer is a reading taken at a moment, and this app now holds five of yours or more.
+2026-10-18  [report closing]  guidance.closing / stage 1 / plain / cls.rev.12
+  rule:  guidance.closing
+  > Whether each active item is still the right item is worth one pass.
 
 2026-10-19  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.27
   rule:  momentum.balancedWeek
@@ -13877,6 +14295,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.consistentRhythm
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   > The last four weeks came in level.
+2026-10-25  [report closing]  guidance.plan / stage 1 / plain / frm.05+cue.bound.07+act.fin.11
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > A small one at the end of the week: finishing one item without opening a second.
 
 2026-10-26  [momentum]  balancedWeek / stage 1 / observational / mo.bal.38
   rule:  momentum.balancedWeek
@@ -13957,7 +14379,7 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
 
 ### November 2026
 
-30 days on screen, 15 Pulses spoken, 15 Pulse days silent, 97 sentences in all.
+30 days on screen, 15 Pulses spoken, 15 Pulse days silent, 102 sentences in all.
 
 ```text
 2026-11-01  [momentum]  balancedWeek / stage 1 / observational / mo.bal.49
@@ -13996,6 +14418,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > Your answers have been consistent. So has the pattern behind them.
+2026-11-01  [report closing]  guidance.plan / stage 1 / plain / frm.02+cue.band.10+act.fin.07
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > If you want one thing to aim at early in the day: moving one queued item all the way through.
 
 2026-11-02  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.30
   rule:  momentum.balancedWeek
@@ -14114,6 +14540,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.consistentRhythm
   fired: four weeks inside a narrow band, there are four weeks to see it across, the band is a rhythm rather than a run of empty weeks
   > Same rhythm, four weeks running.
+2026-11-08  [report closing]  guidance.plan / stage 1 / plain / frm.12+cue.hab.02+act.brk.08
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > If you want somewhere to start after your next focus session: naming the obstacle, even in three words.
 
 2026-11-09  [momentum]  balancedWeek / stage 1 / observational / mo.bal.37
   rule:  momentum.balancedWeek
@@ -14227,6 +14657,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > The question came back.
+2026-11-15  [report closing]  guidance.plan / stage 1 / plain / frm.09+cue.hab.04+act.fin.20
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > The next time you finish something is one place for ten minutes on the item nearest the front.
 
 2026-11-16  [momentum]  balancedWeek / stage 1 / plain / mo.bal.59
   rule:  momentum.balancedWeek
@@ -14348,6 +14782,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.growingQueues
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > Longer than last week. Longer than the week before that.
+2026-11-22  [report closing]  guidance.plan / stage 1 / plain / frm.08+cue.band.10+act.fin.06
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > One thing that would fit early in the day: finishing something before writing anything down.
 
 2026-11-23  [momentum]  balancedWeek / stage 1 / observational / mo.bal.02
   rule:  momentum.balancedWeek
@@ -14458,6 +14896,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > The same kind of question has come around three times, which says more about the situation than about the answers.
+2026-11-29  [report closing]  guidance.closing / stage 1 / plain / cls.rev.03
+  rule:  guidance.closing
+  > Check what each area is currently asking of you.
 
 2026-11-30  [momentum]  balancedWeek / stage 1 / plain / mo.bal.09
   rule:  momentum.balancedWeek
@@ -14479,7 +14920,7 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
 
 ### December 2026
 
-31 days on screen, 15 Pulses spoken, 16 Pulse days silent, 93 sentences in all.
+31 days on screen, 15 Pulses spoken, 16 Pulse days silent, 97 sentences in all.
 
 ```text
 2026-12-01  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.27
@@ -14586,6 +15027,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.growingQueues
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > A rise, then another rise.
+2026-12-06  [report closing]  guidance.plan / stage 1 / plain / frm.12+cue.bound.09+act.fin.21
+  rule:  guidance.plan
+  fired: motivated by intakeVsOutput
+  > If you want somewhere to start in the last hour of the week: finishing something that fits in one sitting.
 
 2026-12-07  [momentum]  balancedWeek / stage 1 / observational / mo.bal.46
   rule:  momentum.balancedWeek
@@ -14701,6 +15146,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > Three weeks of answers.
+2026-12-13  [report closing]  guidance.plan / stage 1 / plain / frm.06+cue.hab.01+act.brk.03
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > There is room before you open Personal for twenty minutes on Repot the balcony plants and nothing else.
 
 2026-12-14  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.25
   rule:  momentum.balancedWeek
@@ -14821,6 +15270,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   facts: k=332 [history.weekQueueSizeAgo:2], m=339 [history.weekQueueSizeAgo:1], n=346 [history.weekQueueSizeAgo:0]
   > 346 waiting now, 339 last week, 332 the week before.
+2026-12-20  [report closing]  guidance.plan / stage 1 / plain / frm.07+cue.hab.04+act.brk.09
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > The next time you finish something would suit splitting Repot the balcony plants into the first part and the rest.
 
 2026-12-21  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.27
   rule:  momentum.balancedWeek
@@ -14934,6 +15387,9 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.reportedVsActual
   fired: there are several stored answers to compare against, one family has been answered about more than twice, there are at least three weeks of snapshots, without which no pattern may fire
   > Five answers is enough for the record to have a shape, and three of them point at the same kind of moment.
+2026-12-27  [report closing]  guidance.closing / stage 1 / plain / cls.trust.01
+  rule:  guidance.closing
+  > Nothing here needs fixing. Carry on.
 
 2026-12-28  [momentum]  balancedWeek / stage 1 / plain / mo.bal.54
   rule:  momentum.balancedWeek
@@ -14994,7 +15450,7 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
 
 ### January 2027
 
-3 days on screen, 2 Pulses spoken, 1 Pulse day silent, 12 sentences in all.
+3 days on screen, 2 Pulses spoken, 1 Pulse day silent, 13 sentences in all.
 
 ```text
 2027-01-01  [momentum]  balancedWeek / stage 1 / reflective / mo.bal.22
@@ -15061,6 +15517,10 @@ span:    365 simulated days, 365 opens, 2218 events, 1404 engine invocations
   rule:  report.pattern.growingQueues
   fired: the queues have grown three weeks running, there are at least three weeks of snapshots, without which no pattern may fire
   > Three consecutive weeks of net growth.
+2027-01-03  [report closing]  guidance.plan / stage 1 / plain / frm.04+cue.hab.01+act.brk.13
+  rule:  guidance.plan
+  fired: motivated by persistentItem
+  > Something to consider before you open Home: asking what Call the bank would look like finished.
 ```
 
 ### The year in counts
@@ -15082,24 +15542,23 @@ report observation: 208 invocations, 208 spoken
 report pattern: 49 invocations, 49 spoken
   families: reportedVsActual 24, consistentRhythm 19, growingQueues 6
 layer 5 vetoes: 0
-distinct variants used: 514
+distinct variants used: 561
 ```
 
 ---
 
 ## Appendix A: every `hardStretch` line in the run
 
-`hardStretch` fired **four times across eleven persona years**, which is what 6.4 intends:
-it waits six weeks between firings, and only three or more quiet weeks with growing
-queues, or a four week decline, reach it at all. One of them falls inside the three years
-above and is banner flagged in place. All four are here so the family can be judged whole,
-because this is the entire run's evidence for a family whose stated consequence is
-removal.
+`hardStretch` fired **three times across eleven persona years**, which is what 6.4
+intends: it waits six weeks between firings, and only three or more quiet weeks with
+growing queues, or a four week decline, reach it at all. One of them falls inside the
+three years above and is banner flagged in place. All three are here so the family can be
+judged whole, because this is the entire run's evidence for a family whose stated
+consequence is removal.
 
 | persona | date | key | the line |
 |---|---|---|---|
 | Abandoning | 2026-10-25 | `ob.hard.l07` | A period like this is not a failure of the system you set up. |
-| Accepts every plan, completes none | 2026-04-26 | `ob.hard.l09` | Three weeks now. |
 | Fast completer | 2026-09-27 | `ob.hard.l16` | The report reads three weeks at a time here, and one week of it would say nothing. |
 | Low focus | 2026-08-30 | `ob.hard.l02` | Stretches like this are common and they are not usually about the app. |
 
@@ -15113,31 +15572,30 @@ person's data to know it from. `ob.hard.l07` denies a failure, which is reassura
 wearing the grammar of an observation.
 
 **The eight lines phase 9 added hold 6.4 more tightly than the eight they were grown
-from.** `ob.hard.l09`, "Three weeks now.", and `ob.hard.l16`, "The report reads three
-weeks at a time here, and one week of it would say nothing.", state the pattern and stop,
-and the second one declines to interpret out loud, which is the whole register in one
-sentence. That is the shape of the ruling if the owner wants one: the newer half of this
-bench is the standard, and the older half is what 6.4 warned about when it said the family
-is removed rather than rewritten.
+from.** `ob.hard.l16`, "The report reads three weeks at a time here, and one week of it
+would say nothing.", state the pattern and stop, and the second one declines to interpret
+out loud, which is the whole register in one sentence. That is the shape of the ruling if
+the owner wants one: the newer half of this bench is the standard, and the older half is
+what 6.4 warned about when it said the family is removed rather than rewritten.
 
 ---
 
 ## Appendix B: where the repeats are now, and who owns them
 
-Variant repeats inside ninety days stand at **2,286**, against 3,898 at the taking before
-this one and 7,370 before phase 9, and the tightest gap is still one day. **93 percent of
+Variant repeats inside ninety days stand at **2,328**, against 3,898 at the taking before
+this one and 7,370 before phase 9, and the tightest gap is still one day. **92 percent of
 what is left is the Momentum headline and the areas banner**, the two surfaces that render
-on every app open rather than once a day. The whole split is 1,370 momentum, 760 banner,
-144 report observation, 6 report headline, 3 pulse, 3 report pattern.
+on every app open rather than once a day. The whole split is 1,400 momentum, 761 banner,
+144 report observation, 11 report closing, 6 report headline, 3 pulse, 3 report pattern.
 
 The benches under the most pressure, measured as firings across the run divided by the
 number of lines the chooser actually reached.
 
 | surface | family | firings | lines reached | firings per line | the most said line |
 |---|---|---|---|---|---|
-| banner | `weekMixed` | 1,241 | 66 | 18.8 | `bn.mixed.21`, 55 times |
-| banner | `weekStarting` | 732 | 47 | 15.6 | `bn.start.33`, 43 times |
-| momentum | `singleAreaWeek` | 1,033 | 67 | 15.4 | `mo.single.62`, 45 times |
+| banner | `weekMixed` | 1,244 | 66 | 18.8 | `bn.mixed.21`, 55 times |
+| momentum | `singleAreaWeek` | 1,089 | 67 | 16.3 | `mo.single.62`, 47 times |
+| banner | `weekStarting` | 724 | 47 | 15.4 | `bn.start.33`, 42 times |
 | momentum | `balancedWeek` | 849 | 65 | 13.1 | `mo.bal.58`, 29 times |
 | report observation | `focusInvestment s3` | 33 | 3 | 11.0 | `ob.focus.s3.l04`, 16 times |
 | report observation | `switchingBehavior` | 10 | 1 | 10.0 | `ob.swi.l01`, 10 times |
@@ -15169,14 +15627,14 @@ ninth is the bound on the repeat filter.
 
 | reading | seventh, phase 9 | eighth, the register tier | ninth, the repeat bound |
 |---|---|---|---|
-| authored corpus lines | 4,733 | 4,733 | **4,785** |
-| variant repeats inside ninety days | 3,898 | 2,411 | **2,286** |
-| two consecutive report leads sharing a length band | 277 | 289 | **305** |
+| authored corpus lines | 4,733 | 4,733 | **4,942** |
+| variant repeats inside ninety days | 3,898 | 2,411 | **2,328** |
+| two consecutive report leads sharing a length band | 277 | 289 | **302** |
 | three or more parallel numeric clauses in a row | 121 | 148 | **148** |
-| Pulse silence, all personas | 65.7 percent | 65.7 percent | **56.0 percent** |
-| silent days: nothing qualified / qualified and filtered / too little data | 895 / 1,161 / 11 | 895 / 1,161 / 11 | **907 / 844 / 11** |
+| Pulse silence, all personas | 65.7 percent | 65.7 percent | **55.8 percent** |
+| silent days: nothing qualified / qualified and filtered / too little data | 895 / 1,161 / 11 | 895 / 1,161 / 11 | **898 / 849 / 11** |
 | layer 5 vetoes | 0 | 0 | **0** |
-| distinct variants a whole run reached | 1,162 of 4,733 | not recorded | **1,846 of 4,785** |
+| distinct variants a whole run reached | 1,162 of 4,733 | not recorded | **2,070 of 4,942** |
 | registers a surface reaches | one, on five of six | every one on all six | **unchanged, every one on all six** |
 
 **Two readings moved the wrong way and both are report composition rather than language.**
@@ -15190,8 +15648,8 @@ thousand corpus lines left it identical to the day, because `VariantChoice.choos
 a line rather than falling silent when a bench is exhausted, so depth cannot produce
 silence at all. The register tier changed which line was chosen and never whether one was,
 so it did not move it either. What moved it was a filter reaching further than the rule it
-implements, and the corrected reach takes silence from 65.7 to 56.0 percent. **What is
-left is not a filter problem.** 907 of the 1,762 silent days had nothing qualify at all,
+implements, and the corrected reach takes silence from 65.7 to 55.8 percent. **What is
+left is not a filter problem.** 898 of the 1,758 silent days had nothing qualify at all,
 which is a question about rules and facts rather than about language, and it is the first
 run in nine measurements where that is the larger half.
 

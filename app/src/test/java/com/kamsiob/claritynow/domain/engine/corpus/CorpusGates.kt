@@ -13,6 +13,7 @@ import com.kamsiob.claritynow.domain.engine.catalog.Template
 import com.kamsiob.claritynow.domain.engine.catalog.Variant
 import com.kamsiob.claritynow.domain.engine.realize.MeasureKind
 import com.kamsiob.claritynow.domain.engine.realize.Measures
+import com.kamsiob.claritynow.domain.engine.realize.SlotRenderer
 import com.kamsiob.claritynow.domain.engine.realize.SlotBindings
 import com.kamsiob.claritynow.domain.engine.validate.LengthLimits
 import com.kamsiob.claritynow.domain.engine.validate.ValidatorVocabulary
@@ -42,6 +43,7 @@ internal object CorpusGates {
             lengthBands(catalog),
             registerDepth(catalog),
             nearDuplicates(catalog),
+            mixedNumberNotation(catalog),
         ),
     )
 
@@ -861,4 +863,122 @@ internal object CorpusGates {
      */
     fun catalogAllowance(name: String): Set<FamilyKey> =
         KnownCorpusViolations.CONSTRUCTION_ALLOWANCE[name].orEmpty()
+
+    // ------------------------------------------------------ 9. mixed number notation
+
+    /**
+     * The number words this gate can evaluate, and the value each names.
+     *
+     * Through nineteen, because `fourteen` is the one that shipped: `mo.steady` lines paired
+     * a slot that renders `12` with the literal `fourteen` on the surface a person reads most
+     * often. Above nineteen a literal is compound and nobody writes one.
+     *
+     * **One is absent and its absence is the whole reason this table is not longer.** `one`
+     * is a pronoun and an article far more often than it is a count, and `one of the areas`
+     * and `the one you started` are not numbers. Zero never reaches a template at all, per
+     * 7.2.
+     */
+    private val NUMBER_WORDS: Map<String, Int> = mapOf(
+        "two" to 2, "three" to 3, "four" to 4, "five" to 5, "six" to 6,
+        "seven" to 7, "eight" to 8, "nine" to 9, "ten" to 10, "eleven" to 11,
+        "twelve" to 12, "thirteen" to 13, "fourteen" to 14, "fifteen" to 15,
+        "sixteen" to 16, "seventeen" to 17, "eighteen" to 18, "nineteen" to 19,
+    )
+
+    /**
+     * A literal number the volume's own renderer would have written as a digit, standing
+     * beside a slot that counts the same thing. Issue #57, 7.2.
+     *
+     * ## The line that found this, on a phone
+     *
+     * `2 of seven days had activity.` Both halves are individually correct. `{n}` is a
+     * `Count` slot and the renderer applied 7.2's Report register, which is digits. The
+     * `seven` is not a slot at all: it is a literal typed by an author who had just been
+     * writing Pulse lines, where two through nine are words. **Each half is right and the
+     * two are only wrong beside each other**, which is exactly what a line by line reading
+     * does not catch, and which is why this is a gate rather than an edit.
+     *
+     * ## The predicate asks the renderer rather than restating it
+     *
+     * A literal is wrong when [SlotRenderer.number] would have written that value differently for
+     * this line's purpose. That is one call, it cannot drift from 7.2, and it gets both
+     * halves of the rule for free: in the Report two through nine are digits, so `seven` is
+     * wrong there; in Pulse and Momentum they are words, so `seven` is right there and
+     * `fourteen` is wrong. Restating the boundary here would have been a second copy of the
+     * one thing this gate exists to check.
+     *
+     * ## And it has to stand beside a slot of the same unit
+     *
+     * Measured over the corpus, a literal number word appears on **390 lines**. Most of them
+     * name the window as an adverbial frame, `over seven days`, `three weeks ago`, and count
+     * a different noun from anything the line renders. Firing on those would turn the volume
+     * that is explicitly allowed to sound like a piece of writing into a spreadsheet.
+     *
+     * So the collision is what makes it a defect: a reader comparing two quantities in one
+     * sentence, seeing one as a word and its sibling as a numeral. Sameness of unit is
+     * decided by [DIMENSIONS], gate 5's table, so a unit added there is covered here on the
+     * same commit.
+     */
+    fun mixedNumberNotation(catalog: ClarityCatalog): GateOutcome {
+        val findings = mutableListOf<GateFinding>()
+        var literals = 0
+        var besideANumericSlot = 0
+        for (variant in catalog.allVariants) {
+            if (SlotBindings.isExcluded(variant.key)) continue
+            val text = variant.statement.text
+            val spelled = wordsWithFollowers(text)
+                .mapNotNull { (word, follower) ->
+                    val value = NUMBER_WORDS[word.lowercase()] ?: return@mapNotNull null
+                    val dimension = DIMENSIONS[follower.lowercase()] ?: return@mapNotNull null
+                    Triple(word, value, dimension)
+                }
+            if (spelled.isEmpty()) continue
+            literals++
+
+            val bindings = SlotBindings.bindingsFor(variant.purpose, variant.family, variant.stage, variant.key)
+            val rendered = Template.MARKER.findAll(text).mapNotNull { marker ->
+                val slot = marker.groupValues[1]
+                val binding = bindings[slot] ?: return@mapNotNull null
+                val measure = Measures.byId(binding.measure) ?: return@mapNotNull null
+                val dimension = when (measure.kind) {
+                    MeasureKind.TEXT, MeasureKind.DATE -> null
+                    MeasureKind.DAYS -> DIMENSIONS["days"]
+                    MeasureKind.PERCENT -> DIMENSIONS["percent"]
+                    MeasureKind.COUNT -> DIMENSIONS[measure.plural.lowercase()]
+                } ?: return@mapNotNull null
+                slot to dimension
+            }.toList()
+            if (rendered.isEmpty()) continue
+            besideANumericSlot++
+
+            for ((word, value, dimension) in spelled) {
+                if (SlotRenderer.number(value, variant.purpose).equals(word, ignoreCase = true)) continue
+                val collision = rendered.firstOrNull { it.second == dimension } ?: continue
+                findings += GateFinding(
+                    variant.key,
+                    "the literal `$word` stands beside {${collision.first}}, which counts the same " +
+                        "unit, and this volume's renderer would write $value as " +
+                        "`${SlotRenderer.number(value, variant.purpose)}`. One quantity is a word and its " +
+                        "sibling is a numeral in one sentence. A literal is not a slot and gets no " +
+                        "register applied to it, so it has to be written the way 7.2 would have " +
+                        "written it here",
+                    variant.origin,
+                )
+            }
+        }
+        return GateOutcome(
+            id = "notation",
+            name = "no literal number the renderer would have written as a digit, beside a slot of its unit",
+            citation = "CLARITY_LOGIC_ENGINE.md 7.2, issue #57",
+            findings = findings,
+            measured = "$literals lines spell a number this gate can evaluate, " +
+                "$besideANumericSlot of them also render one",
+        )
+    }
+
+    /** Every word in [text] paired with the word after it, markers removed. */
+    private fun wordsWithFollowers(text: String): List<Pair<String, String>> {
+        val bare = Template.MARKER.replace(text, " ")
+        return Regex("[A-Za-z]+").findAll(bare).map { it.value }.toList().zipWithNext()
+    }
 }

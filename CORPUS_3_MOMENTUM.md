@@ -82,7 +82,7 @@ mo.steady.40   [O]  The fortnight has been fairly even day to day.
 mo.steady.41   [O]  Activity has been spread through the fortnight.
 mo.steady.42   [O]  {n} completions across a fairly even fortnight.
 mo.steady.43   [P]  {dayCount} days with something in them.
-mo.steady.44   [P]  Fourteen days, {m} of them quiet.
+mo.steady.44   [P]  14 days, {m} of them quiet.
 mo.steady.45   [P]  Active on most days.
 mo.steady.46   [P]  {dayCount} active days, {m} quiet.
 mo.steady.47   [P]  {n} completions in fourteen days.
@@ -90,7 +90,7 @@ mo.steady.48   [P]  A steady fortnight.
 mo.steady.49   [P]  Fourteen days, mostly active.
 mo.steady.50   [P]  Even, {dayCount} days of 14.
 mo.steady.51   [P]  {m} quiet days, the rest with something.
-mo.steady.52   [N]  Fourteen days, {m} of them without activity.
+mo.steady.52   [N]  14 days, {m} of them without activity.
 mo.steady.53   [N]  The fortnight holds more active days than quiet ones.
 mo.steady.54   [N]  Activity sits on most of the fourteen days.
 mo.steady.55  [R]  Two weeks with something in most of them.
@@ -106,11 +106,11 @@ mo.steady.60  [N]  The active days outnumber the quiet ones.
 Trigger: active on 4 or fewer of the last 14 days.
 
 ```
-mo.quiet.01  [P]  Active {dayCount} of the last fourteen days.
-mo.quiet.02  [N]  {dayCount} of the last fourteen days had activity.
+mo.quiet.01  [P]  {dayCount} days of the fortnight saw a change.
+mo.quiet.02  [N]  Activity landed on {dayCount} days.
 mo.quiet.03  [N]  A quiet fortnight.
 mo.quiet.04  [O]  The last two weeks have been mostly still.
-mo.quiet.05  [N]  Fourteen days, {dayCount} with something in them.
+mo.quiet.05  [N]  {dayCount} days in the fortnight carried something.
 mo.quiet.06  [R]  A slow stretch.
 mo.quiet.07  [N]  Most of the last fortnight passed without a move here.
 mo.quiet.08  [R]  Quiet, across two weeks.
@@ -992,7 +992,7 @@ bnc.10  Nothing completed yet this week
 | Banner captions | 10 | 3,330 combined |
 | **Total** | **810** | **3,797** |
 
-**Corpus grand total across all three volumes: 4,785 authored lines, and roughly 320,000 distinct surfaces.** Counted when the last hot bench in volume 3 closed, with 1,775 Pulse lines and 2,200 Report lines beside this volume's 810. Two earlier readings stood here: 2,942, taken at the moment this volume closed, when volume 1 was still being grown and had moved twice in the hour before it, and 4,407, which assumed 1,874 Report lines against the 1,617 the file carried and was failing the audit from the day it was written. This one is settled rather than a reading: all three volumes have closed. `CorpusTotalsAuditTest` recounts it on every run and names this line when it drifts. The surface figure is the one number here that is approximate on purpose, because two of its three parts are products of benches rather than counts of lines.
+**Corpus grand total across all three volumes: 4,942 authored lines, and roughly 336,000 distinct surfaces.** Counted after phase 9b grew section 4 of volume 2, with 1,775 Pulse lines and 2,357 Report lines beside this volume's 810. Two earlier readings stood here: 2,942, taken at the moment this volume closed, when volume 1 was still being grown and had moved twice in the hour before it, and 4,407, which assumed 1,874 Report lines against the 1,617 the file carried and was failing the audit from the day it was written. This one is settled rather than a reading: all three volumes have closed. `CorpusTotalsAuditTest` recounts it on every run and names this line when it drifts. The surface figure is the one number here that is approximate on purpose, because two of its three parts are products of benches rather than counts of lines.
 
 ---
 

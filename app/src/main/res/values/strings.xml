@@ -551,13 +551,24 @@
 
         Both are offered, both are costless and neither is ever mentioned again. There is
         no PLAN_DECLINED event to write and no surface anywhere that could count either.
+        Ignoring both is identical to declining, CLARITY_LOGIC_ENGINE.md 10.5, so none of
+        these four strings is ever shown to somebody as a thing they failed to answer.
+
+        None of them is a sentence about a person's own data. The line above them is, and
+        it comes out of CORPUS_2_REPORT.md section 4 through the engine like every other
+        one; these are the eyebrow over it and the labels on the two answers to it.
 
         `Noted` is the confirmation 8.2 item 26 asks the accept label to cross to. It is
         the plainest acknowledgment available: it never celebrates, it makes no promise
         back, and it says nothing about the person. The obvious answers were a check mark,
         which section 14 rules out as a celebration and 11.1 rules out as a fifth
         treatment, and a first person restatement, which would put the plan's own voice on
-        a button.
+        a button and would repeat the stored line the block has just changed to.
+
+        **After the crossfade it is a statement rather than a label.** A settled pill
+        carries no click handling and no button role, so this string reaches TalkBack as
+        the word it shows. `Saved` and `Done` were both refused for saying something
+        untrue: nothing is stored to come back to, and nothing has been completed.
     -->
     <string name="report_closing_eyebrow">One thing</string>
     <string name="report_accept">I\'ll do that</string>

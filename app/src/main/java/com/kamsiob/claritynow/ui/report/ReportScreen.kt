@@ -339,7 +339,9 @@ private fun ComposedReport(
         step++
     }
 
-    // 8. Absent until layer six lands. See ReportClosing.
+    // 8. Layer six, and the only block on the page a person can answer. Absent
+    // altogether when layer six composed nothing, which 10.7 requires of at least
+    // fifteen percent of reports.
     page.closing?.let { closing ->
         Spacer(Modifier.height(ClaritySpacing.scaled(CLOSING_SPACE)))
         ClosingLine(

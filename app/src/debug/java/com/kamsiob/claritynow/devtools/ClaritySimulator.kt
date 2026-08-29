@@ -18,15 +18,22 @@ import com.kamsiob.claritynow.domain.engine.FiringHistory
 import com.kamsiob.claritynow.domain.engine.RenderedOutput
 import com.kamsiob.claritynow.domain.engine.SilenceReason
 import com.kamsiob.claritynow.domain.engine.StableHash
+import com.kamsiob.claritynow.domain.engine.Validated
 import com.kamsiob.claritynow.domain.engine.catalog.ClarityCatalog
 import com.kamsiob.claritynow.domain.engine.catalog.LengthBand
 import com.kamsiob.claritynow.domain.engine.catalog.Purpose
 import com.kamsiob.claritynow.domain.engine.catalog.Register
 import com.kamsiob.claritynow.domain.engine.catalog.ResponseOption
+import com.kamsiob.claritynow.domain.engine.catalog.LengthBands
 import com.kamsiob.claritynow.domain.engine.realize.Candidate
 import com.kamsiob.claritynow.domain.engine.realize.Slot
 import com.kamsiob.claritynow.domain.engine.validate.ClarityValidator
 import com.kamsiob.claritynow.domain.engine.validate.ValidationResult
+import com.kamsiob.claritynow.domain.guidance.ClarityPlan
+import com.kamsiob.claritynow.domain.guidance.FollowThrough
+import com.kamsiob.claritynow.domain.guidance.GuidanceComposer
+import com.kamsiob.claritynow.domain.guidance.GuidanceResult
+import com.kamsiob.claritynow.domain.guidance.PlanHistory
 import com.kamsiob.claritynow.domain.query.TrailWindow
 import java.time.LocalDate
 import java.time.ZoneId
@@ -108,6 +115,25 @@ class ClaritySimulator(
     /** Every rule by key, so the dump can print the criteria that fired. */
     private val rulesByKey = catalog.rules.associateBy { it.key }
 
+    /**
+     * Layer 6, built once for the run. CLARITY_LOGIC_ENGINE.md 10.
+     *
+     * The same object the Report screen builds, over the same catalog and the same zone,
+     * so a plan a persona is offered here is a plan a device would offer.
+     */
+    private val guidance = GuidanceComposer(catalog, zone)
+
+    /**
+     * Layer 5 again, and for the same one purpose `ReportComposer` needs it for: minting
+     * the `Validated` layer 6 takes.
+     *
+     * 10.4 rule 2 rests on layer 6 being unable to see an observation that did not appear,
+     * and the type is what enforces it. `RecordingValidator` above wraps the same checks
+     * and answers a reason rather than a token, because that is the seam the engine loop
+     * takes. This is the plain one.
+     */
+    private val minting = ClarityValidator(zone)
+
     /** Runs every persona section 12 names. */
     fun runAll(personas: List<SimulationPersona> = SimulationPersona.ALL): List<SimulationRun> =
         personas.map { run(it) }
@@ -165,6 +191,11 @@ class ClaritySimulator(
         val extractor = FactExtractor(queries)
         val openInstant = log.at(day, OPEN_HOUR)
         val history = FiringHistory.from(queries, openInstant)
+        // Layer 6's follow through, rebuilt from the log like everything else. An offer with
+        // no acceptance beside it produces no entry at all, so a persona that declines every
+        // plan reaches the ranking with an empty set and is indistinguishable from one that
+        // was never offered anything.
+        val plans = PlanHistory.from(queries, openInstant)
 
         // Momentum, on every open. The rolling fourteen days of 12.2, which never becomes a
         // streak: a missed day narrows the count and resets nothing.
@@ -199,7 +230,7 @@ class ClaritySimulator(
         recordPulse(persona, log, day, pulse)
 
         if (isReportDay(day)) {
-            invocations += generateReport(persona, log, engine, validator, extractor, day, history)
+            invocations += generateReport(persona, log, engine, validator, extractor, day, history, plans)
         }
     }
 
@@ -218,6 +249,7 @@ class ClaritySimulator(
         extractor: FactExtractor,
         day: Int,
         history: FiringHistory,
+        plans: PlanHistory,
     ): List<SimulatedInvocation> {
         val facts = extractor.extract(
             TrailWindow(log.startOfDay(day - REPORT_WINDOW_DAYS), log.startOfDay(day)),
@@ -234,7 +266,12 @@ class ClaritySimulator(
         // The observation pass realizes and validates every chosen selection before it
         // returns, so its vetoes arrive as one batch rather than one per observation. They
         // are recorded against the first section for that reason, and never dropped.
-        val observations = engine.observeObservations(facts, history, headline.spoken?.familyKey)
+        val observations = engine.observeObservations(
+            facts,
+            history,
+            headline.spoken?.familyKey,
+            boosted = FollowThrough.boosted(plans, log.dateKey(day - REPORT_WINDOW_DAYS)),
+        )
         val observationVetoes = validator.drain()
         if (observations.isEmpty()) {
             out += record(
@@ -268,9 +305,116 @@ class ClaritySimulator(
 
         val pattern = (patternResult as? EngineResult.Spoke)?.output
         writeReport(log, day, headline.spoken, observations, pattern)
-        if (persona.acceptsEveryPlan) writeAcceptedPlan(log, day, observations)
+        out += closing(
+            persona = persona,
+            log = log,
+            day = day,
+            facts = facts,
+            headline = (headlineResult as? EngineResult.Spoke)?.output?.meta,
+            observations = observations,
+            plans = plans,
+            history = history,
+        )
         return out
     }
+
+    /**
+     * Layer 6, on the observations that actually appeared. 11.3 steps 7 and 8.
+     *
+     * **The engine composes the plan and the persona answers it**, which is the arrangement
+     * the non compliance test needs and the one this file did not have until layer 6
+     * existed. The plan the accepting persona accepts is now a real plan, assembled from
+     * `CORPUS_2_REPORT.md` 4 by `GuidanceComposer`, filed under a real `PLAN_OFFERED` and
+     * accepted with a real `PLAN_ACCEPTED`. Until phase 9b it was three corpus keys and a
+     * marker where a sentence would go, because nothing could compose one.
+     *
+     * A week that produced no closing at all records no invocation, which is what
+     * `SimulationChecks.layerSixSilence` counts against the number of reports.
+     */
+    private fun closing(
+        persona: SimulationPersona,
+        log: SimulatorLog,
+        day: Int,
+        facts: FactSet,
+        headline: Candidate?,
+        observations: List<RenderedOutput>,
+        plans: PlanHistory,
+        history: FiringHistory,
+    ): List<SimulatedInvocation> {
+        val weekStartKey = log.dateKey(day - REPORT_WINDOW_DAYS)
+        val result = guidance.compose(
+            headline = headline?.let { minted(facts, it) },
+            appeared = observations.mapNotNull { minted(facts, it.meta) },
+            facts = facts,
+            plans = plans,
+            history = history,
+            weekStartKey = weekStartKey,
+        )
+        val line = when (result) {
+            is GuidanceResult.Plan -> result.plan.offeredLine
+            is GuidanceResult.Closing -> result.line.text
+            is GuidanceResult.Nothing -> return emptyList()
+        }
+        // The real corpus key, so 7.6's ninety day repetition reading is about the line a
+        // person would recognize rather than about a constant. A plan is three authored
+        // lines and has no single key, so it records the three it used.
+        val variantKey = when (result) {
+            is GuidanceResult.Plan ->
+                "${result.plan.frameKey}+${result.plan.cueKey}+${result.plan.actionKey}"
+            is GuidanceResult.Closing -> result.line.meta.variantKey
+            is GuidanceResult.Nothing -> return emptyList()
+        }
+        val plan = (result as? GuidanceResult.Plan)?.plan
+        if (plan != null && persona.acceptsEveryPlan) writeAcceptedPlan(log, day, plan)
+        // Once per recorded invocation, exactly as [record] does it. `CorpusRenderGate`
+        // harvests the fact set behind every line the simulator produced and checks that
+        // the hook fired as often as the dump has entries, so a surface recorded without
+        // it makes that harvest quietly incomplete.
+        onFacts(day, SimulatedSurface.REPORT_CLOSING, facts)
+        return listOf(
+            SimulatedInvocation(
+                day = day,
+                dateKey = log.dateKey(day),
+                surface = SimulatedSurface.REPORT_CLOSING,
+                ordinal = CLOSING_ORDINAL,
+                spoken = closingLine(line, variantKey, plan),
+                silence = null,
+                vetoes = emptyList(),
+                areaEventsInWindow = facts.areas.mapValues { it.value.eventsInWindow },
+            ),
+        )
+    }
+
+    /** Layer 5's proof that [candidate] may be shown, which is what layer 6 takes. */
+    private fun minted(facts: FactSet, candidate: Candidate): Validated? =
+        (minting.validate(candidate, facts) as? ValidationResult.Passed)?.validated
+
+    /** The dump's record of one closing. See [SimulatedSurface.REPORT_CLOSING]. */
+    private fun closingLine(text: String, variantKey: String, plan: ClarityPlan?): SpokenLine = SpokenLine(
+        ruleKey = if (plan == null) GUIDANCE_CLOSING_RULE else GUIDANCE_PLAN_RULE,
+        // **Never the motivating family**, and this is the one field where that matters.
+        // Every coverage reading in `SimulationAggregate` counts by `(purpose, familyKey)`,
+        // so recording `neglectedArea` here would add a firing that family did not have and
+        // could carry it over the one fifth share ceiling on the strength of a closing line.
+        // The family is in [fired] instead, which the dump prints and nothing counts.
+        familyKey = if (plan == null) GUIDANCE_CLOSING_RULE else GUIDANCE_PLAN_RULE,
+        stage = 1,
+        register = Register.PLAIN,
+        lengthBand = LengthBands.bandFor(text),
+        variantKey = variantKey,
+        fired = listOfNotNull(plan?.let { "motivated by ${it.familyKey}" }),
+        facts = emptyList(),
+        factSnapshot = emptyMap(),
+        statement = text,
+        question = null,
+        maskedStatement = text,
+        maskedQuestion = null,
+        responses = emptyList(),
+        subjectId = plan?.subjectId,
+        subjectKind = null,
+        namedAreaIds = emptySet(),
+        namedItemIds = emptySet(),
+    )
 
     // ------------------------------------------------------------ recording the log
 
@@ -343,41 +487,36 @@ class ClaritySimulator(
     }
 
     /**
-     * The plan the plan-accepting persona accepts and never acts on.
+     * The plan the plan accepting persona accepts and never acts on.
      *
-     * **The simulator writes this, not the engine.** Layer 6 is phase 9b and
-     * CLARITY_LOGIC_ENGINE.md 2 puts it outside layers 1 to 5, so nothing yet composes a
-     * plan. What the log needs is the shape: three real corpus keys from
-     * `CORPUS_2_REPORT.md` 4, a family that actually appeared in this report per composition
-     * rule 10.4, and an acceptance. `FiringHistory` reads exactly those keys.
+     * **The plan is the engine's now, and that is the whole point of this persona.** Until
+     * layer 6 existed the simulator composed the shape by hand, three real corpus keys and
+     * a marker where a sentence would go, because nothing could produce one and writing a
+     * sentence here would have been composing a plan outside the corpus. It writes the real
+     * offer and the real acceptance, so `PlanHistory` reads what a device would read and
+     * the follow through in 10.6 is exercised rather than described.
      *
-     * `offeredLine` and `committedLine` are **not** sentences. Composing one here would mean
-     * writing a plan outside the engine and outside the corpus, which
-     * `MASTER_BUILD_PROMPT.md` 11.1 forbids without exception, so both carry a marker
-     * instead. The non-compliance check asserts that marker never reaches the dump, which is
-     * the same assertion in the other direction: if a plan line ever appears in a year of
-     * this persona's output, something composed one.
+     * The persona never acts on any of it, which is what makes the year it produces the
+     * evidence section 12 asks for: a real, visible, repeated non compliance, with nothing
+     * in the dump that references it.
      */
-    private fun writeAcceptedPlan(log: SimulatorLog, day: Int, observations: List<RenderedOutput>) {
-        val motivating = observations.firstOrNull()?.meta ?: return
-        val weekStartKey = log.dateKey(day - REPORT_WINDOW_DAYS)
-        val planId = "plan-$weekStartKey"
+    private fun writeAcceptedPlan(log: SimulatorLog, day: Int, plan: ClarityPlan) {
         log.add(
             log.at(day, REPORT_HOUR),
             PlanOffered(
-                planId = planId,
-                weekStartKey = weekStartKey,
-                frameKey = PLAN_FRAME_KEY,
-                cueKey = PLAN_CUE_KEY,
-                actionKey = PLAN_ACTION_KEY,
-                familyKey = motivating.familyKey,
-                subjectId = motivating.subjectId,
-                offeredLine = PLAN_LINE_MARKER,
-                committedLine = PLAN_LINE_MARKER,
-                resolutionFactRef = PLAN_RESOLUTION_FACT,
+                planId = plan.id,
+                weekStartKey = plan.weekStartKey,
+                frameKey = plan.frameKey,
+                cueKey = plan.cueKey,
+                actionKey = plan.actionKey,
+                familyKey = plan.familyKey,
+                subjectId = plan.subjectId,
+                offeredLine = plan.offeredLine,
+                committedLine = plan.committedLine,
+                resolutionFactRef = plan.resolutionFactRef,
             ),
         )
-        log.add(log.at(day, PLAN_ACCEPT_HOUR), PlanAccepted(planId))
+        log.add(log.at(day, PLAN_ACCEPT_HOUR), PlanAccepted(plan.id))
     }
 
     // ------------------------------------------------------------ one invocation
@@ -521,6 +660,7 @@ class ClaritySimulator(
         private const val HEADLINE_ORDINAL = 0
         private const val FIRST_OBSERVATION_ORDINAL = 1
         private const val PATTERN_ORDINAL = 5
+        private const val CLOSING_ORDINAL = 6
 
         private const val OPEN_HOUR = 7
         private const val PULSE_HOUR = 8
@@ -531,21 +671,9 @@ class ClaritySimulator(
         /** The family key recorded when a week produced no headline at all. */
         private const val NO_HEADLINE = "none"
 
-        // Three real keys from CORPUS_2_REPORT.md 4.1, 4.2 and 4.3. Keys only: the lines
-        // themselves belong to layer 6, which does not exist yet.
-        private const val PLAN_FRAME_KEY = "frm.01"
-        private const val PLAN_CUE_KEY = "cue.hab.06"
-        private const val PLAN_ACTION_KEY = "act.fin.01"
-
-        /**
-         * What goes where a rendered plan would go, and why it is not a sentence.
-         *
-         * Deliberately unreadable as English. If this string ever appears in a dump,
-         * something outside the engine composed a plan.
-         */
-        const val PLAN_LINE_MARKER = "<<layer6-not-built>>"
-
-        private val PLAN_RESOLUTION_FACT = FactRef("area", "completionsInWindow")
+        /** What a closing invocation records instead of a rule key. */
+        const val GUIDANCE_PLAN_RULE = "guidance.plan"
+        const val GUIDANCE_CLOSING_RULE = "guidance.closing"
     }
 }
 
@@ -624,14 +752,22 @@ data class SimulationRun(
 }
 
 /**
- * The six surfaces the engine speaks on, named as section 12's dump names them.
+ * The seven surfaces the engine speaks on, named as section 12's dump names them.
  *
  * [purpose] is carried rather than derived at each call site, because counting how many of
  * a purpose's families ever fired means putting a firing back beside the families the
  * catalog declares for it, and a surface is the only thing an invocation records. The
- * mapping is one to one and is the same one [ClaritySimulator.openTheApp] makes on the way
- * in, so a surface that ever stopped agreeing with the purpose it was invoked with would
- * make every coverage reading below quietly wrong.
+ * mapping is one to one for the six that select a rule, and is the same one
+ * [ClaritySimulator.openTheApp] makes on the way in, so a surface that ever stopped
+ * agreeing with the purpose it was invoked with would make every coverage reading quietly
+ * wrong.
+ *
+ * **[REPORT_CLOSING] is the exception and it is safe rather than tolerated.** Layer 6
+ * selects no rule and a closing is not a `Purpose`, so the value it carries is the nearest
+ * one rather than a claim. Nothing keyed by `(purpose, family)` can see it, because the
+ * family key of a closing invocation is never a family any catalog declares: it is
+ * `guidance.plan` or `guidance.closing`. `ClaritySimulator.closingLine` says so where the
+ * field is set, which is where somebody would otherwise put the motivating family.
  */
 enum class SimulatedSurface(val label: String, val purpose: Purpose) {
     PULSE("pulse", Purpose.PULSE),
@@ -640,6 +776,22 @@ enum class SimulatedSurface(val label: String, val purpose: Purpose) {
     REPORT_HEADLINE("report headline", Purpose.REPORT_HEADLINE),
     REPORT_OBSERVATION("report observation", Purpose.REPORT_OBSERVATION),
     REPORT_PATTERN("report pattern", Purpose.REPORT_PATTERN),
+
+    /**
+     * Layer 6's closing line. `CORPUS_2_REPORT.md` 4 and CLARITY_LOGIC_ENGINE.md 10.
+     *
+     * It carries the Report's observation purpose because a closing is not a `Purpose` of
+     * its own; 8 check 9 gives it its own word limit and `LengthLimits.CLOSING_MAX_WORDS`
+     * is where that lives.
+     *
+     * **What reaches the dump is the offered line and never the committed one.** The dump
+     * is the record of what the app said about a person, and the committed line is what the
+     * person said about themselves: it exists only because they tapped `I'll do that` and
+     * it is shown to nobody else. Keeping it out is not a gap in the non compliance test,
+     * which reads both through `GuidanceNonComplianceTest`; it is what stops the dump from
+     * being a place a reader could count acceptances.
+     */
+    REPORT_CLOSING("report closing", Purpose.REPORT_OBSERVATION),
 }
 
 /**

@@ -5383,6 +5383,110 @@ it is an open question, and it is the owner's.
 
 ---
 
+## August 28, 2026: layer 6 ships, and the reservation in section 19 is not exercised
+
+`MASTER_BUILD_PROMPT.md` 19 registers a formal reservation against the follow through:
+it is the first thing removed if it reads as supervision when tested, and it says
+**removed rather than tuned**. This entry is the test being run and the answer being
+given, so that a later session can see the evidence rather than the verdict.
+
+### The four readings, taken over a forced run
+
+An up to date `verifyClarity` returns green in 541 milliseconds and establishes nothing,
+because the three corpus files are read at runtime and Gradle does not track them as
+task inputs. Every number here is from `--rerun-tasks`: 44 of 44 tasks executed,
+**1,076 tests, 0 failures, 0 errors**, one deliberate skip.
+
+| reading | result |
+|---|---|
+| the non compliance test | **pass.** 1,441 invocations of `acceptsEveryPlan`, 0 referencing a plan, a commitment, an intention or a failure to act |
+| layer 6 silence | **pass.** 185 of 451 reports carried no plan, 41 percent, against a floor of 15 |
+| cue substantiation | **pass.** No plan renders with a cue below threshold across ten thousand generated fact sets |
+| no imperative anywhere | **pass.** Asserted over the frame, cue, action and commitment benches themselves, not over the sentences they happened to produce |
+
+The second one had never been measurable. It is the last of the ten checks in
+`CLARITY_LOGIC_ENGINE.md` 12 to become so, and it is enforced from this phase.
+
+### The decision: the reservation is not exercised
+
+**A count cannot answer the question section 19 asks**, which is whether the reports
+around an accepted plan feel different in a way a person would read as being watched.
+So the year was measured against itself. `Selector.FOLLOW_THROUGH_BOOST` was set to 0,
+the eleven persona years were re-run, the two dumps were diffed, and the constant was
+restored and the file checksummed back to byte identity.
+
+**The boost changes 118 lines, all of them report observations, on 27 of 52 weeks.**
+Nothing on the Pulse, Momentum or the Areas banner, because every caller outside the
+Report omits the argument. On 51 of the 52 weeks it changed only the order of four true
+observations. A reader has no access to the counterfactual, so on those weeks there is
+nothing available to notice, and nothing in any of them names a plan.
+
+**The judgment is that it does not read as supervision, and the reservation stands
+unexercised rather than withdrawn.** It stays cheap to exercise: one file, one
+parameter and one integer, and `Selector` compiles with `domain/guidance/` deleted.
+
+### The one week that is not order, and what it actually is
+
+On 2026-09-06, the only `hardStretch` week in that persona's year:
+
+- **Without the boost:** the report says `The stretch is three weeks old.` and layer 6
+  returns `Nothing`. That is 10.4 rule 6 working exactly as written
+- **With the boost:** `queuePressure` and `hardStretch` sit at equal specificity and
+  equal priority. The boost breaks the tie that rule key order would have given to
+  `hardStretch`, which falls outside `MAX_OBSERVATIONS`. `heavy` reads off what
+  appeared rather than off what qualified, so **the heaviest week of the year stops
+  looking heavy and gets a closing line**
+
+An accepted plan can therefore delete the one family `CORPUS_2_REPORT.md` 6.4 exists
+for, and turn a deliberate silence into a sentence.
+
+**It is a report composer property rather than a layer 6 one, and that was measured
+rather than argued.** `Selector.selectObservations` was temporarily instrumented to
+report every week where `hardStretch` qualified and was crowded out, the eleven years
+were re-run, and the patch was reverted. It happens **twice in eleven simulated years,
+once with a non empty boost set and once with an empty one.** A cap of four and a tie
+broken on rule key can drop `hardStretch` with no plan anywhere near it.
+
+**Recorded and not fixed, which is the part that is a decision.** The obvious fix is to
+make `heavy` read `hardStretch` off the qualified set rather than off the kept four.
+That loses, for now, because 10.4 argues the opposite reading deliberately and in
+writing: "a report that was heavy and did not say so is not treated as heavy, the rule
+is about the page the person is reading, not about the facts behind it." Overturning a
+stated reading of a specification section is the owner's call, the remedy touches every
+week rather than the two, and the simpler and more reversible option is to leave the
+behavior alone and write the finding down. **Open question, recommendation stated and
+not taken: protect `hardStretch` from displacement, by exempting it from the cap rather
+than by changing rule 6.** That keeps 10.4's reading intact and removes both cases.
+
+### Two things a reader of the Trail can see, and one of them is new this phase
+
+`PLAN_OFFERED` and `PLAN_ACCEPTED` render Trail rows, `One thing was suggested` and
+`Accepted one thing`. Declining writes no event, so an offer a person left shows as a
+row with no acceptance beside it, and a person scrolling their Trail can therefore tell
+which offers they took up. 10.5 says the plan exists in the report and nowhere else.
+
+**It is left alone, and the reason is that it is exactly the Pulse's shape.**
+`PULSE_GENERATED` and `PULSE_ANSWERED` have rendered the same asymmetric pair since
+phase 6 and nobody has read it as a compliance record. Both rows quote nothing and name
+nothing, `TrailRow` gives both an empty `TrailRowContent`, and the Trail is a log
+renderer whose job is to show what happened. The precedent that would argue the other
+way is `APP_OPENED`, which renders no row because a log of when somebody was present is
+a measurement of absence turned inside out. **Whether an unanswered offer is closer to
+an unanswered Pulse or to a presence marker is a judgment about the person's own
+reading, and it is the owner's.** Recorded as open, unchanged, and outside the engine
+either way.
+
+### One recording error corrected
+
+Section 12's prose read "Eight measurements exist and the eighth is the current one"
+for two passes after the ninth column was already in the table below it. A count kept
+in prose beside a table that grows goes stale silently, and it did. It now reads ten
+and names all ten. 10.7's own figure was likewise still the 43 percent layer 6 measured
+before the guidance language pass revived two cues; it reads 41 now, which is the
+figure taken over all three lanes together.
+
+---
+
 ## Standing register: platform first records
 
 Append only, oldest first, one row per component built by hand rather than taken from

@@ -32,9 +32,13 @@ import java.io.File
  *    every scan below finds no files and passes, so the assumption is checked first
  *    rather than assumed.
  *
- * `domain.guidance` does not exist until phase 5. Its absence must not fail, and its
- * arrival must be scanned without anyone remembering to come back here, which is why
- * it is listed but not required.
+ * **`domain.guidance` was listed and not required until phase 9b, and is now both.** It did
+ * not exist while layer 6 was unbuilt, so its absence had to be tolerated and its arrival
+ * had to be scanned without anyone remembering to come back here. It arrived. The exemption
+ * is removed rather than left standing, because a package that is optional in this list is
+ * a package that could be deleted without this test noticing, and layer 6 is the one part
+ * of the engine `MASTER_BUILD_PROMPT.md` 19 says may one day be deliberately removed. When
+ * that day comes, this line is the one that says so out loud.
  */
 class DomainPurityTest {
 
@@ -45,8 +49,8 @@ class DomainPurityTest {
         "src/main/java/com/kamsiob/claritynow/domain/query",
     )
 
-    /** The three that exist today. A missing one is a broken test, not a clean package. */
-    private val required = pureDirs.filterNot { it.endsWith("guidance") }
+    /** All four. A missing one is a broken test, not a clean package. */
+    private val required = pureDirs
 
     private val clockPath = "src/main/java/com/kamsiob/claritynow/domain/ClarityClock.kt"
 

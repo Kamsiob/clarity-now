@@ -48,6 +48,31 @@ import com.kamsiob.claritynow.domain.engine.catalog.Purpose
  * measurement. What follows a crossing is mechanical and cheap: the anchors move with the
  * table, and a bench that arrives short of 11.1's sixty has its debt recorded rather than
  * paid, exactly as `weekQuiet`'s was.
+ *
+ * ## The tenth measurement, phase 9b, and why fourteen rows moved by a little
+ *
+ * **Not one family entered or left the hot tier.** The set is identical to the ninth
+ * measurement's and every change is a count: the largest is `singleAreaWeek` at plus 56 out
+ * of 1,033, and eleven of the fourteen moved by fewer than ten firings across eleven
+ * simulated years.
+ *
+ * Two things in phase 9b could move these numbers and both did a little.
+ *
+ * **The persona's log changed, which is most of it.** `acceptsEveryPlan` used to write a
+ * synthetic `PLAN_OFFERED` and `PLAN_ACCEPTED` every single report week, because layer 6
+ * did not exist and the simulator had to fabricate the shape. It now writes a real offer
+ * and a real acceptance only on the weeks layer 6 actually produces a plan, which is
+ * roughly half of them. Fewer events on different days in one persona's year is a different
+ * year, and the Momentum and banner rows are where a persona's own event count shows up
+ * most directly. All three Momentum moves net to roughly zero, which is what a redistributed
+ * fortnight looks like rather than a changed rule.
+ *
+ * **The follow through boost reorders, which is the rest of it.** 10.6 raises the family of
+ * an accepted plan by one place in step 6's second term, for that persona only, on the weeks
+ * after an acceptance. The four `REPORT_OBSERVATION` rows that moved are exactly what a
+ * reordering inside one specificity level produces: `timeOfDay` gives up five, three of
+ * which go to `completionSplit`. **No row gained or lost enough to change what any bench is
+ * sized against**, which is the property this table exists to protect.
  */
 internal object HotFamilies {
 
@@ -70,8 +95,8 @@ internal object HotFamilies {
      */
     val ALL: List<Hot> = listOf(
         Hot(Purpose.PULSE, "persistence", 482),
-        Hot(Purpose.PULSE, "quietDay", 283),
-        Hot(Purpose.PULSE, "concentration", 246),
+        Hot(Purpose.PULSE, "quietDay", 286),
+        Hot(Purpose.PULSE, "concentration", 247),
         Hot(Purpose.PULSE, "accumulation", 163),
         Hot(Purpose.PULSE, "rebalance", 100),
         // **New, and it is the second bench debt this table carries.** 26 firings at the
@@ -82,7 +107,7 @@ internal object HotFamilies {
         // Its bench is short of 11.1's sixty and the debt is recorded rather than paid, for
         // the reason `weekQuiet`'s is below.
         Hot(Purpose.PULSE, "freshStart", 42),
-        Hot(Purpose.REPORT_HEADLINE, "comeback", 91),
+        Hot(Purpose.REPORT_HEADLINE, "comeback", 90),
         Hot(Purpose.REPORT_HEADLINE, "personalBest", 88),
         Hot(Purpose.REPORT_HEADLINE, "mostActiveSince", 78),
         Hot(Purpose.REPORT_HEADLINE, "balanced", 62),
@@ -92,33 +117,33 @@ internal object HotFamilies {
         // label a person last gave a Pulse, so it moves whenever the Pulse speaks more: the
         // recency bound put 305 more Pulses into the eleven logs and this row is where most
         // of that arrives on the Report.
-        Hot(Purpose.REPORT_OBSERVATION, "completionSplit", 162),
+        Hot(Purpose.REPORT_OBSERVATION, "completionSplit", 165),
         Hot(Purpose.REPORT_OBSERVATION, "queuePressure", 156),
         Hot(Purpose.REPORT_OBSERVATION, "areaBalance", 118),
-        Hot(Purpose.REPORT_OBSERVATION, "timeOfDay", 105),
+        Hot(Purpose.REPORT_OBSERVATION, "timeOfDay", 100),
         Hot(Purpose.REPORT_OBSERVATION, "persistentItem", 90),
         Hot(Purpose.REPORT_OBSERVATION, "mostActiveSince", 88),
         Hot(Purpose.REPORT_OBSERVATION, "personalBest", 88),
         // 60 at the eighth measurement. Same cause as `completionSplit`: it sets what
         // somebody said against what happened, and there is more of what somebody said.
         Hot(Purpose.REPORT_OBSERVATION, "selfReportVsData", 85),
-        Hot(Purpose.REPORT_OBSERVATION, "singleFocus", 49),
-        Hot(Purpose.REPORT_OBSERVATION, "steadyPace", 43),
+        Hot(Purpose.REPORT_OBSERVATION, "singleFocus", 50),
+        Hot(Purpose.REPORT_OBSERVATION, "steadyPace", 45),
         Hot(Purpose.REPORT_PATTERN, "reportedVsActual", 177),
         Hot(Purpose.REPORT_PATTERN, "comebackPattern", 70),
-        Hot(Purpose.REPORT_PATTERN, "growingQueues", 58),
-        Hot(Purpose.MOMENTUM_HEADLINE, "singleAreaWeek", 1033),
+        Hot(Purpose.REPORT_PATTERN, "growingQueues", 57),
+        Hot(Purpose.MOMENTUM_HEADLINE, "singleAreaWeek", 1089),
         Hot(Purpose.MOMENTUM_HEADLINE, "balancedWeek", 849),
-        Hot(Purpose.MOMENTUM_HEADLINE, "comeback", 608),
-        Hot(Purpose.MOMENTUM_HEADLINE, "steadyStretch", 343),
+        Hot(Purpose.MOMENTUM_HEADLINE, "comeback", 574),
+        Hot(Purpose.MOMENTUM_HEADLINE, "steadyStretch", 321),
         Hot(Purpose.MOMENTUM_HEADLINE, "quietStretch", 153),
         Hot(Purpose.MOMENTUM_HEADLINE, "firstDays", 139),
-        Hot(Purpose.AREAS_BANNER, "weekMixed", 1241),
+        Hot(Purpose.AREAS_BANNER, "weekMixed", 1244),
         // 804 at the sixth measurement. The register pass gave `weekQuiet` a voice it could
         // speak in, and the windows this family used to take are windows where the quiet week
         // now outranks it. Those windows did not change; what changed is that one of the two
         // candidates on them stopped being unrealizable.
-        Hot(Purpose.AREAS_BANNER, "weekStarting", 732),
+        Hot(Purpose.AREAS_BANNER, "weekStarting", 724),
         Hot(Purpose.AREAS_BANNER, "weekBuilding", 331),
         // **The largest bench debt in the corpus.** This family fired zero times in every
         // measurement before the register pass, because all eight of its lines are `[N]` and
@@ -130,7 +155,7 @@ internal object HotFamilies {
         // is recorded in `CorpusGateBaseline.REGISTERS` rather than paid, because authoring is
         // not this pass's to do. `CORPUS_3_MOMENTUM.md` says the bench was left at eight on
         // purpose "because it has never once spoken", which was true and is not any more.
-        Hot(Purpose.AREAS_BANNER, "weekQuiet", 234),
+        Hot(Purpose.AREAS_BANNER, "weekQuiet", 242),
         Hot(Purpose.AREAS_BANNER, "weekStrong", 65),
     )
 

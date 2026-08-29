@@ -57,9 +57,13 @@ plugins {
 // nothing new can be done with the app: every change corrects something that was already
 // specified and already wrong, and the largest of them is eight lines restoring a bound
 // three documents already stated.
+// 0.11.0: phase 9b, layer six, the last unbuilt phase. A minor bump because the app can
+// now do something it could not: end a report with one optional, completable thing and
+// remember it in the person's own words if they take it. Not a major bump because 1.0 is
+// the release and the closing device pass has not run.
 val versionMajor = 0
-val versionMinor = 10
-val versionPatch = 1
+val versionMinor = 11
+val versionPatch = 0
 
 // The application id and the one suffix that changes it, written once.
 //

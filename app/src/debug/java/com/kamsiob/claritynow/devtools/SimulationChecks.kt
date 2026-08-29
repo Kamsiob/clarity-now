@@ -4,6 +4,7 @@ import com.kamsiob.claritynow.domain.engine.catalog.AbsenceSubjectRules
 import com.kamsiob.claritynow.domain.engine.catalog.Purpose
 import com.kamsiob.claritynow.domain.engine.catalog.ReportRules
 import com.kamsiob.claritynow.domain.engine.validate.ValidatorVocabulary
+import com.kamsiob.claritynow.domain.guidance.PlanVocabulary
 
 /**
  * The twelve automated checks over the dump. CLARITY_LOGIC_ENGINE.md 12.
@@ -149,14 +150,28 @@ object SimulationChecks {
      */
     private fun layerSixSilence(runs: List<SimulationRun>): CheckOutcome {
         val reports = runs.sumOf { it.of(SimulatedSurface.REPORT_HEADLINE).size }
+        val closings = runs.flatMap { it.of(SimulatedSurface.REPORT_CLOSING) }
+        val plans = closings.count { it.spoken?.ruleKey == ClaritySimulator.GUIDANCE_PLAN_RULE }
+        // Nothing, or a non plan closing. A report with no closing invocation recorded got
+        // `GuidanceResult.Nothing`, and a closing whose rule key is not the plan one is a
+        // complete authored line from 4.6 with no pill under it. Both are the silence 10.7
+        // is about; only a plan is not.
+        val silent = reports - plans
+        val share = SimulationSummary.percent(silent, reports)
         return CheckOutcome(
             id = "guidanceSilence",
             name = "layer 6 silent on at least $GUIDANCE_SILENCE_FLOOR percent of reports",
             citation = "CLARITY_LOGIC_ENGINE.md 12 and 10.7",
-            passed = false,
-            measured = "not measurable: layer 6 is phase 9b and composed nothing across $reports reports",
-            failures = listOf("layer 6 does not exist yet, so its silence cannot be measured"),
-            deferral = GUIDANCE_PHASE,
+            passed = reports > 0 && share >= GUIDANCE_SILENCE_FLOOR,
+            measured = "$silent of $reports reports carried no plan, $share percent. " +
+                "${closings.size - plans} were a non plan closing and " +
+                "${reports - closings.size} were nothing at all",
+            failures = if (reports > 0 && share >= GUIDANCE_SILENCE_FLOOR) {
+                emptyList()
+            } else {
+                listOf("layer 6 offered a plan on ${SimulationSummary.percent(plans, reports)} percent of reports")
+            },
+            deferral = null,
         )
     }
 
@@ -521,9 +536,16 @@ object SimulationChecks {
      * accepted, the follow-through implementation has failed and must be **removed rather
      * than tuned**.
      *
-     * It passes trivially today, because layer 6 is phase 9b and composes nothing, and it is
-     * enforced anyway. A check written the day the mechanism arrives is a check written by
-     * somebody who already knows what the mechanism does. This one was written first.
+     * **It stopped passing trivially in phase 9b, which is the point at which it started
+     * being a test.** Until then layer 6 composed nothing, the persona accepted a plan the
+     * simulator had assembled by hand, and no closing reached the dump at all. The persona
+     * now accepts a real plan from `GuidanceComposer`, `PLAN_OFFERED` and `PLAN_ACCEPTED`
+     * are written, `PlanHistory` reads them back, and the follow through boost runs on every
+     * subsequent report. The year it produces is a real, repeated, visible non compliance,
+     * which is what section 12 asks this to be read against.
+     *
+     * The vocabulary is `PlanVocabulary.FORBIDDEN`, in main source beside the mechanism, so
+     * this check and `GuidanceNonComplianceTest` read one list rather than two.
      */
     private fun theNonComplianceTest(runs: List<SimulationRun>): CheckOutcome {
         val failures = mutableListOf<String>()
@@ -532,15 +554,9 @@ object SimulationChecks {
             for (invocation in run.invocations) {
                 val spoken = invocation.spoken ?: continue
                 for (text in listOfNotNull(spoken.statement, spoken.question)) {
-                    PLAN_VOCABULARY.forEach { (pattern, what) ->
-                        if (pattern.containsMatchIn(text)) {
-                            failures += "${run.persona.key} ${invocation.dateKey} ${spoken.variantKey} " +
-                                "references $what: $text"
-                        }
-                    }
-                    if (ClaritySimulator.PLAN_LINE_MARKER in text) {
-                        failures += "${run.persona.key} ${invocation.dateKey} rendered a plan line"
-                    }
+                    val referenced = PlanVocabulary.referenceIn(text) ?: continue
+                    failures += "${run.persona.key} ${invocation.dateKey} ${spoken.variantKey} " +
+                        "references $referenced: $text"
                 }
             }
         }
@@ -574,37 +590,6 @@ object SimulationChecks {
         get() = this == SimulatedSurface.REPORT_HEADLINE ||
             this == SimulatedSurface.REPORT_OBSERVATION ||
             this == SimulatedSurface.REPORT_PATTERN
-
-    /**
-     * What the app referring back to a plan of its own would leave behind.
-     *
-     * **The bare noun is not the test, and getting that wrong would break real language.**
-     * `CORPUS_1_PULSE.md` asks `Was that the plan?` and `Planned, or did it just flow?`, and
-     * offers `A commitment / A trial` as a response pair. Those are questions about the
-     * person's own day in ordinary English and are exactly the kind of line 6.1 asks for.
-     * Banning the word would delete twenty three approved lines and prove nothing.
-     *
-     * What section 12 forbids is narrower and worse: the app **attributing a past
-     * commitment to the person**. Every pattern below is second person plus a prior
-     * undertaking, which is the shape a follow-through mechanism produces when it leaks.
-     *
-     * `You said {priorLabel}` is deliberately absent. That is `selfReportVsData`, the
-     * flagship family of 2.6, quoting an answer the person actually gave against what the
-     * data shows. It is a self report set beside a fact, not a promise recalled, and check 6
-     * already guarantees the quote is exact.
-     */
-    private val PLAN_VOCABULARY: List<Pair<Regex, String>> = listOf(
-        Regex("""\byou(?:r)?\s+plan(?:s|ned|ning)?\b""", RegexOption.IGNORE_CASE) to "a plan of the person's",
-        Regex("""\bthe\s+plan\s+you\b""", RegexOption.IGNORE_CASE) to "a plan the person was given",
-        Regex("""\byou\s+(?:agreed|committed|promised|intended|meant)\b""", RegexOption.IGNORE_CASE)
-            to "an undertaking attributed to the person",
-        Regex("""\byou\s+were\s+going\s+to\b""", RegexOption.IGNORE_CASE) to "an unmet intention",
-        Regex("""\byou\s+accepted\b""", RegexOption.IGNORE_CASE) to "an acceptance recalled",
-        Regex("""\byour\s+commitment\b""", RegexOption.IGNORE_CASE) to "a commitment",
-        Regex("""\bcommitted\s+to\b""", RegexOption.IGNORE_CASE) to "a commitment",
-        Regex("""\bfollow\s*[- ]?\s*through\b""", RegexOption.IGNORE_CASE) to "follow through",
-        Regex("""\bset\s+out\s+to\b""", RegexOption.IGNORE_CASE) to "an unmet intention",
-    )
 
     /** 7.6 step 1. */
     private const val EXCLUSION_DAYS = 90

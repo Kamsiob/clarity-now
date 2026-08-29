@@ -215,11 +215,20 @@ class SimulatorTest {
         )
         assertTrue("the non-compliance check is deferred, and must not be", outcome.enforced)
 
-        // The same claim from the other end. The simulator writes a marker where a rendered
-        // plan would go, precisely so that a plan composed anywhere outside the engine would
-        // show up in the dump as itself.
+        // The same claim from the other end, and the half that makes the first half mean
+        // something. Until phase 9b there was no layer 6, the persona accepted a plan the
+        // simulator had assembled by hand from three corpus keys, and this asserted that the
+        // marker standing in for a rendered plan never reached the dump. The marker is gone
+        // because the plans are real now, so what has to be asserted is that they happened:
+        // a check that passes because nothing was offered is a check of nothing.
         val run = runs.first { it.persona.acceptsEveryPlan }
-        assertFalse("a plan line reached the dump", ClaritySimulator.PLAN_LINE_MARKER in SimulationDump.of(run))
+        val plans = run.of(SimulatedSurface.REPORT_CLOSING)
+            .count { it.spoken?.ruleKey == ClaritySimulator.GUIDANCE_PLAN_RULE }
+        assertTrue(
+            "the plan accepting persona was offered no plan in a simulated year, so it " +
+                "accepted none, the follow through never ran, and this check proved nothing",
+            plans > 0,
+        )
     }
 
     /**
@@ -338,6 +347,11 @@ class SimulatorTest {
          * - **report observation** reaches four. Not `REFLECTIVE`, because volume 2 authors
          *   no reflective line anywhere, which is exactly the case the open tier has to fall
          *   through rather than fall silent on
+         * - **report closing** reaches `PLAIN` alone, and no author can change that either.
+         *   Section 4 carries no register tag on any line, `ReportWalker` refuses one there,
+         *   and 7.4's register selection is a property of rule selection, which layer 6 does
+         *   not do: it assembles three authored fragments and chooses between four complete
+         *   closings. A closing has one voice on purpose
          */
         val REGISTERS_A_SURFACE_CAN_REACH: Map<SimulatedSurface, Set<Register>> = mapOf(
             SimulatedSurface.PULSE to setOf(Register.PLAIN, Register.OBSERVATIONAL),
@@ -350,6 +364,7 @@ class SimulatorTest {
                 Register.PLAIN, Register.OBSERVATIONAL, Register.EDITORIAL, Register.NEUTRAL_AGENT,
             ),
             SimulatedSurface.REPORT_PATTERN to setOf(Register.PLAIN),
+            SimulatedSurface.REPORT_CLOSING to setOf(Register.PLAIN),
         )
 
         /** Section 12 names eleven synthetic histories. */

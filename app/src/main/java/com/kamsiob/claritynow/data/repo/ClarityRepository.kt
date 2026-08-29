@@ -31,6 +31,8 @@ import com.kamsiob.claritynow.data.event.ItemPromoted
 import com.kamsiob.claritynow.data.event.ItemReopened
 import com.kamsiob.claritynow.data.event.ItemReordered
 import com.kamsiob.claritynow.data.event.ItemStatus
+import com.kamsiob.claritynow.data.event.PlanAccepted
+import com.kamsiob.claritynow.data.event.PlanOffered
 import com.kamsiob.claritynow.data.event.PulseAnswered
 import com.kamsiob.claritynow.data.event.PulseGenerated
 import com.kamsiob.claritynow.data.event.SettingChanged
@@ -57,6 +59,7 @@ import com.kamsiob.claritynow.domain.replay.FocusOutcome
 import com.kamsiob.claritynow.domain.replay.FocusSessionState
 import com.kamsiob.claritynow.domain.replay.ItemState
 import com.kamsiob.claritynow.domain.replay.OrderKey
+import com.kamsiob.claritynow.domain.replay.PlanState
 import com.kamsiob.claritynow.domain.replay.PulseEntryState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -1249,6 +1252,61 @@ class ClarityRepository(
             )
             _state.value.pulses[dateKey]
         }
+
+    // Plans -------------------------------------------------------------------
+
+    /**
+     * Appends `PLAN_OFFERED` unless this plan is already in the log.
+     * CLARITY_LOGIC_ENGINE.md 10.3 and `MASTER_BUILD_PROMPT.md` 11.3 step 9.
+     *
+     * **Offering is recorded and declining is not, and that asymmetry is the feature.**
+     * The offer has to be in the log because `FiringHistory` reads the frame, cue and
+     * action keys out of it for 7.6's ninety day exclusion, so a person does not meet the
+     * same frame twice in a season. What is never recorded is the answer, unless the
+     * answer was yes: 10.5 says declining writes nothing, costs nothing, is never counted
+     * and is never referenced, and there is no `PLAN_DECLINED` in the event catalog for
+     * anything to write.
+     *
+     * **At most one per week, and immutable once written.** A plan's id is derived from
+     * the week it belongs to, so a second generation of the same week's report cannot file
+     * a second plan; the check and the append are taken under one lock for
+     * [recordPulseGenerated]'s reason, which is that two foregrounds racing at launch would
+     * otherwise both read an empty answer and both write.
+     */
+    suspend fun recordPlanOffered(payload: PlanOffered): PlanState = mutex.withLock {
+        val existing = _state.value.plans[payload.planId]
+        if (existing != null) return@withLock existing
+        commitLocked(payload)
+        requireNotNull(_state.value.plans[payload.planId]) {
+            "the reducer did not file the plan ${payload.planId}"
+        }
+    }
+
+    /**
+     * Appends `PLAN_ACCEPTED` for [planId]. CLARITY_LOGIC_ENGINE.md 10.5.
+     *
+     * Null when there is no such plan. The plan unchanged when it has already been
+     * accepted: a second acceptance is a double tap or a stale screen, and the reducer
+     * ignores it too, so the two agree.
+     *
+     * **Nothing else happens.** 10.5: the pill settles and that is all. No toast, no
+     * celebration, no bounce, no haptic heavier than an ordinary tap, and no notification,
+     * badge or home screen card anywhere afterwards. The plan exists in the report and
+     * nowhere else, so this method has one caller and writes one event.
+     *
+     * What the event is for is 10.6, and it is worth saying here because it is the one
+     * thing a later reader might try to make more useful. An acceptance raises the
+     * motivating observation family by one place in next week's ranking, through
+     * `PlanHistory` and `FollowThrough`, **and that is the entire consequence**. There is
+     * no path from this event to a sentence, and `GuidanceNonComplianceTest` is what keeps
+     * it that way.
+     */
+    suspend fun acceptPlan(planId: String): PlanState? = mutex.withLock {
+        val plan = _state.value.plans[planId] ?: return@withLock null
+        if (plan.isAccepted) return@withLock plan
+        commitLocked(PlanAccepted(planId))
+        _state.value.plans[planId]
+    }
 
     /** The event a Pulse entry was built from. `PulseGenerated` uses its id as its entity id. */
     private suspend fun pulseGeneratedPayload(pulseId: String): PulseGenerated? =

@@ -6,6 +6,7 @@ import com.kamsiob.claritynow.domain.engine.EngineResult
 import com.kamsiob.claritynow.domain.engine.FactRef
 import com.kamsiob.claritynow.domain.engine.FactSet
 import com.kamsiob.claritynow.domain.engine.FiringHistory
+import com.kamsiob.claritynow.domain.engine.Validated
 import com.kamsiob.claritynow.domain.engine.catalog.ClarityCatalog
 import com.kamsiob.claritynow.domain.engine.catalog.LengthBand
 import com.kamsiob.claritynow.domain.engine.catalog.Purpose
@@ -14,6 +15,11 @@ import com.kamsiob.claritynow.domain.engine.realize.Candidate
 import com.kamsiob.claritynow.domain.engine.validate.ClarityValidator
 import com.kamsiob.claritynow.domain.engine.validate.ReportIntegrity
 import com.kamsiob.claritynow.domain.engine.validate.ReportVerdict
+import com.kamsiob.claritynow.domain.engine.validate.ValidationResult
+import com.kamsiob.claritynow.domain.guidance.FollowThrough
+import com.kamsiob.claritynow.domain.guidance.GuidanceComposer
+import com.kamsiob.claritynow.domain.guidance.GuidanceResult
+import com.kamsiob.claritynow.domain.guidance.PlanHistory
 import java.time.ZoneId
 
 /**
@@ -36,10 +42,9 @@ import java.time.ZoneId
  * ```
  *
  * Steps 3 to 6 are [compose]. Steps 1 and 2 are the caller's, because they need a clock and
- * a query facade and this class needs neither. Steps 7 and 8 are layer 6, which is phase 9b
- * and which takes the observations that appeared; [ClarityReport.observations] is that list
- * and there is deliberately no other. Step 9 is the repository's, because
- * `ClarityRepository` is the only writer in the app.
+ * a query facade and this class needs neither. Steps 7 and 8 are [closing], which hands
+ * layer 6 exactly the observations the page will carry and nothing else. Step 9 is the
+ * repository's, because `ClarityRepository` is the only writer in the app.
  *
  * ## What composition adds to what the engine already does
  *
@@ -89,6 +94,24 @@ class ReportComposer(private val catalog: ClarityCatalog, private val zone: Zone
 
     private val integrity = ReportIntegrity(catalog, zone)
 
+    private val guidance = GuidanceComposer(catalog, zone)
+
+    /**
+     * Layer 5 again, for one purpose: minting the `Validated` layer 6 takes.
+     *
+     * `Validated` is constructed by layer 5 and by nothing else, and 10.4 rule 2 rests on
+     * that: layer 6 takes a `List<Validated>` so it cannot be handed a sentence that was
+     * vetoed. The engine validates every candidate it returns and then throws the proof
+     * away, because `CandidateValidator.veto` answers a reason rather than a token.
+     *
+     * So the kept observations are validated a second time here rather than wrapped. It
+     * costs five validations per report and it keeps the type's guarantee exact: the
+     * `Validated` layer 6 receives really was minted by layer 5, for that candidate,
+     * against these facts. Wrapping instead would make the type a promise this file makes
+     * rather than one layer 5 makes, and the promise is the only thing holding rule 2 up.
+     */
+    private val validator = ClarityValidator(zone)
+
     /**
      * One report for the week [facts] describes.
      *
@@ -96,7 +119,12 @@ class ReportComposer(private val catalog: ClarityCatalog, private val zone: Zone
      * ninety day variant exclusion, the fourteen day family cooldowns and the escalation
      * ladders, and caching it is how two devices holding one log start disagreeing.
      */
-    fun compose(facts: FactSet, history: FiringHistory, weekStartKey: String): ReportOutcome {
+    fun compose(
+        facts: FactSet,
+        history: FiringHistory,
+        weekStartKey: String,
+        plans: PlanHistory = PlanHistory.EMPTY,
+    ): ReportOutcome {
         val dateKey = engine.momentOf(facts).dateKey
 
         // 12.3's edge case, and it comes before selection rather than after it. A week with
@@ -118,8 +146,19 @@ class ReportComposer(private val catalog: ClarityCatalog, private val zone: Zone
         // 4 and 6. The engine's own loop: the family exclusion, the incompatibility matrix,
         // the editorial budget and the length band alternation, with every candidate realized
         // and validated before it comes back.
+        //
+        // The boost is layer 6's follow through, 10.6, and it is the only thing an accepted
+        // plan ever does. It reorders observations of equal specificity and cannot make one
+        // qualify, so a family a person accepted a plan about still has to earn its place
+        // here on its own merits. See `FollowThrough` and `Selector.FOLLOW_THROUGH_BOOST`.
         val selected = engine
-            .observeObservations(facts, history, headline?.familyKey, MAX_OBSERVATIONS)
+            .observeObservations(
+                facts,
+                history,
+                headline?.familyKey,
+                MAX_OBSERVATIONS,
+                FollowThrough.boosted(plans, weekStartKey),
+            )
             .map { it.meta }
 
         // 5. At most one pattern, and only with three weeks behind it. No trend means the
@@ -130,7 +169,7 @@ class ReportComposer(private val catalog: ClarityCatalog, private val zone: Zone
             null
         }
 
-        return assemble(headline, selected, pattern, facts, dateKey, weekStartKey)
+        return assemble(headline, selected, pattern, facts, dateKey, weekStartKey, plans, history)
     }
 
     /**
@@ -149,6 +188,8 @@ class ReportComposer(private val catalog: ClarityCatalog, private val zone: Zone
         facts: FactSet,
         dateKey: String,
         weekStartKey: String,
+        plans: PlanHistory = PlanHistory.EMPTY,
+        history: FiringHistory = FiringHistory.EMPTY,
     ): ReportOutcome {
         val dropped = mutableListOf<DroppedLine>()
         val gated = intentGate(observations, facts, dropped)
@@ -169,6 +210,7 @@ class ReportComposer(private val catalog: ClarityCatalog, private val zone: Zone
             totals = language.totals(facts),
             numbers = emptyMap(),
             dropped = dropped.toList(),
+            closing = closing(headline, kept, facts, plans, history, weekStartKey),
         )
         val numbered = report.copy(numbers = numbersOf(report))
         return when (val verdict = integrity.inspect(numbered.lines, facts)) {
@@ -176,6 +218,48 @@ class ReportComposer(private val catalog: ClarityCatalog, private val zone: Zone
             is ReportVerdict.Vetoed -> ReportOutcome.Suppressed(weekStartKey, verdict)
         }
     }
+
+    /**
+     * 11.3 steps 7 and 8. Layer 6, handed only what the reader will actually see.
+     *
+     * **`kept` is the whole of 10.4 rule 2 and it is why this is here rather than earlier.**
+     * The observations the engine selected are not the observations the report shows: the
+     * intent gate, the area mention cap and the editorial budget each remove lines, and a
+     * plan motivated by a line that was dropped would refer to something that did not
+     * happen. So layer 6 runs after every composition rule has taken what it takes, on the
+     * final list, in reading order.
+     *
+     * The pattern is deliberately not passed. Sections 6.3 and 10.4 make a plan a response
+     * to a week, and a pattern is a statement about three or more of them; an action
+     * completable inside one week, 10.4 rule 5, cannot be a response to a shape that took a
+     * month to form.
+     */
+    private fun closing(
+        headline: Candidate?,
+        kept: List<ReportObservation>,
+        facts: FactSet,
+        plans: PlanHistory,
+        history: FiringHistory,
+        weekStartKey: String,
+    ): GuidanceResult = guidance.compose(
+        headline = headline?.let { validated(it, facts) },
+        appeared = kept.mapNotNull { validated(it.candidate, facts) },
+        facts = facts,
+        plans = plans,
+        history = history,
+        weekStartKey = weekStartKey,
+    )
+
+    /**
+     * Layer 5's proof that [candidate] may be shown, or null.
+     *
+     * Null cannot happen through [compose], because the engine already refused every
+     * candidate the validator vetoed. It can happen through [assemble], which the
+     * composition tests drive with candidates built by hand, and refusing there is right:
+     * a line layer 5 will not pass is not a line layer 6 may be motivated by.
+     */
+    private fun validated(candidate: Candidate, facts: FactSet): Validated? =
+        (validator.validate(candidate, facts) as? ValidationResult.Passed)?.validated
 
     /**
      * The pattern section's empty state, or null. `CORPUS_2_REPORT.md` 3.16.

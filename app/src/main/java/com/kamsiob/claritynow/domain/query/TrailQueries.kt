@@ -1225,6 +1225,19 @@ class TrailQueries(
     fun plansOfferedBetween(startMillis: Long, endMillis: Long): List<PlanOffered> =
         eventsIn(startMillis, endMillis).mapNotNull { it.payload as? PlanOffered }
 
+    /**
+     * PLAN_ACCEPTED payloads in the window, in the log's total order.
+     *
+     * The sibling of the one above, and `PlanHistory` needs both: an offer carries
+     * everything about a plan and nothing about whether it was taken up, and this
+     * carries an id and nothing else. **There is no third function here and there
+     * must not be**, because there is no third event: 10.5 says declining writes
+     * nothing and ignoring both options is identical to declining, so an offer with
+     * no acceptance beside it is the whole of what a decline looks like in the log.
+     */
+    fun plansAcceptedBetween(startMillis: Long, endMillis: Long): List<PlanAccepted> =
+        eventsIn(startMillis, endMillis).mapNotNull { it.payload as? PlanAccepted }
+
     // Internals ---------------------------------------------------------------
 
     /** The half open window filter. Every windowed function starts here. */

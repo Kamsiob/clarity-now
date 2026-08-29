@@ -29,28 +29,49 @@ class CorpusParseTest {
         }
     }
 
+    /**
+     * Every keyed line in all three files reaches a bench, with no exception anywhere.
+     *
+     * **This used to carry one, and phase 9b removed it rather than moving it.** Section 4
+     * of `CORPUS_2_REPORT.md` is layer 6, nothing read it until layer 6 existed, and the
+     * walker recorded the skip so that a hundred and nine authored lines going nowhere was
+     * a stated fact rather than a silence. Layer 6 now reads them, so the exception is
+     * gone and the Report is asserted exactly as the other two volumes are.
+     *
+     * The single line the parser carries that the file does not key is still the fixed
+     * generated line in 5.1, which is a sentence rather than a bench.
+     */
     @Test
     fun `every keyed line in every corpus file reaches a bench`() {
         for (volume in CorpusFixture.volumes) {
             val counted = CorpusFixture.keyedLineCount(volume.volume.fileName)
-            // The one line the parser carries that the file does not key is the fixed
-            // generated line in 5.1, which is a sentence rather than a bench.
             val parsed = volume.lineCount - volume.auxiliary["footer.generated"].orEmpty().size
-            val skippedLines = counted - parsed
-            if (volume.volume == CorpusVolume.REPORT) {
-                // Section 4 is layer 6 and is deliberately not read in this phase. Its
-                // benches are frames, cues, actions, commitment forms and the non plan
-                // closings, and the walker records the skip rather than performing it
-                // silently.
-                assertTrue(
-                    "the report walker should have recorded skipping section 4",
-                    volume.skipped.any { it.title.startsWith("SECTION 4") },
-                )
-                assertEquals("section 4 line count", GUIDANCE_LINES, skippedLines)
-            } else {
-                assertEquals("${volume.volume.fileName} lines reaching a bench", counted, parsed)
-            }
+            assertEquals("${volume.volume.fileName} lines reaching a bench", counted, parsed)
         }
+    }
+
+    /**
+     * The one section of one corpus file that is still read past, and it has no benches.
+     *
+     * Section 7 is the composition rules: prose and the incompatibility matrix. Section 4
+     * used to be here too and is not any more. A skip that stops being recorded is a
+     * hundred lines quietly leaving the app, so this asserts the list rather than its size.
+     */
+    @Test
+    fun `the only recorded skip with a section number is the composition rules`() {
+        val numbered = CorpusFixture.report.skipped
+            .map { it.title }
+            .filter { it.startsWith("SECTION ") }
+        assertEquals(listOf("SECTION 7: COMPOSITION RULES"), numbered)
+    }
+
+    /** 4.5's two labels are the one fenced block inside section 4 that is not a bench. */
+    @Test
+    fun `the accept and decline labels are skipped and the skip is recorded`() {
+        assertTrue(
+            "4.5 carries two unkeyed interface labels and the walker must record reading past them",
+            CorpusFixture.report.skipped.any { it.title == ReportWalker.ACCEPT_DECLINE_HEADING },
+        )
     }
 
     @Test
@@ -211,6 +232,5 @@ class CorpusParseTest {
          * actions, three commitment forms and twenty four non plan closings, plus the two
          * accept and decline labels, which carry no key and are counted separately.
          */
-        const val GUIDANCE_LINES = 7 + 21 + 54 + 3 + 24
     }
 }

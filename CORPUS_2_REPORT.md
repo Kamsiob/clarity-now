@@ -2772,7 +2772,7 @@ Three benches combine. **Frame, cue, action.**
 The offered form is **nominal, never imperative**. On acceptance the plan is re-rendered in **first person** and that is the only form shown afterwards. The imperative never exists anywhere in the app.
 
 > Offered: *One option for Wednesday morning: ten minutes in Personal before you open Work.*
-> Stored: *If it's Wednesday morning, I'll spend ten minutes in Personal before opening Work.*
+> Stored: *If it's Wednesday morning, my one thing is ten minutes in Personal.*
 
 Rendering: `{frame}` takes `{cue}` and `{action}` as slots. Cue lines carry no terminal punctuation. Action lines are gerund phrases with no leading capital.
 
@@ -2786,11 +2786,22 @@ frm.04  Something to consider {cue}: {action}.
 frm.05  A small one {cue}: {action}.
 frm.06  There is room {cue} for {action}.
 frm.07  {cue} would suit {action}.
+frm.08  One thing that would fit {cue}: {action}.
+frm.09  {cue} is one place for {action}.
+frm.10  There is time {cue} for {action}.
+frm.11  One possibility {cue}: {action}.
+frm.12  If you want somewhere to start {cue}: {action}.
 ```
+
+**Twelve rather than seven**, because the frame is the one bench a person meets on every plan they are ever offered, and 7.6's ninety day exclusion over seven frames runs out inside a quarter. The five added here take their grammar from a frame that already exists rather than inventing a sixth sentence shape: `frm.08` and `frm.11` put the cue in an adjunct before a colon as `frm.04` and `frm.05` do, `frm.09` makes the cue the subject as `frm.03` does, `frm.10` puts it mid sentence as `frm.06` does, and `frm.12` opens with a conditional as `frm.02` does. That is what makes each one's compatible cue shapes a copy of a judgment somebody already made and checked.
+
+**One collision in `frm.02` is recorded rather than fixed.** *If you want one thing to aim at* takes a cue that opens with its own preposition, and the corpus blesses that pairing in 4.7's second worked plan, *aim at before you add anything new*. It reads. *Aim at after your next focus session* reads less well and *aim at once Work is open* reads as *at once*, so the two cues added here that would have produced it are shaped as trailing clauses instead and reach only the frames that punctuate after the cue. The approved `after` cues keep the shape they were approved with, and the collision is a wording question about one frame rather than a fault in any cue.
 
 ## 4.2 Cue bank
 
 Each cue names the `CueFacts` field it requires. A cue that cannot be substantiated is unavailable. Confidence thresholds in `CLARITY_LOGIC_ENGINE.md` 3.7 are mandatory.
+
+**Every cue also carries a grammatical shape, and the shape is recorded in `PlanBenches.CUE_SHAPES` rather than here.** It is the output of authoring rule 5 below: write the cue out inside every frame and inside every commitment form, and record which ones it reads in. A cue with no shape recorded is unavailable, so a cue added to this bank without one is a line the app never says, and `PlanFormTest` reports it by name rather than letting it go quiet.
 
 ### Weekday, requires `strongestWeekday`
 ```
@@ -2799,6 +2810,10 @@ cue.day.02   {strongestWeekday}, your busiest day
 cue.day.03   when {strongestWeekday} comes around
 cue.day.04   before {strongestWeekday} is over
 cue.day.05   the day you usually get most done
+cue.day.06   next {strongestWeekday}
+cue.day.07   the start of {strongestWeekday}
+cue.day.08   the end of {strongestWeekday}
+cue.day.09   once {strongestWeekday} arrives
 ```
 
 ### Part of day, requires `productiveBand`
@@ -2808,7 +2823,15 @@ cue.band.02  the morning, when you finish most things
 cue.band.03  before midday, where most of your completions land
 cue.band.04  your first hour
 cue.band.05  early on {strongestWeekday}
+cue.band.06  {strongestWeekday} morning, before anything else
+cue.band.07  the first hour of {strongestWeekday}
+cue.band.08  {strongestWeekday} before midday
+cue.band.09  the morning, before the day fills up
+cue.band.10  early in the day
+cue.band.11  the first hour of the day
 ```
+
+Every line in this bank names the morning, and the whole bank is held back unless `productiveBand` is `MORNING`. That is not a stylistic preference: *the morning, when you finish most things* is false of a person whose band is the evening, and 3.7 calls a cue the data cannot substantiate worse than no plan. `PlanFormTest` asserts every line here really is about mornings, so an evening line added later fails the build rather than telling somebody something untrue about their own day.
 
 ### Behavioral, anchored to an existing habit
 ```
@@ -2818,20 +2841,36 @@ cue.hab.03   before you add anything new
 cue.hab.04   the next time you finish something
 cue.hab.05   before you start on {areaName} again
 cue.hab.06   the next time you open the app
+cue.hab.07   before {areaName} is opened
+cue.hab.08   after the next thing is finished
+cue.hab.09   before anything new is written down
+cue.hab.10   before the next item is added
+cue.hab.11   once {areaName} is open
+cue.hab.12   after the first completion of the week
 ```
 
 ### Boundary
 ```
-cue.bound.01 before the week ends
-cue.bound.02 before {quietestWeekday}
-cue.bound.03 at the start of next week
-cue.bound.04 before Friday
-cue.bound.05 your next quiet evening
+cue.bound.01  before the week ends
+cue.bound.02  before {quietestWeekday}
+cue.bound.03  at the start of next week
+cue.bound.04  before Friday
+cue.bound.05  the evening of {quietestWeekday}
+cue.bound.06  before the weekend
+cue.bound.07  at the end of the week
+cue.bound.08  before Monday
+cue.bound.09  in the last hour of the week
+cue.bound.10  before the next report
+cue.bound.11  after this report is closed
 ```
+
+**`cue.bound.05` was reworded in the guidance language pass and it is the only approved line in section 4 that was.** It read *your next quiet evening*, and no field of `CueFacts` carries a quiet evening: there is a quietest weekday, a productive band and an adding band, and nothing at all about how an evening went. It had never rendered, because the nominal shape had no commitment form until 4.4 grew one, so the day it became reachable was the day it would have started making a claim the app cannot check. It now names the fact it always meant, and the marker in it is what gates it.
 
 ## 4.3 Action bank
 
 Nominal, never imperative. An action pairs with a cue only when its motivating family appeared in the report.
+
+**The subheadings are the friction list**, not a filing convenience. A week whose observations are all outside them is a week with no barrier a plan could act on, and it gets no plan without anything in the engine having to decide that the week was a good one. That is `CLARITY_LOGIC_ENGINE.md` 10.4 rule 3, held by this bank and nowhere else.
 
 ### From `intakeVsOutput` or `queuePressure`
 ```
@@ -2845,6 +2884,21 @@ act.fin.07   moving one queued item all the way through
 act.fin.08   letting one thing leave before the next arrives
 act.fin.09   the easiest item in {areaName}
 act.fin.10   fifteen minutes on whatever is nearest to finished
+act.fin.11   finishing one item without opening a second
+act.fin.12   one item out of {areaName} and nothing new in
+act.fin.13   swapping the front of {areaName} for something that can be finished this week
+act.fin.14   the item in {areaName} with the smallest estimate
+act.fin.15   the first step already written on the front item of {areaName}
+act.fin.16   one focus session spent finishing rather than starting
+act.fin.17   letting {areaName} get one item shorter
+act.fin.18   closing an item rather than reordering one
+act.fin.19   one item finished, whatever it is
+act.fin.20   ten minutes on the item nearest the front
+act.fin.21   finishing something that fits in one sitting
+act.fin.22   choosing one queued item and finishing only that
+act.fin.23   moving the front item of {areaName} to done
+act.fin.24   the item that has been at the front of {areaName} longest
+act.fin.25   reading {areaName} and finishing the first thing that could be finished today
 ```
 
 ### From `neglectedArea`
@@ -2859,6 +2913,19 @@ act.neg.07   putting one new thing at the front of {areaName}
 act.neg.08   finding out whether {areaName} still matters to you
 act.neg.09   moving anything at all in {areaName}
 act.neg.10   reading {areaName}'s queue and cutting what is dead
+act.neg.11   the front item of {areaName}, read once
+act.neg.12   writing a first step under whatever is at the front of {areaName}
+act.neg.13   one focus session in {areaName}
+act.neg.14   deciding what {areaName} is for now, or letting it go
+act.neg.15   opening {areaName} and closing it again with one thing changed
+act.neg.16   the oldest item in {areaName}, finished or dropped
+act.neg.17   archiving {areaName} if that is what it has become
+act.neg.18   reading {areaName} and keeping only what is still true
+act.neg.19   giving {areaName} one hour this week
+act.neg.20   looking at what {areaName} was holding a month ago
+act.neg.21   one item in {areaName} taken off the list for good
+act.neg.22   naming what {areaName} is waiting on
+act.neg.23   one visit to {areaName} with nothing expected of it
 ```
 
 ### From `singleFocus`
@@ -2870,6 +2937,15 @@ act.oth.04   checking what the other areas have been holding
 act.oth.05   starting somewhere other than {areaName}
 act.oth.06   letting {areaName} wait and doing something else first
 act.oth.07   the first half hour anywhere but {areaName}
+act.oth.08   one item in {otherArea} moved before {areaName} is opened
+act.oth.09   the first thing today from anywhere except {areaName}
+act.oth.10   reading the other areas' front items
+act.oth.11   one completion outside {areaName}
+act.oth.12   giving {otherArea} the hour {areaName} usually gets
+act.oth.13   one thing in {otherArea} taken from start to finish
+act.oth.14   the front item of {otherArea}
+act.oth.15   starting the week in {otherArea}
+act.oth.16   leaving {areaName} closed for one sitting
 ```
 
 ### From `persistentItem`
@@ -2882,6 +2958,16 @@ act.brk.05   adding a note to {itemTitle} saying what is in the way
 act.brk.06   putting the smaller version of {itemTitle} at the front instead
 act.brk.07   one uninterrupted hour on {itemTitle}
 act.brk.08   naming the obstacle, even in three words
+act.brk.09   splitting {itemTitle} into the first part and the rest
+act.brk.10   one hour on {itemTitle} with the app closed
+act.brk.11   writing the next physical step of {itemTitle} under it
+act.brk.12   moving {itemTitle} back and putting something finishable in front
+act.brk.13   asking what {itemTitle} would look like finished
+act.brk.14   the smallest version of {itemTitle} that would still count
+act.brk.15   fifteen minutes on {itemTitle}, then stopping whatever happens
+act.brk.16   deciding whether {itemTitle} belongs in {areaName} at all
+act.brk.17   changing the title of {itemTitle} to the thing that is actually next
+act.brk.18   dropping {itemTitle} and writing the real one
 ```
 
 ### From `focusInvestment` or `focusHabitFading`
@@ -2892,6 +2978,13 @@ act.foc.03   twenty five protected minutes for {areaName}
 act.foc.04   a session before anything else
 act.foc.05   one session in before the week fills up
 act.foc.06   the same length of time that worked before
+act.foc.07   one session, whatever length fits
+act.foc.08   a focus session on the front item of {areaName}
+act.foc.09   the first session of the week before anything is added
+act.foc.10   twenty minutes of focus rather than none
+act.foc.11   the shortest session the app offers
+act.foc.12   one session finished rather than extended
+act.foc.13   a session at the hour focus usually happens
 ```
 
 ### From `queueDrained` or an idle area
@@ -2901,6 +2994,14 @@ act.pick.02  one thing at the front of {areaName}
 act.pick.03  deciding what {areaName} is about this month
 act.pick.04  writing down the next thing for {areaName}
 act.pick.05  one item for {areaName}, or the archive
+act.pick.06  three things written into {areaName} and no more
+act.pick.07  deciding whether {areaName} is finished or between things
+act.pick.08  writing the smallest next thing for {areaName}
+act.pick.09  giving {areaName} a front item again
+act.pick.10  one line in {areaName} about what comes next
+act.pick.11  archiving {areaName} rather than leaving it empty
+act.pick.12  the thing that would go in {areaName} if anything did
+act.pick.13  deciding whether an empty {areaName} is a rest or an ending
 ```
 
 ### From `switchingBehavior`
@@ -2909,6 +3010,14 @@ act.set.01   picking one item in {areaName} and leaving it there
 act.set.02   finishing what is at the front of {areaName} before changing it again
 act.set.03   deciding what {areaName} is actually for this week
 act.set.04   one thing in {areaName}, until it is done
+act.set.05   one item at the front of {areaName} for the whole week
+act.set.06   finishing the current front item before any swap
+act.set.07   the front item of {areaName} left where it is until Friday
+act.set.08   choosing the front item of {areaName} once and not again
+act.set.09   one swap in {areaName} this week rather than several
+act.set.10   one item carried from Monday to the end of the week
+act.set.11   no reordering in {areaName} for a week
+act.set.12   the current front item of {areaName}, finished or dropped
 ```
 
 ### From `dayShape` or `timeOfDay`
@@ -2917,6 +3026,12 @@ act.rep.01   whatever you did last {strongestWeekday}
 act.rep.02   the same hours that worked
 act.rep.03   starting at the time you usually finish things
 act.rep.04   the hardest item in your best hour
+act.rep.05   one item in the hour that usually works
+act.rep.06   the same shape of day, once more
+act.rep.07   putting the hardest item where the good hours are
+act.rep.08   one thing scheduled for the part of the day that already works
+act.rep.09   the first hour of {strongestWeekday} spent on one thing
+act.rep.10   one item saved for {strongestWeekday}
 ```
 
 ## 4.4 Commitment rendering
@@ -2924,12 +3039,18 @@ act.rep.04   the hardest item in your best hour
 On accept, the plan re-renders in first person. Cue and action map to a fixed grammar:
 
 ```
-com.01  If it's {cue}, I'll {actionVerb}.
+com.01  If it's {cue}, my one thing is {actionNoun}.
 com.02  {cue}, I'm {actionGerund}.
 com.03  My one thing {cue}: {actionNoun}.
 ```
 
-Each action carries a verb form alongside its gerund so `com.01` can render. `act.neg.01` gerund is `ten minutes in Personal`; verb form is `spend ten minutes in Personal`.
+`com.01` is the if then form that `CLARITY_LOGIC_ENGINE.md` 10.2 calls the mechanism, and **it is built out of the noun phrase every action in 4.3 already is.** The form this section carried before asked for `I'll {actionVerb}` and said in prose that every action carries a verb form alongside its gerund. No action ever did, the form never rendered once, and the sentence promising the verb forms is withdrawn here rather than left standing.
+
+**Authoring the fifty four verb forms was the obvious way to close it and it loses on a specific hazard.** A verb form is *spend ten minutes in Personal*, *close the oldest item in Work*, *decide whether Reading stays or goes*. In isolation every one of them is an imperative, and a bank of them sitting in this file is a complete imperative action bank one frame away from a screen, in an app whose 10.2 says the imperative form never exists anywhere. `PlanFormTest` would have to be weakened to admit it. The noun phrase gives the same if then and cannot be read as a command on any day by anybody.
+
+**Which form fills depends on the cue's shape**, and the shapes are the ones 4.2 records. `com.01` needs a cue that can follow *If it's*, which is a bare calendar phrase like *Wednesday* or *Wednesday morning*, or a determiner headed one like *your first hour*. `com.02` and `com.03` need a cue that reads as an adjunct, which is *before Friday*, *when Wednesday comes around*, *the next time you finish something*. **No cue reads in both sets**, which is why there are three forms rather than one, and `PlanBenches.COMMITMENT_SHAPES` records the pairing the way `CUE_SHAPES` records the frame pairing.
+
+**One consequence worth stating.** Five cues in 4.2 could not be stored at all before this, because they read in a frame and in none of the commitment forms, so the composer never offered them: *the day you usually get most done*, *your first hour*, *your next quiet evening* and the two appositives. `com.01` is where three of them live now. The two appositives still have no commitment form and are still unavailable, and that is recorded rather than fixed: *If it's the morning, when you finish most things, my one thing is ten minutes in Personal* is a sentence with two subordinate clauses before its subject, and no reader would forgive it.
 
 ## 4.5 The accept and decline labels
 
@@ -2946,6 +3067,10 @@ Declining writes nothing, costs nothing, is never counted, never referenced. Ign
 
 Complete lines, not frame plus cue plus action. Used when layer 6 cannot or should not produce a plan.
 
+**This bench carries as much weight as the plan benches and it is sized as though it does.** Layer 6 must be silent or non committal on at least fifteen percent of reports, and it measured forty three percent across the persona set, so a person meets these lines more often than they meet a plan. They also have one property no other bench in this app has: **a closing is recorded nowhere**, `REPORT_GENERATED` carries sections rather than a closing, and 7.6's ninety day exclusion is therefore blind to them. Bench size is the only thing keeping a closing from returning inside a month, which is why the four sub benches here went from eight, seven, four and five lines to something a year can rotate through.
+
+**None of these is a consolation prize for not getting advice.** A line that reads as one is a line telling somebody the app had nothing for them, which is worse than silence and is what `GuidanceResult.Nothing` is for.
+
 ### `trustThePace`, when the week worked
 ```
 cls.trust.01  Nothing here needs fixing. Carry on.
@@ -2956,6 +3081,21 @@ cls.trust.05  Steady is the result, not the absence of one.
 cls.trust.06  No adjustment needed this week.
 cls.trust.07  That week does not need a note from anyone.
 cls.trust.08  Keep the shape. It suits you.
+cls.trust.09  Nothing here needs a decision.
+cls.trust.10  This week can stand as it is.
+cls.trust.11  Nothing in the record is out of place.
+cls.trust.12  The app has nothing to add to this one.
+cls.trust.13  A week that asks for nothing is a reading too.
+cls.trust.14  The shape held all week.
+cls.trust.15  Nothing about this week is a problem to solve.
+cls.trust.16  Nothing to correct. Nothing to add.
+cls.trust.17  This one holds together on its own.
+cls.trust.18  The week did not need managing.
+cls.trust.19  What worked is still working.
+cls.trust.20  Nothing is asking to be picked up.
+cls.trust.21  Nothing needs a hand this week.
+cls.trust.22  This is a page with no note on it.
+cls.trust.23  The week can be left alone.
 ```
 
 ### `letItBe`, for genuinely quiet weeks
@@ -2967,6 +3107,19 @@ cls.let.04    This one can just be a quiet week.
 cls.let.05    Leave it. The app will still be here.
 cls.let.06    No week owes you a result.
 cls.let.07    Rest is not a gap in the record.
+cls.let.08    Nothing moved here, which is not the same as nothing happening.
+cls.let.09    A week can pass without leaving anything in a queue.
+cls.let.10    The record is thin this week. It is not a verdict.
+cls.let.11    There is nothing here to act on, and no reason to invent one.
+cls.let.12    Quiet weeks are weeks.
+cls.let.13    The queues kept. Nothing spoiled.
+cls.let.14    This page is short because the week was.
+cls.let.15    Whatever the week was for, it was not for this.
+cls.let.16    Some weeks the app is the wrong place to look.
+cls.let.17    Nothing here is unfinished. There was nothing to finish.
+cls.let.18    The week is over and it asked for nothing.
+cls.let.19    A blank week reads as blank and means nothing more.
+cls.let.20    Nothing to pick up from this one.
 ```
 
 ### `noRhythmYet`, when cues have not stabilized
@@ -2975,7 +3128,22 @@ cls.new.01    A few more weeks and this page will know your rhythm.
 cls.new.02    Not enough of a pattern yet to say anything useful.
 cls.new.03    Come back in a month and this line will be sharper.
 cls.new.04    Still learning what your weeks look like.
+cls.new.05    No day of the week has stood out yet.
+cls.new.06    Nothing repeats often enough yet to point at.
+cls.new.07    A rhythm takes about six weeks to show up.
+cls.new.08    This line gets more specific when the weeks start to rhyme.
+cls.new.09    There is no hour or day here that the app can lean on yet.
+cls.new.10    The weeks so far are all different from each other.
+cls.new.11    Nothing here is regular enough to build on.
+cls.new.12    The app is looking for a day that repeats and has not found one.
+cls.new.13    This page fills in as the days do.
+cls.new.14    No week here looks much like the one before it.
+cls.new.15    There is not a repeating hour in the record yet.
+cls.new.16    What the app needs is six weeks that resemble each other.
+cls.new.17    Nothing about the timing of these weeks is settled yet.
 ```
+
+This is also the bench `MASTER_BUILD_PROMPT.md` 14b.10 asks for on the Report: the section that needs history says plainly what it needs and roughly when it becomes useful. **It is not only the first weeks bench.** `hasStableRhythm` is false for anybody whose twelve weeks hold no repeating day and no repeating hour, however long they have been here, so every line written for it from `cls.new.05` on says what is missing rather than how new the person is.
 
 ### `review`, the safe general closing
 ```
@@ -2984,6 +3152,19 @@ cls.rev.02    Read the active items and see if you still agree with them.
 cls.rev.03    Check what each area is currently asking of you.
 cls.rev.04    One pass over the active items is enough.
 cls.rev.05    Ask whether each active item is the thing you would pick today.
+cls.rev.06    One look at what is at the front of each area.
+cls.rev.07    The active items are the whole queue as far as this week goes.
+cls.rev.08    Read the front of each queue once and stop there.
+cls.rev.09    Every area has one item in front. That is the list worth reading.
+cls.rev.10    The front of each queue is where a week is decided.
+cls.rev.11    One question per area: is that still the one?
+cls.rev.12    Whether each active item is still the right item is worth one pass.
+cls.rev.13    The item at the front of an area is the one the week will meet.
+cls.rev.14    What is at the front of each area is a shorter list than the queues behind it.
+cls.rev.15    One pass, front items only.
+cls.rev.16    Every active item was chosen on some earlier day.
+cls.rev.17    The front items are worth a read, whatever the order behind them is.
+cls.rev.18    An active item is a decision from an earlier week.
 ```
 
 ## 4.7 Worked plans
@@ -3002,18 +3183,32 @@ Real combinations, showing what the user actually sees.
 > **Something to consider before Friday: deciding whether Reading stays or goes to the archive.**
 > `frm.04` + `cue.bound.04` + `act.neg.05`, motivated by `neglectedArea` at stage 2.
 
+And the same plan in both forms, which is the pair 10.2 is about. All three are taken from what the composer actually produced rather than assembled by hand, which is why the area is the fixture's and the actions are all `neglectedArea`'s.
+
+> Offered: **Wednesday is one place for writing a first step under whatever is at the front of Reading.**
+> Stored: **If it's Wednesday, my one thing is writing a first step under whatever is at the front of Reading.**
+> `frm.09` + `cue.day.01` + `act.neg.12` + `com.01`. The mechanism at its plainest: a bare weekday, an action, and a person saying the second follows the first.
+
+> Offered: **One option for the day you usually get most done: opening Reading and reading what is in it.**
+> Stored: **If it's the day you usually get most done, my one thing is opening Reading and reading what is in it.**
+> `frm.01` + `cue.day.05` + `act.neg.02` + `com.01`. `cue.day.05` is nominal, so the if then is the only form that can store it, and until 4.4 grew one this cue was offered by nothing at all.
+
+> Offered: **If you want one thing to aim at before Sunday: moving anything at all in Reading.**
+> Stored: **Before Sunday, I'm moving anything at all in Reading.**
+> `frm.02` + `cue.bound.02` + `act.neg.09` + `com.02`. What an adjunct cue gets instead: the same when and then, without the word `if`, because *If it's before Sunday* is not a sentence anybody says.
+
 ## 4.8 Totals
 
 | bank | lines |
 |---|---|
-| Frames | 7 |
-| Cues | 21 |
-| Actions | 54 |
+| Frames | 12 |
+| Cues | 43 |
+| Actions | 130 |
 | Commitment forms | 3 |
-| Non-plan closings | 24 |
-| **Total** | **109** |
+| Non-plan closings | 78 |
+| **Total** | **266** |
 
-Family compatibility constrains pairing, yielding roughly **4,500 valid plan surfaces** plus 24 non-plan closings. Fewer raw lines than the imperative version and considerably more surfaces, because every line now does two jobs.
+Family compatibility constrains pairing, yielding roughly **20,000 valid plan surfaces** plus 78 non-plan closings. The figure is frames times compatible cues times the actions one family licenses, taken over the largest bank: twelve frames, roughly nineteen cues valid for a given action once shapes and substantiation are applied, and twenty five actions in `act.fin`. Every line still does two jobs, once in the offer and once in the commitment.
 
 ## 4.9 Authoring rules for guidance
 
@@ -3021,8 +3216,10 @@ Family compatibility constrains pairing, yielding roughly **4,500 valid plan sur
 2. **Every action names a thing.** `ten minutes in Personal`, not `some attention on an area`. A slot that cannot be filled means the line cannot fire
 3. **The permission test.** Read each action preceded by *You should have*. If it still parses naturally, rewrite it
 4. **Cues are things the app has observed, never things it assumes.** No `before bed`, no `at the weekend`, no `when you have a moment`. If the data cannot substantiate it, it does not exist
-5. **Every cue must read grammatically inside every frame and before every action in its compatible families.** Write it out against all of them
+5. **Every cue must read grammatically inside every frame, inside every commitment form, and before every action in its compatible families.** Write it out against all of them, and record what the exercise produced in `PlanBenches.CUE_SHAPES`
 6. **No imperatives, no exclamation marks, no `try to`.** Actions are gerund phrases
+7. **A new line carries no second person if it can carry none.** The offered line is addressed to the person and `before you open {areaName}` is right in it; the stored line is the person speaking, and the same cue there produces *before you open Work, I'm closing the oldest item*, which puts two people in one sentence. Seven cues and four actions approved before this rule was written still do it, they are listed nowhere because nothing about them is wrong in the offer, and every line added since is neutral about who is speaking
+8. **A closing is a complete sentence with no slots in it.** The composer refuses one that grew a slot, because a slot is a claim about the person and this bench was never reviewed as one
 
 ---
 
@@ -3162,19 +3359,19 @@ Counted from the keyed lines in this file, not estimated.
 | Observation leads | 1,022 | ~19,700 combined with extensions |
 | Observation extensions | 370 | |
 | Patterns | 321 | 321 |
-| Guidance frames | 7 | ~4,500 plan surfaces |
-| Guidance cues | 21 | |
-| Guidance actions | 54 | |
+| Guidance frames | 12 | ~20,000 plan surfaces |
+| Guidance cues | 43 | |
+| Guidance actions | 130 | |
 | Commitment forms | 3 | |
-| Non-plan closings | 24 | 24 |
+| Non-plan closings | 78 | 78 |
 | Basis and edge states | 18 | 18 |
-| **Total** | **2,200** | **~24,900** |
+| **Total** | **2,357** | **~40,500** |
 
-Plan surfaces are frames times compatible cues times actions. Not every cue pairs with every action, so the figure assumes roughly twelve of the twenty one cues are valid for a given action.
+Plan surfaces are frames times compatible cues times actions. Not every cue pairs with every action and not every cue is substantiated on a given week, so the figure assumes roughly nineteen of the forty three cues are valid for a given action and takes the largest action bank.
 
 A report contains one headline, two to four observations, at most one pattern and one closing. At 52 reports a year a user sees roughly 400 report sentences annually. With these benches and the 90 day exclusion, the same headline would not recur for several years and a full report would never repeat.
 
-**Combined with volume 1: 3,975 authored lines, roughly 317,000 distinct surfaces.** The surface figure is a product of benches rather than a count of lines, so it is the only number here that is approximate on purpose; every counted figure above is recounted by `CorpusTotalsAuditTest` on every run. This is the reading taken when volume 2 closed, so it is the settled one rather than a figure still owed: volume 1 closed first at 1,775 lines and volume 3 before it at 758, and nothing in either moves again for this phase. The figure it replaces was 3,649, which assumed 1,874 Report lines against the 1,617 the file carried at the time; the audit had been naming that disagreement in three files before this pass corrected it.
+**Combined with volume 1: 4,132 authored lines, roughly 332,000 distinct surfaces.** The surface figure is a product of benches rather than a count of lines, so it is the only number here that is approximate on purpose; every counted figure above is recounted by `CorpusTotalsAuditTest` on every run. This is the reading taken when volume 2 closed, so it is the settled one rather than a figure still owed: volume 1 closed first at 1,775 lines and volume 3 before it at 810, and nothing in either moves again for this phase. The figure it replaces was 3,975, taken when volume 2 closed at 2,200 lines and before section 4 was grown; the 157 lines the guidance pass added are the whole of the difference, and they are the last of them for this phase.
 
 These counts are the **current** state, not the target. Section 11.1 of `CLARITY_LOGIC_ENGINE.md` gives the sizing targets, and phase 9 of the build grows the hot families toward them.
 

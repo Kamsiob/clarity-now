@@ -1,11 +1,17 @@
 package com.kamsiob.claritynow.ui.report
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.EaseInOutCubic
+import androidx.compose.animation.core.EaseOutCubic
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -26,18 +32,25 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kamsiob.claritynow.R
@@ -52,6 +65,7 @@ import com.kamsiob.claritynow.ui.theme.LocalContemplativeColors
 import com.kamsiob.claritynow.ui.theme.ReportPalette
 import com.kamsiob.claritynow.ui.theme.calmed
 import com.kamsiob.claritynow.ui.theme.clarityMotion
+import kotlin.math.hypot
 
 /**
  * The pattern break. `design-v3.md` 11.1 item 7, **the one deliberate grid break**.
@@ -180,7 +194,7 @@ internal fun ReportSidehead(text: String, modifier: Modifier = Modifier) {
  *
  * A caption eyebrow reading `One thing`, then the line in `closingLine` at `textBright`,
  * **roman, never italic**, then an accept pill in gold at 14 percent reading `I'll do that`
- * and a decline in text only at `textFaint` reading `Not this week`.
+ * and a decline in text only at `textDim` reading `Not this week`.
  *
  * ## Roman, never italic
  *
@@ -189,24 +203,81 @@ internal fun ReportSidehead(text: String, modifier: Modifier = Modifier) {
  * style is taken from the theme and never copied with a `fontStyle`, so there is no italic
  * anywhere in this file to remove later.
  *
+ * ## The sentence changes and the pill settles, and that is everything an accept does
+ *
+ * `ReportClosing.line` is the nominal offer until the plan is accepted and the plan's
+ * stored first person line afterwards, so the block stops offering and starts stating.
+ * Nothing else in the app changes: no toast, no celebration, no bounce, no haptic heavier
+ * than an ordinary tap, and no notification, badge, widget or home screen card. The plan
+ * exists in the report and nowhere else, and `PlanSurfaceTest` reads the sources to keep
+ * that true rather than trusting this paragraph.
+ *
  * ## Both optional, both costless, neither ever mentioned again
  *
  * That is a rule about the whole app rather than a note about this screen.
  * `MASTER_BUILD_PROMPT.md` 11.4 requires an explicit decline, because one button is not a
  * choice, and there is no `PLAN_DECLINED` event to write: declining removes the block and
  * nothing else happens, ever. No reminder, no second offer, no count of how many were
- * declined, and no surface anywhere that could show one.
+ * declined, and no surface anywhere that could show one. `CLARITY_LOGIC_ENGINE.md` 10.5
+ * goes further and makes ignoring both identical to declining, so somebody who reads the
+ * line and scrolls past has already answered.
  *
- * The two controls differ in treatment because they are different kinds of thing rather
- * than a primary and a secondary of the same thing. `CLARITY_LOGIC_ENGINE.md` 6.1's rule
- * that both options must feel equally valid governs the Pulse, where the two answers are
- * both statements about the person; here one accepts a plan and one closes the subject, and
- * 11.1 names the treatments outright.
+ * ## Where the two options sit, which 11.1 leaves open. `design-v3.md` 15
  *
- * After an accept, 8.2 item 26: the pill fills, the label crossfades to a confirmation and
- * it settles at reduced prominence. **It never bounces, never celebrates and produces no
- * toast.** The fill is not animated from a tap point here, because that is the Pulse's
- * treatment for its own vocabulary and this pill is not a Pulse answer.
+ * **The statistically common answer is a row**: two controls on one baseline, the
+ * dismissive one leading and the affirmative one trailing, which is what a card and a
+ * dialog do with a yes and a no everywhere. It is refused twice over.
+ *
+ * A row is a dialog footer, and a dialog footer is a question that holds the page until it
+ * is answered. This block is the opposite of that by construction, because not answering
+ * is a complete answer. And two things on one baseline read as a matched pair whatever
+ * their treatment, with the one carrying a ground winning the pair, so a row would take
+ * 11.1's one deliberate asymmetry and put a second, louder one on top of it.
+ *
+ * **Stacked and centered on the page's own axis instead**, so the block reads as three
+ * things at the end of a page of centered prose: a sentence, one thing that can be done
+ * about it, and a way to close the subject. The decline sits on the same axis, in the same
+ * text color and at the same size as the body, which is how it stays quiet without being
+ * hidden.
+ *
+ * **And the air under the pill is the air above it**, [DECLINE_GAP] against [ANSWER_GAP],
+ * which is the second half of the same decision. The common answer groups the two controls
+ * within four to eight dp of one another and separates the group from the content, and
+ * that grouping is exactly what makes them read as a pair of buttons. The counter argument
+ * is real, that both are answers to the line above and belong together, and it loses to
+ * the same sentence: a group of two reads as a question with a required answer. The two
+ * numbers differ because the decline's 48dp touch target already carries about 18dp of its
+ * own space above its text while the closing line leaves about 6dp of descent below its
+ * own, so 24dp and 12dp of layout draw as roughly 30dp each. Worth an owner's glance on
+ * the device, like every optical number in this section.
+ *
+ * ## What a settled pill looks like, which 11.1 also leaves open
+ *
+ * 8.2 item 26: the pill fills from the center over 250ms, the label crossfades to a
+ * confirmation, and it settles at reduced prominence. **The fill traveling out from the
+ * center is the reduced prominence arriving, not a brightening.** The obvious reading of a
+ * pill that fills is that it fills to a stronger gold, which is a flash of light at the
+ * moment somebody accepts, which is the celebration section 10 forbids, and which would
+ * need a peak value no document states. Filling to the settled value needs no second
+ * number and no second animation: one front leaves the center, and what is behind it is
+ * the pill at rest. Nothing here ever gets brighter than it already was.
+ *
+ * **The ground halves and the label does not.** Seven percent is fourteen halved, the one
+ * reduction that invents no number, and it is the ground rather than the label because the
+ * ground is what made the pill a control. Dimming both would be two reductions where 6.1's
+ * habit through this whole design is one, and it would make the sentence somebody has just
+ * chosen the hardest thing on the page to read.
+ *
+ * **A settled pill is not a control and stops describing itself as one.** It carries no
+ * click handling, no focus ring and no button role, so it reaches TalkBack as the word it
+ * shows rather than as a disabled button. There is no un-accept: the event is written, a
+ * second acceptance is ignored by the repository, and a control that did nothing would be
+ * a lie about that.
+ *
+ * The decline leaves over the same 250ms rather than vanishing on the frame of the tap,
+ * because an element removed with no transition during another element's animation reads
+ * as a glitch and moves the footer under the reader's eye. It borrows item 26's duration
+ * and 8.3's reduced path and introduces no timing of its own.
  */
 @Composable
 internal fun ClosingLine(
@@ -218,6 +289,9 @@ internal fun ClosingLine(
 ) {
     val contemplative = LocalContemplativeColors.current
     val type = LocalClarityTypography.current
+    val leavingMillis = settleMillis(clarityMotion().reduced)
+    val leaving = tween<Float>(leavingMillis)
+    val collapsing = tween<IntSize>(leavingMillis)
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -240,9 +314,18 @@ internal fun ClosingLine(
         if (closing.offersPlan) {
             Spacer(Modifier.height(ClaritySpacing.scaled(ANSWER_GAP)))
             AcceptPill(accepted = closing.accepted, onAccept = onAccept)
-            if (!closing.accepted) {
-                Spacer(Modifier.height(ClaritySpacing.scaled(DECLINE_GAP)))
-                Decline(onDecline = onDecline)
+            AnimatedVisibility(
+                visible = !closing.accepted,
+                // It never comes back. A block that offered again after an accept would be
+                // the second offer 11.1 rules out, and the only route back to an offer is a
+                // week in which the engine composes a new plan.
+                enter = EnterTransition.None,
+                exit = fadeOut(leaving) + shrinkVertically(collapsing, Alignment.Top),
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Spacer(Modifier.height(ClaritySpacing.scaled(DECLINE_GAP)))
+                    Decline(onDecline = onDecline)
+                }
             }
         }
     }
@@ -250,40 +333,85 @@ internal fun ClosingLine(
 
 @Composable
 private fun AcceptPill(accepted: Boolean, onAccept: () -> Unit) {
-    val contemplative = LocalContemplativeColors.current
-    val type = LocalClarityTypography.current
     val gold = ReportPalette.gold.calmed(LocalCalmMode.current)
+    val reduced = clarityMotion().reduced
     val interaction = remember { MutableInteractionSource() }
-    val label = stringResource(if (accepted) R.string.report_accepted else R.string.report_accept)
+    val offer = stringResource(R.string.report_accept)
+    val confirmation = stringResource(R.string.report_accepted)
+
+    val settle by animateFloatAsState(
+        targetValue = if (accepted) 1f else 0f,
+        animationSpec = tween(settleMillis(reduced), easing = EaseOutCubic),
+        label = "reportPlanSettle",
+    )
+    val resting = gold.copy(alpha = PILL_ALPHA)
+    val settled = gold.copy(alpha = SETTLED_ALPHA)
 
     Box(
         modifier = Modifier
             .heightIn(min = PILL_MIN_HEIGHT)
             .clarityPressScale(interaction, enabled = !accepted, label = "reportAccept")
             .clip(CircleShape)
-            .background(gold.copy(alpha = if (accepted) SETTLED_ALPHA else PILL_ALPHA))
-            .clarityFocusRing(interaction, CircleShape)
-            .clarityClickable(
-                enabled = !accepted,
-                interactionSource = interaction,
-                haptic = ClarityHapticEvent.SELECT,
-                role = Role.Button,
-                onClickLabel = label,
-                onClick = onAccept,
+            .drawBehind {
+                drawRect(settleGround(settle, resting, settled, reduced, center, size))
+            }
+            // Everything that makes this a control, and nothing at all once it is not one.
+            .then(
+                if (accepted) {
+                    Modifier
+                } else {
+                    Modifier
+                        .clarityFocusRing(interaction, CircleShape)
+                        .clarityClickable(
+                            interactionSource = interaction,
+                            // design-v3.md 9: `planAccepted` is PRIMITIVE_TICK at 0.5,
+                            // deliberately the same weight as an ordinary tap, because
+                            // accepting is not an achievement.
+                            haptic = ClarityHapticEvent.PLAN_ACCEPTED,
+                            role = Role.Button,
+                            onClickLabel = offer,
+                            onClick = onAccept,
+                        )
+                },
             ),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = label,
-            style = type.bodyStrong,
-            color = if (accepted) contemplative.textDim else contemplative.textBright,
-            textAlign = TextAlign.Center,
+        // Both labels stay in the layout, so the pill is the width of the wider of the two
+        // from the first frame and the crossfade moves nothing.
+        Box(
+            contentAlignment = Alignment.Center,
             modifier = Modifier.padding(
                 horizontal = PILL_PADDING,
-                vertical = ClaritySpacing.scaled(PILL_PADDING_VERTICAL,
-            )),
-        )
+                vertical = ClaritySpacing.scaled(PILL_PADDING_VERTICAL),
+            ),
+        ) {
+            PillLabel(text = offer, opacity = 1f - settle, voiced = settle < HALF)
+            PillLabel(text = confirmation, opacity = settle, voiced = settle >= HALF)
+        }
     }
+}
+
+/**
+ * One of the accept pill's two labels, at whatever the crossfade has reached.
+ *
+ * The one that is not [voiced] is cleared out of the semantics tree, so a screen reader is
+ * never handed the offer and the confirmation at once. The caller decides which, from one
+ * comparison rather than from each label's own opacity, because at the midpoint of the
+ * crossfade both are at exactly half and both would answer the same question yes.
+ */
+@Composable
+private fun PillLabel(text: String, opacity: Float, voiced: Boolean) {
+    val contemplative = LocalContemplativeColors.current
+    val type = LocalClarityTypography.current
+    Text(
+        text = text,
+        style = type.bodyStrong,
+        color = contemplative.textBright,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .alpha(opacity)
+            .then(if (voiced) Modifier else Modifier.clearAndSetSemantics { }),
+    )
 }
 
 @Composable
@@ -321,6 +449,42 @@ private fun Decline(onDecline: () -> Unit) {
         )
     }
 }
+
+/**
+ * The accept pill's ground, part way through 8.2 item 26's settle.
+ *
+ * One brush and therefore one alpha per pixel, which is the whole reason this is a
+ * gradient rather than a second translucent shape drawn over the first: gold at 7 percent
+ * painted on top of gold at 14 percent is brighter than either, and brighter is the one
+ * direction this animation must not go.
+ *
+ * [reduced] is 8.3, which makes every animation one crossfade. Nothing travels, so the
+ * whole ground moves together and the front never exists.
+ */
+private fun settleGround(
+    progress: Float,
+    resting: Color,
+    settled: Color,
+    reduced: Boolean,
+    center: Offset,
+    size: Size,
+): Brush {
+    if (progress <= 0f) return SolidColor(resting)
+    if (progress >= 1f) return SolidColor(settled)
+    if (reduced) return SolidColor(lerp(resting, settled, progress))
+    val radius = hypot(size.width, size.height) / 2f
+    if (radius <= 0f) return SolidColor(resting)
+    val trail = (progress - SETTLE_FEATHER).coerceAtLeast(0f)
+    val stops = if (trail > 0f) {
+        arrayOf(0f to settled, trail to settled, progress to resting, 1f to resting)
+    } else {
+        arrayOf(0f to settled, progress to resting, 1f to resting)
+    }
+    return Brush.radialGradient(colorStops = stops, center = center, radius = radius)
+}
+
+/** 8.2 item 26's 250ms, or 8.3's one crossfade. */
+private fun settleMillis(reduced: Boolean) = if (reduced) REDUCED_MILLIS else SETTLE_MILLIS
 
 /**
  * What the headline block shows while a regenerate is in flight.
@@ -426,8 +590,13 @@ internal val SIDEHEAD_GAP = 12.dp
 /** 10.12. Where the hairline starts, after the label. */
 private val SIDEHEAD_RULE_GAP = 10.dp
 private val EYEBROW_GAP = 14.dp
+
+/**
+ * The air above and below the accept pill. See the note on [ClosingLine] for why they are
+ * one decision, why they are not one number, and what they draw as.
+ */
 private val ANSWER_GAP = 24.dp
-private val DECLINE_GAP = 6.dp
+private val DECLINE_GAP = 12.dp
 
 /** 3.3. A hairline, and a gradient rather than a solid line. */
 private val RULE_HEIGHT = 1.dp
@@ -436,8 +605,29 @@ private const val RULE_ALPHA = 0.45f
 /** 11.1 item 8. The accept pill is gold at 14 percent. */
 private const val PILL_ALPHA = 0.14f
 
-/** 8.2 item 26. Accepted, it settles at reduced prominence and never celebrates. */
+/**
+ * 8.2 item 26. Accepted, it settles at reduced prominence and never celebrates.
+ *
+ * [PILL_ALPHA] halved, which is the one reduction that invents a number no document
+ * states. See the note on [ClosingLine].
+ */
 private const val SETTLED_ALPHA = 0.07f
+
+/** 8.2 item 26. The settle runs 250ms; 8.1's `easeOut` supplies the curve at it. */
+private const val SETTLE_MILLIS = 250
+
+/**
+ * How much of the pill's half diagonal the settling front is soft over.
+ *
+ * A hard circular edge sweeping outward from a tap is a Material ripple, which 15.1's
+ * habit of naming the common answer would call this animation's tell, and it is also the
+ * shape of a thing arriving rather than of a thing settling. A quarter of the radius is
+ * enough that what the eye reads is the pill quietly going dim from the middle.
+ */
+private const val SETTLE_FEATHER = 0.25f
+
+/** The midpoint of the label crossfade, which decides which label is the one being read. */
+private const val HALF = 0.5f
 
 private val PILL_MIN_HEIGHT = 48.dp
 private val PILL_PADDING = 26.dp

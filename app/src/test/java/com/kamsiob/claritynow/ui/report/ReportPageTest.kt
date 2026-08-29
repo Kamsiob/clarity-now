@@ -6,6 +6,7 @@ import com.kamsiob.claritynow.domain.report.ReportNote
 import com.kamsiob.claritynow.domain.report.ReportObservation
 import com.kamsiob.claritynow.domain.report.ReportSection
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -139,6 +140,49 @@ class ReportPageTest {
         assertEquals(positions.sorted(), positions)
     }
 
+    /**
+     * `design-v3.md` 11.1 item 8: after an accept, the stored first person line is what
+     * shows and the nominal offer is gone.
+     *
+     * The one visible thing accepting does, and the reason `ReportClosing.line` is derived
+     * rather than held: there is no state in which the flag is set and the sentence has not
+     * changed, because there is no second place holding the sentence.
+     */
+    @Test
+    fun `accepting replaces the offer with the plan's stored line`() {
+        assertEquals(OFFERED, CLOSING.line)
+        assertEquals(COMMITTED, CLOSING.copy(accepted = true).line)
+    }
+
+    /**
+     * `CORPUS_2_REPORT.md` 4.6. A closing line with no plan in it has nothing to accept and
+     * nothing to refuse, so neither control is drawn.
+     */
+    @Test
+    fun `a closing line with no plan offers no answer`() {
+        val quiet = "A quiet week, and that is all of it."
+        val closing = ReportClosing(offeredLine = quiet, plan = null)
+
+        assertFalse(closing.offersPlan)
+        assertTrue(CLOSING.offersPlan)
+    }
+
+    /**
+     * The clipboard carries what a person can read, which after an accept is the stored
+     * line. `MASTER_BUILD_PROMPT.md` 12.3.
+     *
+     * It follows from `line` being derived and is asserted anyway, because copy is the only
+     * surface in this app that hands a sentence to anything outside it, and a stale offer
+     * leaving through it would be the one copy of the plan nobody could correct.
+     */
+    @Test
+    fun `the clipboard carries the stored line once the plan is accepted`() {
+        val text = reportPlainText(report(), CAPTION, CLOSING.copy(accepted = true), LABELS)
+
+        assertTrue(text.contains(COMMITTED))
+        assertFalse(text.contains(OFFERED))
+    }
+
     // ------------------------------------------------------------------ fixtures
 
     private fun observation(section: ReportSection, rendered: String) = ReportObservation(
@@ -177,10 +221,12 @@ class ReportPageTest {
         const val PATTERN_SIDEHEAD = "Pattern"
         const val CLOSING_EYEBROW = "One thing"
 
+        const val OFFERED = "One session on Tuesday would even the week out."
+        const val COMMITTED = "My one thing before Tuesday is over: one session in Reading."
+
         val CLOSING = ReportClosing(
-            line = "One session on Tuesday would even the week out.",
-            offersPlan = true,
-            accepted = false,
+            offeredLine = OFFERED,
+            plan = ClosingPlan(id = "plan-2026-03-08", committedLine = COMMITTED),
         )
 
         val SIDEHEADS = mapOf(

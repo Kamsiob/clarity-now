@@ -3,6 +3,7 @@ package com.kamsiob.claritynow.ui.report
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kamsiob.claritynow.domain.guidance.GuidanceResult
 import com.kamsiob.claritynow.domain.report.ClarityReport
 import com.kamsiob.claritynow.domain.report.ReportNote
 import com.kamsiob.claritynow.domain.report.ReportOutcome
@@ -14,22 +15,54 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 /**
- * The closing line, and the two answers to it. `design-v3.md` 11.1 item 8.
+ * The plan a closing line offers, when it offers one. `CLARITY_LOGIC_ENGINE.md` 10.3.
  *
- * **Always null today, and the composable that draws it is built anyway.** The closing line
- * is layer six, `CLARITY_LOGIC_ENGINE.md` section 8, and layer six is phase 9b: 11.3's
- * sequence passes only the observations that actually appeared into `GuidanceComposer`
- * after the body exists, and `ClarityReport` has no field for what comes back yet. When it
- * does, this type is what the screen already knows how to draw and [ReportPage.Composed]
- * is where it arrives.
+ * The id and the first person line travel together because neither is any use without the
+ * other. The id is what `PLAN_ACCEPTED` is written against, and [committedLine] is the one
+ * visible thing writing it does. Two nullable fields on [ReportClosing] would have allowed
+ * a closing that can be accepted and has nothing to say afterwards, and one that has a
+ * stored line and nothing to accept, so the pair is one field.
  *
- * [accepted] exists so the pill can settle at reduced prominence after a tap, per 8.2 item
- * 26. **Declining records nothing at all**, which is why there is no declined state here:
- * there is no `PLAN_DECLINED` event, deliberately, and 11.1 says both options are costless
- * and neither is ever mentioned again.
+ * The id is the plan's own, derived from the week it belongs to, so a tap cannot accept a
+ * plan from a report the screen is no longer showing.
  */
 @Immutable
-data class ReportClosing(val line: String, val offersPlan: Boolean, val accepted: Boolean)
+data class ClosingPlan(
+    val id: String,
+    /** First person. Rendered only after an accept, and never offered in this form. */
+    val committedLine: String,
+)
+
+/**
+ * The closing line, and the two answers to it. `design-v3.md` 11.1 item 8.
+ *
+ * **[line] is derived rather than stored, and it is the whole of what an accept shows.**
+ * Until a plan is accepted the block reads the nominal offer; after one it reads the plan's
+ * stored first person form and the offer is gone. A single mutable `line` beside a flag
+ * would have made the two forms a thing to keep in step, and there would have been a state
+ * in which the flag was set and the sentence had not changed.
+ *
+ * [plan] is null for a closing line with no plan in it, `CORPUS_2_REPORT.md` 4.6, and then
+ * there is no pill and no decline because there is nothing to accept or refuse.
+ *
+ * **There is no declined state and there must never be one.** There is no `PLAN_DECLINED`
+ * event, declining removes the block and records nothing, and 10.5 makes ignoring both
+ * options identical to declining. So there is no answer a person can fail to give that
+ * leaves them anywhere.
+ */
+@Immutable
+data class ReportClosing(
+    /** Nominal, never imperative. What the block reads until a plan is accepted. */
+    val offeredLine: String,
+    val plan: ClosingPlan?,
+    val accepted: Boolean = false,
+) {
+    /** Whether a pill and a decline are drawn under the line at all. */
+    val offersPlan: Boolean get() = plan != null
+
+    /** The sentence on the screen, and the one the copy control puts on the clipboard. */
+    val line: String get() = plan?.takeIf { accepted }?.committedLine ?: offeredLine
+}
 
 /**
  * The three things the Report body can be. `MASTER_BUILD_PROMPT.md` 12.3.
@@ -175,20 +208,33 @@ class ReportViewModel(private val coordinator: ReportCoordinator) : ViewModel() 
     }
 
     /**
-     * Accepts the closing line's plan. `design-v3.md` 11.1 item 8 and 8.2 item 26.
+     * Accepts the closing line's plan. `design-v3.md` 11.1 item 8 and 8.2 item 26, and
+     * `CLARITY_LOGIC_ENGINE.md` 10.5.
      *
-     * **This settles the pill and writes nothing**, because there is nothing to write yet:
-     * `PLAN_OFFERED` is layer six's, phase 9b, and `PLAN_ACCEPTED` refers to a plan id that
-     * only that phase can mint. The screen's half of the interaction is built and the
-     * write is one call to the repository when the plan exists.
+     * **The line changes, the pill settles, one event is written, and that is the whole of
+     * it.** No toast, no celebration, no bounce, no haptic heavier than an ordinary tap,
+     * and no notification, badge, widget or home screen card afterwards. The plan exists in
+     * the report and nowhere else, which `PlanSurfaceTest` holds by reading the sources.
+     *
+     * The one visible consequence is that the block stops offering and starts stating: the
+     * nominal offer is replaced by the plan's stored first person line, which is a form
+     * this app renders only here and only after this tap.
+     *
+     * The state settles first and the write follows, because the tap has to feel immediate
+     * and the write is idempotent: `acceptPlan` on an already accepted plan returns it
+     * unchanged. What the event buys is 10.6, and only 10.6: next week the motivating
+     * observation family is ranked one place higher, and if it does not qualify on its own
+     * merits nothing appears at all.
      */
     fun acceptPlan() {
+        val plan = (state.value.page as? ReportPage.Composed)?.closing?.plan ?: return
         _state.update { state ->
             val page = state.page as? ReportPage.Composed ?: return@update state
             val closing = page.closing ?: return@update state
-            if (closing.accepted) return@update state
+            if (closing.plan == null || closing.accepted) return@update state
             state.copy(page = page.copy(closing = closing.copy(accepted = true)))
         }
+        viewModelScope.launch { coordinator.acceptPlan(plan.id) }
     }
 
     /**
@@ -229,14 +275,46 @@ class ReportViewModel(private val coordinator: ReportCoordinator) : ViewModel() 
             is ReportOutcome.Composed -> ReportPage.Composed(
                 report = outcome.report,
                 ribbon = generation.ribbon,
-                // Layer six, phase 9b. See ReportClosing.
-                closing = null,
+                closing = closingOf(outcome.report.closing, generation.planAccepted),
             )
 
             is ReportOutcome.Empty -> ReportPage.Empty(outcome.note)
             is ReportOutcome.Suppressed -> ReportPage.Withheld
         }
     }
+
+    /**
+     * Layer 6's result, as the closing block draws it. `CLARITY_LOGIC_ENGINE.md` 10.
+     *
+     * Three states and the third is null: `GuidanceResult.Nothing` means the report ends
+     * with its last observation and the block is not drawn at all. A non plan closing draws
+     * the line with no pill and no decline under it, because there is nothing to accept or
+     * refuse; `ReportClosing.offersPlan` is what the composable reads for that.
+     *
+     * **[accepted] comes from the log rather than from this screen's memory**, through
+     * `ReportGeneration.planAccepted`, and that is what makes an accept survive a
+     * regenerate, a tab switch and a launch tomorrow. A screen that only remembered its own
+     * tap would offer the plan again on the next composition and show the nominal line to
+     * somebody who had already answered.
+     */
+    private fun closingOf(result: GuidanceResult, accepted: Boolean): ReportClosing? =
+        when (result) {
+            is GuidanceResult.Plan -> ReportClosing(
+                offeredLine = result.plan.offeredLine,
+                plan = ClosingPlan(
+                    id = result.plan.id,
+                    committedLine = result.plan.committedLine,
+                ),
+                accepted = accepted,
+            )
+
+            is GuidanceResult.Closing -> ReportClosing(
+                offeredLine = result.line.text,
+                plan = null,
+            )
+
+            is GuidanceResult.Nothing -> null
+        }
 
     /**
      * What makes this report the same report as the last one, for 8.4's content exception.

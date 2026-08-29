@@ -145,6 +145,14 @@ internal object CorpusRenderGate {
                     dateKey = invocation.dateKey,
                 )
                 val spoken = invocation.spoken ?: continue
+                // Layer 6 is not a rule and a closing is not a family, so it is not a
+                // firing. `SimulatedSurface.REPORT_CLOSING` carries the Report's
+                // observation purpose because a closing has no `Purpose` of its own, and
+                // counting it here would put `guidance.plan` into the hot family table as
+                // the second busiest observation family in the app. 11.1 sizes a bench by
+                // its firings and layer 6 has no bench to size: its three banks are
+                // assembled rather than chosen from, and `PlanFormTest` holds them.
+                if (invocation.surface == SimulatedSurface.REPORT_CLOSING) continue
                 firings[surface.purpose to spoken.familyKey] = (firings[surface.purpose to spoken.familyKey] ?: 0) + 1
                 val variant = variants[spoken.variantKey] ?: continue
                 if (CorpusFill.quotesACallback(variant)) {

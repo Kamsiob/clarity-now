@@ -16,11 +16,20 @@ import com.kamsiob.claritynow.domain.engine.FamilyKey
  * a place to disagree. So the table is read at load and every keyed line is checked
  * against it.
  *
- * **Two sections are skipped, and both skips are recorded rather than silent.** Section 4
- * is the closing line, which is layer 6, which CLARITY_LOGIC_ENGINE.md 2 puts outside
- * layers 1 to 5 and the build order calls the last thing built. Its benches are frames,
- * cues and actions rather than families with stages. Section 7 is the composition rules,
- * which are prose and a matrix with no benches in them at all.
+ * **Section 4 is read as benches rather than as families**, because that is what it is.
+ * It is the closing line, layer 6, and its banks are frames, cues, actions, commitment
+ * forms and non plan closings rather than families with escalation ladders. Phase 9b
+ * gave it a reader; until then it was skipped and the skip was recorded. The bench a line
+ * belongs to is derived from the line's own key, `cue.day.01` belonging to `cue.day`, so
+ * a sub bank added to the corpus needs no change here and a mistyped one fails the build.
+ *
+ * **Section 7 is still skipped and the skip is still recorded.** It is the composition
+ * rules: prose and the incompatibility matrix, with no benches in them at all.
+ *
+ * **One fenced block inside section 4 is skipped on purpose**, and it is 4.5's accept and
+ * decline labels. They are fixed interface labels rather than observations, CLAUDE.md
+ * rule 8 puts those in `strings.xml`, and they carry no key for the lexer to read.
+ * `PlanFormTest` asserts the two resources still say exactly what the corpus says.
  */
 internal class ReportWalker(text: String) : CorpusWalker(text, CorpusVolume.REPORT) {
 
@@ -35,6 +44,7 @@ internal class ReportWalker(text: String) : CorpusWalker(text, CorpusVolume.REPO
     private var bench: ReportBench? = null
     private var auxBench: String? = null
     private var literalBench: String? = null
+    private var guidanceSkip = false
 
     private enum class ReportBench { LEADS, EXTENSIONS }
 
@@ -65,6 +75,7 @@ internal class ReportWalker(text: String) : CorpusWalker(text, CorpusVolume.REPO
             section = match.groupValues[1].toInt()
             auxBench = null
             literalBench = null
+            guidanceSkip = false
             if (section in SKIPPED_SECTIONS) {
                 skipped += SkippedSection(raw.removePrefix("# ").trim(), SKIPPED_SECTIONS.getValue(section))
             }
@@ -75,6 +86,7 @@ internal class ReportWalker(text: String) : CorpusWalker(text, CorpusVolume.REPO
             section = 0
             auxBench = null
             literalBench = null
+            guidanceSkip = false
             val title = raw.removePrefix("# ").trim()
             if (title !in TAIL_HEADINGS) fail(lineNumber, "an unrecognized top level heading: $title")
             skipped += SkippedSection(title, "prose, not a bench")
@@ -103,6 +115,7 @@ internal class ReportWalker(text: String) : CorpusWalker(text, CorpusVolume.REPO
             val name = match.groupValues[3].trim()
             when (section) {
                 1, 2, 3 -> startFamily(lineNumber, name)
+                GUIDANCE_SECTION -> startGuidance(name)
                 5, 6 -> startAuxiliary(lineNumber, name)
                 else -> fail(lineNumber, "a family heading in section $section: $raw")
             }
@@ -164,6 +177,58 @@ internal class ReportWalker(text: String) : CorpusWalker(text, CorpusVolume.REPO
         }
     }
 
+    /**
+     * Section 4's subheadings. `CORPUS_2_REPORT.md` 4.1 to 4.8.
+     *
+     * They carry no state, because the bench a line belongs to is derived from the line's
+     * own key rather than from the heading above it. The one thing this decides is whether
+     * the block that follows is the accept and decline pair, which is skipped: those are
+     * two fixed interface labels rather than corpus lines about a person, they carry no
+     * key, and CLAUDE.md rule 8 puts them in `strings.xml`.
+     *
+     * Every other section 4 heading is prose or a table and needs nothing from here.
+     */
+    private fun startGuidance(name: String) {
+        guidanceSkip = name == ACCEPT_DECLINE_HEADING
+        if (guidanceSkip) {
+            skipped += SkippedSection(name, ACCEPT_DECLINE_REASON)
+        }
+        family = null
+        stage = null
+        bench = null
+        auxBench = null
+        literalBench = null
+    }
+
+    /**
+     * One line of one of section 4's five banks, filed under the bench its key names.
+     *
+     * The bench is `frm`, `cue.day`, `act.neg`, `com`, `cls.trust` and so on: everything
+     * before the final numeric segment. Deriving it rather than declaring it means a new
+     * sub bank is a corpus edit alone, which is the same arrangement the key prefix table
+     * has for families. What is declared is the five top level banks, in
+     * [GUIDANCE_BANKS], so `que.day.01` for `cue.day.01` fails the build rather than
+     * quietly becoming a sixth bank nothing reads.
+     */
+    private fun guidanceLine(lineNumber: Int, raw: String) {
+        if (guidanceSkip) return
+        val line = lex(lineNumber, raw)
+        demand(line.register == null, lineNumber) {
+            "${line.key} carries a register tag, and section 4 is five untagged banks"
+        }
+        val bank = line.key.substringBefore('.')
+        demand(bank in GUIDANCE_BANKS, lineNumber) {
+            "${line.key} sits in section 4 under the bank `$bank`, which is not one of " +
+                "$GUIDANCE_BANKS. CORPUS_2_REPORT.md 4 declares frames, cues, actions, " +
+                "commitment forms and non plan closings and no sixth bank"
+        }
+        val benchKey = line.key.substringBeforeLast('.')
+        demand(benchKey.isNotEmpty() && benchKey != line.key, lineNumber) {
+            "${line.key} has no bench segment before its number"
+        }
+        auxiliary.getOrPut(benchKey) { mutableListOf() }.add(line)
+    }
+
     private fun openBench(lineNumber: Int, next: ReportBench): ReportBench {
         val current = family ?: fail(lineNumber, "a bench outside any family")
         if (stage == null) {
@@ -180,6 +245,10 @@ internal class ReportWalker(text: String) : CorpusWalker(text, CorpusVolume.REPO
 
     override fun onFencedLine(lineNumber: Int, raw: String) {
         if (section in SKIPPED_SECTIONS) return
+        if (section == GUIDANCE_SECTION) {
+            guidanceLine(lineNumber, raw)
+            return
+        }
 
         literalBench?.let { key ->
             auxiliary.getOrPut(key) { mutableListOf() }.add(
@@ -288,7 +357,7 @@ internal class ReportWalker(text: String) : CorpusWalker(text, CorpusVolume.REPO
         )
     }
 
-    private companion object {
+    companion object {
         val SECTION_HEADING = Regex("""^#\s+SECTION\s+(\d+):\s+.+$""")
         val FAMILY_HEADING = Regex("""^##\s+(\d+)\.(\d+)\s+(.+?)\s*$""")
         val PREFIX_ROW = Regex("""^\|\s*`([a-z][a-z.]*)`\s*\|\s*([A-Za-z]+)\s*\|$""")
@@ -308,9 +377,27 @@ internal class ReportWalker(text: String) : CorpusWalker(text, CorpusVolume.REPO
             "Nothing to report" to "ed.none",
             "First week" to "ed.first",
         )
+        /** `CORPUS_2_REPORT.md` 4, the closing line. Layer 6. */
+        const val GUIDANCE_SECTION = 4
+
+        /** 4.5, and the one fenced block in section 4 that is not a bench. */
+        const val ACCEPT_DECLINE_HEADING = "The accept and decline labels"
+
+        const val ACCEPT_DECLINE_REASON =
+            "two fixed interface labels rather than observations, carrying no key. " +
+                "CLAUDE.md rule 8 puts a fixed label in strings.xml, and PlanFormTest " +
+                "asserts the two resources still say exactly what 4.5 says"
+
+        /**
+         * The five banks section 4 declares. `CORPUS_2_REPORT.md` 4.1 to 4.6.
+         *
+         * The top level prefix only, so a sub bank is a corpus edit and a typo is a build
+         * failure. `PlanBenches` is what turns these into the three benches a plan is
+         * built from and the four it can close with instead.
+         */
+        val GUIDANCE_BANKS = setOf("frm", "cue", "act", "com", "cls")
+
         val SKIPPED_SECTIONS = mapOf(
-            4 to "layer 6, the closing line. Built in phase 9b, and its benches are frames, " +
-                "cues and actions rather than families with stages",
             7 to "composition rules. Prose and the incompatibility matrix, no benches",
         )
         val TAIL_HEADINGS = setOf(

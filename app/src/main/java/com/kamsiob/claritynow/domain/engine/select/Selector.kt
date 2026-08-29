@@ -48,12 +48,26 @@ import com.kamsiob.claritynow.domain.engine.realize.EngineMoment
  */
 class Selector(private val catalog: ClarityCatalog) {
 
-    /** Everything that could be said for [purpose], best first, or the reason for saying nothing. */
+    /**
+     * Everything that could be said for [purpose], best first, or the reason for saying
+     * nothing.
+     *
+     * [boosted] is layer 6's follow through and the only thing it can do is reorder. It
+     * lifts a `(family, subject)` pair by [FOLLOW_THROUGH_BOOST] within its own specificity
+     * level, so it cannot promote a family over a narrower observation and it cannot reach
+     * step 1, where qualification happens. A family a person accepted a plan about therefore
+     * still has to qualify on its own merits.
+     *
+     * It defaults to the empty set and every caller outside the Report leaves it that way,
+     * which is what lets `domain/guidance/FollowThrough.kt` be deleted without touching this
+     * file. See that file for the whole of the mechanism.
+     */
     fun select(
         purpose: Purpose,
         facts: FactSet,
         history: FiringHistory,
         moment: EngineMoment,
+        boosted: Set<Pair<FamilyKey, String?>> = emptySet(),
     ): SelectionOutcome {
         // 1. Qualify. Every criterion of the rule, against every subject its selector yields.
         val qualified = qualify(purpose, facts)
@@ -81,8 +95,8 @@ class Selector(private val catalog: ClarityCatalog) {
             .filter { withinHorizon(it, facts, moment) }
             .filterNot { purpose == Purpose.PULSE && repeatsYesterday(it, facts, moment) }
             .filterNot { inCooldown(it, history, moment) }
-            // 6. Rank.
-            .sortedWith(RANKING)
+            // 6. Rank, with layer 6's follow through folded into the priority term.
+            .sortedWith(ranking(boosted))
 
         if (ranked.isEmpty()) return SelectionOutcome.Silent(SilenceReason.ALL_QUALIFIED_RULES_FILTERED)
         if (deliberatelySilent(purpose, ranked, moment)) {
@@ -110,8 +124,11 @@ class Selector(private val catalog: ClarityCatalog) {
         moment: EngineMoment,
         headlineFamily: FamilyKey? = null,
         limit: Int = MAX_OBSERVATIONS,
+        boosted: Set<Pair<FamilyKey, String?>> = emptySet(),
     ): List<Selection> {
-        val ranked = when (val outcome = select(Purpose.REPORT_OBSERVATION, facts, history, moment)) {
+        val ranked = when (
+            val outcome = select(Purpose.REPORT_OBSERVATION, facts, history, moment, boosted)
+        ) {
             is SelectionOutcome.Ranked -> outcome.selections
             is SelectionOutcome.Silent -> return emptyList()
         }
@@ -367,6 +384,48 @@ class Selector(private val catalog: ClarityCatalog) {
          */
         val RANKING: Comparator<Selection> =
             compareBy<Selection, ClarityRule>(ClarityRule.RANKING) { it.rule }.thenBy { it.subjectId.orEmpty() }
+
+        /**
+         * What an accepted plan is worth in the ranking. CLARITY_LOGIC_ENGINE.md 10.6.
+         *
+         * **The number lives here rather than in `domain.guidance`, and the direction of
+         * that dependency is the point.** `MASTER_BUILD_PROMPT.md` 19 says the follow
+         * through is the first thing removed if it reads as supervision, and says removed
+         * rather than tuned. Deleting `domain/guidance/FollowThrough.kt` has to leave this
+         * file compiling, and it does: [select] keeps a parameter that defaults to the
+         * empty set, every caller outside the Report already omits it, and this constant
+         * multiplies nothing. Layer 3 therefore knows that a caller may hand it a set of
+         * pairs to lift, and knows nothing whatever about plans.
+         *
+         * One, because the boost orders two observations of equal specificity and any
+         * positive value orders them identically. See `FollowThrough` for why it may not
+         * be larger and may not touch specificity.
+         */
+        const val FOLLOW_THROUGH_BOOST = 1
+
+        /**
+         * Section 5 step 6 with layer 6's follow through folded into its second term.
+         *
+         * Specificity descending, then **priority plus the boost** descending, then
+         * `rule.key` ascending, then the subject id. Only the second term differs from
+         * [RANKING], and only for a pair in [boosted].
+         *
+         * **Written out rather than delegated to `ClarityRule.RANKING`**, because the
+         * boost is a property of a `(family, subject)` pair and that comparator sees a
+         * rule alone. One rule can qualify for four areas at once and only the area a
+         * person accepted a plan about is boosted, so the comparison has to happen at
+         * this level. The three other terms are the same three, in the same order and
+         * the same directions, and `SelectorTest` asserts that an empty boost set
+         * reproduces `ClarityRule.RANKING` exactly.
+         */
+        fun ranking(boosted: Set<Pair<FamilyKey, String?>>): Comparator<Selection> =
+            compareByDescending<Selection> { it.specificity }
+                .thenByDescending {
+                    val lifted = (it.rule.family to it.subjectId) in boosted
+                    it.rule.priority + if (lifted) FOLLOW_THROUGH_BOOST else 0
+                }
+                .thenBy { it.rule.key }
+                .thenBy { it.subjectId.orEmpty() }
 
         /**
          * Step 4's reach in days, which 7.3 states as yesterday and yesterday alone.

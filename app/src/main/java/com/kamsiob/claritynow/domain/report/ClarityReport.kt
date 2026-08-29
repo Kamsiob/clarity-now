@@ -10,6 +10,7 @@ import com.kamsiob.claritynow.domain.engine.realize.Candidate
 import com.kamsiob.claritynow.domain.engine.validate.ReportLine
 import com.kamsiob.claritynow.domain.engine.validate.ReportRole
 import com.kamsiob.claritynow.domain.engine.validate.ReportVerdict
+import com.kamsiob.claritynow.domain.guidance.GuidanceResult
 
 /**
  * One composed Clarity Report, in the order it is read.
@@ -85,6 +86,21 @@ data class ClarityReport(
     val numbers: Map<FactRef, ReportNumber>,
     /** What the composer dropped and why. Never shown; read by the simulator and by tests. */
     val dropped: List<DroppedLine>,
+    /**
+     * `design-v3.md` 11.1 item 8, and CLARITY_LOGIC_ENGINE.md 10. The `One thing` block.
+     *
+     * A plan to offer, one complete non plan closing, or nothing at all. Three states, and
+     * two of them are a kind of silence: 10.7 requires the second or the third on at least
+     * fifteen percent of reports across the persona set, because a report that always has
+     * advice is a report inventing problems.
+     *
+     * **It is not part of [lines].** The report scope checks in section 9 compare sentences
+     * against each other and against the facts, and a closing states no number, names no
+     * area and makes no claim about the week that another line could contradict. It has
+     * been through layer 5 on its own, at 8 check 9's closing length rather than the
+     * observation length, which is the check that applies to it.
+     */
+    val closing: GuidanceResult = GuidanceResult.Nothing,
 ) {
 
     /** Every line the screen will show, in reading order, as the report scope checks read them. */

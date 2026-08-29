@@ -80,15 +80,21 @@ class ClarityEngine(
      * report, belongs to the composer that assembles the page.
      *
      * **Never padded.** If two observations qualify, two come back.
+     *
+     * [boosted] is layer 6's follow through, per 10.6, and it passes straight through to
+     * step 6 of selection. It can reorder observations of equal specificity and it can do
+     * nothing else: it is read after qualification and it is added to priority, which
+     * section 4 calls a tie break only. `Selector.FOLLOW_THROUGH_BOOST` carries the rest.
      */
     fun observeObservations(
         facts: FactSet,
         history: FiringHistory,
         headlineFamily: FamilyKey? = null,
         limit: Int = MAX_OBSERVATIONS,
+        boosted: Set<Pair<FamilyKey, String?>> = emptySet(),
     ): List<RenderedOutput> {
         val moment = momentOf(facts)
-        val chosen = selector.selectObservations(facts, history, moment, headlineFamily, limit)
+        val chosen = selector.selectObservations(facts, history, moment, headlineFamily, limit, boosted)
         val spoken = mutableListOf<RenderedOutput>()
         var editorialUsed = 0
         var previousBand: LengthBand? = null

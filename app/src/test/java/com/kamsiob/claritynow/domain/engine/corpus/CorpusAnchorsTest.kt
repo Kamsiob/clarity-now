@@ -149,6 +149,42 @@ class CorpusAnchorsTest {
         }
     }
 
+    /**
+     * The guidance anchors, which are three columns because section 4 has no fifth thing.
+     *
+     * A frame, a cue, an action, a commitment form and a closing carry no register tag, and
+     * `ReportWalker` rejects one on any of them. A length band is computed on the assembled
+     * sentence rather than on the three pieces separately, so a band beside a frame would be
+     * a number about nothing. What is left is what this checks: the key is one of the parsed
+     * banks', and the line is quoted character for character.
+     *
+     * Section 4 is where the only advice in the application is written, and phase 9b's own
+     * pass added a hundred and fifty seven lines to it, so it is exactly the surface the
+     * anchors exist for.
+     */
+    @Test
+    fun `every guidance anchor quotes a section 4 line exactly as the corpus writes it`() {
+        val byKey = catalog.auxiliary.values.flatten().associateBy { it.key }
+        val rows = CorpusFixture.read("docs/CORPUS_ANCHORS.md")
+            .split('\n')
+            .mapNotNull { GUIDANCE_ROW.matchEntire(it.trim()) }
+        assertTrue("no guidance anchor rows were parsed at all", rows.size >= MINIMUM_GUIDANCE)
+        for (row in rows) {
+            val (key, line, note) = row.destructured
+            val corpus = byKey[key]
+            assertTrue("$key is a guidance anchor and is not a line in section 4", corpus != null)
+            requireNotNull(corpus)
+            assertEquals("$key is quoted wrongly in the anchors", corpus.text, line)
+            assertTrue("$key has a note too short to mean anything: $note", note.length >= MINIMUM_NOTE)
+            assertTrue("$key restates its own line instead of saying what it carries", note != line)
+        }
+        assertEquals(
+            "the guidance anchors do not span the five banks section 4 declares",
+            GUIDANCE_BANKS,
+            rows.map { it.groupValues[1].substringBefore('.') }.toSet(),
+        )
+    }
+
     private fun tagOf(register: Register): String = when (register) {
         Register.PLAIN -> "P"
         Register.OBSERVATIONAL -> "O"
@@ -167,5 +203,14 @@ class CorpusAnchorsTest {
 
         /** A note shorter than this is not saying anything about a voice. */
         const val MINIMUM_NOTE = 25
+
+        /** `| `cls.let.07` | `Rest is not a gap in the record.` | the note |` */
+        val GUIDANCE_ROW = Regex("""^\| `([a-z][A-Za-z0-9.]+)` \| `(.+?)` \| (.+?) \|$""")
+
+        /** Below this the guidance table was not parsed, whatever else the assertions say. */
+        const val MINIMUM_GUIDANCE = 10
+
+        /** The five banks of `CORPUS_2_REPORT.md` 4, which the anchors have to span. */
+        val GUIDANCE_BANKS = setOf("frm", "cue", "act", "com", "cls")
     }
 }

@@ -64,6 +64,10 @@ line is renderable, every hot family is covered and no other family is, and each
 carries ten anchors or every sayable line it has. A misquoted anchor teaches a sentence
 nobody approved, and nothing else in the build reads this file.
 
+**The guidance table below is three columns and is checked separately**, because a section 4
+line carries no register and no length band of its own. Its rows are held to the two things
+that can be held: the key is one the parsed banks have, and the line is quoted exactly.
+
 The hot families are the thirty six benches `HotFamilies` records at forty firings a year or
 more, measured over eleven personas and a simulated year each. Warm and long tail benches
 have no anchors here because phase 9 does not touch them.
@@ -495,6 +499,41 @@ times a year and has exactly one sentence.**
 
 ---
 
+## Guidance, section 4 of the Report
+
+**Three columns rather than five, because a section 4 line carries neither of the other
+two.** Its banks have no register ladder and no stage, the walker rejects a register tag on
+one, and a length band is computed on the assembled sentence rather than on the frame, the
+cue or the action separately. So these rows are checked by an assertion of their own:
+the key exists in the parsed section 4 benches and the line matches character for
+character. Everything else in this file's introduction applies to them unchanged.
+
+**Read these before writing anything into section 4, and read them twice before writing a
+closing.** The closings are the only lines in this corpus that are allowed to sound like
+advice, and they are the lines where a wrong note is loudest: a closing that reads as
+consolation is the app telling somebody it had nothing for them, which is worse than the
+silence it replaced.
+
+Layer 6 is also on probation. `MASTER_BUILD_PROMPT.md` 19 names it the first thing removed
+if it reads as supervision, so a line that would survive review in section 2 can still be
+wrong here. The test is not whether it is kind. It is whether the app is claiming to know
+what somebody's week needed.
+
+| key | line | what the voice carries |
+|---|---|---|
+| `frm.01` | `One option for {cue}: {action}.` | The frame at its plainest. A noun phrase, a colon, and no verb anywhere addressed to the reader. |
+| `frm.03` | `{cue} might be the moment for {action}.` | The cue is the subject and `might` is the whole of the optionality. Nothing is asked. |
+| `cue.hab.03` | `before you add anything new` | A cue anchored to something the person already does, which is the half of an implementation intention the app can actually supply. |
+| `cue.day.04` | `before {strongestWeekday} is over` | A boundary drawn around a fact the app measured over twelve weeks, and around nothing else. |
+| `act.neg.01` | `ten minutes in {areaName}` | The smallest complete action in the bank: a duration and a place, with no verb and no adverb. |
+| `act.fin.04` | `clearing one item before adding another` | An order of operations rather than a quantity. It sets a sequence and leaves the size alone. |
+| `act.brk.08` | `naming the obstacle, even in three words` | The one action that asks for a sentence rather than a task, and it caps its own size in the same breath. |
+| `com.03` | `My one thing {cue}: {actionNoun}.` | The stored form. First person, and it borrows the sidehead's own words rather than inventing a label for itself. |
+| `cls.trust.05` | `Steady is the result, not the absence of one.` | The one reach the closings allow themselves. It corrects a reading without naming who might have held it. |
+| `cls.let.07` | `Rest is not a gap in the record.` | A denial that plants nothing, because the record is the subject of it and the person is not in the sentence. |
+| `cls.new.02` | `Not enough of a pattern yet to say anything useful.` | Says what is missing without saying that the person is new, which they may not be. |
+| `cls.rev.04` | `One pass over the active items is enough.` | An instruction that names its own end. The word doing the work is `enough`. |
+
 ## Momentum and the Areas banner
 
 Four registers are permitted here: `[P]` plain, `[O]` observational, `[R]` reflective and
@@ -586,7 +625,7 @@ whole corpus, not as the loosest.
 
 | key | tag | band | line | what the voice carries |
 |---|---|---|---|---|
-| `mo.quiet.01` | P | MEDIUM | `Active {dayCount} of the last fourteen days.` | The near twin of `mo.steady.01`, carrying the opposite reading in its number alone. It keeps the word `fourteen` where the steady line takes `14`, because `{dayCount}` never reaches ten in this family and a word beside a word is what 7.2 asks for. |
+| `mo.quiet.01` | P | MEDIUM | `{dayCount} days of the fortnight saw a change.` | It takes `14` because 7.2 says ten and above are **always** digits in every volume, so a literal `fourteen` is a number written the way this app's own renderer would not have written it. A word and a digit beside each other, `three of the last 14 days`, is 7.2's own boundary and is exactly what two slots holding 3 and 14 would produce. **It no longer opens with `Active`**, and that is the finding rather than the wording: while both lines spelled fourteen differently they looked like near twins, and the moment the notation agreed they were one sentence under two keys, in two families that mean opposite things. A number was carrying a distinction the words were not. |
 | `mo.quiet.03` | N | SHORT | `A quiet fortnight.` | Three words. The neutral agent register with nothing to be neutral about but the time. |
 | `mo.quiet.04` | O | MEDIUM | `The last two weeks have been mostly still.` | `still` rather than empty, and never inactive. |
 | `mo.quiet.06` | R | SHORT | `A slow stretch.` | Three words, and `slow` is as far as it goes. |

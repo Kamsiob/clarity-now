@@ -11,6 +11,9 @@ import com.kamsiob.claritynow.domain.parseDateKey
 import com.kamsiob.claritynow.domain.pulse.CorpusSource
 import com.kamsiob.claritynow.domain.query.TrailQueries
 import com.kamsiob.claritynow.domain.replay.ReportState
+import com.kamsiob.claritynow.data.event.PlanOffered
+import com.kamsiob.claritynow.domain.guidance.GuidanceResult
+import com.kamsiob.claritynow.domain.guidance.PlanHistory
 import com.kamsiob.claritynow.domain.report.ReportOutcome
 import com.kamsiob.claritynow.domain.report.ReportComposer
 import com.kamsiob.claritynow.domain.report.ReportLanguage
@@ -47,6 +50,12 @@ data class RibbonDay(val date: LocalDate, val count: Int)
  * leaves [ribbon] intact: the marks are counted from the log and need no language at all,
  * so a packaging fault must not take the whole tab down with it. [languageFailure] says
  * why, so a month of silent Reports cannot be mistaken for a month with nothing to say.
+ *
+ * [planAccepted] is read off the log rather than remembered by the screen, so the closing
+ * block shows the stored first person line to somebody who accepted this week's plan
+ * yesterday. False when there is no plan, which is the same as false when there is one
+ * nobody answered: `CLARITY_LOGIC_ENGINE.md` 10.5 makes ignoring an offer identical to
+ * declining it, so there is no third value to carry.
  */
 @Immutable
 data class ReportGeneration(
@@ -54,6 +63,7 @@ data class ReportGeneration(
     val ribbon: List<RibbonDay>,
     val outcome: ReportOutcome?,
     val languageFailure: String?,
+    val planAccepted: Boolean = false,
 )
 
 /**
@@ -167,9 +177,72 @@ class ReportCoordinator(
         val outcome = withContext(Dispatchers.Default) {
             val facts = FactExtractor(queries).extract(week.window)
             val history = FiringHistory.from(queries, now)
-            ReportComposer(catalog, zone).compose(facts, history, week.weekStartKey)
+            // 10.6's follow through, rebuilt from the log on every call for 11.7's reason.
+            // An offer with no acceptance beside it leaves no entry, so a declined plan
+            // reaches the ranking as an empty set.
+            val plans = PlanHistory.from(queries, now)
+            ReportComposer(catalog, zone).compose(facts, history, week.weekStartKey, plans)
         }
-        return ReportGeneration(week, ribbon, outcome, languageFailure = null)
+        // 7. Step 9's second half. The plan is recorded when it is **offered**, not when it
+        // is accepted, because `FiringHistory` reads the frame, cue and action keys out of
+        // `PLAN_OFFERED` for 7.6's ninety day exclusion and a plan nobody sees twice is the
+        // point of that exclusion. It is not a record of an answer: 10.5's decline still
+        // writes nothing, and ignoring the offer still writes nothing. The id is derived
+        // from the week, so a second generation of the same week files nothing new.
+        val accepted = recordPlanIfOffered(outcome)
+        return ReportGeneration(
+            week,
+            ribbon,
+            outcome,
+            languageFailure = null,
+            planAccepted = accepted,
+        )
+    }
+
+    /**
+     * Appends `PLAN_OFFERED` for a plan this generation produced, and answers whether that
+     * plan has already been accepted. 11.3 step 9.
+     *
+     * Idempotent by the plan's own id, which is derived from the week it belongs to, so the
+     * report regenerating does not file a second plan for one week. Nothing visible happens
+     * when it is filed and nothing is shown: the offer is in the log so that layer 6 does
+     * not put the same frame in front of somebody twice in a season.
+     *
+     * **The acceptance comes back from the same call that files the offer**, because the
+     * writer already returns the plan's state and it is the state of the one plan this
+     * report is about. Asking a second time would be a second read of the same fact, and
+     * two reads are how a screen comes to disagree with the log it was drawn from. False
+     * for a report with no plan in it, which is what the closing block does with it.
+     */
+    private suspend fun recordPlanIfOffered(outcome: ReportOutcome): Boolean {
+        val composed = outcome as? ReportOutcome.Composed ?: return false
+        val plan = (composed.report.closing as? GuidanceResult.Plan)?.plan ?: return false
+        return repository.recordPlanOffered(
+            PlanOffered(
+                planId = plan.id,
+                weekStartKey = plan.weekStartKey,
+                frameKey = plan.frameKey,
+                cueKey = plan.cueKey,
+                actionKey = plan.actionKey,
+                familyKey = plan.familyKey,
+                subjectId = plan.subjectId,
+                offeredLine = plan.offeredLine,
+                committedLine = plan.committedLine,
+                resolutionFactRef = plan.resolutionFactRef,
+            ),
+        ).isAccepted
+    }
+
+    /**
+     * Accepts the plan [planId]. CLARITY_LOGIC_ENGINE.md 10.5.
+     *
+     * One event and nothing else. The screen settles its pill; there is no toast, no
+     * celebration, no bounce and no haptic heavier than an ordinary tap, and nothing
+     * anywhere afterwards refers to the plan again.
+     */
+    suspend fun acceptPlan(planId: String) {
+        repository.load()
+        repository.acceptPlan(planId)
     }
 
     /**

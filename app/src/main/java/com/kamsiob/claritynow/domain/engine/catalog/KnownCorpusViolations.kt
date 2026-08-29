@@ -117,8 +117,8 @@ internal object KnownCorpusViolations {
         ),
         ClaimedTotal(
             "CORPUS_2_REPORT.md",
-            claimed = 2200,
-            actual = 2200,
+            claimed = 2357,
+            actual = 2357,
             note = "the totals table agrees, and every prose total in the file agrees with it. " +
                 "Phase 9 grew this volume's nineteen hot benches to 11.1's hot band in two " +
                 "passes, from 804 lines to 1,617 and then to 2,200, and each pass moved the " +
@@ -129,7 +129,10 @@ internal object KnownCorpusViolations {
                 "passes and is worth the sentence: 11.1 and CORPUS_3_MOMENTUM.md both stated " +
                 "1,874 Report lines while the file carried 1,617, which is a projected total " +
                 "rather than a stale one and failed the audit identically. Every stated " +
-                "total here is recounted by CorpusTotalsAuditTest on every run",
+                "total here is recounted by CorpusTotalsAuditTest on every run. Phase 9b's " +
+                "guidance pass moved it once more, from 2,200 to 2,357, by growing section 4 " +
+                "from 109 lines to 266: the frames, the cues, the eight action banks and " +
+                "the four non plan closings, which are the benches layer 6 assembles from",
         ),
         ClaimedTotal(
             "CORPUS_3_MOMENTUM.md",
