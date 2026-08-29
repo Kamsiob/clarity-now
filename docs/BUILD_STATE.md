@@ -77,14 +77,15 @@ worse than either of them**, and the way to edit these is to replace the whole b
 | The persona repair, and the fifth simulator reading | done | no issue, owner approved |
 | The executive function engine gaps, 14b.3, 14b.4, 14b.8, 14b.9 | in progress | #27, #42, #43, #45 |
 | 9. Corpus | done. 3,230 lines. It halved repeats, moved silence by zero, and named why | closed |
-| 9b. Guidance, layer six | not started | #8 |
+| 9b. Guidance, layer six | done. All four readings pass and section 19's reservation is not exercised | closed |
 | 10. First run | built, all five tutorial targets landed, awaiting the device check | #9 |
 | 11. Settings, About, data | built, awaiting the device check | #10 |
 | 12. Widgets and notifications | built, all six routes landed, awaiting the device check and the preview captures | #11 |
 | 12b. Design surfaces, the polish pass | built, awaiting the device check | #54 |
 | 12c. The re-entry screen | built, awaiting the device check | #56 |
-| The archive view, and the reach pass | built | #15 closed |
-| 13. Ship | in progress. Store listing, the About disclaimer and the baseline profile generator are in | #12 |
+| The archive view | built | closed |
+| The reach passes, and the tenth measurement | done. Silence 65.7 to 56.0 percent, repeats 7,370 to 2,286 | no issue |
+| 13. Ship | the buildable half is done. What is left needs a Play Console account and a keystore, and is in `HANDOFF.md` | #12 |
 
 ---
 
@@ -1410,6 +1411,111 @@ is lighter than `deepBlack` and the same mark measured 2.969 there. **That one n
 the whole thesis of issue #51**: a contrast figure is only true against the ground it was
 measured on, and an app has more grounds than anybody enumerates by hand. It is now 55
 percent rather than 50, and measures 3.277 on the worst of its three grounds.
+
+---
+
+## Phase 9b delivered, and the reach passes before it
+
+Layer six, issue #8, plus the two engine passes that phase 9 made necessary.
+
+### What phase 9 proved, and why two more passes followed it
+
+Phase 9 wrote 3,230 corpus lines and moved Pulse silence by **zero**. That was the result
+rather than a disappointment: it proved the premise wrong and named the causes. Three
+passes followed, and between them they moved the two readings a person actually feels.
+
+| reading | before phase 9 | now |
+|---|---|---|
+| Pulse silence | 65.7 percent | **56.0 percent** |
+| variant repeats inside ninety days | 7,370 | **2,286** |
+| lines the engine cannot say | 86 | **2** |
+| unbound markers | 99 across 80 lines | **0** |
+| families that fire | 69 of 78 | **71 of 80** |
+| layer six silence | not measurable | **41 percent**, floor 15 |
+
+### The four defects those passes found, and none of them was the corpus
+
+**The register was never chosen.** `RegisterChoice.preference` returned a flat list and the
+realizer took the first register with a fillable bench, so the head of 7.4's step 4 won
+every firing where a rule left the question open. Measured over eleven persona years the
+Pulse spoke plain on 1,080 of 1,081 firings, and Momentum and the banner spoke reflective
+on 5,594 of 5,594. **11.1 sizes a stage bench and the chooser sees a register**, so a stage
+of sixty lines split three ways bought twenty lines of variety and 487 of volume 3's 748
+register tagged lines sat in registers nothing could ask for. Making step 4 a tier chosen
+among rather than an order cut repeats by 38 percent with no line written.
+
+**Eighty six lines could not reach a screen and eighty waited on a binding.**
+`reportedVsActual` fires 173 times a year and had two sayable lines; `comebackPattern`
+fires seventy and had one. Twenty two gained a binding, five facts were derived from events
+already in the log, and sixty two were retired with the reason beside each key. **Eighteen
+of those sixty two asked for the current quiet run or the current single area run**, which
+the owner scoped as a streak exception that may never render and which a test enforces: the
+corpus had authored eighteen lines into its two hottest benches against a number the app is
+not allowed to say.
+
+**The Pulse repeat filter had no recency bound.** `CLARITY_LOGIC_ENGINE.md` 7.3 says the no
+repeat rule covers only yesterday, section 12's table says yesterday's family cannot be
+today's, and step 4 named a fact carrying no recency. Of the 869 silent days it caused,
+**169 were a gap of one day and 214 were at ninety days or more.** Worse, it latched: a
+family blocked at step 4 writes no `PULSE_GENERATED`, so the fact never advances and the
+block renews every morning. `balancedAcrossFour` spoke nine times in a year, all inside
+three weeks, and every measurement this project took recorded that as a 97 percent silence
+rate. **It was not a rate. It was a loop.** Eight lines fixed it and silence moved for the
+first time in five measurements.
+
+**And 9.2's parallel clause cap was worse than missing.** It existed, fired twice a year,
+and broke 11.4 when it did by dropping a true observation to improve cadence. It is now the
+same shape as the band rule beside it: a preference in the ranking rather than a drop.
+
+### Layer six, and the question section 19 asks
+
+**The non compliance test was written before `FollowThrough.kt`**, in that order, because a
+test written afterward is written to pass. It holds the door from four directions: the
+corpus cannot say it, the history cannot carry it, the mechanism cannot return a
+`CharSequence`, and a year of accepting every plan and acting on none says nothing.
+**1,441 invocations, zero references**, and it is no longer trivially true because the
+persona now accepts real engine composed plans.
+
+**A count cannot answer whether it reads as supervision**, so the year was measured against
+itself: the boost set to zero, the eleven years re-run, the dumps diffed, the constant
+restored and the file checksummed back to byte identity. **The boost changes 118 lines, all
+report observations, on 27 of 52 weeks, and on 51 of those it changed only the order of
+four true observations.** A reader cannot see the counterfactual, so there is nothing
+available to notice.
+
+**The 52nd week is the one that is not order, and it is not layer six's defect.** On the
+persona's only `hardStretch` week the boost breaks a tie, the family falls outside the four
+observation cap, and because the heaviness test reads what appeared rather than what
+qualified, the hardest week of the year stops looking heavy. Measured rather than argued: a
+qualified `hardStretch` is crowded out **twice in eleven persona years, once with a boost
+and once without.** The cap does it with no plan anywhere near.
+
+**The if then is built from the noun phrase every action already is.** The corpus declared
+fifty four verb forms and carried none, and authoring them was refused for a reason: a verb
+form is `spend ten minutes in Personal`, and fifty four of those is a complete imperative
+action bank one frame from a screen, in an app whose 10.2 says the imperative exists
+nowhere. Building it the other way bought back three cues that had never reached a screen.
+
+**And accepting settles the pill and does nothing else.** The haptic was wrong in the exact
+direction section 10 forbids: it fired the one a Pulse answer fires, and section 9 gives
+plan acceptance a lighter one with the reason in the table, that accepting is not an
+achievement.
+
+### What the device showed
+
+At 0.11.0 the Report's closing block draws `One thing` over `There is not a repeating hour
+in the record yet.` A two week old install has no stable rhythm, so cue substantiation
+refuses a plan and the non plan closing says why. **That is layer six working on its
+hardest case, which is the one where it must not speak.**
+
+### Three things recorded as open rather than fixed
+
+- **Removing the Pulse repeat filter entirely** is worth 3.8 further points and is the
+  owner's call. Recommendation stated and not taken
+- **Exempting `hardStretch` from the observation cap**, for the reason above. The remedy
+  overturns a reading 10.4 argues for in writing
+- **A non plan closing is recorded nowhere**, so 7.6's ninety day exclusion cannot see one.
+  Issue #60
 
 ---
 
