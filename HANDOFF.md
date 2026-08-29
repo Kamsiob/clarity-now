@@ -10,6 +10,14 @@ Nothing in this file blocks any other work.
 
 ---
 
+## What is left, in one paragraph
+
+**Everything that can be built is built and green.** Thirteen phases plus 3b, 3c, 12b and
+12c, `verifyClarity` at 1,076 tests, a release APK that builds under R8 at 5.9 MB with a
+baseline profile generated on a real phone. What remains needs a Play Console account, a
+signing keystore, and a device in somebody's hand for the two checks a unit test cannot
+make. All of it is below, with the exact steps.
+
 ## BLOCKED
 
 ### Play Console setup, phase 13
@@ -171,3 +179,33 @@ Before the first upload, create an upload keystore, keep it and its passwords so
 that survives this machine, and wire it through `gradle.properties` in `$HOME` rather
 than through anything in the repository. Losing it means never being able to update the
 app under the same listing.
+
+
+### The two device checks nobody has made
+
+**A signed release build, walked.** `assembleRelease` succeeds and produces an unsigned
+APK. What that does not prove is that the shrunk APK runs: R8 can strip code only
+reflection reaches, and this app has Room, Compose, Glance, kotlinx serialization and a
+parser reading a corpus out of assets. Install a signed release build and walk the four
+tabs. It needs the keystore above.
+
+**The re-entry screen.** 14b.4's screen appears only after fourteen days without opening
+the app, so a fresh install cannot reach it and neither can `adb`. Its language and its
+routing are held by twenty unit tests, one of them mutation checked, and the clearing path
+returns a type that will not compile into a delete. What no test can answer is the one
+thing its own report flags: on a phone whose log takes a moment to load, does the Areas
+screen show for a perceptible beat before the surface fades over it.
+
+### Three decisions recorded as open, with the recommendation stated and not taken
+
+Each is in `DECISIONS.md` with its measurement. None blocks a release.
+
+- **Removing the Pulse repeat filter entirely.** Worth 3.8 further points of silence. It is
+  a deliberate behavior rule and behavior is `MASTER_BUILD_PROMPT.md`'s authority
+- **Exempting `hardStretch` from the four observation cap.** A qualified `hardStretch` is
+  crowded out twice in eleven persona years, which means the hardest week of somebody's
+  year can stop looking heavy. The remedy overturns a reading 10.4 argues for in writing
+- **Whether the Trail should show which plans were accepted.** It renders a row for
+  `PLAN_OFFERED` and `PLAN_ACCEPTED`, and declining writes nothing, so a left offer is a
+  row with no acceptance beside it. 10.5 says the plan exists in the report and nowhere
+  else. The precedent both ways is in the file
