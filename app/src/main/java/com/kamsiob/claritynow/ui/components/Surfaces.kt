@@ -10,8 +10,6 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.dropShadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.shadow.Shadow
@@ -20,10 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.kamsiob.claritynow.ui.theme.ClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.ShadowLayer
-import com.kamsiob.claritynow.ui.theme.WashCorner
 import com.kamsiob.claritynow.ui.theme.calmAccent
-import com.kamsiob.claritynow.ui.theme.washCornerFor
-import kotlin.math.hypot
 
 /**
  * design-v3.md 6.1. One separation device per element, expressed here as a pair of
@@ -59,61 +54,39 @@ fun Modifier.clarityShadow(layers: List<ShadowLayer>, shape: Shape, enabled: Boo
  * caller and is where calm mode's transform is applied, so that the choke point is one
  * function rather than two.
  */
-internal fun washBrush(accent: Color, alpha: Float, corner: WashCorner, width: Float, height: Float): Brush {
-    val center = when (corner) {
-        WashCorner.TOP_START -> Offset(0f, 0f)
-        WashCorner.TOP_END -> Offset(width, 0f)
-        WashCorner.BOTTOM_START -> Offset(0f, height)
-        WashCorner.BOTTOM_END -> Offset(width, height)
-    }
-    return Brush.radialGradient(
-        colors = listOf(accent.copy(alpha = alpha), accent.copy(alpha = 0f)),
-        center = center,
-        radius = hypot(width, height) * 0.92f,
-    )
-}
-
 /**
- * The one place an area accent becomes atmosphere, and therefore the one place calm
- * mode's color transform is applied. design-v3.md 16.2.
+ * **A flat tint, not a gradient, and that is the single most visible change in the
+ * refresh.**
  *
- * Every wash in the app arrives here: the area card, the color picker's live preview,
- * and anything later that pools an accent behind content. The transform is applied
- * inside rather than at the call sites, so a screen cannot forget it and a new screen
- * inherits it without being told. The two excluded uses of the accent, the 7dp dot and
- * the area label text, never come through this function at all, which is what keeps the
- * exclusion structural rather than a rule somebody has to remember.
+ * The shipping wash was a radial gradient running from the accent at full alpha in one
+ * of the card's four corners to nothing over `hypot(w, h) * 0.92`. Two things were wrong
+ * with it.
  *
- * The alpha is not touched here. 16.2 pins the wash opacity to the low end of its range
- * in calm mode, and that pinning belongs to the token set, in `ClarityColors.calmed`,
- * because the opacity is a design token while the accent is the user's own color.
+ * It was **the tell**. A radial color wash on a card is the most common thing a generated
+ * interface does, and design-v3.md 15.1 is a list of exactly these; the wash was on the
+ * list by construction and had been shipped anyway.
  *
- * `composed` rather than a `@Composable` extension so the signature does not change: the
- * two call sites in `ui/areas` are outside this phase's scope, and a wash that quietly
- * started honoring calm mode without them being edited is the correct outcome.
+ * It also **cost the card its rank**. Because the gradient reaches zero at 92 percent of
+ * the diagonal, most of a card's area carried a fraction of the stated alpha, and the
+ * corner that carried the peak was 4 to 6 L* under the card's own value, which put the
+ * card within two points of the chrome around it. The card was tinted and darker and
+ * read as neither.
+ *
+ * A flat tint is a paper stock. It is one value across the whole card, so the card holds
+ * its place on the ladder, and it never reads as an effect because there is nothing for
+ * the eye to trace. design-v3.md 3.4 is unchanged and still binding: area color is a dot
+ * and a word, never a stripe, a bar, an edge or a filled block, and a tint at 5 percent
+ * is a surface rather than a block of color.
  */
-fun Modifier.areaWash(accent: Color, alpha: Float, areaId: String): Modifier = composed {
+fun Modifier.areaTint(accent: Color, alpha: Float): Modifier = composed {
     if (alpha <= 0f) {
         this
     } else {
-        val calm = calmAccent(accent)
-        val corner = washCornerFor(areaId)
-        drawBehind {
-            drawRect(washBrush(calm, alpha, corner, size.width, size.height))
-        }
+        val tint = calmAccent(accent).copy(alpha = alpha)
+        drawBehind { drawRect(tint) }
     }
 }
 
-/**
- * A content card. design-v3.md 10.3.
- *
- * There is no border parameter, and there never will be one. A card carries a
- * shadow in the light world and a lightness step in the dark world, and nothing
- * carries both.
- *
- * The default background is `card`, the top rank of the phase 3c surface ladder, and
- * a content card is what that rank is for. Chrome sits at `raise` one step below it.
- */
 @Composable
 fun ClarityCard(
     modifier: Modifier = Modifier,

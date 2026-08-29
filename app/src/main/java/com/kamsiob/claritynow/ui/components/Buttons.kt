@@ -1,6 +1,7 @@
 package com.kamsiob.claritynow.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -157,6 +158,15 @@ fun ClarityFab(
         animationSpec = motion.springSnappy(),
         label = "fabPress",
     )
+    // A.4's shape law: the FAB is the one control that morphs on press, from a full
+    // pill to a 20dp squircle, because it is the one control that opens rather than
+    // commits.
+    val corner by animateDpAsState(
+        targetValue = if (pressed) 20.dp else 28.dp,
+        animationSpec = motion.springSnappy(),
+        label = "fabCorner",
+    )
+    val fabShape = RoundedCornerShape(corner)
 
     Box(
         modifier = modifier
@@ -187,8 +197,8 @@ fun ClarityFab(
             contentDescription = contentDescription,
             // The same inversion the primary button's label takes, and for the same
             // measurement. See the note on ClarityButtonRole.
-            tint = colors.card,
-            modifier = Modifier.size(24.dp),
+            tint = if (colors.isDark) colors.card else Color.White,
+            modifier = Modifier.size(26.dp),
         )
     }
 }
@@ -259,6 +269,23 @@ fun ClarityChip(
         label = "chipLabel",
     )
 
+    // **A selected chip morphs from a full pill to a 12dp rectangle**, on the spatial
+    // spring because a corner is geometry rather than color.
+    //
+    // A.4's permanence law reads a full pill as reversible and a 12dp rectangle as a
+    // commitment, and a set filter is exactly the second: it persists until it is
+    // cleared. It is also the deliberate answer to design-v3.md 15's open-choice rule.
+    // Selection today is an ink fill, which is a color signal, which is why
+    // `semantics { selected }` had to be bolted on underneath to satisfy 13. **A shape
+    // change works in grayscale, in a screenshot, and for any color vision**, so the
+    // signal is carried by the thing rather than by an announcement about it.
+    val corner by animateDpAsState(
+        targetValue = if (selected) 12.dp else 19.dp,
+        animationSpec = motion.springStandard(),
+        label = "chipCorner",
+    )
+    val chipShape = RoundedCornerShape(corner)
+
     Box(
         modifier = modifier
             .sizeIn(minHeight = ClaritySpacing.minTouchTarget)
@@ -280,10 +307,10 @@ fun ClarityChip(
             modifier = Modifier
                 .scale(scale)
                 .defaultMinSize(minHeight = 38.dp)
-                .clarityShadow(ClarityElevation.card, CircleShape, enabled = !colors.isDark && !selected)
-                .clip(CircleShape)
+                .clarityShadow(ClarityElevation.card, chipShape, enabled = !colors.isDark && !selected)
+                .clip(chipShape)
                 .background(background)
-                .clarityFocusRing(interaction, CircleShape)
+                .clarityFocusRing(interaction, chipShape)
                 .padding(horizontal = 15.dp, vertical = ClaritySpacing.scaled(9.dp)),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,

@@ -89,30 +89,22 @@ internal fun SettingsScreen(
     ) {
         SettingsGroup(title = stringResource(R.string.settings_group_daily)) {
             SettingsRow(
-                icon = ClarityIcons.pulse,
-                groupColor = SettingsGroupColors.daily,
                 title = stringResource(R.string.settings_daily_reflection),
                 onClick = onOpenReflection,
             )
             SettingsToggleRow(
-                icon = ClarityIcons.reminders,
-                groupColor = SettingsGroupColors.daily,
                 title = stringResource(R.string.settings_pulse_reminder),
                 checked = state.pulseReminders,
                 onCheckedChange = onPulseRemindersChange,
-                divider = state.pulseReminders,
             )
             // 14.1: shown only when the toggle is on. Absent rather than present and
             // disabled, for the reason design-v3.md 10.16 gives about the unfiled row:
             // a disabled control is a question the person then has to answer.
             if (state.pulseReminders) {
                 SettingsRow(
-                    icon = ClarityIcons.time,
-                    groupColor = SettingsGroupColors.daily,
                     title = stringResource(R.string.settings_remind_at),
                     value = formatHour(state.pulseReminderHour),
                     onClick = onOpenReminderHour,
-                    divider = false,
                 )
             }
         }
@@ -121,27 +113,20 @@ internal fun SettingsScreen(
 
         SettingsGroup(title = stringResource(R.string.settings_group_focus)) {
             SettingsToggleRow(
-                icon = ClarityIcons.focus,
-                groupColor = SettingsGroupColors.focus,
                 title = stringResource(R.string.settings_focus_highlight),
                 checked = state.focusHighlight,
                 onCheckedChange = onFocusHighlightChange,
             )
             SettingsRow(
-                icon = ClarityIcons.focusEvent,
-                groupColor = SettingsGroupColors.focus,
                 title = stringResource(R.string.settings_session_length),
                 value = stringResource(R.string.settings_session_length_value, state.focusMinutes),
                 onClick = onOpenSessionLength,
             )
             SettingsToggleRow(
-                icon = ClarityIcons.reminders,
-                groupColor = SettingsGroupColors.focus,
                 title = stringResource(R.string.settings_transition_warning),
                 caption = stringResource(R.string.settings_transition_warning_caption),
                 checked = state.transitionWarning,
                 onCheckedChange = onTransitionWarningChange,
-                divider = false,
             )
         }
 
@@ -199,13 +184,10 @@ internal fun SettingsScreen(
             TextSizePicker(selected = state.textSize, onSelect = onTextSizeChange)
             Spacer(Modifier.height(ClaritySpacing.scaled(16.dp)))
             SettingsToggleRow(
-                icon = ClarityIcons.editArea,
-                groupColor = SettingsGroupColors.appearance,
                 title = stringResource(R.string.settings_calm_mode),
                 caption = stringResource(R.string.settings_calm_mode_caption),
                 checked = calmMode,
                 onCheckedChange = onCalmModeChange,
-                divider = false,
             )
         }
 
@@ -213,8 +195,6 @@ internal fun SettingsScreen(
 
         SettingsGroup(title = stringResource(R.string.settings_group_data)) {
             SettingsRow(
-                icon = ClarityIcons.export,
-                groupColor = SettingsGroupColors.data,
                 title = stringResource(R.string.settings_export),
                 value = state.lastExportAt
                     ?.let { formatDate(it, zone) }
@@ -223,18 +203,13 @@ internal fun SettingsScreen(
                 chevron = false,
             )
             SettingsRow(
-                icon = ClarityIcons.importData,
-                groupColor = SettingsGroupColors.data,
                 title = stringResource(R.string.settings_import),
                 onClick = onImport,
                 chevron = false,
             )
             SettingsRow(
-                icon = ClarityIcons.erase,
-                groupColor = SettingsGroupColors.data,
                 title = stringResource(R.string.settings_erase),
                 onClick = onOpenErase,
-                divider = false,
             )
             // MASTER_BUILD_PROMPT 14b.7, in Settings only and nowhere else in the app.
             // Addendum 01 4h's plain statement about an unencrypted file is on the
@@ -272,17 +247,12 @@ internal fun SettingsScreen(
 
         SettingsGroup(title = stringResource(R.string.settings_group_privacy)) {
             SettingsRow(
-                icon = ClarityIcons.privacy,
-                groupColor = SettingsGroupColors.privacy,
                 title = stringResource(R.string.settings_privacy_policy),
                 onClick = onOpenPrivacy,
             )
             SettingsRow(
-                icon = ClarityIcons.licenses,
-                groupColor = SettingsGroupColors.privacy,
                 title = stringResource(R.string.settings_licenses),
                 onClick = onOpenLicenses,
-                divider = false,
             )
             Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
             PermissionCard()
@@ -292,25 +262,18 @@ internal fun SettingsScreen(
 
         SettingsGroup(title = stringResource(R.string.settings_group_help)) {
             SettingsRow(
-                icon = ClarityIcons.regenerate,
-                groupColor = SettingsGroupColors.help,
                 title = stringResource(R.string.settings_replay_tour),
                 onClick = onReplayTour,
                 chevron = false,
             )
             SettingsRow(
-                icon = ClarityIcons.regenerate,
-                groupColor = SettingsGroupColors.help,
                 title = stringResource(R.string.settings_replay_welcome),
                 onClick = onReplayWelcome,
                 chevron = false,
             )
             SettingsRow(
-                icon = ClarityIcons.mark,
-                groupColor = SettingsGroupColors.help,
                 title = stringResource(R.string.settings_about),
                 onClick = onOpenAbout,
-                divider = false,
             )
         }
 

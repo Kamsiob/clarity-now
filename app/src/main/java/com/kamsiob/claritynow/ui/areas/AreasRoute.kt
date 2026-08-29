@@ -267,6 +267,11 @@ fun AreasRoute(
                     onDelete = { sheet = AreaSheet.DeleteArea(area.id) },
                     onOpenItem = { sheet = AreaSheet.EditItem(it.id) },
                     onReopenItem = { viewModel.reopenItem(it.id) },
+                    // The sheet stays open. Promoting from the queue is a thing a
+                    // person may do twice in a row while they decide, and closing the
+                    // list they are choosing from would make the second choice a
+                    // navigation.
+                    onMakeActive = { viewModel.swapToItem(it.id) },
                     onDismiss = { sheet = null },
                 )
             }

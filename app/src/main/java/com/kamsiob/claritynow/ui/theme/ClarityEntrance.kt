@@ -1,164 +1,152 @@
 package com.kamsiob.claritynow.ui.theme
 
-import android.os.SystemClock
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
- * Whether a screen composing now is arriving or is already at rest. design-v3.md 8.4,
- * Addendum 01 item 8e.
+ * **How a page comes together.**
  *
- * An entrance is a way of saying "this is new". A screen opened twenty times a day is
- * not new, and an entrance that fires every time is not delight: it delays the content
- * by its own duration, every time, for the reader least able to afford the wait. So the
- * entrance fires on the first open of a tab per app session and never again, and every
- * return after that renders already settled, at rest, with no fade and no offset.
+ * The shipping build faded a screen in with a 16dp rise on a 350ms cubic, one treatment
+ * for every element, once per session. Two things were wrong with that and they are
+ * different problems. It was **one motion**, so a screen assembled as a single slab and
+ * nothing about the arrival said what the screen was made of. And it was **spent after
+ * the first visit**, so the app was at its most alive in the ten seconds a person saw it
+ * least and inert forever after.
  *
- * **An app session is the process lifetime**, recorded in `DECISIONS.md` and stated in
- * design-v3.md 8.4. The alternative, re-arming after some period in the background, was
- * rejected: it invents a threshold nobody asked for and makes one screen behave two ways
- * for a reason the user cannot see.
+ * The replacement is a choreography with four parts, and the rule that generates it is
+ * one sentence:
  *
- * **Calm mode removes the entrance; reduce motion only reduces it.** design-v3.md 16.2
- * says entrances do not fire at all in calm mode, and 8.3 turns every other animation
- * into a 150ms crossfade, which for an entrance means the fade without the rise and
- * without the stagger. Both flags are read in [clarityEntrance], once, rather than at
- * any call site.
+ * > **Everything enters from where it lives, in the order a person reads it.**
  *
- * Item 25, the empty state entrance, is deliberately not routed through here. Its 150ms
- * delay exists to stop a flash during a load that resolves quickly rather than to
- * announce anything, and design-v3.md 8.4 exempts it by name.
+ * | role | motion | why |
+ * |---|---|---|
+ * | [ClarityEntranceRole.HEADER] | settles down 10dp, no scale | a header is already at the top of the page; it arrives by coming to rest, not by moving |
+ * | [ClarityEntranceRole.DOMINANT] | scales 0.94 to 1, rises 8dp, from its own top left | the one large sentence on a screen is the thing that grows into the room |
+ * | [ClarityEntranceRole.ROW] | rises 18dp, staggered by reading order | a list arrives as a list, one item after another |
+ * | [ClarityEntranceRole.CHROME] | fades only, no travel | a tab bar that slides is a tab bar that moved, and it did not |
  *
- * The default carried by [LocalScreenEntrance] is `false`, so a composable rendered
- * outside a [TabEntrance], in a preview or a test, draws settled. Settled is always
- * safe; an entrance that fires when it should not is the defect this file exists to
- * prevent.
+ * **Transform runs on a spring and opacity runs on a tween, never the other way round.**
+ * A spring on alpha reads as a flicker because the overshoot has nowhere to go, and a
+ * tween on a transform reads as a slide because it arrives at constant speed and stops.
+ * The spring is the Material 3 Expressive default spatial spring, damping 0.8 and
+ * stiffness 380, which is the same spring the rest of this app already presses with, so
+ * an arrival and a press are the same physical world.
+ *
+ * **Reduced motion and calm mode collapse the whole thing to nothing**, not to a shorter
+ * version of itself: [clarityMotion] reports `reduced`, every travel distance goes to
+ * zero, the stagger goes to zero and only the opacity tween remains.
  */
 @Immutable
-class ScreenEntrance(val playing: Boolean)
+class ScreenEntrance(val playing: Boolean, val generation: Int)
 
-val LocalScreenEntrance = compositionLocalOf { ScreenEntrance(false) }
+val LocalScreenEntrance = compositionLocalOf { ScreenEntrance(false, 0) }
 
-/** design-v3.md 8.2 item 4. The distance an arriving item travels. */
-private val ENTRANCE_RISE = 16.dp
+enum class ClarityEntranceRole { HEADER, DOMINANT, ROW, CHROME }
 
-/**
- * How long after a tab's first open an item composed for the first time still counts as
- * part of the arrival.
- *
- * 350ms for the fade itself, per 8.2 item 4, plus enough stagger for a screen's worth of
- * rows: design-v3.md 11 puts five area cards on screen comfortably and a tall device
- * holds a few more, so twelve slots at the 50ms stagger is a generous ceiling. Past it, a
- * row scrolled into view is a row being read rather than a screen arriving.
- */
-private const val ENTRANCE_WINDOW_MILLIS = 350L + 12L * 50L
+private val HEADER_FALL: Dp = (-10).dp
+private val DOMINANT_RISE: Dp = 8.dp
+private val ROW_RISE: Dp = 18.dp
+private const val DOMINANT_SCALE_FROM = 0.94f
 
-/** No session has spent this tab's entrance yet. `SystemClock` never returns zero. */
-private const val NO_SESSION = 0L
+/** Long enough for the last staggered row of a full screenful to finish. */
+private const val ENTRANCE_WINDOW_MILLIS = 380L + 14L * 46L
 
 /**
- * The app session, as a value that can be written into a saved instance state bundle and
- * compared after a restore.
- *
- * `elapsedRealtimeNanos` is read once when this object initializes, which happens once
- * per process. Two launches cannot read the same nanosecond, and a reboot resets the
- * clock but also discards every saved bundle, so the token is unique across every
- * restore that can actually happen.
- */
-private object ClaritySession {
-    val token: Long = SystemClock.elapsedRealtimeNanos()
-}
-
-/**
- * Holds one tab's entrance flag and provides it to everything inside.
- *
- * Placed inside the shell's `SaveableStateProvider` for the tab, which is what puts the
- * flag in the per tab saveable state the shell has held since phase 3 rather than in a
- * global or in DataStore. A global would make the second tab opened think it was the
- * second open of the first; DataStore would spend the entrance permanently at first
- * install and it would never be seen again.
- *
- * **The flag is a session token rather than a boolean**, and that is the whole trick.
- * design-v3.md 8.4 wants a rotation to leave the entrance spent and a process death to
- * re-arm it, and those pull in opposite directions: `remember` loses a rotation,
- * `rememberSaveable` survives a system initiated process death, and neither alone is
- * right. Storing *which* session spent it settles both. A bundle restored into a new
- * process carries a token that matches nothing, so the entrance fires again.
- *
- * Wrapping the tab rather than the screen is what keeps a sheet or a detail view from
- * counting as a first open.
- *
- * Phase 8's Report reveal, 8.2 item 12, is the one entrance that re-arms on a content
- * change as well as on a session change. It will need a key here; it does not have one
- * yet, because nothing whose content changes under an entrance exists to test it
- * against.
+ * Plays the choreography every time the screen is entered, which is the change from the
+ * shipping build's once per session. A tab a person opens forty times a day is the
+ * surface that most needs to feel alive, and a 380ms settle that a thumb outruns is not
+ * a cost a person pays; it is what tells them the page is new.
  */
 @Composable
 fun TabEntrance(content: @Composable () -> Unit) {
-    var spentBySession by rememberSaveable { mutableStateOf(NO_SESSION) }
-    val firstOpen = remember { spentBySession != ClaritySession.token }
-    var playing by remember { mutableStateOf(firstOpen) }
+    var generation by remember { mutableIntStateOf(0) }
+    var playing by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
-        if (!firstOpen) return@LaunchedEffect
-        spentBySession = ClaritySession.token
+        generation += 1
+        playing = true
         delay(ENTRANCE_WINDOW_MILLIS)
         playing = false
     }
 
-    val entrance = remember(playing) { ScreenEntrance(playing) }
+    val entrance = remember(playing, generation) { ScreenEntrance(playing, generation) }
     CompositionLocalProvider(LocalScreenEntrance provides entrance) { content() }
 }
 
 /**
- * design-v3.md 8.2 item 4. Fades from 0 and rises 16dp over 350ms easeOut, delayed by
- * [index] times the stagger.
- *
- * [index] is the item's position in the arrival order rather than in the data, so a
- * screen with a header and then any number of cards staggers as one sequence.
- *
- * The decision is captured once per item, in a `remember`, and everything below depends
- * on it never changing: an item whose entrance is in flight when the arrival window
- * closes finishes it, and a row scrolled off and back never arrives a second time.
+ * `index` is reading order within the screen, not layout order: it decides only when an
+ * element starts, and two elements a person reads as one thing should share an index.
  */
 @Composable
-fun Modifier.clarityEntrance(index: Int): Modifier {
+fun Modifier.clarityEntrance(
+    index: Int = 0,
+    role: ClarityEntranceRole = ClarityEntranceRole.ROW,
+): Modifier {
     val motion = clarityMotion()
     val calm = LocalCalmMode.current
-    val playing = LocalScreenEntrance.current.playing
+    val entrance = LocalScreenEntrance.current
 
-    val plays = remember { playing && !calm }
+    val plays = remember(entrance.generation) { entrance.playing && !calm }
     if (!plays) return this
 
-    val rise = with(LocalDensity.current) {
-        // A crossfade has no travel. design-v3.md 8.3 turns the entrance into one, and
-        // leaving the 16dp in would be the slide that rule exists to remove.
-        if (motion.reduced) 0f else ENTRANCE_RISE.toPx()
+    val density = LocalDensity.current
+    val travel = with(density) {
+        if (motion.reduced) {
+            0f
+        } else {
+            when (role) {
+                ClarityEntranceRole.HEADER -> HEADER_FALL.toPx()
+                ClarityEntranceRole.DOMINANT -> DOMINANT_RISE.toPx()
+                ClarityEntranceRole.ROW -> ROW_RISE.toPx()
+                ClarityEntranceRole.CHROME -> 0f
+            }
+        }
     }
-    val progress = remember { Animatable(0f) }
+    val scaleFrom = if (motion.reduced || role != ClarityEntranceRole.DOMINANT) {
+        1f
+    } else {
+        DOMINANT_SCALE_FROM
+    }
+
+    val settle = remember(entrance.generation) { Animatable(0f) }
+    val fade = remember(entrance.generation) { Animatable(0f) }
     val delayMillis = (index.coerceAtLeast(0) * motion.staggerMillis).toLong()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(entrance.generation) {
         if (delayMillis > 0L) delay(delayMillis)
-        progress.animateTo(1f, motion.easeOut())
+        // Opacity and transform are started together and land apart on purpose: the
+        // fade is over in 200ms so the text is readable immediately, and the spring
+        // keeps settling under text a person has already started reading.
+        kotlinx.coroutines.coroutineScope {
+            launch { fade.animateTo(1f, tween(if (motion.reduced) 150 else 200)) }
+            launch { settle.animateTo(1f, motion.springStandard()) }
+        }
     }
 
     return graphicsLayer {
-        alpha = progress.value
-        translationY = (1f - progress.value) * rise
+        alpha = fade.value
+        translationY = (1f - settle.value) * travel
+        val s = scaleFrom + (1f - scaleFrom) * settle.value
+        scaleX = s
+        scaleY = s
+        transformOrigin = TransformOrigin(0f, 0f)
     }
 }

@@ -3,7 +3,6 @@ package com.kamsiob.claritynow.ui.theme
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
-import com.kamsiob.claritynow.domain.engine.StableHash
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
@@ -146,15 +145,6 @@ fun parseAreaColor(hex: String): Color {
     val value = cleaned.toLongOrNull(16) ?: return Color(0xFF2D7FF9)
     return Color(0xFF000000L or value)
 }
-
-/**
- * The corner an area's wash pools toward, chosen by hashing the area id so it is
- * stable for the life of the area and varied across a screen of cards.
- */
-enum class WashCorner { TOP_START, TOP_END, BOTTOM_START, BOTTOM_END }
-
-fun washCornerFor(areaId: String): WashCorner =
-    WashCorner.entries[StableHash.bucket(areaId, WashCorner.entries.size)]
 
 /**
  * The deepest ground an area label can ever sit on, per world: the card carrying that

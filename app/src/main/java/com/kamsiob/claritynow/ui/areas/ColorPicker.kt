@@ -43,7 +43,7 @@ import com.kamsiob.claritynow.ui.components.ClarityCard
 import com.kamsiob.claritynow.ui.components.ClarityIcon
 import com.kamsiob.claritynow.ui.components.ClarityIcons
 import com.kamsiob.claritynow.ui.components.Sidehead
-import com.kamsiob.claritynow.ui.components.areaWash
+import com.kamsiob.claritynow.ui.components.areaTint
 import com.kamsiob.claritynow.ui.components.clarityClickable
 import com.kamsiob.claritynow.ui.theme.AreaMood
 import com.kamsiob.claritynow.ui.theme.AreaPalette
@@ -144,7 +144,7 @@ private fun ColorPreviewCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .areaWash(currentAccent, colors.cardWashAlpha, current)
+                    .areaTint(currentAccent, colors.cardWashAlpha)
                     .padding(horizontal = 18.dp, vertical = ClaritySpacing.scaled(17.dp)),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

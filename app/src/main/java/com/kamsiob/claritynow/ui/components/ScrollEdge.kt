@@ -130,20 +130,29 @@ object ScrollEdge {
     val aboveTheBar: Dp = 16.dp
 }
 
-/** Fully removed at the edge, nothing removed at the far end. */
+/**
+ * Fully removed at the edge, nothing removed at the far end.
+ *
+ * **The curve holds at full removal through the first third and then ramps.** It used to
+ * start ramping immediately, which put content at 72 percent opacity a quarter of the way
+ * into a band whose first three quarters *is* the status bar: scrolling Settings put a
+ * readable `Calm mode` directly across the clock. A band is not a gradient over the whole
+ * inset, it is an inset that is clear and then a gradient below it, and the hold is what
+ * says so.
+ */
 private val FADE_IN_FROM_EDGE = arrayOf(
     0.00f to Color.Black,
-    0.25f to Color.Black.copy(alpha = 0.72f),
-    0.50f to Color.Black.copy(alpha = 0.40f),
-    0.75f to Color.Black.copy(alpha = 0.15f),
+    0.34f to Color.Black,
+    0.55f to Color.Black.copy(alpha = 0.62f),
+    0.75f to Color.Black.copy(alpha = 0.28f),
     1.00f to Color.Transparent,
 )
 
 /** The same curve, read from the other end. */
 private val FADE_OUT_TO_EDGE = arrayOf(
     0.00f to Color.Transparent,
-    0.25f to Color.Black.copy(alpha = 0.15f),
-    0.50f to Color.Black.copy(alpha = 0.40f),
-    0.75f to Color.Black.copy(alpha = 0.72f),
+    0.25f to Color.Black.copy(alpha = 0.28f),
+    0.45f to Color.Black.copy(alpha = 0.62f),
+    0.66f to Color.Black,
     1.00f to Color.Black,
 )

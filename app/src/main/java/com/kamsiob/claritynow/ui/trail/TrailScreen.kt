@@ -67,6 +67,9 @@ import com.kamsiob.claritynow.ui.components.ScrollEdge
 import com.kamsiob.claritynow.ui.components.TabBarHeight
 import com.kamsiob.claritynow.ui.components.TabBarInset
 import com.kamsiob.claritynow.ui.components.scrollEdgeFade
+import androidx.compose.ui.semantics.Role
+import com.kamsiob.claritynow.ui.components.clarityClickable
+import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
 import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityShapes
@@ -177,6 +180,7 @@ fun TrailScreen(
     state: TrailUiState,
     onSelectArea: (String?) -> Unit,
     onLoadMore: () -> Unit,
+    onReopen: (String, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalClarityColors.current
@@ -266,7 +270,7 @@ fun TrailScreen(
                         )
                     }
                     items(day.rows, key = { "row:" + it.eventId }) { row ->
-                        TrailEventRow(row = row, zone = state.zone)
+                        TrailEventRow(row = row, zone = state.zone, onReopen = onReopen)
                     }
                 }
 
@@ -325,11 +329,14 @@ private fun TrailHeader() {
     val type = LocalClarityTypography.current
     Text(
         text = stringResource(R.string.trail_title),
-        style = type.displayTitle,
+        // `readSerif` 26, matching the Areas wordmark exactly. A screen title names the
+        // place and is chrome; the dominant on a list screen is content, and here that
+        // is the day header. Two screens that open the same way are one app.
+        style = type.readSerif,
         color = colors.inkPrimary,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 12.dp, bottom = 6.dp),
+            .padding(top = ClaritySpacing.snug, bottom = ClaritySpacing.tight),
     )
 }
 
@@ -442,9 +449,17 @@ private fun TrailDayHeader(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // **`leadStrong` 31, and it is the screen's dominant.** A.3 measured the
+            // Trail at 1.13 to 1 between its loudest content and its modal size, the
+            // worst ratio in the app, which is the mechanical statement of "every row
+            // looks the same". A day is the unit a person navigates this screen by, so
+            // the day is what gets to be large. It repeats down the page because a
+            // section marker repeats by definition; what the budget forbids is two
+            // *different* things competing to be the dominant, and here there is one
+            // kind of thing at 2.48x the modal and everything else beneath it.
             Text(
                 text = label,
-                style = type.bodyStrong,
+                style = type.leadStrong,
                 color = colors.inkPrimary,
                 modifier = Modifier.widthIn(max = labelCap),
             )
@@ -513,7 +528,7 @@ private fun trailDayLabel(date: LocalDate, today: LocalDate, referenceYear: Int)
  * A completion is the same row inside a flat mint at `positiveGreen` 8 percent over
  * `card`, clipped to the 12dp row radius. Not `ClarityCard`, which applies elevation
  * unconditionally in light mode and would leave this element carrying a wash and a
- * shadow at once; not `Modifier.areaWash`, which pools its color toward a corner
+ * shadow at once; not `Modifier.areaTint`, which is an area's own accent and
  * chosen by hashing an area id, which section 11 never asked for here; and 12dp
  * rather than the 18dp of a content card, because every neighbor on this screen is a
  * row and reading it as a card invites both of the mistakes above.
@@ -528,7 +543,7 @@ private fun trailDayLabel(date: LocalDate, today: LocalDate, referenceYear: Int)
  * even on the rows where the cluster rule hides it.
  */
 @Composable
-private fun TrailEventRow(row: TrailRow, zone: ZoneId) {
+private fun TrailEventRow(row: TrailRow, zone: ZoneId, onReopen: (String, String) -> Unit) {
     val colors = LocalClarityColors.current
     val type = LocalClarityTypography.current
     val shapes = LocalClarityShapes.current
@@ -536,21 +551,36 @@ private fun TrailEventRow(row: TrailRow, zone: ZoneId) {
     val time = remember(row.wallClock, zone) {
         TIME_FORMAT.format(Instant.ofEpochMilli(row.wallClock).atZone(zone))
     }
-    val sentence = trailSentence(row)
-    val description = trailRowDescription(sentence, time)
-    // No area accent reaches this row any more. The one place an area color becomes a
-    // Color on this screen is the filter chip's 7dp dot, which design-v3.md 16.2
-    // excludes from the calm mode transform by name because it is identity rather than
-    // atmosphere. `CalmModeTest` holds the census.
+    val text = trailRowText(row)
+    val description = trailRowDescription(trailSentence(row), time)
+    val accent = row.areaColorHex?.let { parseAreaColor(it) }
+    // A completion is the one row that offers an act, so it is the one row that takes a
+    // role, a click label and a press ground. Everything else stays a record.
+    val reopenLabel = stringResource(R.string.cd_trail_reopen)
+    val reopenable = row.itemId?.takeIf { row.isCompletion && !row.subject.isNullOrBlank() }
     val outer = Modifier
         .fillMaxWidth()
-        .clearAndSetSemantics { contentDescription = description }
+        .semantics { contentDescription = description }
     val surface = if (row.isCompletion) {
         val mint = colors.positiveGreen.copy(alpha = COMPLETED_WASH_ALPHA)
             .compositeOver(colors.card)
-        outer.clip(shapes.row).background(mint)
-    } else {
         outer
+            .clip(shapes.row)
+            .background(mint)
+            .then(
+                if (reopenable == null) {
+                    Modifier
+                } else {
+                    Modifier.clarityClickable(
+                        haptic = ClarityHapticEvent.TAP,
+                        role = Role.Button,
+                        onClickLabel = reopenLabel,
+                        onClick = { onReopen(reopenable, row.subject.orEmpty()) },
+                    )
+                },
+            )
+    } else {
+        outer.clearAndSetSemantics { contentDescription = description }
     }
 
     Box(modifier = surface) {
@@ -558,42 +588,57 @@ private fun TrailEventRow(row: TrailRow, zone: ZoneId) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    vertical = ClaritySpacing.scaled(
-                        if (row.isCompletion) 12.dp else 10.dp,
-                    ),
+                    horizontal = if (row.isCompletion) ClaritySpacing.snug else 0.dp,
+                    vertical = ClaritySpacing.scaled(10.dp),
                 ),
             verticalAlignment = Alignment.Top,
         ) {
+            // **The area dot replaces the glyph column, and it says something the
+            // sentence does not.**
+            //
+            // The column used to carry one of eighteen drawables chosen by row shape,
+            // which restated the verb the row had already written in English, and it
+            // pushed every sentence 35dp in from the day header above it. The dot names
+            // which area the event belongs to, which is the one fact the sentence
+            // leaves out and the fact a person scanning a day actually wants. A row
+            // that belongs to no area draws a spacer, because inventing an area for a
+            // Pulse would be a fabrication, and 3.4's dot is the app's identity device
+            // rather than a decoration to fill a column with.
             Box(
-                modifier = Modifier.size(EVENT_SLOT),
-                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .padding(top = 6.dp)
+                    .size(ClaritySpacing.areaDot - 2.dp),
             ) {
-                // No description on the glyph: the row's own sentence already says
-                // what happened, and a second node would have TalkBack say it twice.
-                ClarityIcon(
-                    icon = iconFor(row.sentence),
-                    contentDescription = null,
-                    tint = colors.inkSecondary,
-                    modifier = Modifier.size(EVENT_GLYPH),
-                )
+                if (accent != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape)
+                            .background(accent),
+                    )
+                }
             }
-            Spacer(Modifier.width(12.dp))
-            // No maxLines and no ellipsis. design-v3.md 13 requires the app to hold
-            // together at 200 percent font scale without clipping, and no Trail row is
-            // tappable, so a truncated sentence is one a person has no way to recover.
-            // A title is capped at 200 characters where it is written, so a row is
-            // bounded even when it is tall.
-            Text(
-                text = sentence,
-                style = type.body,
-                color = colors.inkPrimary,
-                modifier = Modifier.weight(1f),
-            )
-            Spacer(Modifier.width(12.dp))
-            // MASTER_BUILD_PROMPT 9 puts a timestamp on the first event of each ten
-            // minute cluster only. The suppressed ones still occupy their slot, drawn
-            // in nothing, so the text column keeps one measure the whole way down the
-            // page instead of widening on every row that happens to be in a cluster.
+            Spacer(Modifier.width(ClaritySpacing.snug))
+            Column(modifier = Modifier.weight(1f)) {
+                // A row that names nothing of the person's own is one line at `body`,
+                // not an orphaned action at `caption`. The five rows that record what
+                // the app did stay quieter than a row about a person's own work, which
+                // is the ranking, but they still sit at a size a row can be read at.
+                Text(
+                    text = text.action,
+                    style = if (text.subject == null) type.body else type.caption,
+                    color = colors.inkSecondary,
+                )
+                if (text.subject != null) {
+                    Text(
+                        text = text.subject,
+                        style = type.bodyStrong,
+                        color = colors.inkPrimary,
+                        modifier = Modifier.padding(top = 1.dp),
+                    )
+                }
+            }
+            Spacer(Modifier.width(ClaritySpacing.snug))
             Text(
                 text = time,
                 style = type.caption,

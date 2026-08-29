@@ -694,6 +694,34 @@ class ClarityRepository(
     }
 
     /**
+     * Reopens a completed item and makes it the active one in a single gesture.
+     *
+     * **Two events, not one, and that is the design rather than a shortcut.** Reopening
+     * and promoting are separate facts about separate transitions, and the log has to be
+     * able to say that an item came back and then took the front, because a later replay
+     * has to reach the same state from the same events. A third event type meaning "came
+     * back and took the front" would be a compound the reducer would have to unpick.
+     *
+     * [swapToItem] already does the eviction: whatever was active is demoted to the head
+     * of the queue with a fresh order key, so nothing is lost and nothing needs a warning
+     * dialog. If the area is idle the promotion simply has nothing to demote.
+     *
+     * Ordering matters and is not interchangeable. [reopenItem] refuses anything that is
+     * not `COMPLETED` and [swapToItem] refuses anything that is not `QUEUED`, so running
+     * them the other way round is two refusals and no writes.
+     */
+    suspend fun reopenItemAsActive(itemId: String) {
+        reopenItem(itemId)
+        swapToItem(itemId)
+    }
+
+    /** Whether a Trail row's completion can still be undone, which it cannot twice. */
+    fun isCompleted(itemId: String): Boolean {
+        val item = _state.value.items[itemId] ?: return false
+        return item.deletedAt == null && item.status == ItemStatus.COMPLETED
+    }
+
+    /**
      * Moves a queued item to [toIndex] within its area's queue.
      *
      * **An unfiled item cannot be reordered, and that is a gap rather than a rule.**

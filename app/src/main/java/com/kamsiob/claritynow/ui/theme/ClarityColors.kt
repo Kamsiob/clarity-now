@@ -65,6 +65,12 @@ data class ClarityColors(
     val cardWashAlpha: Float,
     /** Area accent opacity for a card whose area has a running focus session. */
     val cardWashActiveAlpha: Float,
+    /**
+     * Area accent opacity for the deck a card's status line sits on. The deck is the
+     * card's one internal separation device, so 6.1 is satisfied by a tone step and the
+     * card never grows a hairline to divide itself.
+     */
+    val cardDeckAlpha: Float,
 )
 
 /**
@@ -100,13 +106,38 @@ private val InkDark = Color(0xFFF0EEF1)
  *   and would have been invisible even if anything had drawn it. It now sits between
  *   the ground and the content, which is what a rank in a ladder is for, and it is
  *   warm for the same reason the card is.
- * - **`inkSecondary` 0.60 to 0.64.** Required, not chosen. At 0.60 on the new canvas
+ * - **`inkSecondary` 0.60 to 0.64, and to 0.68 in the visual refresh.** Required, not
+ *   chosen, both times. The refresh's `canvas` took the 0.64 value to 4.59:1 on the page
+ *   and under the floor on two of the soft fills drawn over it, so the ink moved with the
+ *   ground exactly as it did in phase 3c. At 0.68 the page reads 5.19, the 5 percent ink
+ *   fill reads 4.71 and the 13 percent mint reads 4.84. Original phase 3c reasoning: At 0.60 on the new canvas
  *   it measures 4.33:1, under design-v3.md 13's floor of 4.5. At 0.64 the worst
  *   ground in the app is the canvas at 4.88:1. The raise also retires a defect phase
  *   3b had to pin as unfixable: at 0.60 this token measured 4.27:1 on an in-session
  *   area card, and at 0.64 it measures 4.75:1, so every ground now clears.
  *
  * Card to canvas: 1.126:1 to 1.202:1. Span: 4.73 L* to 7.19 L*.
+ *
+ * ## The visual refresh widens the ladder again, and this is the reason
+ *
+ * Phase 3c bought 7.19 L* and it was still not enough: a device capture of the refreshed
+ * build still read as one field of grey with faint rectangles on it, because 1.202:1 is
+ * under the 1.3:1 at which a surface boundary is seen rather than inferred. The ladder
+ * now spans **12.96 L* in light and 11.45 in dark**, and card against canvas is
+ * **1.400:1**.
+ *
+ * - **`canvas` `#E6E6EC` to `#D6D6DB`, L* 91.4 to 85.7.** Depth is bought downward
+ *   again, for the same reason as before: `card` is nearly at the ceiling, so the only
+ *   direction with headroom is down. `inkSecondary` at 0.64 measures **4.59:1** on the
+ *   new ground, which still clears 13's floor of 4.5, and that floor is what pins the
+ *   value: `#D2D2D8` would read better as a ground and measures 4.42.
+ * - **`raise` `#F4F3F0` to `#EBEAE6`, L* 95.8 to 92.7.** Chrome has to stay a real step
+ *   under content once content is this much brighter than the page.
+ * - **`card` holds `#FCFBF9`.** It was already the top of the room.
+ * - **dark `card` `#1D1D25` to `#262630` and `raise` `#18181F` to `#1D1D25`.** Dark has
+ *   no shadows at all, so its ladder is its only separation device and it is matched to
+ *   the light world's step rather than tuned on its own: chrome sits 7.04 L* off the
+ *   ground against light's 6.95.
  *
  * ## Three more moved in the phase 13 contrast audit, and one token is new
  *
@@ -150,11 +181,11 @@ private val InkDark = Color(0xFFF0EEF1)
  */
 val ClarityLightColors = ClarityColors(
     isDark = false,
-    canvas = Color(0xFFE6E6EC),
+    canvas = Color(0xFFD6D6DB),
     card = Color(0xFFFCFBF9),
-    raise = Color(0xFFF4F3F0),
+    raise = Color(0xFFEBEAE6),
     inkPrimary = InkLight,
-    inkSecondary = InkLight.copy(alpha = 0.64f),
+    inkSecondary = InkLight.copy(alpha = 0.68f),
     inkTertiary = InkLight.copy(alpha = 0.38f),
     hairline = InkLight.copy(alpha = 0.08f),
     actionBlue = Color(0xFF004BAE),
@@ -163,8 +194,9 @@ val ClarityLightColors = ClarityColors(
     warnAmber = Color(0xFFF59E0B),
     parchment = Color(0xFFEFEEE2),
     deleteMuted = Color(0xFF724444),
-    cardWashAlpha = 0.06f,
-    cardWashActiveAlpha = 0.13f,
+    cardWashAlpha = 0.05f,
+    cardWashActiveAlpha = 0.09f,
+    cardDeckAlpha = 0.11f,
 )
 
 /**
@@ -217,8 +249,8 @@ val ClarityLightColors = ClarityColors(
 val ClarityDarkColors = ClarityColors(
     isDark = true,
     canvas = Color(0xFF0E0E13),
-    card = Color(0xFF1D1D25),
-    raise = Color(0xFF18181F),
+    card = Color(0xFF262630),
+    raise = Color(0xFF1D1D25),
     inkPrimary = InkDark,
     inkSecondary = InkDark.copy(alpha = 0.62f),
     inkTertiary = InkDark.copy(alpha = 0.38f),
@@ -229,8 +261,9 @@ val ClarityDarkColors = ClarityColors(
     warnAmber = Color(0xFFF59E0B),
     parchment = Color(0xFF211F16),
     deleteMuted = Color(0xFFB98685),
-    cardWashAlpha = 0.08f,
-    cardWashActiveAlpha = 0.16f,
+    cardWashAlpha = 0.10f,
+    cardWashActiveAlpha = 0.17f,
+    cardDeckAlpha = 0.22f,
 )
 
 /**

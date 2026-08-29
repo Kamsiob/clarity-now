@@ -108,7 +108,7 @@ class TrailContrastTest {
     @Test
     fun `the light canvas is the tightest surface, with a margin since phase 3c`() {
         val tightest = ratioOn(ClarityLightColors.inkSecondary, ClarityLightColors.canvas)
-        assertTrue("expected about 4.88 to one, measured $tightest", tightest in 4.82..4.95)
+        assertTrue("expected about 5.19 to one, measured $tightest", tightest in 5.10..5.30)
         val others = listOf(
             ratioOn(ClarityLightColors.inkSecondary, ClarityLightColors.card),
             ratioOn(ClarityDarkColors.inkSecondary, ClarityDarkColors.canvas),
@@ -130,6 +130,9 @@ class TrailContrastTest {
      * measured 4.56 to one and the canvas reading 4.40, so only one of the two shipped a
      * legible timestamp. With `inkSecondary` at 0.64 both clear, 5.14 and 4.77, and the
      * floor no longer chooses.
+     *
+     * The visual refresh moved both grounds again and both still clear: the card
+     * reading is 5.53 and the canvas reading 5.02, on `inkSecondary` at 0.68.
      *
      * That is recorded rather than quietly dropped, because the reading is unchanged and
      * the reasons for it now have to carry it alone: design-v3.md 11 says "card", and the

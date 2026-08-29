@@ -65,9 +65,18 @@ plugins {
 // done with the app, and the finding underneath it is a correction rather than a feature:
 // the corpus parse was running on the main thread while three code comments said it was
 // not.
+// 0.12.0: the visual refresh, plus two acts a person could not perform before. A minor
+// bump rather than a patch on both halves of the same rule. It is not a patch, because
+// the app can now do two new things: promote a queued item to active in one tap from the
+// area sheet, and put a completed item back from the Trail, either into the queue or
+// straight into the active slot. And it is not a major bump, because 1.0 is the release
+// and nothing in the event catalog, the backup format or the engine contract moved: both
+// acts are composed from `ITEM_PROMOTED` and `ITEM_REOPENED`, which have existed since
+// phase 1. The visual work is large but by itself would have been a patch, because it
+// changes what the app looks like and not what it can do.
 val versionMajor = 0
-val versionMinor = 11
-val versionPatch = 1
+val versionMinor = 12
+val versionPatch = 0
 
 // The application id and the one suffix that changes it, written once.
 //

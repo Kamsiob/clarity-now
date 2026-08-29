@@ -201,6 +201,27 @@ class TrailViewModel(
      * and it would leave the person looking at a page of history that is now mostly
      * empty. Reloading also lets the empty page rule below do its work.
      */
+    /**
+     * A completed item can be put back, and the Trail is where a person looks for it.
+     *
+     * The area detail sheet has always been able to reopen a completion, but only for a
+     * completion still listed under the area it belongs to. The Trail is the screen a
+     * person actually goes to when they want to find something they finished, because it
+     * is the one place that holds everything in the order it happened.
+     */
+    fun reopenToQueue(itemId: String) = viewModelScope.launch {
+        repository.reopenItem(itemId)
+        reload()
+    }
+
+    fun reopenAsActive(itemId: String) = viewModelScope.launch {
+        repository.reopenItemAsActive(itemId)
+        reload()
+    }
+
+    /** False once a row's completion has already been undone, here or anywhere else. */
+    fun canReopen(itemId: String): Boolean = repository.isCompleted(itemId)
+
     fun selectArea(areaId: String?) {
         if (selected.value == areaId) return
         selected.value = areaId

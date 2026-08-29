@@ -42,6 +42,13 @@ interface ClarityMotion {
     /** Swatches, chips, small immediate feedback. design-v3.md springSnappy. */
     fun <T> springSnappy(): FiniteAnimationSpec<T>
 
+    /**
+     * Material 3 Expressive's slow spatial spring, damping 0.8 stiffness 200. For a
+     * transform a person is meant to watch rather than to be told about: a sheet
+     * settling, a ring closing, a card taking a new place in a list.
+     */
+    fun <T> springSlowSpatial(): FiniteAnimationSpec<T>
+
     /** Entrances and fades. One of the two places the design names a duration. */
     fun <T> easeOut(): FiniteAnimationSpec<T>
 
@@ -68,6 +75,31 @@ interface ClarityMotion {
 }
 
 /** design-v3.md 8.1. The named curves, used whenever motion is not reduced. */
+/**
+ * **The spring set is Material 3 Expressive's, read off the tokens rather than tuned.**
+ *
+ * Expressive ships two spring families and the distinction is the whole system: a
+ * **spatial** spring is underdamped and overshoots, and is what anything that moves or
+ * changes size uses; an **effects** spring is critically damped at 1.0 and never
+ * overshoots, and is what color, opacity and elevation use, because an overshoot in
+ * opacity is a flicker and an overshoot in color is a wrong color.
+ *
+ * | token | damping | stiffness | this app's name |
+ * |---|---|---|---|
+ * | spatial default | 0.8 | 380 | [springStandard] |
+ * | spatial fast | 0.6 | 800 | [springSnappy] |
+ * | spatial slow | 0.8 | 200 | [springSlowSpatial] |
+ * | effects fast | 1.0 | 3800 | [effectsFast] |
+ * | effects default | 1.0 | 1600 | [effects] |
+ *
+ * [springGentle] at 0.9 / 200 is the one value not from the token set and it is kept: it
+ * is the near critically damped spatial spring the focus ring and the report reveal use,
+ * where an overshoot would read as the number being wrong.
+ *
+ * `springSnappy` moved from 0.75 / 600 to the token's 0.6 / 800 in the visual refresh.
+ * It is faster and it overshoots more, which is what "fast" means in this system; the
+ * old value was a slightly quicker default rather than a different character.
+ */
 object FullMotion : ClarityMotion {
     override fun <T> springStandard(): FiniteAnimationSpec<T> =
         spring(dampingRatio = 0.8f, stiffness = 380f)
@@ -76,7 +108,10 @@ object FullMotion : ClarityMotion {
         spring(dampingRatio = 0.9f, stiffness = 200f)
 
     override fun <T> springSnappy(): FiniteAnimationSpec<T> =
-        spring(dampingRatio = 0.75f, stiffness = 600f)
+        spring(dampingRatio = 0.6f, stiffness = 800f)
+
+    override fun <T> springSlowSpatial(): FiniteAnimationSpec<T> =
+        spring(dampingRatio = 0.8f, stiffness = 200f)
 
     override fun <T> easeOut(): FiniteAnimationSpec<T> = tween(350, easing = EaseOutCubic)
 
@@ -89,7 +124,7 @@ object FullMotion : ClarityMotion {
         spring(dampingRatio = 1f, stiffness = 3800f)
 
     override val reduced = false
-    override val staggerMillis = 50
+    override val staggerMillis = 46
     override val promotionMillis = 250
 }
 
@@ -104,6 +139,8 @@ object ReducedMotion : ClarityMotion {
     override fun <T> springStandard(): FiniteAnimationSpec<T> = crossfade()
     override fun <T> springGentle(): FiniteAnimationSpec<T> = crossfade()
     override fun <T> springSnappy(): FiniteAnimationSpec<T> = crossfade()
+
+    override fun <T> springSlowSpatial(): FiniteAnimationSpec<T> = crossfade()
     override fun <T> easeOut(): FiniteAnimationSpec<T> = crossfade()
     override fun <T> easeSlow(): FiniteAnimationSpec<T> = crossfade()
     override fun <T> effects(): FiniteAnimationSpec<T> = crossfade()

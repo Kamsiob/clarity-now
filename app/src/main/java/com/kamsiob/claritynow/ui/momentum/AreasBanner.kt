@@ -2,19 +2,16 @@ package com.kamsiob.claritynow.ui.momentum
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -61,6 +58,29 @@ import com.kamsiob.claritynow.ui.theme.clarityMotion
  * of design-v3.md 6.1, so there is no border and no shadow. 10.2 says no border in as many
  * words, and 6.1 forbids pairing either of the others with it.
  */
+/**
+ * **The Areas sentence is the screen's dominant, and it stopped being a banner to
+ * become one.**
+ *
+ * It shipped as `bodyStrong` 17 inside a 14dp parchment box with 16dp of padding, which
+ * is the one string on the screen that was *written* rather than labeled, dressed as
+ * chrome. Measured against A.3's dominance budget the Areas screen had no dominant at
+ * all: its loudest content was the 21sp item title at 1.40x the modal, against the 1.73x
+ * the budget requires, and the sentence sat two steps under that.
+ *
+ * Three things change and they are one change. It takes the **reading voice**, because
+ * 5.1 gives the serif to the app speaking and the sans to a person's own things, and
+ * this is the app speaking. It takes **`displayTitle` 31**, which is 2.48x the screen's
+ * 12.5 modal and satisfies clause 2. And it **loses its container entirely**, because a
+ * box was the thing making it read as a notification: on the canvas at 31sp with the
+ * full measure it is the page's opening line, which is what it is.
+ *
+ * design-v3.md 10.3 calls the active item title "the most important string on the
+ * screen" and says it never shrinks, and it does not: it holds `lead` 21.5 in all four
+ * places a person meets it. What changed is that the app's own observation is now
+ * allowed to be larger than any single card, which is the difference between a screen
+ * that opens with a statement and a screen that opens with a list.
+ */
 @Composable
 fun AreasBanner(
     modifier: Modifier = Modifier,
@@ -80,16 +100,14 @@ fun AreasBanner(
     // one sentence with another.
     AnimatedVisibility(visible = banner != null, enter = fadeIn(motion.easeOut())) {
         banner?.let { current ->
-            Column(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(BANNER_RADIUS))
-                    .background(colors.parchment)
-                    .padding(horizontal = 16.dp, vertical = ClaritySpacing.scaled(14.dp)),
-            ) {
-                Text(text = current.sentence, style = type.bodyStrong, color = colors.inkPrimary)
+            Column(modifier = modifier.fillMaxWidth()) {
+                Text(
+                    text = current.sentence,
+                    style = type.displayTitle,
+                    color = colors.inkPrimary,
+                )
                 current.caption?.let { caption ->
-                    Spacer(Modifier.height(ClaritySpacing.scaled(4.dp)))
+                    Spacer(Modifier.height(ClaritySpacing.tight))
                     Text(text = caption, style = type.caption, color = colors.inkSecondary)
                 }
             }
@@ -98,4 +116,3 @@ fun AreasBanner(
 }
 
 /** design-v3.md 10.2. Not the card's 18dp and not a row's 12dp; the banner has its own. */
-private val BANNER_RADIUS = 14.dp

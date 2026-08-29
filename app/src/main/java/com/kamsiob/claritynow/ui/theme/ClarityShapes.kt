@@ -16,13 +16,19 @@ data class ClarityShapes(
     val button: RoundedCornerShape = RoundedCornerShape(12.dp),
     val pill: RoundedCornerShape = RoundedCornerShape(percent = 50),
     val widgetInner: RoundedCornerShape = RoundedCornerShape(8.dp),
-    val momentumTile: RoundedCornerShape = RoundedCornerShape(11.dp),
-    val settingsBadge: RoundedCornerShape = RoundedCornerShape(8.dp),
-    val swatch: RoundedCornerShape = RoundedCornerShape(16.dp),
+    val momentumTile: RoundedCornerShape = RoundedCornerShape(12.dp),
+    /**
+     * 8dp, and it is the only thing left at this rung. It was named `settingsBadge`
+     * for a badge that the refresh deletes; the segmented control's own corner is
+     * the same 8dp, sitting concentrically inside its 12dp track with 4dp of track
+     * padding, so the value survives under the name of its one remaining caller.
+     */
+    val segment: RoundedCornerShape = RoundedCornerShape(8.dp),
+    val swatch: RoundedCornerShape = RoundedCornerShape(18.dp),
     val moodPill: RoundedCornerShape = RoundedCornerShape(8.dp),
     val appearanceTile: RoundedCornerShape = RoundedCornerShape(12.dp),
-    val weeklyBanner: RoundedCornerShape = RoundedCornerShape(14.dp),
-    val markBadge: RoundedCornerShape = RoundedCornerShape(16.dp),
+    val weeklyBanner: RoundedCornerShape = RoundedCornerShape(18.dp),
+    val markBadge: RoundedCornerShape = RoundedCornerShape(18.dp),
     val snackbar: RoundedCornerShape = RoundedCornerShape(12.dp),
 )
 
@@ -51,6 +57,45 @@ val ClarityShapeScale = ClarityShapes()
  * is invisible on a phone at its default setting.
  */
 object ClaritySpacing {
+    /**
+     * **The spacing ladder. Six values, a Fibonacci sequence snapped to the 4dp unit.**
+     *
+     * `ui/` carried 27 distinct spacing values before the refresh, 19 of them off the
+     * 4dp grid section 6 claims: 10, 14, 6, 18, 26, 22, 7, 5, 9, 13, 17, 11, 15, 30, 34.
+     * That is not a grid with exceptions, it is a habit of picking a number, and it is
+     * most of why the app read as assembled rather than made.
+     *
+     * | token | dp | units | ratio | job |
+     * |---|---|---|---|---|
+     * | [hair] | 4 | 1 | | inside one unit: a glyph to its label, a dot to its name |
+     * | [tight] | 8 | 2 | 2.00 | lines of a single thought: a title to its caption |
+     * | [snug] | 12 | 3 | 1.50 | peers in a group: card to card, row to row |
+     * | [step] | 20 | 5 | 1.67 | the screen inset, and a block to a sibling block |
+     * | [rest] | 32 | 8 | 1.60 | section to section |
+     * | [movement] | 52 | 13 | 1.63 | movement to movement, and the bottom reservation |
+     *
+     * Three properties an 8pt ladder does not have, which is why it is refused.
+     *
+     * 1. **It is additive.** `snug + step = rest` and `step + rest = movement`, so a
+     *    nested layout can never drift off the ladder.
+     * 2. **The ratio holds** at 1.50 to 1.67, converging on phi. An 8pt ladder is
+     *    arithmetic above its first step and its ratio collapses to 1.25 as it climbs,
+     *    so its top steps stop being distinguishable, which is exactly why a team
+     *    reaches for a number between two of them.
+     * 3. **It is closed under the 200 percent text multiply**: 8, 16, 24, 40, 64, 104.
+     *
+     * Vertical rhythm is then a function of the type above it, so nobody picks a number:
+     * line to line inside one thought is [tight]; block to sibling block is one line slot
+     * of the block's own role snapped down; block to a new section is two slots of the
+     * largest role above it; a sidehead to its content is [snug], fixed.
+     */
+    val hair: Dp = 4.dp
+    val tight: Dp = 8.dp
+    val snug: Dp = 12.dp
+    val step: Dp = 20.dp
+    val rest: Dp = 32.dp
+    val movement: Dp = 52.dp
+
 
     /** Fixed. Width is the scarce axis and a growing margin shortens the measure. */
     val screenPadding: Dp = 20.dp
@@ -59,7 +104,14 @@ object ClaritySpacing {
     val cardPaddingHorizontal: Dp = 18.dp
 
     /** Fixed. design-v3.md 3.4 gives the dot one size and it is identity, not rhythm. */
-    val areaDot: Dp = 7.dp
+    /**
+     * 9dp, up from 7. The dot is the app's identity device under 3.4 and it was the
+     * smallest thing on a card carrying the most meaning; at 7dp against a 21.5sp title
+     * it read as a bullet rather than as the area. It is still well under 16.7's floor
+     * for a device that has to be seen, which is why it is paired with the name and
+     * never asked to carry the area alone.
+     */
+    val areaDot: Dp = 9.dp
 
     /** Fixed. A grip, sized for a thumb rather than for a line of text. */
     val sheetHandleWidth: Dp = 34.dp
@@ -91,18 +143,18 @@ object ClaritySpacing {
     val minTouchTarget: Dp = 48.dp
 
     /** Scales. The air above and below a line inside a card. */
-    val cardPaddingVertical: Dp @Composable get() = scaled(17.dp)
+    val cardPaddingVertical: Dp @Composable get() = scaled(12.dp)
 
     /** Scales. design-v3.md 6's card rhythm. */
-    val cardGap: Dp @Composable get() = scaled(11.dp)
+    val cardGap: Dp @Composable get() = scaled(snug)
 
     /** Scales. design-v3.md 6's 28dp between sections. */
-    val sectionGap: Dp @Composable get() = scaled(28.dp)
+    val sectionGap: Dp @Composable get() = scaled(rest)
 
     /** Scales. The drop from a sheet's handle to its first line. */
-    val sheetContentTop: Dp @Composable get() = scaled(18.dp)
+    val sheetContentTop: Dp @Composable get() = scaled(step)
 
-    /** Scales, because it is a box drawn to hold `swipeLabel`. design-v3.md 10.3.1. */
+    /** Scales, because it is a box drawn to hold a `sidehead` label. design-v3.md 10.3.1. */
     val swipeActionWidth: Dp @Composable get() = scaled(66.dp)
 
     /**

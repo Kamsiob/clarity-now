@@ -17,7 +17,8 @@
     <string name="tab_trail">Trail</string>
 
     <!-- Areas -->
-    <string name="areas_title">Areas</string>
+    <!-- The wordmark, not a screen title. The tab bar already names this place. -->
+    <string name="areas_title">Clarity Now</string>
     <string name="areas_chip_focus">Focus</string>
     <string name="areas_chip_pulse">Pulse</string>
     <!--
@@ -29,6 +30,8 @@
         question is never chased, counted or mentioned. See PulseChip.kt.
     -->
     <string name="areas_chip_pulse_ready">Today\'s Pulse</string>
+    <!-- A direct readout of a queried state, not an observation. 10.12. -->
+    <string name="areas_pulse_ready_now">ready now</string>
     <!--
         The unfiled inbox chip, design-v3.md 10.1 and 10.16. The count is the label
         and the label is plain text: never a badge, never a dot, never a color that
@@ -296,6 +299,14 @@
         <item quantity="one">%d entry</item>
         <item quantity="other">%d entries</item>
     </plurals>
+    <!-- Putting a completed item back. Fixed labels and a direct statement of what
+         each choice does, never an observation. -->
+    <string name="action_make_active">Make active</string>
+    <string name="reopen_to_queue">Put it back in the queue</string>
+    <string name="reopen_to_queue_detail">It waits at the front of the queue</string>
+    <string name="reopen_as_active">Make it the active one</string>
+    <string name="reopen_as_active_detail">What is active now moves to the queue</string>
+    <string name="cd_trail_reopen">Put this back</string>
     <string name="trail_end_of_history">That is everything.</string>
     <string name="trail_empty_title">Nothing here yet</string>
     <string name="trail_empty_body">Everything you do in your areas is recorded here, back to the day you installed this app.</string>

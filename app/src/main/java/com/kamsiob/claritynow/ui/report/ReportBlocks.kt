@@ -192,7 +192,7 @@ internal fun ReportSidehead(text: String, modifier: Modifier = Modifier) {
 /**
  * The closing line, and the two answers to it. `design-v3.md` 11.1 item 8.
  *
- * A caption eyebrow reading `One thing`, then the line in `closingLine` at `textBright`,
+ * A caption eyebrow reading `One thing`, then the line in `readSerif` at `textBright`,
  * **roman, never italic**, then an accept pill in gold at 14 percent reading `I'll do that`
  * and a decline in text only at `textDim` reading `Not this week`.
  *
@@ -306,7 +306,7 @@ internal fun ClosingLine(
         Spacer(Modifier.height(ClaritySpacing.scaled(EYEBROW_GAP)))
         Text(
             text = closing.line,
-            style = type.closingLine,
+            style = type.readSerif,
             color = contemplative.textBright,
             textAlign = TextAlign.Center,
         )

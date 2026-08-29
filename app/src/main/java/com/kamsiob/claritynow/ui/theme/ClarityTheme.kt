@@ -74,8 +74,20 @@ object ClarityElevation {
         ShadowLayer((-8).dp, 40.dp, Color.Black.copy(alpha = 0.28f)),
     )
 
+    /**
+     * **Two layers of the action color, not one halo of it.**
+     *
+     * A single 16dp blur at 40 percent of a saturated blue is a glow, and a glow around
+     * a button is the most legible generated-interface tell on a screen that otherwise
+     * has none. Measured on a device capture it put a visible blue field 16dp out from
+     * every edge of the control. The replacement is the card's own two layer shadow
+     * shape, tinted: a tight contact layer that seats the control on the page, and a
+     * wider ambient layer at a third of the old opacity that gives it height without
+     * lighting the canvas.
+     */
     fun fab(actionBlue: Color) = listOf(
-        ShadowLayer(5.dp, 16.dp, actionBlue.copy(alpha = 0.40f)),
+        ShadowLayer(2.dp, 4.dp, actionBlue.copy(alpha = 0.22f)),
+        ShadowLayer(8.dp, 18.dp, actionBlue.copy(alpha = 0.14f)),
     )
 }
 
@@ -225,7 +237,7 @@ private fun materialSchemeFor(colors: ClarityColors, dark: Boolean) = if (dark) 
  * component that reaches for a corner size lands on one this design already uses.
  */
 private fun materialShapesFor(shapes: ClarityShapes) = androidx.compose.material3.Shapes(
-    extraSmall = shapes.settingsBadge,
+    extraSmall = shapes.segment,
     small = shapes.widgetInner,
     medium = shapes.momentumTile,
     large = shapes.card,
@@ -242,7 +254,7 @@ private fun materialTypographyFor(type: ClarityTypography) = Typography(
     displaySmall = type.displayTitle,
     headlineLarge = type.readSerif,
     headlineMedium = type.readSerif,
-    headlineSmall = type.closingLine,
+    headlineSmall = type.readSerif,
     titleLarge = type.title,
     titleMedium = type.title,
     titleSmall = type.bodyStrong,

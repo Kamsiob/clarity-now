@@ -63,7 +63,6 @@ import com.kamsiob.claritynow.ui.theme.opticallyCentered
  */
 private val ROW_MIN_HEIGHT = 56.dp
 private val ROW_PADDING_VERTICAL = 10.dp
-private val TITLE_CAPTION_GAP = 2.dp
 
 /**
  * The badge, its glyph and the gap before the title, all fixed at every text size.
@@ -73,16 +72,12 @@ private val TITLE_CAPTION_GAP = 2.dp
  * that grew with the type would take the room a settings title needs at exactly the size
  * it needs it most. design-v3.md 10.11 and 13.
  */
-private val BADGE_SIZE = 26.dp
-private val BADGE_ICON_SIZE = 15.dp
-private val BADGE_GAP = 14.dp
 
 /**
  * The badge tint, design-v3.md 10.11's "11 to 14 percent of a per group color".
  *
  * The midpoint of the range, so neither end of it is a rounding accident.
  */
-private const val BADGE_TINT_ALPHA = 0.125f
 
 /**
  * The per group colors, chosen here because 10.11 requires one per group and names
@@ -124,11 +119,31 @@ internal fun SettingsGroup(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        Sidehead(
-            text = title,
-            modifier = Modifier.fillMaxWidth().padding(bottom = ClaritySpacing.scaled(6.dp)),
-        )
+    val colors = LocalClarityColors.current
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(ClaritySpacing.snug),
+    ) {
+        // **The sidehead's rule is the group's one separation device, and the rows
+        // beneath it are separated by air.**
+        //
+        // The screen drew sixteen hairlines: one under every row. A hairline between two
+        // rows says the rows are a table; air says they are a list of settings, which is
+        // what they are. 6.1 ranks whitespace first and the rules exist only where a
+        // group starts, where something genuinely divides.
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = ClaritySpacing.hair),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Sidehead(text = title)
+            Box(
+                modifier = Modifier
+                    .padding(start = ClaritySpacing.tight)
+                    .weight(1f)
+                    .height(1.dp)
+                    .background(colors.hairline),
+            )
+        }
         content()
     }
 }
@@ -143,22 +158,16 @@ internal fun SettingsGroup(
  */
 @Composable
 internal fun SettingsRow(
-    @DrawableRes icon: Int,
-    groupColor: Color,
     title: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     caption: String? = null,
     value: String? = null,
     chevron: Boolean = true,
-    divider: Boolean = true,
 ) {
     SettingsRowFrame(
-        icon = icon,
-        groupColor = groupColor,
         title = title,
         caption = caption,
-        divider = divider,
         modifier = modifier.clarityClickable(
             haptic = ClarityHapticEvent.TAP,
             role = Role.Button,
@@ -202,24 +211,18 @@ internal fun SettingsRow(
  */
 @Composable
 internal fun SettingsToggleRow(
-    @DrawableRes icon: Int,
-    groupColor: Color,
     title: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     caption: String? = null,
-    divider: Boolean = true,
 ) {
     val colors = LocalClarityColors.current
     val haptics = LocalClarityHaptics.current
     val interaction = remember { MutableInteractionSource() }
     SettingsRowFrame(
-        icon = icon,
-        groupColor = groupColor,
         title = title,
         caption = caption,
-        divider = divider,
         // `indication = null`, which is what `clarityClickable` passes and therefore
         // what every other tappable thing in this app does. Taking the default here
         // would put a ripple on the toggle rows and none on the rows above and below
@@ -240,9 +243,16 @@ internal fun SettingsToggleRow(
         Switch(
             checked = checked,
             onCheckedChange = null,
+            // **The track is ink, not `actionBlue`.** 3.1 scopes the action color to a
+            // control a person presses, and a switch track is a state readout. Measured
+            // on a device capture, three saturated `#004BAE` blobs were the loudest
+            // objects on a screen whose entire content is words. Ink is quieter and more
+            // emphatic at once: on a page of grey and near white the darkest thing is
+            // where the eye goes, and it does not have to shout to get there. It is also
+            // the same fill the selected segment uses 200dp below.
             colors = SwitchDefaults.colors(
                 checkedThumbColor = colors.card,
-                checkedTrackColor = colors.actionBlue,
+                checkedTrackColor = colors.inkPrimary,
                 uncheckedThumbColor = colors.inkTertiary,
                 uncheckedTrackColor = colors.raise,
                 uncheckedBorderColor = colors.hairline,
@@ -254,70 +264,58 @@ internal fun SettingsToggleRow(
     }
 }
 
-/** The shared anatomy: badge, titles, trailing slot, hairline. */
+/**
+ * **The badge is deleted, and that is the change the whole screen rests on.**
+ *
+ * Every row carried a 26dp rounded square in one of seven hues at 12.5 percent with a
+ * 15dp glyph inside it. Three things were wrong and they compound.
+ *
+ * It **set a second left edge**. The badge sat on the 20dp measure and the title began at
+ * 61dp, so the group sideheads, the screen title and the paragraphs ran on one edge and
+ * every row's text ran on another. That is the misalignment a person sees on this screen
+ * without being able to name it.
+ *
+ * It **spent the app's one color device on nothing**. design-v3.md 3.4 gives area color a
+ * job: it says which part of a person's life something belongs to. A settings group is
+ * not an area, so the seven hues were decoration in the one app whose section 1 says
+ * there is none, and they were the brightest thing on a screen made of words.
+ *
+ * And the glyphs **restated their own labels**. A bell beside `Pulse reminder`, a palette
+ * beside `Appearance`. An icon earns its place by being faster to recognize than the word
+ * or by disambiguating it, and in a single column of full labels it does neither.
+ *
+ * What replaces it is nothing at all. The title moves to the 20dp measure at `readStrong`
+ * 18/600, the same rank as a sheet title, and the row does its job with size, position
+ * and air. The per-row hairline goes with it: sixteen drawn lines said these were rows of
+ * a table, and `snug` 12 of air says they are a list of settings, which is what they are.
+ */
 @Composable
 private fun SettingsRowFrame(
-    @DrawableRes icon: Int,
-    groupColor: Color,
     title: String,
     caption: String?,
-    divider: Boolean,
     modifier: Modifier = Modifier,
     trailing: @Composable () -> Unit,
 ) {
     val colors = LocalClarityColors.current
     val type = LocalClarityTypography.current
-    val shapes = LocalClarityShapes.current
-    Column(modifier = modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = ClaritySpacing.scaled(ROW_MIN_HEIGHT))
-                .padding(vertical = ClaritySpacing.scaled(ROW_PADDING_VERTICAL)),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(BADGE_SIZE)
-                    .clip(shapes.settingsBadge)
-                    // A surface accent, so it takes calm mode's transform like every
-                    // other one. design-v3.md 16.2.
-                    .background(calmAccent(groupColor).copy(alpha = BADGE_TINT_ALPHA)),
-                contentAlignment = Alignment.Center,
-            ) {
-                ClarityIcon(
-                    icon = icon,
-                    contentDescription = null,
-                    tint = colors.inkSecondary,
-                    modifier = Modifier.size(BADGE_ICON_SIZE),
-                )
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = ClaritySpacing.scaled(ROW_MIN_HEIGHT))
+            .padding(vertical = ClaritySpacing.scaled(ROW_PADDING_VERTICAL)),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = type.bodyStrong, color = colors.inkPrimary)
+            if (caption != null) {
+                Spacer(Modifier.height(ClaritySpacing.hair))
+                // The caption explains what the setting does, and 10.11's note naming
+                // `inkTertiary` for it is corrected in that section.
+                Text(text = caption, style = type.caption, color = colors.inkSecondary)
             }
-            Spacer(Modifier.width(BADGE_GAP))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = type.body.copy(fontWeight = FontWeight(600)),
-                    color = colors.inkPrimary,
-                )
-                if (caption != null) {
-                    Spacer(Modifier.height(ClaritySpacing.scaled(TITLE_CAPTION_GAP)))
-                    // The caption explains what the setting does, and 10.11's note
-                    // naming `inkTertiary` for it is corrected in that section. The
-                    // rank is the `caption` role under a 15sp semibold title.
-                    Text(text = caption, style = type.caption, color = colors.inkSecondary)
-                }
-            }
-            Spacer(Modifier.width(12.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) { trailing() }
         }
-        if (divider) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(colors.hairline),
-            )
-        }
+        Spacer(Modifier.width(ClaritySpacing.snug))
+        Row(verticalAlignment = Alignment.CenterVertically) { trailing() }
     }
 }
 
@@ -456,7 +454,7 @@ private fun SettingsSegment(
     Box(
         modifier = modifier
             .defaultMinSize(minHeight = ClaritySpacing.scaled(SEGMENT_MIN_HEIGHT))
-            .clip(shapes.settingsBadge)
+            .clip(shapes.segment)
             .background(background)
             .clarityClickable(
                 haptic = ClarityHapticEvent.SELECT,

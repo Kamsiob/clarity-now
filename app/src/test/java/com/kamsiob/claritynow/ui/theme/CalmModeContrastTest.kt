@@ -235,7 +235,7 @@ class CalmModeContrastTest {
         assertTrue(
             "the in session card is supposed to stay the tightest of the grounds and " +
                 "measured $inSession to one",
-            inSession in 4.65..4.90,
+            inSession in 5.45..5.75,
         )
     }
 

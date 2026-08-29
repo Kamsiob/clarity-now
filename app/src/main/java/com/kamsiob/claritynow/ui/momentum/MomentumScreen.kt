@@ -37,7 +37,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kamsiob.claritynow.R
 import com.kamsiob.claritynow.domain.momentum.ActivityWindow
-import com.kamsiob.claritynow.domain.momentum.AreaTile
 import com.kamsiob.claritynow.domain.momentum.MomentumView
 import com.kamsiob.claritynow.domain.momentum.WeekStat
 import com.kamsiob.claritynow.domain.momentum.WeekStatKind
@@ -50,14 +49,12 @@ import com.kamsiob.claritynow.ui.components.scrollEdgeFade
 import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
-import com.kamsiob.claritynow.ui.theme.calmAccent
 import com.kamsiob.claritynow.ui.theme.parseAreaColor
 
 /** design-v3.md section 6. Section spacing on the Daylight world's calmest screen. */
 private val SECTION_SPACING = 28.dp
 
 /** design-v3.md section 6. Momentum tiles are 11dp, and this is the only place they exist. */
-private val TILE_RADIUS = 11.dp
 
 /**
  * Three columns of tiles, not four and not a scrolling row.
@@ -72,9 +69,7 @@ private val TILE_RADIUS = 11.dp
  * two rows with the second one short, which is what a mosaic looks like rather than what a
  * table looks like.
  */
-private const val TILE_COLUMNS = 3
 
-private val TILE_HEIGHT = 52.dp
 
 /**
  * Momentum. design-v3.md section 11: "Daylight, the calmest screen in that world. Headline
@@ -143,11 +138,6 @@ fun MomentumScreen(view: MomentumView, modifier: Modifier = Modifier) {
         }
 
         ActivityRow(view.activity)
-
-        if (view.tiles.isNotEmpty()) {
-            Spacer(Modifier.height(ClaritySpacing.scaled(SECTION_SPACING)))
-            AreaTiles(view.tiles)
-        }
 
         Spacer(Modifier.height(ClaritySpacing.scaled(SECTION_SPACING)))
         ThisWeek(view, dimmed = view.isEmpty)
@@ -234,93 +224,28 @@ private val ACTIVE_DOT = 9.dp
 
 private val IDLE_DOT = 5.dp
 
-// -------------------------------------------------------------------- the tiles
-
 /**
- * One tile per non archived area. design-v3.md section 11 and 3.4.
+ * **The 60 percent tiles are deleted, and this is where the reasoning is kept.**
  *
- * **The active tile is the area color at 60 percent and carries no border. The idle tile
- * is not colored at all and carries a neutral hairline.** 3.4 permits the accent in four
- * forms and one of them is "a 60 percent tile in Momentum"; the same sentence ends "never
- * as a stripe, bar, edge, border or filled block", so the faint outline section 11 asks
- * for on an idle tile cannot be drawn in the area's own color. It is the `hairline` token,
- * which is what that token is for, and it means the two states differ in fill, in edge and
- * in nothing else. One separation device each, per 6.1.
+ * design-v3.md 3.4 names "a 60 percent tile in Momentum" as one of four permitted uses of
+ * an area's color, and section 11 gave it a three column grid of 52dp blocks. On a device
+ * capture those blocks were **the two loudest objects in the entire app**, and each one
+ * said exactly one bit: this area has an active item, or it does not. Directly beneath
+ * them the Area balance module listed the same areas again, by name, with a figure
+ * against each. The screen carried two lists of the same thing, and the one that said
+ * nothing was fifteen times the size of the one that said something.
  *
- * **The name sits under the tile rather than inside it.** 3.4 requires an area label to be
- * verified at 4.5:1 against the surface it is drawn on, and it names the two surfaces that
- * were measured: the card carrying that area's wash, in both worlds. A label on a 60
- * percent tile is a third surface, one per area color per theme, and none of them has been
- * measured. Under the tile the name is ordinary caption ink on the canvas, which has been.
+ * **Presence was being measured in area when it should have been measured in meaning.**
+ * 3.4 states the tile without stating its size, and design-v3.md 15 requires the
+ * non-obvious answer where a choice is open, so the size is open and the obvious answer,
+ * taken in phase 7, was "as large as three columns allow". The dot beside a name that
+ * carries a real figure has more presence than a 115dp block that carries one bit,
+ * because presence is what an element means and not how much of the screen it covers.
  *
- * **Calm mode desaturates the tile and nothing else here.** 3.4: the 7dp dot and the area
- * label text keep their accent at full strength because they are how an area is
- * recognized and they are the two places contrast was verified; washes, tiles and every
- * atmospheric use desaturate. The tile is named in that sentence, so it goes through
- * `calmAccent`, and the name beneath is ordinary ink and never took an accent at all.
+ * What is left is the Area balance rows, which is the same information at a tenth of the
+ * ink, on the same left edge as every sidehead on the page. `AreaTile` stays in the view
+ * model: `MomentumView.tiles` is what tells the Areas banner which areas exist.
  */
-@Composable
-private fun AreaTiles(tiles: List<AreaTile>) {
-    Column(verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(12.dp))) {
-        tiles.chunked(TILE_COLUMNS).forEach { row ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                row.forEach { tile ->
-                    AreaTileCell(tile = tile, modifier = Modifier.weight(1f))
-                }
-                // Keeps a short final row aligned with the one above it rather than
-                // stretching two tiles across the whole width.
-                repeat(TILE_COLUMNS - row.size) {
-                    Spacer(Modifier.weight(1f))
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AreaTileCell(tile: AreaTile, modifier: Modifier = Modifier) {
-    val colors = LocalClarityColors.current
-    val type = LocalClarityTypography.current
-    val accent = calmAccent(parseAreaColor(tile.colorHex))
-    val description = stringResource(
-        if (tile.hasActiveItem) R.string.cd_momentum_tile_active else R.string.cd_momentum_tile_idle,
-        tile.name,
-    )
-
-    Column(
-        modifier = modifier.semantics(mergeDescendants = true) { contentDescription = description },
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        val shape = RoundedCornerShape(TILE_RADIUS)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(TILE_HEIGHT)
-                .clip(shape)
-                .then(
-                    if (tile.hasActiveItem) {
-                        Modifier.background(accent.copy(alpha = ACTIVE_TILE_ALPHA))
-                    } else {
-                        Modifier.border(1.dp, colors.hairline, shape)
-                    },
-                ),
-        )
-        Spacer(Modifier.height(ClaritySpacing.scaled(7.dp)))
-        Text(
-            text = tile.name,
-            style = type.caption,
-            color = colors.inkSecondary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
-
-/** design-v3.md 3.4, the third of the four permitted uses of an area color. */
-private const val ACTIVE_TILE_ALPHA = 0.6f
 
 // ----------------------------------------------------------------- This Week
 
@@ -448,12 +373,16 @@ internal const val MARK_FLOOR_ALPHA = 0.10f
 
 internal const val MARK_CEILING_ALPHA = 0.70f
 
-/** One 7dp identity dot, the first of design-v3.md 3.4's four permitted uses. */
+/**
+ * One identity dot, the first of design-v3.md 3.4's four permitted uses, and now the only
+ * one on this screen. It takes `ClaritySpacing.areaDot`, so the mark that says which area
+ * something belongs to is one size everywhere in the app.
+ */
 @Composable
 internal fun AreaDot(colorHex: String) {
     Box(
         modifier = Modifier
-            .size(7.dp)
+            .size(ClaritySpacing.areaDot)
             .clip(CircleShape)
             // 3.4: the dot keeps its accent at full strength in calm mode, because it is
             // how an area is recognized. It never goes through `calmAccent`.

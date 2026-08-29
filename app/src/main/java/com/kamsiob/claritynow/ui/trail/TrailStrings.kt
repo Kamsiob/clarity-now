@@ -139,3 +139,66 @@ private fun weekOf(weekStartKey: String?): String {
     return runCatching { WEEK_START_FORMAT.format(parseDateKey(weekStartKey)) }
         .getOrDefault(weekStartKey)
 }
+
+/**
+ * A Trail row split into what happened and what it happened to.
+ *
+ * [subject] is null when the row names nothing of the person's own, which is true of
+ * the five rows that record something the app did.
+ */
+data class TrailRowText(val action: String, val subject: String?)
+
+/**
+ * Trailing function words. After the snapshot is lifted out of a template, whatever
+ * preposition introduced it is left dangling on the end of the action.
+ */
+private val DANGLING = listOf(" on", " in", " to", " of", " with", " at", " for")
+
+/**
+ * **The row is one sentence and it is set as two, and that is the whole fix for the
+ * Trail.**
+ *
+ * Every row shipped as a single string at `body` 15/400. Nine of them on a screen is
+ * nine lines of identical type, and A.3 measured the screen's dominance ratio at
+ * **1.13 to 1**, the worst in the app: the day header was 17sp against a 15sp body, so
+ * there was almost literally nothing to catch the eye. The owner's word for it was that
+ * the page is hard to tell apart, which is the same measurement from the other side.
+ *
+ * Nothing about the data changes. `TrailRow` has carried `subject` in its own field
+ * since phase 1, separate from the sentence key, precisely because the snapshot is not
+ * part of the template; this only stops throwing that structure away at the last step.
+ * The split is mechanical and has no table of special cases:
+ *
+ * > **Cut the rendered sentence at the first occurrence of the snapshot. What is before
+ * > it, plus what is after it, is the action. The snapshot is the subject.**
+ *
+ * `Made X active` becomes `Made active` over `X`. `Started a focus session on X` becomes
+ * `Started a focus session` over `X`, once the dangling preposition is trimmed. A row
+ * that names two things keeps them together, because `Renamed` over `Studio to Work` is
+ * the sentence and `Renamed to Work` over `Studio` is not.
+ *
+ * A row whose snapshot could not be resolved, or whose template names nothing, falls
+ * back to one line. It never guesses, which is the same refusal [trailSentence]
+ * documents one function up.
+ */
+@Composable
+fun trailRowText(row: TrailRow): TrailRowText {
+    val sentence = trailSentence(row)
+    val subject = row.subject?.takeIf { it.isNotBlank() } ?: return TrailRowText(sentence, null)
+    // The Report row renders its snapshot as a date, so the raw key is not in the string.
+    val at = sentence.indexOf(subject).takeIf { it > 0 } ?: return TrailRowText(sentence, null)
+
+    val before = sentence.take(at).trim()
+    return if (row.secondary.isNullOrBlank()) {
+        val after = sentence.substring(at + subject.length).trim()
+        val action = listOf(before, after).filter { it.isNotEmpty() }.joinToString(" ")
+        TrailRowText(action.trimDangling(), subject)
+    } else {
+        TrailRowText(before.trimDangling(), sentence.substring(at).trim())
+    }
+}
+
+private fun String.trimDangling(): String {
+    val trimmed = DANGLING.firstOrNull { endsWith(it) }?.let { dropLast(it.length) } ?: this
+    return trimmed.trim()
+}

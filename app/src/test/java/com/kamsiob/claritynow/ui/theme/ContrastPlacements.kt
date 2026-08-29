@@ -35,11 +35,17 @@ internal fun daylightPlacements(name: String, c: ClarityColors): List<Measured> 
     val graphic = ContrastAudit.GRAPHIC_FLOOR
     // design-v3.md 10.3.1. Each face is its own action's token at its base alpha,
     // deepened by 40 percent past the commit threshold, which is the deepest the ground
-    // under its 22dp glyph and its 10.5sp label ever gets. A swipe face is therefore the
-    // one ground in the app where a token has to be legible on its own tint.
-    val swapFace = Swatch("$name Swap face", ContrastAudit.over(c.actionBlue, 0.12f * SWIPE_DEEPEN, page.color))
-    val completeFace = Swatch("$name Complete face", ContrastAudit.over(c.positiveGreen, 0.18f * SWIPE_DEEPEN, page.color))
-    val deleteFace = Swatch("$name Delete face", ContrastAudit.over(c.deleteMuted, 0.13f * SWIPE_DEEPEN, page.color))
+    // under its 22dp glyph and its label ever gets. A swipe face is therefore the one
+    // ground in the app where a token has to be legible on its own tint.
+    //
+    // **The ground under the tint is `card`, not `canvas`**, which is what
+    // `SwipeableRow.SwipeActionSlot` paints: the slot is the rectangle the card is
+    // sliding out of, so it is content rank. Over the page all three measured under the
+    // floor on the refreshed ladder.
+    val faceGround = if (c.isDark) page.color else content.color
+    val swapFace = Swatch("$name Swap face", ContrastAudit.over(c.actionBlue, 0.12f * SWIPE_DEEPEN, faceGround))
+    val completeFace = Swatch("$name Complete face", ContrastAudit.over(c.positiveGreen, 0.18f * SWIPE_DEEPEN, faceGround))
+    val deleteFace = Swatch("$name Delete face", ContrastAudit.over(c.deleteMuted, 0.13f * SWIPE_DEEPEN, faceGround))
     val out = mutableListOf<Measured>()
 
     AreaPalette.all.forEach { hex ->

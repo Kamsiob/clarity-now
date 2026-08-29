@@ -38,7 +38,7 @@ import kotlinx.coroutines.launch
 import com.kamsiob.claritynow.R
 import com.kamsiob.claritynow.ui.components.ClarityIcon
 import com.kamsiob.claritynow.ui.components.ClarityIcons
-import com.kamsiob.claritynow.ui.components.areaWash
+import com.kamsiob.claritynow.ui.components.areaTint
 import com.kamsiob.claritynow.ui.components.opticalGlyphNudge
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
@@ -112,15 +112,25 @@ fun AreaCardContent(
         played()
     }
 
-    Column(
-        modifier = modifier
-            .areaWash(accent, wash.value, area.id)
-            .padding(horizontal = 18.dp, vertical = ClaritySpacing.scaled(17.dp)),
-    ) {
+    // **The card is a body and a deck, and the deck is its one separation device.**
+    //
+    // The status line used to be a fourth line of text inside one padded block, so a
+    // card was four things at one rank with nothing to say which was the object and
+    // which was its state. The deck is a tone step of the area's own accent across the
+    // full width, which 6.1 ranks as a legal separator and which 6.1 also means the card
+    // may never grow a hairline to divide itself. It appears only when there is state to
+    // report, so a resting card is one block and a running one is two.
+    Column(modifier = modifier.areaTint(accent, wash.value)) {
+        Column(
+            modifier = Modifier.padding(
+                horizontal = ClaritySpacing.cardPaddingHorizontal,
+                vertical = ClaritySpacing.scaled(16.dp),
+            ),
+        ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
-                    .size(7.dp)
+                    .size(ClaritySpacing.areaDot)
                     .clip(CircleShape)
                     .background(if (area.isIdle) accent.copy(alpha = 0.45f) else accent),
             )
@@ -128,11 +138,11 @@ fun AreaCardContent(
                 text = area.name,
                 style = type.label,
                 color = areaLabelColor(accent, colors),
-                modifier = Modifier.padding(start = 8.dp),
+                modifier = Modifier.padding(start = ClaritySpacing.tight),
             )
         }
 
-        Box(modifier = Modifier.fillMaxWidth().padding(top = ClaritySpacing.scaled(7.dp))) {
+        Box(modifier = Modifier.fillMaxWidth().padding(top = ClaritySpacing.tight)) {
             val cue = playing
             if (cue != null) {
                 Text(
@@ -191,7 +201,9 @@ fun AreaCardContent(
         }
 
         FirstStepLine(area = area)
-        StatusLine(area = area, accent = accent)
+        IdleLine(area = area)
+        }
+        FocusDeck(area = area, accent = accent)
     }
 }
 
@@ -230,89 +242,81 @@ private fun FirstStepLine(area: AreaCardModel) {
         overflow = TextOverflow.Ellipsis,
         // Tighter than the 6dp above the status line, because this line belongs to
         // the title above it and the status line belongs to the card as a whole.
-        modifier = Modifier.padding(top = ClaritySpacing.scaled(5.dp)),
+        modifier = Modifier.padding(top = ClaritySpacing.tight),
     )
 }
 
 /**
- * Row four, shown only when it carries information. design-v3.md 10.3.
+ * **The deck, and the line that is not on it.**
  *
- * It was row three until the first step took that place. Both are single lines and
- * both are conditional, so the card still never exceeds the four lines 10.3 caps it
- * at, and neither one moves the other when it is absent.
+ * design-v3.md 10.3's status row was one composable doing two unrelated jobs: reporting a
+ * running session, and reporting how long an area has been quiet. They are opposites. A
+ * session is state the app is holding right now and it belongs on its own ground, where
+ * it can carry the area's accent at full strength without competing with the title. An
+ * idle line is the absence of state and belongs under the title as one more quiet
+ * caption, because giving absence its own deck would make an untouched area the loudest
+ * card on the screen.
+ *
+ * The weight hack goes with the split. The comment on the old line said weight was "the
+ * only device available to say so", which was true when the line sat inside the same
+ * padded block as everything else. On a deck the device is the ground, so the text can
+ * be `label` and stop shouting in a register it does not have.
  */
 @Composable
-private fun StatusLine(area: AreaCardModel, accent: Color) {
+private fun FocusDeck(area: AreaCardModel, accent: Color) {
     val colors = LocalClarityColors.current
     val type = LocalClarityTypography.current
+    val minutes = area.focusMinutesRemaining ?: return
 
-    val minutes = area.focusMinutesRemaining
-    when {
-        minutes != null -> Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start,
-            modifier = Modifier.padding(top = ClaritySpacing.scaled(6.dp)),
-        ) {
-            ClarityIcon(
-                icon = ClarityIcons.focus,
-                contentDescription = null,
-                tint = accent,
-                // The play triangle carries its mass left of its bounding box, so
-                // centering it by layout leaves it looking off center.
-                modifier = Modifier.size(13.dp).opticalGlyphNudge(13.dp),
-            )
-            Text(
-                text = pluralStringResource(R.plurals.area_in_focus_minutes, minutes, minutes),
-                // Semibold, design-v3.md 10.3. This is the one status line that
-                // reports something happening right now, and weight is the only
-                // device available to say so: the card has no room for a second
-                // size and 3.4 forbids giving it a filled block. Inert until phase
-                // 3c for the same reason as the idle title above.
-                style = type.caption.copy(fontWeight = FontWeight(600)),
-                color = accent,
-                modifier = Modifier.padding(start = 5.dp),
-            )
-        }
-
-        area.isIdle -> Text(
-            text = when {
-                area.daysSinceLastEvent <= 0 -> stringResource(R.string.area_last_active_today)
-                else -> pluralStringResource(
-                    R.plurals.area_last_active_days,
-                    area.daysSinceLastEvent,
-                    area.daysSinceLastEvent,
-                )
-            },
-            style = type.caption,
-            // The same correction as the idle title above, and a worse failure before
-            // it: this line is 12sp rather than 21, and it was the smallest text in
-            // the app sitting at 2.40 to one. design-v3.md 10.3 names no color for
-            // this row, so there was no contradiction to resolve, only section 13 to
-            // obey. It reads quieter than the title anyway, by 9sp of size.
-            color = colors.inkSecondary,
-            modifier = Modifier.padding(top = ClaritySpacing.scaled(6.dp)),
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start,
+        modifier = Modifier
+            .fillMaxWidth()
+            .areaTint(accent, colors.cardDeckAlpha)
+            .padding(
+                horizontal = ClaritySpacing.cardPaddingHorizontal,
+                vertical = ClaritySpacing.scaled(10.dp),
+            ),
+    ) {
+        ClarityIcon(
+            icon = ClarityIcons.focus,
+            contentDescription = null,
+            tint = accent,
+            // The play triangle carries its mass left of its bounding box, so
+            // centering it by layout leaves it looking off center.
+            modifier = Modifier.size(13.dp).opticalGlyphNudge(13.dp),
         )
-
-        // An ordinary active area shows nothing, because there is nothing to add.
-        else -> Unit
+        Text(
+            text = pluralStringResource(R.plurals.area_in_focus_minutes, minutes, minutes),
+            style = type.label,
+            color = accent,
+            modifier = Modifier.padding(start = ClaritySpacing.hair + 1.dp),
+        )
     }
 }
 
-/**
- * Reads the whole card as one thing, in the order a person would say it.
- *
- * **The first step follows the title and never precedes it**, Addendum 01 4b. A
- * screen reader user gets the same hierarchy the sighted card has: the thing itself,
- * then the way in. Reversing them would announce a fragment of a task before naming
- * the task, which is disorienting in exactly the way the card's type scale avoids.
- *
- * **[focusStatus] is the status line and it is read out**, because the in session
- * state is carried visually by an intensified wash and a colored line, design-v3.md
- * 10.3, and section 13 does not let color be the only signal. It is the same sentence
- * the card draws, taken from `strings.xml` by the caller, so there is no second wording
- * of it here to drift or to editorialize: a session is `In focus, 7 minutes left` and
- * nothing about it is ever a judgment.
- */
+@Composable
+private fun IdleLine(area: AreaCardModel) {
+    val colors = LocalClarityColors.current
+    val type = LocalClarityTypography.current
+    if (!area.isIdle) return
+
+    Text(
+        text = when {
+            area.daysSinceLastEvent <= 0 -> stringResource(R.string.area_last_active_today)
+            else -> pluralStringResource(
+                R.plurals.area_last_active_days,
+                area.daysSinceLastEvent,
+                area.daysSinceLastEvent,
+            )
+        },
+        style = type.caption,
+        color = colors.inkSecondary,
+        modifier = Modifier.padding(top = ClaritySpacing.tight),
+    )
+}
+
 fun areaCardDescription(
     area: AreaCardModel,
     idleTitle: String,

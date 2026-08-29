@@ -160,6 +160,21 @@ data class TrailRow(
     /** The area's color hex as of this event, or null when the event has no area. */
     val areaColorHex: String?,
     val isCompletion: Boolean,
+    /**
+     * The item a completion row names, so the screen can offer to undo it.
+     *
+     * **Set only on a completion**, and it is the one live entity reference in a type
+     * whose whole point is that it holds none. The rule it does not break is the one
+     * stated above: nothing here is a *name*, a color or an icon that could be resolved
+     * live and silently rewrite history. An id is an address. A row still renders its
+     * title from the snapshot in its own payload, so a reopened item that is later
+     * renamed keeps saying what it said on the day it was completed, and the id only
+     * decides which item an action would act on.
+     *
+     * It is null on every other row shape, including `ITEM_REOPENED`, because reopening
+     * a reopening is not an act.
+     */
+    val itemId: String?,
     /** False on every row of a cluster after the first. See [trailRows]. */
     val showsTimestamp: Boolean,
 )
@@ -278,6 +293,7 @@ fun trailRowFor(
         areaId = context.areaId,
         areaColorHex = content.areaColorHex ?: context.areaColorHex,
         isCompletion = event.type == ClarityEventType.ITEM_COMPLETED,
+        itemId = (event.payload as? ItemCompleted)?.itemId,
         showsTimestamp = showsTimestamp,
     )
 }

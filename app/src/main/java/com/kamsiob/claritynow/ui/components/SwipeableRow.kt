@@ -334,10 +334,19 @@ private fun SwipeActionSlot(
     // Fades in from nothing as the card moves, then deepens by 40 percent past the
     // commit threshold. Never a full bleed alarm color.
     val alpha = baseAlpha * reveal * (if (deepened) 1.4f else 1f)
+    // **The face is painted on the card plane, not on the page.** The slot occupies the
+    // rectangle the card is sliding out of, so the ground behind a revealed action is
+    // content rank, and a swipe reads as the card lifting off its own surface rather
+    // than as a hole cut through to the canvas. It is also what makes the faces legible:
+    // measured on the refreshed ladder, the three labels read 4.31, 4.36 and 4.30 to one
+    // over `canvas`, all under design-v3.md 13's floor, and 5.84, 5.66 and 5.82 over
+    // `card`.
+    val ground = LocalClarityColors.current.card
     Box(
         modifier = modifier
             .width(ACTION_WIDTH)
             .fillMaxHeight()
+            .background(ground)
             .background(background.copy(alpha = alpha)),
         contentAlignment = Alignment.Center,
     ) { content() }
@@ -366,7 +375,7 @@ private fun SwipeActionFace(
             // Scales from 0.8 across the reveal, so it arrives rather than appears.
             modifier = Modifier.size(22.dp).scale(0.8f + 0.2f * reveal),
         )
-        Text(text = label, style = type.swipeLabel.opticallyCentered(), color = tint)
+        Text(text = label, style = type.sidehead.opticallyCentered(), color = tint)
     }
 }
 

@@ -84,18 +84,19 @@ class SurfaceLadderTest {
             val toContent = abs(lStar(c.card) - lStar(c.raise))
             val whole = abs(lStar(c.card) - lStar(c.canvas))
             assertTrue(
-                "$name: ground to chrome measured $toChrome L*, expected 3.5 to 5.5",
-                toChrome in 3.5..5.5,
+                "$name: ground to chrome measured $toChrome L*, expected 6.0 to 8.0",
+                toChrome in 6.0..8.0,
             )
             assertTrue(
-                "$name: chrome to content measured $toContent L*, expected 2.0 to 3.5",
-                toContent in 2.0..3.5,
+                "$name: chrome to content measured $toContent L*, expected 4.0 to 6.5",
+                toContent in 4.0..6.5,
             )
             assertTrue(
-                "$name: ground to content measured $whole L*, expected 6.0 to 8.0. It " +
-                    "was 4.73 in light and 4.98 in dark before phase 3c, and the app " +
-                    "read as two colors.",
-                whole in 6.0..8.0,
+                "$name: ground to content measured $whole L*, expected 10.5 to 13.5. It " +
+                    "was 4.73 in light and 4.98 in dark before phase 3c, 7.19 and 6.98 " +
+                    "after it, and the app still read as one field of grey. A card is " +
+                    "seen rather than inferred at 1.3:1; the ladder now runs 1.400:1.",
+                whole in 10.5..13.5,
             )
         }
     }

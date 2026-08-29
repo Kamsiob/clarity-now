@@ -113,8 +113,9 @@ fun calmAccent(accent: Color): Color = accent.calmed(LocalCalmMode.current)
  * belongs to the area's own color, which is user data and never a token.
  */
 fun ClarityColors.calmed(): ClarityColors = copy(
-    cardWashAlpha = if (isDark) 0.07f else 0.05f,
-    cardWashActiveAlpha = if (isDark) 0.15f else 0.12f,
+    cardWashAlpha = if (isDark) 0.09f else 0.04f,
+    cardWashActiveAlpha = if (isDark) 0.16f else 0.08f,
+    cardDeckAlpha = if (isDark) 0.18f else 0.09f,
 )
 
 // ---------------------------------------------------------------------------

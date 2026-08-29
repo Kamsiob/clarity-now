@@ -189,12 +189,15 @@ class CalmModeTest {
     @Test
     fun `calm mode pins the wash opacities and changes no other token`() {
         val light = ClarityLightColors.calmed()
-        assertEquals(0.05f, light.cardWashAlpha, 0.0001f)
-        assertEquals(0.12f, light.cardWashActiveAlpha, 0.0001f)
+        assertEquals(0.04f, light.cardWashAlpha, 0.0001f)
+        assertEquals(0.08f, light.cardWashActiveAlpha, 0.0001f)
+
+        assertEquals(0.09f, light.cardDeckAlpha, 0.0001f)
 
         val dark = ClarityDarkColors.calmed()
-        assertEquals(0.07f, dark.cardWashAlpha, 0.0001f)
-        assertEquals(0.15f, dark.cardWashActiveAlpha, 0.0001f)
+        assertEquals(0.09f, dark.cardWashAlpha, 0.0001f)
+        assertEquals(0.16f, dark.cardWashActiveAlpha, 0.0001f)
+        assertEquals(0.18f, dark.cardDeckAlpha, 0.0001f)
 
         listOf(ClarityLightColors to light, ClarityDarkColors to dark).forEach { (ordinary, calm) ->
             assertEquals(
@@ -203,13 +206,16 @@ class CalmModeTest {
                 calm.copy(
                     cardWashAlpha = ordinary.cardWashAlpha,
                     cardWashActiveAlpha = ordinary.cardWashActiveAlpha,
+                    cardDeckAlpha = ordinary.cardDeckAlpha,
                 ),
             )
         }
         assertTrue(
             "the calm wash is supposed to be shallower than the ordinary one",
             light.cardWashAlpha < ClarityLightColors.cardWashAlpha &&
-                dark.cardWashAlpha < ClarityDarkColors.cardWashAlpha,
+                dark.cardWashAlpha < ClarityDarkColors.cardWashAlpha &&
+                light.cardDeckAlpha < ClarityLightColors.cardDeckAlpha &&
+                dark.cardDeckAlpha < ClarityDarkColors.cardDeckAlpha,
         )
     }
 
@@ -266,12 +272,16 @@ class CalmModeTest {
             // The live preview's wash and label, plus the swatches and the selection
             // ring, which show the true color because that is what is being chosen.
             "ui/areas/ColorPicker.kt" to 4,
-            // The filter chip's dot, and it is the only one left. **Phase 12b removed
-            // the event circle's 12 percent tint**, which was the file's atmospheric
-            // use, when it settled what the circle carried: an area accent at wash
-            // strength could not carry identity and this document defines no event
-            // color, so the disc went and the glyph stands on the page. design-v3.md 11.
-            "ui/trail/TrailScreen.kt" to 1,
+            // Two, and both are identity, so neither takes the transform. The filter
+            // chip's dot has always been one. **The visual refresh added the row's own
+            // dot**, which replaced the glyph column: the glyph restated the verb the
+            // sentence had already written, and the dot answers the one question the
+            // sentence does not, which is which area this belongs to. It is the same
+            // device as the card's dot at the same size and 16.2 puts it on the same
+            // side of the split. Phase 12b's removal of the event circle's 12 percent
+            // tint still stands and is a different thing: that was an accent at *wash*
+            // strength being asked to carry identity, which is what fails.
+            "ui/trail/TrailScreen.kt" to 2,
             // Onboarding. The preview card's accent is atmosphere and takes the
             // transform; the 7dp dot beside the name is identity and never does. Both
             // files already read LocalCalmMode at the site, which is where the split
@@ -296,19 +306,19 @@ class CalmModeTest {
             // ground is not one of them.
             "ui/focus/FocusChooserScreen.kt" to 1,
             "ui/focus/FocusSessionScreen.kt" to 1,
-            // Momentum, phase 7. Two uses and one of each kind, which is why they are
-            // worth writing out rather than counting.
+            // Momentum. One use, and it is identity.
             //
-            // The area tile is **atmosphere** and goes through `calmAccent`. design-v3.md
-            // 3.4 names it in the same sentence as the wash: "washes, tiles and every
-            // atmospheric use of the accent desaturate", and the 60 percent tile is the
-            // third of the four permitted uses of an accent, not one of the two excluded
-            // ones.
+            // **The 60 percent area tile was the second and the visual refresh deletes
+            // it.** It was atmosphere and went through `calmAccent`, correctly; what
+            // could not be defended was its size. Two 52dp blocks were the loudest
+            // objects in the app and each carried one bit, directly above an Area balance
+            // module that listed the same areas with real figures against them.
             //
-            // The 7dp dot beside a name in an insight module is **identity** and never
-            // transforms. It is the first of 3.4's four uses and the first of 16.2's two
-            // exclusions by name, and it is how a person tells which area a row is about.
-            "ui/momentum/MomentumScreen.kt" to 2,
+            // What is left is the dot beside a name in an insight module, which is
+            // **identity** and never transforms. It is the first of 3.4's four uses and
+            // the first of 16.2's two exclusions by name, and it is how a person tells
+            // which area a row is about.
+            "ui/momentum/MomentumScreen.kt" to 1,
         )
 
         val root = File("src/main/java/com/kamsiob/claritynow/ui")

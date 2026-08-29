@@ -33,6 +33,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -65,23 +66,29 @@ import com.kamsiob.claritynow.ui.components.ClarityChip
 import com.kamsiob.claritynow.ui.components.ClarityFab
 import com.kamsiob.claritynow.ui.components.ClarityIcon
 import com.kamsiob.claritynow.ui.components.ClarityIcons
+import com.kamsiob.claritynow.ui.components.ScrollEdge
 import com.kamsiob.claritynow.ui.components.SwipeActions
 import com.kamsiob.claritynow.ui.components.SwipeCoordinator
 import com.kamsiob.claritynow.ui.components.SwipeableRow
-import com.kamsiob.claritynow.ui.components.ScrollEdge
 import com.kamsiob.claritynow.ui.components.TabBarHeight
 import com.kamsiob.claritynow.ui.components.TabBarInset
-import com.kamsiob.claritynow.ui.components.scrollEdgeFade
 import com.kamsiob.claritynow.ui.components.clarityClickable
 import com.kamsiob.claritynow.ui.components.clarityPressScale
+import androidx.compose.ui.semantics.Role
+import com.kamsiob.claritynow.ui.components.clarityFocusRing
+import com.kamsiob.claritynow.ui.components.clarityShadow
 import com.kamsiob.claritynow.ui.components.rememberReorderState
 import com.kamsiob.claritynow.ui.components.rememberSwipeCoordinator
 import com.kamsiob.claritynow.ui.components.reorderableItem
+import com.kamsiob.claritynow.ui.components.scrollEdgeFade
 import com.kamsiob.claritynow.ui.momentum.AreasBanner
 import com.kamsiob.claritynow.ui.settings.SettingsSurface
+import com.kamsiob.claritynow.ui.theme.ClarityElevation
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
+import com.kamsiob.claritynow.ui.theme.ClarityEntranceRole
 import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
+import com.kamsiob.claritynow.ui.theme.LocalClarityShapes
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.clarityEntrance
 import com.kamsiob.claritynow.ui.theme.clarityMotion
@@ -101,7 +108,8 @@ private val CARD_HEIGHT_ESTIMATE = 96.dp
  * is for is the app arriving. Starting at the title costs one stagger step, 50ms, and
  * makes the screen one thing rather than two. Recorded in `DECISIONS.md`.
  */
-private const val HEADER_ENTRANCE_INDEX = 0
+/** The header assembles in three beats of its own, so cards start at the fourth. */
+private const val CARD_ENTRANCE_INDEX = 3
 
 /**
  * The Daylight home. design-v3.md section 11.
@@ -222,7 +230,6 @@ fun AreasScreen(
                     onOpenArchive = onOpenArchive,
                     onOpenSettings = { settingsOpen = true },
                     onOpenInbox = onOpenInbox,
-                    modifier = Modifier.clarityEntrance(HEADER_ENTRANCE_INDEX),
                 )
             }
 
@@ -250,7 +257,7 @@ fun AreasScreen(
                             fadeInSpec = motion.easeOut(),
                             fadeOutSpec = motion.easeOut(),
                         )
-                        .clarityEntrance(HEADER_ENTRANCE_INDEX + 1 + index)
+                        .clarityEntrance(CARD_ENTRANCE_INDEX + index, ClarityEntranceRole.ROW)
                         // Only the first card is a tutorial target. The step teaches
                         // what a card is, not which card this is, so the registry
                         // wants one rectangle rather than the topmost of several.
@@ -402,34 +409,38 @@ private fun AreasHeader(
 ) {
     val colors = LocalClarityColors.current
     val type = LocalClarityTypography.current
-    Column(modifier = modifier.fillMaxWidth().padding(top = 12.dp, bottom = 6.dp)) {
+    Column(modifier = modifier.fillMaxWidth().padding(top = ClaritySpacing.snug)) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(44.dp)
+                .clarityEntrance(0, ClarityEntranceRole.HEADER),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 text = stringResource(R.string.areas_title),
-                style = type.displayTitle,
+                style = type.readSerif,
                 color = colors.inkPrimary,
+                modifier = Modifier.weight(1f),
             )
-            // design-v3.md 10.1: archive and settings, in that order, at inkSecondary.
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                HeaderGlyph(
-                    icon = ClarityIcons.archive,
-                    label = stringResource(R.string.areas_open_archive),
-                    tint = colors.inkSecondary,
-                    onClick = onOpenArchive,
-                )
-                HeaderGlyph(
-                    icon = ClarityIcons.settings,
-                    label = stringResource(R.string.cd_settings_open),
-                    tint = colors.inkSecondary,
-                    onClick = onOpenSettings,
-                )
-            }
+            HeaderGlyph(
+                icon = ClarityIcons.archive,
+                label = stringResource(R.string.areas_open_archive),
+                tint = colors.inkSecondary,
+                onClick = onOpenArchive,
+            )
+            HeaderGlyph(
+                icon = ClarityIcons.settings,
+                label = stringResource(R.string.cd_settings_open),
+                tint = colors.inkSecondary,
+                onClick = onOpenSettings,
+            )
         }
-
+        AreasBanner(
+            modifier = Modifier
+                .padding(top = ClaritySpacing.snug)
+                .clarityEntrance(1, ClarityEntranceRole.DOMINANT),
+        )
         AreasChipRow(
             unfiledCount = unfiledCount,
             pulseReady = pulseReady,
@@ -437,35 +448,9 @@ private fun AreasHeader(
             onOpenPulse = onOpenPulse,
             onOpenInbox = onOpenInbox,
         )
-
-        // design-v3.md 10.2, and the one element on this screen whose sentence comes from
-        // the engine. `docs/BUILD_STATE.md` has recorded it as deliberately absent since
-        // phase 2 for exactly that reason, and this is its arrival.
-        //
-        // **It reaches its own ViewModel rather than taking a value through this screen's
-        // parameters**, which is a deviation from the shape every other element here
-        // follows and is recorded rather than quiet. The banner's state is one sentence, a
-        // caption and a once per hour throttle, and none of it belongs to the queue that
-        // `AreasUiState` describes; putting it there would also have meant editing
-        // `AreasViewModel`, which is outside the file list the Momentum phase was given.
-        // The instance is resolved against the Activity's store, which is the same store
-        // `AreasViewModel` comes from, so the throttle survives a tab switch, which is what
-        // "once per hour of app use" requires.
-        //
-        // It draws nothing at all when the engine has said nothing, so the header keeps its
-        // existing height on a week no family describes.
-        AreasBanner(modifier = Modifier.padding(top = ClaritySpacing.scaled(14.dp)))
     }
 }
 
-/**
- * One header control, design-v3.md 10.1 and section 13.
- *
- * The 48dp target and the 22dp glyph are separate on purpose, the same way
- * `ClarityChip` separates the pill from the thing that is touched: 13 fixes the
- * minimum target and section 7 fixes the glyph, and growing the glyph to fill the
- * target would quietly overwrite a dimension the design already states.
- */
 @Composable
 private fun HeaderGlyph(
     @DrawableRes icon: Int,
@@ -517,6 +502,27 @@ private fun HeaderGlyph(
  * one screenful is how a person learns to read neither, and the chip's job is to be the
  * way back in, which it does under the same label either way.
  */
+/**
+ * **Two anchors, not three chips, and each one says what it will do.**
+ *
+ * Focus and Pulse shipped as 38dp `ClarityChip`s in a horizontally scrolling row, the
+ * same component and the same geometry as the Trail's filters, which set a filter, and
+ * as the Inbox chip, which opens a sheet. One shape was doing navigation, filtering and
+ * disclosure, and B.1 measured 26 of the app's 35 controls inside an 18dp band of
+ * height. A screen with no rung ladder has no loud element and no quiet one, and that is
+ * what "lifeless" is, mechanically.
+ *
+ * These are the Areas screen's two standing invitations, so they take the **Standard 48
+ * rung at 56dp** and split the measure between them. Each carries a second line that is
+ * a live readout rather than a label: `7:00 left` when a session is running, `ready now`
+ * when a Pulse is waiting. **Only a chip with something true to say is filled**, so
+ * color on this row is earned by state and never spent on decoration, which is 3.4's
+ * rule applied to chrome instead of to an area.
+ *
+ * The Inbox chip keeps the old chip geometry deliberately and sits under the pair: it is
+ * conditional, it is a disclosure rather than an invitation, and it should not look like
+ * one of the two things this screen is for.
+ */
 @Composable
 private fun AreasChipRow(
     unfiledCount: Int,
@@ -525,53 +531,99 @@ private fun AreasChipRow(
     onOpenPulse: () -> Unit,
     onOpenInbox: () -> Unit,
 ) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(top = ClaritySpacing.scaled(4.dp)),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(top = ClaritySpacing.step)
+            .clarityEntrance(2, ClarityEntranceRole.ROW),
     ) {
-        ClarityChip(
-            label = stringResource(R.string.areas_chip_focus),
-            onClick = onOpenFocus,
-            modifier = Modifier.tutorialTarget(TutorialStep.FOCUS_CHIP),
-        )
-
-        // design-v3.md 10.1, and the reason it was not here before this phase: phase 2
-        // left it out rather than shipping a chip that opened nothing, the same
-        // decision that held the Focus chip back until phase 4 built the surface
-        // behind it. Both permanent chips are now real doors.
-        PulseChip(
-            ready = pulseReady,
-            onClick = onOpenPulse,
-            modifier = Modifier.tutorialTarget(TutorialStep.PULSE_CHIP),
-        )
-
+        Row(horizontalArrangement = Arrangement.spacedBy(ClaritySpacing.snug)) {
+            AreasAnchor(
+                icon = ClarityIcons.focus,
+                label = stringResource(R.string.areas_chip_focus),
+                readout = null,
+                dotColor = null,
+                onClick = onOpenFocus,
+                modifier = Modifier.weight(1f).tutorialTarget(TutorialStep.FOCUS_CHIP),
+            )
+            AreasAnchor(
+                icon = ClarityIcons.pulse,
+                label = stringResource(R.string.areas_chip_pulse),
+                readout = if (pulseReady) stringResource(R.string.areas_pulse_ready_now) else null,
+                dotColor = if (pulseReady) LocalClarityColors.current.warnAmber else null,
+                onClick = onOpenPulse,
+                modifier = Modifier.weight(1f).tutorialTarget(TutorialStep.PULSE_CHIP),
+            )
+        }
         if (unfiledCount > 0) {
-            InboxChip(count = unfiledCount, onClick = onOpenInbox)
+            Row(modifier = Modifier.padding(top = ClaritySpacing.snug)) {
+                InboxChip(count = unfiledCount, onClick = onOpenInbox)
+            }
         }
     }
 }
 
-/**
- * design-v3.md 10.16 and Addendum 01 4a. **The count is the label.**
- *
- * Never a badge and never a red dot. The addendum forbids it twice and design-v3.md
- * 14 forbids the color treatment that would carry it, so the chip is an ordinary
- * unselected `ClarityChip`: card colored, soft elevation, no dot, no accent. An app
- * that answers a person writing something down with a scolding number teaches them
- * to stop writing things down, and that is a worse outcome than an unsorted inbox.
- *
- * There is no entry point at all when the inbox is empty, which is why the caller
- * decides whether this composes rather than this drawing a zero.
- *
- * The obvious answer was a pinned row at the top of the area list carrying a count.
- * design-v3.md 10.16 rejects it in writing and section 15 is the rule behind it: a
- * pinned pile of what has not been dealt with would sit above the one thing a person
- * opened the app to see, every single time.
- */
+@Composable
+private fun AreasAnchor(
+    @DrawableRes icon: Int,
+    label: String,
+    readout: String?,
+    dotColor: Color?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalClarityColors.current
+    val type = LocalClarityTypography.current
+    val shapes = LocalClarityShapes.current
+    val interaction = remember { MutableInteractionSource() }
+
+    Box(
+        modifier = modifier
+            .height(56.dp)
+            .clarityPressScale(interaction, label = "anchorPress")
+            .clarityShadow(ClarityElevation.card, shapes.pill, enabled = !colors.isDark)
+            .clip(shapes.pill)
+            .background(colors.card)
+            .clarityFocusRing(interaction, shapes.pill)
+            .clarityClickable(
+                interactionSource = interaction,
+                haptic = ClarityHapticEvent.TAP,
+                role = Role.Button,
+                onClickLabel = label,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (dotColor != null) {
+                    // A live state takes the dot; an idle one takes its own glyph. The
+                    // two never appear together, so the row never grows.
+                    Box(
+                        modifier = Modifier
+                            .size(ClaritySpacing.areaDot)
+                            .clip(CircleShape)
+                            .background(dotColor),
+                    )
+                } else {
+                    ClarityIcon(
+                        icon = icon,
+                        contentDescription = null,
+                        tint = colors.inkSecondary,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+                Spacer(Modifier.width(ClaritySpacing.tight))
+                Text(text = label, style = type.bodyStrong, color = colors.inkPrimary)
+            }
+            if (readout != null) {
+                Spacer(Modifier.height(2.dp))
+                Text(text = readout, style = type.caption, color = colors.inkSecondary)
+            }
+        }
+    }
+}
+
 @Composable
 private fun InboxChip(count: Int, onClick: () -> Unit) {
     val description = pluralStringResource(R.plurals.cd_areas_chip_inbox, count, count)

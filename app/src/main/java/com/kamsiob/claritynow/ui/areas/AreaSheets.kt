@@ -55,6 +55,8 @@ import com.kamsiob.claritynow.ui.components.Sidehead
 import com.kamsiob.claritynow.ui.components.clarityClickable
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
 import com.kamsiob.claritynow.ui.theme.ClaritySpacing
+import androidx.compose.ui.semantics.Role
+import com.kamsiob.claritynow.ui.theme.LocalClarityShapes
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.clarityMotion
@@ -345,6 +347,7 @@ fun AreaDetailSheet(
     onDelete: () -> Unit,
     onOpenItem: (ItemState) -> Unit,
     onReopenItem: (ItemState) -> Unit,
+    onMakeActive: (ItemState) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val colors = LocalClarityColors.current
@@ -505,7 +508,11 @@ fun AreaDetailSheet(
                 )
             } else {
                 queue.forEach { item ->
-                    QueueRow(item = item, onClick = { onOpenItem(item) })
+                    QueueRow(
+                        item = item,
+                        onClick = { onOpenItem(item) },
+                        onMakeActive = { onMakeActive(item) },
+                    )
                 }
             }
 
@@ -594,34 +601,87 @@ fun AreaDetailSheet(
     }
 }
 
+/**
+ * **A queue row now has two targets, and the second one is the whole point.**
+ *
+ * Changing which item is active was possible before and it was not easy: a full left
+ * swipe on the area card opened a chooser, which is a gesture nothing on the screen
+ * announces, and tapping a queue row opened the item for editing, which is what a person
+ * does far less often than deciding to work on something else instead. The queue is a
+ * list of things a person has already said they intend to do, so **the common act on it
+ * is "that one, now"**, and it was three deliberate steps behind an undiscoverable
+ * gesture.
+ *
+ * The row keeps its old behavior and gains a 48dp trailing button that promotes the item
+ * in one tap. Whatever is active is demoted to the head of the queue, which is exactly
+ * what Swap already did, so this adds no new state and no new event type. The chooser
+ * sheets pass no handler, because in those the whole row already means "choose this" and
+ * a second control saying the same thing would be a second way to do one thing.
+ */
 @Composable
-private fun QueueRow(item: ItemState, onClick: () -> Unit) {
+private fun QueueRow(item: ItemState, onClick: () -> Unit, onMakeActive: (() -> Unit)? = null) {
     val colors = LocalClarityColors.current
     val type = LocalClarityTypography.current
+    val shapes = LocalClarityShapes.current
+    val makeActiveLabel = stringResource(R.string.action_make_active)
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clarityClickable(onClickLabel = item.title, onClick = onClick)
-            // The trailing chevron's viewBox carries its own whitespace, so the
-            // trailing padding is reduced to match what the eye measures.
-            .padding(start = SheetPadding, end = SheetPadding - 3.dp, top = 12.dp, bottom = 12.dp),
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(Modifier.weight(1f)) {
-            Text(text = item.title, style = type.body, color = colors.inkPrimary)
-            // The note is a rank below the title and stays one: `caption` against
-            // `body`, design-v3.md 5.3. The ink is the same, because 3.1 gives this
-            // app two inks that carry text and the third is for shapes.
-            item.note?.let {
-                Text(text = it, style = type.caption, color = colors.inkSecondary)
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .clarityClickable(onClickLabel = item.title, onClick = onClick)
+                .padding(
+                    start = SheetPadding,
+                    end = ClaritySpacing.tight,
+                    top = ClaritySpacing.snug,
+                    bottom = ClaritySpacing.snug,
+                )
+                // 13's floor. The row used to measure 46.5dp, which is a live defect
+                // rather than a matter of taste.
+                .heightIn(min = ClaritySpacing.minTouchTarget - ClaritySpacing.snug * 2),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(text = item.title, style = type.body, color = colors.inkPrimary)
+                // The note is a rank below the title and stays one: `caption` against
+                // `body`, design-v3.md 5.3. The ink is the same, because 3.1 gives this
+                // app two inks that carry text and the third is for shapes.
+                item.note?.let {
+                    Text(text = it, style = type.caption, color = colors.inkSecondary)
+                }
             }
         }
-        ClarityIcon(
-            icon = ClarityIcons.chevron,
-            contentDescription = null,
-            tint = colors.inkSecondary,
-            modifier = Modifier.size(18.dp),
-        )
+        if (onMakeActive == null) {
+            ClarityIcon(
+                icon = ClarityIcons.chevron,
+                contentDescription = null,
+                tint = colors.inkSecondary,
+                modifier = Modifier.padding(end = SheetPadding - 3.dp).size(18.dp),
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .padding(end = ClaritySpacing.snug)
+                    .size(ClaritySpacing.minTouchTarget)
+                    .clip(shapes.pill)
+                    .clarityClickable(
+                        haptic = ClarityHapticEvent.PROMOTE,
+                        role = Role.Button,
+                        onClickLabel = makeActiveLabel,
+                        onClick = onMakeActive,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                ClarityIcon(
+                    icon = ClarityIcons.promoted,
+                    contentDescription = makeActiveLabel,
+                    tint = colors.actionBlue,
+                    modifier = Modifier.size(22.dp),
+                )
+            }
+        }
     }
 }
 
