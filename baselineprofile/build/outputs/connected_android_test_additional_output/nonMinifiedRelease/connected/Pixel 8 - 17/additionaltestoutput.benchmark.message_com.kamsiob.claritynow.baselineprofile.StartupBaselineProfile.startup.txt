@@ -1,0 +1,6 @@
+StartupBaselineProfile_startup
+Total run time Ns: 86431909588.
+Baseline profile [results](file://StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt)
+
+To copy the profile use:
+adb -s 39151FDJH00506 pull "/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof.txt" .

@@ -1,0 +1,2 @@
+
+39151FDJH0050637аќбс*	arm64-v8a2Google:39151FDJH00506RPixel 8

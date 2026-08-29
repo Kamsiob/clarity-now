@@ -44,6 +44,14 @@ class StartupBaselineProfile {
     @Test
     fun startup() = rule.collect(
         packageName = PACKAGE_NAME,
+        // **The startup profile is the half that matters most and it is opt in.** A
+        // baseline profile is compiled ahead of time for everything it names; a startup
+        // profile additionally tells the runtime which of those to lay out together, so
+        // the pages the first frame needs arrive in one read rather than scattered. This
+        // journey is the startup path by construction, so there is nothing here that
+        // should be in one and not the other, and the first generation without this flag
+        // printed a warning saying exactly that.
+        includeInStartupProfile = true,
         // The default is three, which trades collection time for stability. Startup is
         // the one journey where a class that loads on some runs and not others is worth
         // catching, because a miss costs a frame on every launch afterwards.

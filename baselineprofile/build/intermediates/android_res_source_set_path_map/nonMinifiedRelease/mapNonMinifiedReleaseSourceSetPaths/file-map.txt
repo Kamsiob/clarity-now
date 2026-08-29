@@ -1,0 +1,8 @@
+com.kamsiob.claritynow.baselineprofile-pngs-0 /var/home/Kamsiob/Kamiob Apps/-- Android/Clarity Now/baselineprofile/build/generated/res/pngs/nonMinifiedRelease
+com.kamsiob.claritynow.baselineprofile-updated_navigation_xml-1 /var/home/Kamsiob/Kamiob Apps/-- Android/Clarity Now/baselineprofile/build/generated/updated_navigation_xml/nonMinifiedRelease
+com.kamsiob.claritynow.baselineprofile-packageNonMinifiedReleaseResources-2 /var/home/Kamsiob/Kamiob Apps/-- Android/Clarity Now/baselineprofile/build/intermediates/incremental/nonMinifiedRelease/packageNonMinifiedReleaseResources/merged.dir
+com.kamsiob.claritynow.baselineprofile-packageNonMinifiedReleaseResources-3 /var/home/Kamsiob/Kamiob Apps/-- Android/Clarity Now/baselineprofile/build/intermediates/incremental/nonMinifiedRelease/packageNonMinifiedReleaseResources/stripped.dir
+com.kamsiob.claritynow.baselineprofile-nonMinifiedRelease-4 /var/home/Kamsiob/Kamiob Apps/-- Android/Clarity Now/baselineprofile/build/intermediates/merged_res/nonMinifiedRelease/mergeNonMinifiedReleaseResources
+com.kamsiob.claritynow.baselineprofile-main-5 /var/home/Kamsiob/Kamiob Apps/-- Android/Clarity Now/baselineprofile/src/main/res
+com.kamsiob.claritynow.baselineprofile-nonMinifiedRelease-6 /var/home/Kamsiob/Kamiob Apps/-- Android/Clarity Now/baselineprofile/src/nonMinifiedRelease/res
+gradleHome-0 /var/home/Kamsiob/.gradle

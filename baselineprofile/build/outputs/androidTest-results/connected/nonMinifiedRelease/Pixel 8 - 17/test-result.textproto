@@ -1,0 +1,207 @@
+# proto-message: google.testing.platform.proto.api.core.TestSuiteResult
+# 2026-08-29T00:42:10.287154256Z:
+test_suite_meta_data {
+  scheduled_test_case_count: 1
+  device {
+    id: "39151FDJH00506"
+    friendly_name: "primary"
+  }
+}
+test_status: PASSED
+test_result {
+  test_case {
+    test_class: "StartupBaselineProfile"
+    test_package: "com.kamsiob.claritynow.baselineprofile"
+    test_method: "startup"
+    start_time {
+      seconds: 1787964041
+      nanos: 566000000
+    }
+    end_time {
+      seconds: 1787964128
+      nanos: 369000000
+    }
+    device {
+      id: "39151FDJH00506"
+      friendly_name: "primary"
+    }
+  }
+  test_status: PASSED
+  output_artifact {
+    label {
+      label: "additionaltestoutput.benchmark.message"
+      namespace: "android"
+    }
+    source_path {
+      path: "/var/home/Kamsiob/Kamiob Apps/-- Android/Clarity Now/baselineprofile/build/outputs/connected_android_test_additional_output/nonMinifiedRelease/connected/Pixel 8 - 17/additionaltestoutput.benchmark.message_com.kamsiob.claritynow.baselineprofile.StartupBaselineProfile.startup.txt"
+    }
+  }
+  output_artifact {
+    label {
+      label: "additionaltestoutput.benchmark.trace"
+      namespace: "android"
+    }
+    source_path {
+      path: "/var/home/Kamsiob/Kamiob Apps/-- Android/Clarity Now/baselineprofile/build/outputs/connected_android_test_additional_output/nonMinifiedRelease/connected/Pixel 8 - 17/StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt"
+    }
+  }
+  output_artifact {
+    label {
+      label: "logcat"
+      namespace: "android"
+    }
+    source_path {
+      path: "/var/home/Kamsiob/Kamiob Apps/-- Android/Clarity Now/baselineprofile/build/outputs/androidTest-results/connected/nonMinifiedRelease/Pixel 8 - 17/logcat-com.kamsiob.claritynow.baselineprofile.StartupBaselineProfile-startup.txt"
+    }
+  }
+  output_artifact {
+    label {
+      label: "device-info"
+      namespace: "android"
+    }
+    source_path {
+      path: "/var/home/Kamsiob/Kamiob Apps/-- Android/Clarity Now/baselineprofile/build/outputs/androidTest-results/connected/nonMinifiedRelease/Pixel 8 - 17/device-info.pb"
+    }
+  }
+  output_artifact {
+    label {
+      label: "device-info.meminfo"
+      namespace: "android"
+    }
+    source_path {
+      path: "/var/home/Kamsiob/Kamiob Apps/-- Android/Clarity Now/baselineprofile/build/outputs/androidTest-results/connected/nonMinifiedRelease/Pixel 8 - 17/meminfo"
+    }
+  }
+  output_artifact {
+    label {
+      label: "device-info.cpuinfo"
+      namespace: "android"
+    }
+    source_path {
+      path: "/var/home/Kamsiob/Kamiob Apps/-- Android/Clarity Now/baselineprofile/build/outputs/androidTest-results/connected/nonMinifiedRelease/Pixel 8 - 17/cpuinfo"
+    }
+  }
+  details {
+    key: "additionalTestOutputFile_StartupBaselineProfile_startup-startup-prof.txt"
+    value: "/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof.txt"
+  }
+  details {
+    key: "additionalTestOutputFile_StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt"
+    value: "/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt"
+  }
+  details {
+    key: "android.studio.display.benchmark"
+    value: "StartupBaselineProfile_startup\nTotal run time Ns: 86431909588.\nBaseline profile [results](file://StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt)\n\nTo copy the profile use:\nadb -s 39151FDJH00506 pull \"/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof.txt\" .\n"
+  }
+  details {
+    key: "android.studio.v2display.benchmark"
+    value: "StartupBaselineProfile_startup\nTotal run time Ns: 86431909588.\nBaseline profile [results](file://StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt)\n\nTo copy the profile use:\nadb -s 39151FDJH00506 pull \"/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof.txt\" .\n"
+  }
+  details {
+    key: "android.studio.v2display.benchmark.outputDirPath"
+    value: "/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output"
+  }
+  details {
+    key: "android.studio.v3display.benchmark"
+    value: "StartupBaselineProfile_startup\nTotal run time Ns: 86431909588.\nBaseline profile [results](file://StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt)\n\nTo copy the profile use:\nadb -s 39151FDJH00506 pull \"/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof.txt\" .\n"
+  }
+  details {
+    key: "android.studio.v3display.benchmark.outputDirPath"
+    value: "/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output"
+  }
+  details {
+    key: "additionalTestOutputFile_StartupBaselineProfile_startup-startup-prof.txt"
+    value: "/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof.txt"
+  }
+  details {
+    key: "additionalTestOutputFile_StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt"
+    value: "/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt"
+  }
+  details {
+    key: "android.studio.display.benchmark"
+    value: "StartupBaselineProfile_startup\nTotal run time Ns: 86431909588.\nBaseline profile [results](file://StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt)\n\nTo copy the profile use:\nadb -s 39151FDJH00506 pull \"/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof.txt\" .\n"
+  }
+  details {
+    key: "android.studio.v2display.benchmark"
+    value: "StartupBaselineProfile_startup\nTotal run time Ns: 86431909588.\nBaseline profile [results](file://StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt)\n\nTo copy the profile use:\nadb -s 39151FDJH00506 pull \"/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof.txt\" .\n"
+  }
+  details {
+    key: "android.studio.v2display.benchmark.outputDirPath"
+    value: "/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output"
+  }
+  details {
+    key: "android.studio.v3display.benchmark"
+    value: "StartupBaselineProfile_startup\nTotal run time Ns: 86431909588.\nBaseline profile [results](file://StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt)\n\nTo copy the profile use:\nadb -s 39151FDJH00506 pull \"/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof.txt\" .\n"
+  }
+  details {
+    key: "android.studio.v3display.benchmark.outputDirPath"
+    value: "/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output"
+  }
+  details {
+    key: "additionalTestOutputFile_StartupBaselineProfile_startup-startup-prof.txt"
+    value: "/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof.txt"
+  }
+  details {
+    key: "additionalTestOutputFile_StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt"
+    value: "/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt"
+  }
+  details {
+    key: "android.studio.display.benchmark"
+    value: "StartupBaselineProfile_startup\nTotal run time Ns: 86431909588.\nBaseline profile [results](file://StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt)\n\nTo copy the profile use:\nadb -s 39151FDJH00506 pull \"/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof.txt\" .\n"
+  }
+  details {
+    key: "android.studio.v2display.benchmark"
+    value: "StartupBaselineProfile_startup\nTotal run time Ns: 86431909588.\nBaseline profile [results](file://StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt)\n\nTo copy the profile use:\nadb -s 39151FDJH00506 pull \"/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof.txt\" .\n"
+  }
+  details {
+    key: "android.studio.v2display.benchmark.outputDirPath"
+    value: "/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output"
+  }
+  details {
+    key: "android.studio.v3display.benchmark"
+    value: "StartupBaselineProfile_startup\nTotal run time Ns: 86431909588.\nBaseline profile [results](file://StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt)\n\nTo copy the profile use:\nadb -s 39151FDJH00506 pull \"/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof.txt\" .\n"
+  }
+  details {
+    key: "android.studio.v3display.benchmark.outputDirPath"
+    value: "/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output"
+  }
+  details {
+    key: "additionalTestOutputFile_StartupBaselineProfile_startup-startup-prof.txt"
+    value: "/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof.txt"
+  }
+  details {
+    key: "additionalTestOutputFile_StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt"
+    value: "/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt"
+  }
+  details {
+    key: "android.studio.display.benchmark"
+    value: "StartupBaselineProfile_startup\nTotal run time Ns: 86431909588.\nBaseline profile [results](file://StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt)\n\nTo copy the profile use:\nadb -s 39151FDJH00506 pull \"/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof.txt\" .\n"
+  }
+  details {
+    key: "android.studio.v2display.benchmark"
+    value: "StartupBaselineProfile_startup\nTotal run time Ns: 86431909588.\nBaseline profile [results](file://StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt)\n\nTo copy the profile use:\nadb -s 39151FDJH00506 pull \"/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof.txt\" .\n"
+  }
+  details {
+    key: "android.studio.v2display.benchmark.outputDirPath"
+    value: "/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output"
+  }
+  details {
+    key: "android.studio.v3display.benchmark"
+    value: "StartupBaselineProfile_startup\nTotal run time Ns: 86431909588.\nBaseline profile [results](file://StartupBaselineProfile_startup-startup-prof-2026-08-29-00-42-10.txt)\n\nTo copy the profile use:\nadb -s 39151FDJH00506 pull \"/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output/StartupBaselineProfile_startup-startup-prof.txt\" .\n"
+  }
+  details {
+    key: "android.studio.v3display.benchmark.outputDirPath"
+    value: "/sdcard/Android/media/com.kamsiob.claritynow.baselineprofile/additional_test_output"
+  }
+}
+output_artifact {
+  label {
+    label: "test-results.log"
+    namespace: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
+  }
+  source_path {
+    path: "/var/home/Kamsiob/Kamiob Apps/-- Android/Clarity Now/baselineprofile/build/outputs/androidTest-results/connected/nonMinifiedRelease/Pixel 8 - 17/testlog/test-results.log"
+  }
+  type: TEST_DATA
+  mime_type: "text/plain"
+}
