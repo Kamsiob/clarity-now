@@ -266,7 +266,7 @@ fun OnboardingRoute(
                     canGoBack = state.canGoBack,
                     onBack = viewModel::back,
                     onJumpIn = {
-                        viewModel.leaveEarly()
+                        viewModel.leaveEarly(todayName)
                         onFinished()
                     },
                 )
@@ -335,7 +335,11 @@ private fun BoxScope.OnboardingNav(
     val type = LocalClarityTypography.current
     val shapes = LocalClarityShapes.current
     val motion = clarityMotion()
-    val filled = (beat.ordinal + 1).toFloat() / OnboardingBeat.entries.size
+    // **The rule reaches full at the START of the last beat, and beat 4 is four screens
+    // long**, so it read 100 percent with three screens still to come and the flow looked
+    // like it had ended before it had. Counting the beat as begun rather than finished
+    // leaves the last quarter for the beat that is actually running.
+    val filled = beat.ordinal.toFloat() / (OnboardingBeat.entries.size - 1)
     val width = remember { Animatable(0f) }
 
     LaunchedEffect(filled) { width.animateTo(filled, motion.springGentle()) }
@@ -459,9 +463,9 @@ private fun Modifier.swallowsPointerInput(): Modifier = pointerInput(Unit) {
  * screen is held for a second before beat 4 draws the black back over it.
  */
 private const val CLOSING_IN_AT = 200L
-private const val CLOSING_HOLD = 1_200L
-private const val IRIS_AT = 1_800L
-private const val REVEAL_MILLIS = 3_400L
+private const val CLOSING_HOLD = 3_000L
+private const val IRIS_AT = 3_600L
+private const val REVEAL_MILLIS = 5_200L
 
 /** design-v3.md 13.1. An 80dp progress line, and the nav row it sits in. */
 private val PROGRESS_WIDTH = 80.dp

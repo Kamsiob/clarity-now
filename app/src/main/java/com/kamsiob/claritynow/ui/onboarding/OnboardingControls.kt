@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -381,6 +382,10 @@ internal fun OnboardingField(
                 // on a sheet"; the onboarding twin never got the same change and is the
                 // first field anybody in this app ever touches.
                 .defaultMinSize(minHeight = ClaritySpacing.minTouchTarget)
+                // The box grew to the touch floor and a single line top-aligns inside it,
+                // which left the rule under the box 20dp adrift of the text it belongs to.
+                // Centering puts the line back on the rule and keeps the target.
+                .wrapContentHeight(Alignment.CenterVertically)
                 .then(
                     if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier,
                 ),

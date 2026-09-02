@@ -105,6 +105,16 @@ internal fun OnboardingBeatFour(
     // provides and which every other beat uses, so the interaction is unchanged and only
     // the clock is gone.
 
+    // The same hint beat 1 shows, for the same reason: removing the auto advance left
+    // three moments that are two lines of serif on black with no button and no timer, and
+    // that is where two people in usability testing stopped. The app already owns the
+    // string and shows it five times during the tutorial.
+    val hintAlpha = remember(moment) { Animatable(0f) }
+    LaunchedEffect(moment) {
+        delay(HINT_AFTER)
+        hintAlpha.animateTo(1f, motion.easeOut())
+    }
+
     Crossfade(
         targetState = moment,
         animationSpec = motion.easeSlow(),
@@ -117,7 +127,7 @@ internal fun OnboardingBeatFour(
                 .padding(
                     start = ClaritySpacing.screenPadding,
                     end = ClaritySpacing.screenPadding,
-                    bottom = OnboardingOpticalLift,
+                    bottom = OnboardingOpticalLiftPadding,
                 ),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -127,6 +137,20 @@ internal fun OnboardingBeatFour(
                 1 -> PulseMoment()
                 2 -> MomentumMoment()
                 else -> ReportMoment(onFinish = onFinish)
+            }
+
+            // The last moment carries its own control, so it needs no hint.
+            if (current != ONBOARDING_LAST_MOMENT) {
+                Spacer(Modifier.height(ClaritySpacing.rest))
+                Text(
+                    text = stringResource(R.string.tutorial_advance),
+                    style = LocalClarityTypography.current.caption,
+                    color = LocalContemplativeColors.current.textDim,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer { alpha = hintAlpha.value },
+                )
             }
         }
     }
@@ -188,6 +212,19 @@ private fun ColumnScope.PulseMoment() {
             .padding(horizontal = 22.dp, vertical = ClaritySpacing.scaled(26.dp)),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        // **The card says it is a sample, because it does not look like one.**
+        // `SamplePill` carries the resting treatment of a real `PulseResponsePill` at its
+        // real height, on a surface where a tap anywhere advances, so it looks live,
+        // tapping it appears to work and the moment changes underneath. Two people in
+        // usability testing came away believing they had answered a question. Moment 4
+        // already carries a `Clarity Report` eyebrow for the same reason.
+        Text(
+            text = stringResource(R.string.onboarding_depth_pulse_eyebrow),
+            style = type.caption,
+            color = accent,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
         Text(
             text = stringResource(R.string.onboarding_depth_pulse_sample),
             style = type.readSerif,

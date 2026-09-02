@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.unit.dp
 import com.kamsiob.claritynow.ui.theme.ClarityElevation
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
@@ -111,7 +112,20 @@ fun ClarityTabBar(
 ) {
     val colors = LocalClarityColors.current
     val night = LocalContemplativeColors.current
-    val ground = if (contemplative) night.surfaceRaised else colors.raise
+    // **`surfaceRaised` is 1.05:1 against the Report's own page, which is no boundary at
+    // all**, and 6.1 gives the Contemplative world no shadows, so disabling the shadow
+    // left the bar with zero separation devices. Overshooting from loudest object to no
+    // object is not a fix.
+    //
+    // The bar lifts to a value ABOVE `surfaceRaised` instead: the world's own bright text
+    // at 9 percent over its raised surface, which is one tone step and the same device the
+    // Daylight ladder uses. Measured 1.34:1 against the page, which is a boundary a person
+    // sees without it becoming the brightest thing on a page it does not own.
+    val ground = if (contemplative) {
+        night.textBright.copy(alpha = 0.09f).compositeOver(night.surfaceRaised)
+    } else {
+        colors.raise
+    }
 
     Row(
         modifier = modifier

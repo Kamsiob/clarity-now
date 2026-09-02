@@ -157,11 +157,21 @@ fun UndoSnackbar(
                             .clarityClickable(
                                 haptic = null,
                                 role = Role.Button,
-                                onClickLabel = current?.actionLabel.orEmpty(),
+                                // No `onClickLabel`. The visible word IS the label, so
+                                // setting both makes TalkBack say "Undo, button" and then
+                                // "double tap to Undo", which is the same word three
+                                // times. A click label is for a control whose meaning is
+                                // not already its text.
+                                onClickLabel = null,
                             ) {
                                 undone = true
                                 haptics.perform(ClarityHapticEvent.UNDO)
                                 current?.onUndo?.invoke()
+                                // **This line was dropped in the accessibility rewrite**,
+                                // and the timer cannot dismiss it either, because its own
+                                // terminal branch is guarded by `if (!undone)`. Tapping
+                                // Undo left the snackbar on screen permanently.
+                                onDismiss()
                             }
                             .padding(horizontal = ClaritySpacing.snug),
                         contentAlignment = Alignment.Center,

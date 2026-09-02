@@ -20,8 +20,17 @@ import androidx.compose.ui.unit.dp
  * occupied, so it reads low twice over.
  *
  * 64dp is 7 percent of the reference height and lands the block where the eye expects the
- * middle to be. It is applied as bottom padding on the box the arrangement centers inside,
- * so it shortens the box rather than moving the content, and a beat that grows past the
- * viewport still scrolls normally.
+ * middle to be.
+ *
+ * **It is applied as bottom padding, and bottom padding lifts a centered box by HALF its
+ * value**, because shortening a box by 64 moves its midpoint up by 32. The first version
+ * of this put a raw 64 on all three beats and produced 32dp of lift on the two that center
+ * inside a `fillMaxSize` box and 64dp on the one that subtracts it from a viewport
+ * minimum, so the three beats sat at two different heights. [OnboardingOpticalLiftPadding]
+ * is what a caller applies; the constant above is what a reader should be able to measure
+ * on the screen.
  */
 val OnboardingOpticalLift: Dp = 64.dp
+
+/** Twice the lift, because bottom padding on a centered box buys half of what it spends. */
+val OnboardingOpticalLiftPadding: Dp = OnboardingOpticalLift * 2

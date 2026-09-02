@@ -33,7 +33,7 @@ reassurance, nothing that could be read as a promise.
 
 | slot | copy |
 |---|---|
-| beat 1 line | One thing at a time. The next one is ready when you are. |
+| beat 1 line | Each area holds one item. The rest wait in line behind it. |
 | beat 2 question | How do you want to start? |
 | just start | One area called Today. Names and colors can come later. |
 | pick areas | Two to four parts of your life to keep track of. |
@@ -58,7 +58,7 @@ Same facts, ordered so the first thing a person learns is what cannot go wrong.
 
 | slot | copy |
 |---|---|
-| beat 1 line | One thing at a time. The next one is ready when you are. |
+| beat 1 line | Each area holds one item. The rest wait in line behind it. |
 | beat 3 line | Nothing here can break. |
 | beat 4 opener | Most lists ask you to choose. This one already did. |
 | beat 4 second | Two more things, then you are done. |
@@ -127,3 +127,36 @@ Beat 1 and beat 2 are unchanged in all three variants because `MASTER_BUILD_PROM
 states their copy verbatim and the fork's two panels are deliberately written to the same
 length and shape, which is half of what makes `Just start` a genuine equal rather than an
 escape hatch.
+
+
+---
+
+## What focus group B changed, after the fact
+
+All three variants above kept beat 1's line unexamined, because
+`MASTER_BUILD_PROMPT` 13.1 stated it verbatim and this exercise was about the lines that
+were open. Focus group B was not bound by that and named it twice: once under
+condescension and once under **felt described**, which is the failure the whole tone brief
+exists to prevent.
+
+> `One thing at a time` is the phrase used to talk somebody down, and `The next one is
+> ready when you are` presupposes that the reader often is not.
+
+Two of the six had heard that register immediately before a streak in some other app.
+Susan, who does not think of herself as having any difficulty at all, heard an app
+assuming she was flustered.
+
+It also carried none of the mechanic. The word queue appears in no onboarding string, and
+beat 1 draws four cards each holding one line with nothing visibly behind them, so a person
+could finish the entire sequence able to say that one thing is active and unable to say
+where everything else goes. The replacement, `Each area holds one item. The rest wait in
+line behind it.`, says the mechanic and makes no claim about the reader.
+
+The specification is amended in place rather than carrying both statements.
+
+Group B also removed three lines that had survived the variant test above by being inside
+the chosen variant rather than by passing it: `What you did, counted. Nothing scored.` is
+the X-not-Y antithesis that `A record, not a scorecard` was rejected for, and
+`One question a day. One tap. You can turn it off.` is the three fragment triad that
+`No account. No internet. No streaks.` was rejected for. Choosing a variant is not the same
+as auditing it, and the audit found the same two shapes had walked back in.

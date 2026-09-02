@@ -82,7 +82,14 @@ fun trailSentence(row: TrailRow): String {
         // Neutral by design. MASTER_BUILD_PROMPT 10 treats abandonment neutrally
         // everywhere, so this is never "ended early" and never "abandoned".
         TrailSentenceKey.FOCUS_STOPPED ->
-            pluralStringResource(R.plurals.trail_focus_stopped, minutes, minutes, subject)
+            // Zero is its own sentence. `minutesOf` rounds to nearest, so a twenty second
+            // mis-tap rounds to zero, and "0 minutes of focus" files a discarded session as
+            // an achievement of zero on a screen a person rereads.
+            if (minutes == 0) {
+                stringResource(R.string.trail_focus_stopped_zero, subject)
+            } else {
+                pluralStringResource(R.plurals.trail_focus_stopped, minutes, minutes, subject)
+            }
 
         TrailSentenceKey.PULSE_GENERATED -> stringResource(R.string.trail_pulse_generated)
         TrailSentenceKey.PULSE_ANSWERED -> stringResource(R.string.trail_pulse_answered, subject)

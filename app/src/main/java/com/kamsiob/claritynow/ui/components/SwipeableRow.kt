@@ -135,7 +135,7 @@ fun SwipeableRow(
     actions: SwipeActions,
     modifier: Modifier = Modifier,
     shape: RoundedCornerShape = RoundedCornerShape(18.dp),
-    content: @Composable () -> Unit,
+    content: @Composable (Modifier) -> Unit,
 ) {
     val colors = LocalClarityColors.current
     val haptics = LocalClarityHaptics.current
@@ -194,27 +194,46 @@ fun SwipeableRow(
     // from #FFFFFF straight to the canvas in one pixel, against fourteen pixels of
     // decay under the tab bar. design-v3.md 6.1 gives a light mode card a paired
     // shadow and it has to survive being swipeable.
+    // **The actions ride down to the card, because that is the node a person lands on.**
+    //
+    // They used to sit on this outer Box. Merging flows downward only and the card below
+    // carries `clickable`, which is itself a merging boundary, so the outer node stayed
+    // separate, held custom actions and no text, and TalkBack never stopped on it: the
+    // three actions design-v3 10.3.1 makes mandatory were unreachable without the gesture.
+    // Adding `mergeDescendants` here made it worse, because a merging node cannot absorb
+    // another merging node, so the result was two focus stops with the first one nameless.
+    //
+    // Handing the modifier to the content is the only arrangement that puts the actions on
+    // the node that already has the card's description and its click.
+    val rowActions = Modifier.semantics {
+        // Swipe is invisible to a screen reader and is only ever an accelerator. These
+        // duplicates are what make it safe to have, alongside the long press menu and the
+        // detail sheet.
+        customActions = buildList {
+            actions.onComplete?.let { run -> add(CustomAccessibilityAction(actions.completeLabel) { run(); true }) }
+            actions.onSwap?.let { run -> add(CustomAccessibilityAction(actions.swapLabel) { run(); true }) }
+            actions.onDelete?.let { run -> add(CustomAccessibilityAction(actions.deleteLabel) { run(); true }) }
+        }
+    }
+
     Box(
         modifier = modifier
             .onSizeChanged { rowWidth = it.width }
-            // **`mergeDescendants = true`, and without it none of this ever ran.**
-            // Merging in Compose flows downward only. The child here is the card, which
-            // carries `clickable` and is therefore itself a merging node, so this outer
-            // Box stayed a separate semantics node holding custom actions and no text,
-            // no role and nothing focusable. TalkBack never stopped on it, so the three
-            // actions design-v3 10.3.1 makes mandatory rather than optional were
-            // unreachable for anyone not using the gesture. Merged, this is one focus
-            // stop carrying the card's own description plus the three actions.
-            .semantics(mergeDescendants = true) {
-                // Swipe is invisible to a screen reader and is only ever an
-                // accelerator. These duplicates are what make it safe to have,
-                // alongside the long press menu and the detail sheet.
-                customActions = buildList {
-                    actions.onComplete?.let { run -> add(CustomAccessibilityAction(actions.completeLabel) { run(); true }) }
-                    actions.onSwap?.let { run -> add(CustomAccessibilityAction(actions.swapLabel) { run(); true }) }
-                    actions.onDelete?.let { run -> add(CustomAccessibilityAction(actions.deleteLabel) { run(); true }) }
-                }
-            },
+            // **The actions go on the node that already has the text and the click, and
+            // getting here took two attempts.**
+            //
+            // Originally they sat on a plain `Modifier.semantics` on this outer Box.
+            // Merging flows downward only and the card below carries `clickable`, which is
+            // itself a merging boundary, so this node stayed separate, held custom actions
+            // and no text, and TalkBack never stopped on it: the three actions design-v3
+            // 10.3.1 makes mandatory were unreachable without the gesture.
+            //
+            // Adding `mergeDescendants = true` here did not fix it and made it worse. A
+            // merging node cannot absorb another merging node, so the result was TWO focus
+            // stops, the first of them nameless, and the actions were still on the wrong
+            // one. `isTraversalGroup` plus the actions on the child's own node is what
+            // actually puts them where a person will find them.
+
     ) {
         // The action layer matches the card exactly rather than sizing itself,
         // so a revealed action is the full height of the row and is clipped by the
@@ -325,7 +344,7 @@ fun SwipeableRow(
                     },
                 ),
         ) {
-            content()
+            content(rowActions)
         }
     }
 }

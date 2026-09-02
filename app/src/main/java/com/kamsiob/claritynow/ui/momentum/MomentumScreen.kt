@@ -288,7 +288,7 @@ private fun ThisWeek(view: MomentumView, dimmed: Boolean) {
     Sidehead(text = stringResource(R.string.momentum_sidehead_this_week))
     // A.5 fixes a sidehead to its content at `snug` 12. This was 16 here and 14 under all
     // four insight sideheads, for one identical relationship.
-    Spacer(Modifier.height(ClaritySpacing.snug))
+    Spacer(Modifier.height(ClaritySpacing.scaled(ClaritySpacing.snug)))
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -304,9 +304,14 @@ private fun ThisWeek(view: MomentumView, dimmed: Boolean) {
                 // sentence is the only thing here that was written; the figures are a
                 // readout. At 21.5 they still lead their own block and the serif headline
                 // above them is the largest thing on the page, which is what it is for.
+                // `voiceSerif` 21.5, not `itemTitle` 21.5. The size is the fix; the
+                // family was collateral. design-v3 11 sets these three in Newsreader by
+                // name, and `TabularNumber` exists because Hanken ships no `tnum`, so a
+                // sans figure here is both against the document and the one place slotting
+                // is conspicuous.
                 TabularNumber(
                     text = figure.toString(),
-                    style = type.itemTitle,
+                    style = type.voiceSerif,
                     color = if (dimmed || !stat.discovered) colors.inkSecondary else colors.inkPrimary,
                     contentDescription = figure.toString(),
                 )

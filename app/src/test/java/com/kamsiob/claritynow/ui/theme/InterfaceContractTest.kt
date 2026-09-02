@@ -151,13 +151,20 @@ class InterfaceContractTest {
      */
     @Test
     fun `the helpers that exist to prevent a defect are actually called`() {
-        val ui = sources().joinToString("\n") { it.readText() }
+        // **Comments do not count as calls.** The first version of this counted any
+        // occurrence, so a symbol named only in the KDoc explaining why it exists would
+        // have passed while being dead, which is the precise failure this test is for.
+        val ui = sources().joinToString("\n") { file ->
+            file.readLines().filterNot {
+                val t = it.trimStart()
+                t.startsWith("//") || t.startsWith("*") || t.startsWith("/*")
+            }.joinToString("\n")
+        }
         val strings = File("src/main/res/values/strings.xml").readText()
         val kotlinAndXml = ui + "\n" + strings
 
         listOf(
             "AreaCardSemantics" to "the area card's whole TalkBack description",
-            "area_never_active" to "what a card says when nothing has ever been in the area",
             "undo_area_archived" to "the only way back from archiving an area",
             "offersPromote" to "whether an idle area with a queue can be started from its card",
         ).forEach { (symbol, why) ->

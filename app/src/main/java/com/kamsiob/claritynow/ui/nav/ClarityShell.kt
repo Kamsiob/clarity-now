@@ -55,6 +55,7 @@ import com.kamsiob.claritynow.ui.focus.FocusStart
 import com.kamsiob.claritynow.ui.momentum.MomentumRoute
 import com.kamsiob.claritynow.ui.pulse.PulseRoute
 import com.kamsiob.claritynow.ui.report.ReportRoute
+import com.kamsiob.claritynow.ui.theme.LocalIsContemplative
 import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.TabEntrance
@@ -339,7 +340,9 @@ fun ClarityShell(
                             // entrance that re-arms on a content change as well as on a session
                             // change, which needs a key TabEntrance has none of and says so in
                             // its own documentation, so ReportViewModel holds it instead.
-                            TAB_REPORT -> ReportRoute()
+                            TAB_REPORT -> CompositionLocalProvider(
+                                LocalIsContemplative provides true,
+                            ) { ReportRoute() }
 
                             // **Unreachable, and it exists because `selected` is a
                             // `String` rather than a sealed type**, so the compiler
@@ -359,7 +362,9 @@ fun ClarityShell(
             }
 
             if (pulseOpen) {
-                PulseRoute(onDismiss = { pulseOpen = false })
+                CompositionLocalProvider(LocalIsContemplative provides true) {
+                    PulseRoute(onDismiss = { pulseOpen = false })
+                }
             }
 
             // **Not drawn over a pushed screen.** design-v3.md 10.15: the bar belongs to
@@ -419,7 +424,10 @@ fun ClarityShell(
                     onDispose { focusStore.viewModelStore.clear() }
                 }
 
-                CompositionLocalProvider(LocalViewModelStoreOwner.provides(focusStore)) {
+                CompositionLocalProvider(
+                    LocalViewModelStoreOwner.provides(focusStore),
+                    LocalIsContemplative provides true,
+                ) {
                     FocusRoute(
                         // **This leaves the surface and it never ends a session.**
                         // design-v3.md 10.15. The session keeps running, the ongoing

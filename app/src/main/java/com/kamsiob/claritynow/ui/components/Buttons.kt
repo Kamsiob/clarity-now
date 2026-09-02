@@ -140,8 +140,14 @@ fun ClarityButton(
 }
 
 /**
- * design-v3.md 10.5 and 8.2 item 16. A 48dp circle above the tab bar at the
- * trailing edge, pressing to 0.94 with the snappy spring.
+ * design-v3.md 10.5 and 8.2 item 16, **amended in this pass**: a 64 by 56dp pill above the
+ * tab bar at the trailing edge, pressing to 0.94 with the snappy spring and morphing from
+ * a full pill to a 20dp corner.
+ *
+ * 10.5 said "48dp circle". 48dp is exactly design-v3 13's touch floor, so the app's most
+ * used control had no margin at all above the minimum, and a circle is the 2014 default
+ * rather than a decision. The wider pill shares the vocabulary the anchors, the chips and
+ * the tab bar already speak. The amendment is recorded in design-v3.md 10.5 in place.
  */
 @Composable
 fun ClarityFab(
@@ -161,10 +167,14 @@ fun ClarityFab(
     // A.4's shape law: the FAB is the one control that morphs on press, from a full
     // pill to a 20dp squircle, because it is the one control that opens rather than
     // commits.
+    // **The morph does not run under reduced motion or calm mode.** design-v3's calm
+    // component audit says so by name, and `springSnappy` resolves to a 150ms tween under
+    // `ReducedMotion`, which still travels the corner. A shape change is spatial, so it is
+    // gated rather than shortened.
     val corner by animateDpAsState(
         // 28dp on a 56dp tall box is a full pill at rest, so only the pressed state is
         // visibly a change of shape.
-        targetValue = if (pressed) 20.dp else 28.dp,
+        targetValue = if (pressed && !motion.reduced) 20.dp else 28.dp,
         animationSpec = motion.springSnappy(),
         label = "fabCorner",
     )
@@ -200,6 +210,9 @@ fun ClarityFab(
                 haptic = ClarityHapticEvent.TAP,
                 role = Role.Button,
                 onClickLabel = contentDescription,
+                // The FAB already answers with a scale and a corner morph. A third
+                // treatment on one control is 6.1's error in a different register.
+                showPress = false,
                 onClick = onClick,
             ),
         contentAlignment = Alignment.Center,

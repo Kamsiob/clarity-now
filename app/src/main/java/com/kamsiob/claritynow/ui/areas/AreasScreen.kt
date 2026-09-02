@@ -372,7 +372,7 @@ private fun AreaRow(
         coordinator = swipe,
         actions = actions,
         shape = shape,
-    ) {
+    ) { rowActions ->
         // design-v3.md 8.2 item 2 gives a card the same 0.97 press as a button, and
         // section 9 gives a card press the tap haptic. The largest target in the app
         // had neither: `clarityClickable` sets `indication = null` deliberately, and
@@ -381,6 +381,10 @@ private fun AreaRow(
         ClarityCard(
             modifier = Modifier
                 .fillMaxWidth()
+                // The swipe row's three custom actions, on the node that also carries the
+                // card's description and its click, which is the node a screen reader
+                // actually stops on.
+                .then(rowActions)
                 .then(reorderModifier)
                 .clarityPressScale(cardInteraction, label = "areaCardPress")
                 .clarityClickable(

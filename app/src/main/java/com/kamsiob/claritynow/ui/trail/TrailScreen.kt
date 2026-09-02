@@ -670,9 +670,15 @@ private fun TrailEventRow(
                 // column and read four identical lines. At `body` on `inkPrimary` the two
                 // halves are one step apart rather than three, and what changes is
                 // readable at the size the reader is actually scanning.
+                // **`bodyStrong` on the action, `body` on the subject.** The first fix
+                // moved both halves to `body` and left color as the only thing separating
+                // them, which is precisely what 13 refuses: a person with any color vision
+                // difference, or reading in sunlight, got two identical lines. Weight and
+                // size carry the ranking now and the color follows it rather than
+                // replacing it.
                 Text(
                     text = text.action,
-                    style = type.body,
+                    style = if (text.subject == null) type.body else type.bodyStrong,
                     color = if (text.subject == null) colors.inkSecondary else colors.inkPrimary,
                 )
                 if (text.subject != null) {

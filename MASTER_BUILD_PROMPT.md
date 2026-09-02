@@ -652,7 +652,13 @@ The calm daily mirror. **It observes and never interprets.** It must never say b
 
 Four beats, runs once, replayable from Settings. Entirely Contemplative. A persistent nav overlay: back chevron (hidden on beat 1) at 35 percent white, an 80dp progress line filling by beat, and `Jump in` in `textDim`, always visible. **It was 30 percent white**, which the phase 13 contrast audit measured at 2.643 to one against `design-v3.md` 13's floor of 4.5, and `design-v3.md` wins on anything visual. The back chevron stays at 35 percent, where it measures 3.133 against the 3.0 a graphic carries. Tap or swipe left advances, swipe right goes back.
 
-**Beat 1, See It Work.** About 9 seconds, auto advances. Four colored demo cards enter with staggered three-part entrances. The top card's item strikes through and completes; the next queued title slides up and takes its place. One sentence: `One thing at a time. The next one is ready when you are.` **This beat must land the whole model in five seconds.**
+**Beat 1, See It Work.** Four colored demo cards enter with staggered three-part entrances. The top card's item strikes through and completes; the next queued title slides up and takes its place. One sentence: `Each area holds one item. The rest wait in line behind it.` **This beat must land the whole model in five seconds.**
+
+> **Amended twice in the polish pass, and both changes came from testing rather than from taste.**
+>
+> **The sentence was `One thing at a time. The next one is ready when you are.`** Three of six people in usability testing named it as the app talking down to them. `One thing at a time` is the phrase used to talk somebody down, and `when you are ready` presupposes the reader often is not, which is the wellness register two of them said they had heard immediately before a streak in some other app. It also carried none of the mechanic: the word queue appears nowhere in onboarding and beat 1 draws four cards with nothing visibly behind them, so a person finished the sequence able to state that one thing is active and unable to say where the rest went. The replacement says the mechanic and makes no claim about the reader.
+>
+> **It no longer auto advances.** `About 9 seconds` was a fixed timer that took the screen away whether the demo had been understood or not. Beat 4's own source already carries the argument: a page that leaves while somebody is on it is the worst behavior in the sequence and is pure loss, because a tap does the same job better. A `Tap to continue` hint fades in once the demo has finished playing.
 
 **Beat 2, Your Areas.** The user picks two to four starter areas. Suggestion chips (Work, Personal, Health, Family, Learning, Side Project) plus a custom field. Each selection shows a mini card and opens the mood color rows. **Selections are transient in-memory structs; nothing is written until beat 3.**
 

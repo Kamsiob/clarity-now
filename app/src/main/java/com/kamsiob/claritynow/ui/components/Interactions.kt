@@ -26,6 +26,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
+import com.kamsiob.claritynow.ui.theme.LocalContemplativeColors
+import com.kamsiob.claritynow.ui.theme.LocalIsContemplative
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityHaptics
 import com.kamsiob.claritynow.ui.theme.clarityMotion
@@ -105,10 +107,20 @@ fun Modifier.clarityClickable(
     val source = interactionSource ?: remember { MutableInteractionSource() }
     val motion = clarityMotion()
     val colors = LocalClarityColors.current
+    val night = LocalContemplativeColors.current
     val pressed by source.collectIsPressedAsState()
+    // **The veil follows the surface it is drawn on, not the theme.**
+    //
+    // `LocalClarityColors` is provided once at the root and never swapped for a
+    // Contemplative surface, so `inkPrimary` on the Report or the Pulse in the light world
+    // is a near black veil over a near black page: arithmetically present and invisible.
+    // Every Contemplative surface provides `LocalContemplativeColors`, and its bright text
+    // is the right ink there for the same reason `inkPrimary` is the right ink on a page.
+    val contemplative = LocalIsContemplative.current
+    val veil = if (contemplative) night.textBright else colors.inkPrimary
     val ground by animateColorAsState(
         targetValue = if (pressed && enabled && showPress) {
-            colors.inkPrimary.copy(alpha = PRESS_GROUND_ALPHA)
+            veil.copy(alpha = PRESS_GROUND_ALPHA)
         } else {
             Color.Transparent
         },

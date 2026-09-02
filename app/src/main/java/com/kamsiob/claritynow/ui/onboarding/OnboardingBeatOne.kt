@@ -82,14 +82,31 @@ internal fun OnboardingBeatOne(onAdvance: () -> Unit, modifier: Modifier = Modif
     var promoted by remember { mutableStateOf(false) }
 
     val cards = demoCards()
+    var hintShown by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         delay(SENTENCE_AT)
         sentenceShown = true
         delay(PROMOTION_AT - SENTENCE_AT)
         promoted = true
-        delay(BEAT_MILLIS - PROMOTION_AT)
-        onAdvance()
+        // **No auto advance.** The argument written into `OnboardingBeatFour` applies here
+        // word for word: a page that leaves while somebody is on it is the worst behavior
+        // in the sequence, and it is pure loss, because a tap does the same job better.
+        // Beat 1 used to take the screen away at a fixed nine seconds whether the demo had
+        // been understood or not. A tap or a swipe anywhere still advances, which
+        // `OnboardingRoute` provides for every beat.
+        hintShown = true
+    }
+
+    // The hint the tutorial already shows five times, on the two beats that now wait
+    // rather than advancing themselves. It arrives after the demo has finished playing,
+    // so it never competes with the thing it is waiting for.
+    val hintAlpha = remember { Animatable(0f) }
+    LaunchedEffect(hintShown) {
+        if (hintShown) {
+            delay(HINT_AFTER)
+            hintAlpha.animateTo(1f, motion.easeOut())
+        }
     }
 
     val sentenceAlpha = remember { Animatable(0f) }
@@ -103,7 +120,7 @@ internal fun OnboardingBeatOne(onAdvance: () -> Unit, modifier: Modifier = Modif
             .padding(
                 start = ClaritySpacing.screenPadding,
                 end = ClaritySpacing.screenPadding,
-                bottom = OnboardingOpticalLift,
+                bottom = OnboardingOpticalLiftPadding,
             ),
         verticalArrangement = Arrangement.Center,
     ) {
@@ -128,8 +145,28 @@ internal fun OnboardingBeatOne(onAdvance: () -> Unit, modifier: Modifier = Modif
                 .padding(horizontal = 8.dp)
                 .graphicsLayer { alpha = sentenceAlpha.value },
         )
+
+        Spacer(Modifier.height(ClaritySpacing.rest))
+
+        Text(
+            text = stringResource(R.string.tutorial_advance),
+            style = type.caption,
+            color = contemplative.textDim,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .graphicsLayer { alpha = hintAlpha.value },
+        )
     }
 }
+
+/**
+ * How long a beat waits before saying it is waiting.
+ *
+ * Long enough that the hint never competes with the demo it follows, short enough that
+ * somebody who has finished reading is not left wondering. It is the same value on beat 4.
+ */
+internal const val HINT_AFTER = 2_500L
 
 /**
  * One demo card, and the three part entrance design-v3.md's beat 1 asks for.
@@ -306,7 +343,6 @@ private fun demoCards(): List<OnboardingDemoCard> = listOf(
  */
 private const val SENTENCE_AT = 1_900L
 private const val PROMOTION_AT = 3_400L
-private const val BEAT_MILLIS = 9_000L
 
 /** Card, then area, then title. design-v3.md's "staggered three-part entrances". */
 private const val PART_COUNT = 3

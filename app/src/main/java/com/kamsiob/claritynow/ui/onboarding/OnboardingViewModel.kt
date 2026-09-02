@@ -263,8 +263,32 @@ class OnboardingViewModel(
      * who just declined to create anything would be the app making the one decision this
      * whole phase exists to stop making for them.
      */
-    fun leaveEarly() {
-        viewModelScope.launch { preferences.setHasCompletedOnboarding(true) }
+    /**
+     * **The exit a skeptical person reaches for first, and it used to leave them with
+     * nothing.**
+     *
+     * `Jump in` sits top right on every beat, which is where an exit lives, and it set
+     * `hasCompletedOnboarding` and wrote no areas. [commit] runs only on entering beat 3,
+     * so anybody who took the exit from beat 1 or beat 2 landed on an Areas screen reading
+     * `No areas yet`. They declined the setup and the app immediately asked them to do the
+     * setup, which is the worst possible answer to somebody who has already decided this
+     * is going to be work. Usability testing had one persona out of the app inside four
+     * seconds by this exact route.
+     *
+     * It runs the same write [commit] runs, so an early exit lands whatever was chosen so
+     * far, and falls back to the one `Today` area when nothing was chosen at all. Skipping
+     * setup should mean the app sets itself up, not that it has no setup.
+     */
+    fun leaveEarly(todayName: String) {
+        val current = _state.value
+        if (current.selections.isEmpty()) {
+            // Nothing was picked, so take the `Just start` shape: one area, no item.
+            // `justStart` is derived from the stage, so the stage is what moves. Nothing
+            // was typed on this path either, so the item title stays empty and the write
+            // is one area and nothing else.
+            _state.update { it.copy(stage = BeatTwoStage.JUST_START, firstItemTitle = "") }
+        }
+        commit(todayName)
     }
 
     private fun OnboardingUiState.with(name: String): OnboardingUiState {

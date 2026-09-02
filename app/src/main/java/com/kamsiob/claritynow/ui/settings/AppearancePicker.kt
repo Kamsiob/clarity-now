@@ -221,16 +221,17 @@ private fun AppearanceTile(
 /**
  * One miniature Areas screen, drawn from a real token set.
  *
- * **The ground is `card`, not `canvas`, and that is what makes it a tile.** Painting the
+ * **The ground is `raise`, not `canvas`, and that is what makes it a tile.** Painting the
  * preview on the world's own canvas means the Light tile is `#D6D6DB` on a Settings page
  * that is also `#D6D6DB`: contrast 1.00 to 1, no boundary of any kind, so it read as
  * three loose bars floating on the page beside a Dark tile that read as a solid object.
  * In dark mode it inverted and the Dark tile disappeared instead. Three tiles that are
  * meant to be peers and one of them was never a tile.
  *
- * On `card` the Light tile reads 1.40 to 1 against the page, which is the ladder's own
- * step, and the Dark tile 1.55 to 1. The rows step down to `raise` so the preview keeps
- * its own internal hierarchy, and every value is still a real token.
+ * On `raise` the Light tile reads 1.20 to 1 against the page and the Dark tile 1.44 to 1.
+ * Both are objects in both worlds, which is the requirement. The rows inside then step UP
+ * to `card`, which is the real screen's own relationship: an area card is lighter than the
+ * page it sits on, so the miniature says the same thing the thing it pictures says.
  */
 @Composable
 private fun MiniAreas(world: ClarityColors) {

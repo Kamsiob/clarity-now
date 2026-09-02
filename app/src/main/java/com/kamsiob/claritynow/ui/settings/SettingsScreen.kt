@@ -350,7 +350,7 @@ private fun PermissionCard() {
  */
 @Composable
 private fun GroupGap() {
-    Spacer(Modifier.height(ClaritySpacing.movement))
+    Spacer(Modifier.height(ClaritySpacing.scaled(ClaritySpacing.movement)))
 }
 
 private fun busyLabelOf(task: DataTask): Int = when (task) {

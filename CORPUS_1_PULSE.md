@@ -413,10 +413,10 @@ Rules reaching this stage carry a criterion asserting the record claim is genuin
 
 ```
 persistence.s4.01  [P]  {itemTitle} has been active for {ageDays}.
-persistence.s4.02  [O]  {itemTitle} has been at the front of {areaName} the whole time.
+persistence.s4.02  [O]  Nothing in {areaName} has moved past {itemTitle} in {ageDays}.
 persistence.s4.03  [O]  {areaName} has meant one thing for {ageDays}.
 persistence.s4.04  [O]  A month of {areaName} has been {itemTitle}.
-persistence.s4.05  [O]  Other items have come and gone from {areaName} in that time.
+persistence.s4.05  [O]  Other items have come and gone from {areaName} across {ageDays}.
 persistence.s4.06  [O]  {itemTitle} has been active across {m} different weeks.
 persistence.s4.07  [R]  {ageDays}. At some point an item stops being a task and becomes furniture.
 persistence.s4.08  [R]  {itemTitle} has been there long enough to stop being noticed.
@@ -1488,7 +1488,15 @@ quietday.s1.q20  Off the app, or off entirely?
 Three options here rather than two. Recharging and Busy elsewhere are positive, the third
 is the honest one.
 
-**Every label names the day or the load. None of them names the person.** That is 6.4's
+**Every label names the day or the load. None of them names the person, and the third one
+still has to read as the harder answer.**
+
+Positivity here is assigned by POSITION and nothing else: `CorpusParser` marks every option
+but the last as positive, so a third label that reads neutral gets a person's tap written to
+the log as a hard day they did not report. The first attempt at this rewrite traded four
+pathologizing labels for four that read as fine, which is the same defect with the sign
+turned round. A third label has to be plainly the harder of the three AND still be about the
+day. That is 6.4's
 own rule, applied at the one point in this product where a person taps a word about
 themselves: the tap is written to the log, rendered in the Trail forever, carried into the
 plaintext export, and quotable back weeks later as `{priorLabel}`. `Overwhelmed`, `Not
@@ -1502,17 +1510,17 @@ who lived it.
 quietday.s1.r01  Recharging / Busy elsewhere / Too much at once
 quietday.s1.r02  Resting / Elsewhere / Stuck
 quietday.s1.r03  Deliberate / Life happened / Too much on
-quietday.s1.r04  A day off / Off the app / No room for it
+quietday.s1.r04  A day off / Off the app / No room for anything
 quietday.s1.r05  Needed it / Doing other things / A hard one
 quietday.s1.r06  Rested / Busy elsewhere / Nothing left in the tank
-quietday.s1.r07  On purpose / Other things came up / A slow one
+quietday.s1.r07  On purpose / Other things came up / A day that got away
 quietday.s1.r08  A pause / Away / Stalled
 quietday.s1.r09  Needed the day / Out doing things / Never got started
-quietday.s1.r10  Chosen / Circumstance / A full day
+quietday.s1.r10  Chosen / Circumstance / Too full for it
 quietday.s1.r11  Time off / Time elsewhere / No time at all
 quietday.s1.r12  Fine / Busy / A hard day
 quietday.s1.r13  Recovered / Occupied / A tiring one
-quietday.s1.r14  Slow on purpose / Slow by circumstance / Out of hours
+quietday.s1.r14  Slow on purpose / Slow by circumstance / Ran out of day
 ```
 
 ## Stage 2, two to three consecutive quiet days
@@ -1622,7 +1630,7 @@ quietday.s2.r04  Resting / Occupied / A hard one
 quietday.s2.r05  On purpose / Other things came up / No room for it
 quietday.s2.r06  A pause / Away / Stuck in it
 quietday.s2.r07  Resting / Working elsewhere / Cannot get started
-quietday.s2.r08  Chosen / Circumstance / A full day
+quietday.s2.r08  Chosen / Circumstance / Too full for it
 quietday.s2.r09  Time off / Time elsewhere / No time at all
 quietday.s2.r10  Fine / Busy / A hard day
 quietday.s2.r11  Recovered / Occupied / A tiring one
@@ -1742,7 +1750,7 @@ quietday.s3.r07  On purpose / Other things came up / A slow one
 quietday.s3.r08  Coming back / Still away / Not ready
 quietday.s3.r09  Fine / Busy / A hard day
 quietday.s3.r10  Needed the time / Occupied / Under it
-quietday.s3.r11  Chosen / Circumstance / A full day
+quietday.s3.r11  Chosen / Circumstance / Too full for it
 quietday.s3.r12  Still fits / Needs a rethink / Too much on it
 quietday.s3.r13  Rested / Away / Run down
 quietday.s3.r14  Time off / Time elsewhere / No time at all

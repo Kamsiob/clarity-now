@@ -121,9 +121,14 @@ internal fun OnboardingBeatTwo(
             // a list that rearranges itself between them is the worst thing this screen
             // could do. Centered while it fits, anchored to the top the moment it starts
             // to grow, so nothing a person is aiming at ever moves.
-            verticalArrangement = if (state.stage == BeatTwoStage.PICK_AREAS &&
-                state.selections.isNotEmpty()
-            ) {
+            // **Top from the moment the picker opens, not from the first selection.**
+            //
+            // Flipping on the first pick swapped one jump for a bigger one: the whole
+            // column moved by half the empty space in a single un-animated frame, which is
+            // further than the 55dp reflow it was meant to remove. The stage that can grow
+            // is anchored for its whole life, so nothing a person is aiming at ever moves,
+            // and the fork and the Just start field, which cannot grow, stay centered.
+            verticalArrangement = if (state.stage == BeatTwoStage.PICK_AREAS) {
                 Arrangement.Top
             } else {
                 Arrangement.Center

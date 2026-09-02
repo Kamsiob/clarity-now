@@ -28,8 +28,9 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.semantics.text
 import androidx.compose.ui.unit.dp
 import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
@@ -213,9 +214,16 @@ fun ClarityTextField(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                // The field carries the name the label above it draws, because
-                // `BasicTextField` has no label slot to associate them with.
-                .semantics { contentDescription = label }
+                // **The label is the field's `text`, not its `contentDescription`.**
+                //
+                // A `contentDescription` on an editable node REPLACES what TalkBack reads,
+                // so the first version of this fix announced "Title" and hid "Buy milk",
+                // which is worse than the anonymous field it replaced: a person could no
+                // longer hear what they had typed. Compose's own resolution order for an
+                // editable node is contentDescription, then text, then editableText, so
+                // putting the label in `text` names the field and leaves the typed value
+                // to be read after it.
+                .semantics { text = AnnotatedString(label) }
                 .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier),
         )
     }

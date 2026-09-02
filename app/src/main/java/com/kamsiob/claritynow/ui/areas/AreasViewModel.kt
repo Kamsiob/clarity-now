@@ -78,8 +78,12 @@ data class AreaCardModel(
      * though they used it once and stopped. It is a small false statement about a person
      * on the screen they open most.
      *
-     * `area_never_active` was written in phase 2 for exactly this and referenced by
-     * nothing.
+     * `area_never_active` ("Nothing here yet") was written in phase 2 for exactly this,
+     * referenced by nothing for eleven phases, wired up in this pass and then RETIRED in
+     * the same pass, because using it produced `Add your first item` over `Nothing here
+     * yet`: two sentences making one point on the emptiest card in the app. The title is
+     * the invitation and it is enough. What this property does now is suppress the status
+     * line entirely, which is the thing that was actually wrong.
      */
     val neverHeldAnything: Boolean
         get() = isIdle && queueLength == 0 && completedCount == 0

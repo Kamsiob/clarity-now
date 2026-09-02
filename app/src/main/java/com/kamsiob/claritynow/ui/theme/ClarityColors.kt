@@ -323,3 +323,19 @@ val SupportAccent = Color(0xFFB45309)
 
 val LocalClarityColors = staticCompositionLocalOf { ClarityLightColors }
 val LocalContemplativeColors = staticCompositionLocalOf { ClarityContemplativeColors }
+
+/**
+ * **Whether the composable asking is standing on a Contemplative surface.**
+ *
+ * `LocalClarityColors` is provided once at the root with the Daylight or Dark palette and
+ * is never swapped, because 3.3's world is not a theme: Focus, the Pulse and the Report
+ * are always dark whatever the phone is set to. That works until a SHARED control has to
+ * draw ink on whichever ground it happens to be over, which is what the press veil does.
+ * In the light world `inkPrimary` over the Report is a near black veil on a near black
+ * page: present in the arithmetic and invisible to a person.
+ *
+ * A flag rather than a swapped palette, deliberately. Swapping the palette would let any
+ * Daylight token silently resolve to a Contemplative one and back, which is exactly the
+ * accidental inversion the two type families exist to prevent.
+ */
+val LocalIsContemplative = staticCompositionLocalOf { false }

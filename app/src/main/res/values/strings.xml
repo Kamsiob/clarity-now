@@ -72,7 +72,6 @@
         <item quantity="other">Last active %d days ago</item>
     </plurals>
     <string name="area_last_active_today">Last active today</string>
-    <string name="area_never_active">Nothing here yet</string>
     <plurals name="area_in_focus_minutes">
         <item quantity="one">In focus, %d minute left</item>
         <item quantity="other">In focus, %d minutes left</item>
@@ -204,7 +203,7 @@
         active slot. Both are real events in the log, which is the honest record of what
         happened, and it is the same pair the Trail already offers on a completion row.
     -->
-    <string name="undo_item_completed">Completed</string>
+    <string name="undo_item_completed">Item completed</string>
     <string name="undo_area_archived">Area archived</string>
 
     <!-- Content descriptions -->
@@ -279,7 +278,7 @@
         planned length or a person ended it sooner. There is no second, quieter
         version of this line for a shorter session.
     -->
-    <string name="focus_complete_notification_title">Session ended</string>
+    <string name="focus_complete_notification_title">Session complete</string>
 
     <!--
         The transition warning, off by default, per Addendum 01 4g. The exact phrase
@@ -383,6 +382,14 @@
         <item quantity="one">%1$d minute of focus on %2$s</item>
         <item quantity="other">%1$d minutes of focus on %2$s</item>
     </plurals>
+    <!--
+        The zero case, which the unified wording created. `minutesOf` rounds to nearest, so
+        a twenty second mis-tap that the interface deliberately shows no confirmation and
+        no completion screen for still writes FOCUS_ENDED_EARLY, and "0 minutes of focus"
+        files a discarded session as an achievement of zero. The row says what happened
+        instead: a session was started and did not run.
+    -->
+    <string name="trail_focus_stopped_zero">A focus session on %1$s did not get going</string>
     <string name="trail_pulse_generated">A Pulse was ready</string>
     <string name="trail_pulse_answered">Answered a Pulse with %1$s</string>
     <string name="trail_report_generated">A Report was written for the week of %1$s</string>
@@ -932,7 +939,7 @@
         A button says what will happen when it is pressed. These two do.
     -->
     <string name="settings_import_do_merge">Merge these events</string>
-    <string name="settings_import_do_replace">Replace everything on this phone</string>
+    <string name="settings_import_do_replace">Erase this phone and use the file</string>
     <string name="settings_import_summary">%1$d events, written %2$s.</string>
     <string name="settings_import_replace">Replace everything</string>
     <string name="settings_import_merge">Merge with what is here</string>
@@ -1075,13 +1082,22 @@
         looking observation here would one day be shown to somebody with a year of history
         behind them and would read as a claim about it.
     -->
-    <string name="onboarding_jump_in">Jump in</string>
+    <string name="onboarding_jump_in">Skip setup</string>
     <string name="cd_onboarding_back">Back</string>
     <string name="onboarding_continue">Continue</string>
     <string name="onboarding_start">Start</string>
 
-    <!-- Beat 1, See It Work. The sentence is stated verbatim in 13.1. -->
-    <string name="onboarding_beat_one_line">One thing at a time. The next one is ready when you are.</string>
+    <!--
+        Beat 1, See It Work.
+
+        The sentence was pinned verbatim in MASTER_BUILD_PROMPT 13.1 and is amended there,
+        in place, with the reasoning. Three of six people in usability testing heard the
+        old line as the app talking down to them, and it carried none of the mechanic: a
+        person could finish the whole sequence able to say that one thing is active and
+        unable to say where everything else went, because the word queue appears nowhere
+        in onboarding and beat 1 draws four cards with nothing visibly behind them.
+    -->
+    <string name="onboarding_beat_one_line">Each area holds one item. The rest wait in line behind it.</string>
     <string name="onboarding_demo_area_one">Work</string>
     <string name="onboarding_demo_item_one">Send the quarterly update</string>
     <string name="onboarding_demo_next_one">Book a room for Thursday</string>
@@ -1112,7 +1128,7 @@
         field is optional and the placeholder is an example rather than an instruction.
     -->
     <string name="onboarding_just_start_heading">What is on your mind?</string>
-    <string name="onboarding_just_start_note">One thing is enough, and you can leave it empty and add something later.</string>
+    <string name="onboarding_just_start_note">This can be one line, or you can leave it empty and add something later.</string>
     <string name="onboarding_just_start_field">First item</string>
     <string name="onboarding_just_start_placeholder">Anything you do not want to lose</string>
 
@@ -1152,15 +1168,16 @@
 
     <!-- Beat 4. The four captions are stated verbatim in 13.1. -->
     <string name="onboarding_depth_philosophy_one">Every area holds one thing. The rest wait.</string>
-    <string name="onboarding_depth_philosophy_two">Two more things worth knowing.</string>
+    <string name="onboarding_depth_philosophy_two">Three more things worth knowing.</string>
     <string name="onboarding_depth_pulse_sample">Some days there will be a question waiting here.</string>
     <string name="onboarding_depth_pulse_option_one">That sounds right</string>
     <string name="onboarding_depth_pulse_option_two">Not quite</string>
-    <string name="onboarding_depth_pulse_caption">One question a day. One tap. You can turn it off.</string>
-    <string name="onboarding_depth_momentum_caption">What you did, counted. Nothing scored.</string>
+    <string name="onboarding_depth_pulse_caption">It asks about what you did, never about how you feel. One tap answers it, and you can turn it off.</string>
+    <string name="onboarding_depth_momentum_caption">It counts what you did. There is no score anywhere in this app.</string>
+    <string name="onboarding_depth_pulse_eyebrow">Pulse sample</string>
     <string name="onboarding_depth_report_eyebrow">Clarity Report</string>
     <string name="onboarding_depth_report_headline">Your week, in one page.</string>
-    <string name="onboarding_depth_report_caption">Every Sunday, a page about your week. Written on this phone.</string>
+    <string name="onboarding_depth_report_caption">Every Sunday, a page about your week. It is written on this phone and never sent anywhere.</string>
 
     <!--
         Addendum 01 8b, and the one line the whole item is about. It names the cadence, the
@@ -1181,7 +1198,7 @@
     <string name="tutorial_advance">Tap to continue</string>
     <string name="tutorial_step_indicator">%1$d of %2$d</string>
     <string name="tutorial_fab_title">Add anything</string>
-    <string name="tutorial_fab_body">Write it down without choosing where it goes. It waits in your inbox until you file it.</string>
+    <string name="tutorial_fab_body">Write it down without deciding where it goes first. It waits in a queue until you get to it.</string>
     <string name="tutorial_area_title">One active item</string>
     <string name="tutorial_area_body">Each area shows the one thing you are on. Swipe right to complete it, left to swap it.</string>
     <string name="tutorial_focus_title">Focus</string>

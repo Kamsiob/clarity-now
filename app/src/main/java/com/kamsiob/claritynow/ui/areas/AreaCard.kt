@@ -327,13 +327,16 @@ private fun IdleLine(area: AreaCardModel) {
     val colors = LocalClarityColors.current
     val type = LocalClarityTypography.current
     if (!area.isIdle) return
+    // **An area nothing has ever been in draws no status line at all.**
+    //
+    // Fixing `Last active today` on a brand new card left it reading `Add your first item`
+    // over `Nothing here yet`, which is two sentences making one point on the emptiest card
+    // in the app. The title is the invitation and it is enough; the line below exists to
+    // report a last activity, and there has not been one.
+    if (area.neverHeldAnything) return
 
     Text(
         text = when {
-            // An area nothing has ever been in has no last activity to report, and
-            // saying it was active today is untrue on the day it is created and gets
-            // less true every day after.
-            area.neverHeldAnything -> stringResource(R.string.area_never_active)
             area.daysSinceLastEvent <= 0 -> stringResource(R.string.area_last_active_today)
             else -> pluralStringResource(
                 R.plurals.area_last_active_days,
@@ -375,7 +378,12 @@ fun areaCardDescription(
 /** Kept next to the card so the semantics and the visuals cannot drift apart. */
 @Composable
 fun AreaCardSemantics(area: AreaCardModel, modifier: Modifier = Modifier): Modifier {
-    val idleTitle = stringResource(R.string.area_idle_title)
+    // The same branch the visible title takes. When only one of the two learned it, the
+    // card said "Pick what is next" and the description said "Add your first item", which
+    // is the bug this pass fixed visually reappearing in speech.
+    val idleTitle = stringResource(
+        if (area.queueLength > 0) R.string.area_idle_queued_title else R.string.area_idle_title,
+    )
     val minutes = area.focusMinutesRemaining
     val focusStatus = if (minutes == null) {
         null
