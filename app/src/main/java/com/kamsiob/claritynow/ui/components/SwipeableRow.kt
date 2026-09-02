@@ -135,6 +135,15 @@ fun SwipeableRow(
     actions: SwipeActions,
     modifier: Modifier = Modifier,
     shape: RoundedCornerShape = RoundedCornerShape(18.dp),
+    /**
+     * Actions the caller wants on the same node, appended to the three swipe actions.
+     *
+     * They are passed in rather than appended by the caller, because a semantics property
+     * cannot be read inside its own receiver: `customActions = customActions + extra`
+     * compiles and throws `UnsupportedOperationException` the moment an accessibility
+     * service queries the tree. One list, built once, in one place.
+     */
+    extraActions: List<CustomAccessibilityAction> = emptyList(),
     content: @Composable (Modifier) -> Unit,
 ) {
     val colors = LocalClarityColors.current
@@ -213,6 +222,7 @@ fun SwipeableRow(
             actions.onComplete?.let { run -> add(CustomAccessibilityAction(actions.completeLabel) { run(); true }) }
             actions.onSwap?.let { run -> add(CustomAccessibilityAction(actions.swapLabel) { run(); true }) }
             actions.onDelete?.let { run -> add(CustomAccessibilityAction(actions.deleteLabel) { run(); true }) }
+            addAll(extraActions)
         }
     }
 
@@ -231,8 +241,8 @@ fun SwipeableRow(
             // Adding `mergeDescendants = true` here did not fix it and made it worse. A
             // merging node cannot absorb another merging node, so the result was TWO focus
             // stops, the first of them nameless, and the actions were still on the wrong
-            // one. `isTraversalGroup` plus the actions on the child's own node is what
-            // actually puts them where a person will find them.
+            // one. Handing the modifier to the content is what works, and it is the whole
+            // mechanism.
 
     ) {
         // The action layer matches the card exactly rather than sizing itself,

@@ -1,5 +1,7 @@
 package com.kamsiob.claritynow.ui.onboarding
 
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -22,15 +24,33 @@ import androidx.compose.ui.unit.dp
  * 64dp is 7 percent of the reference height and lands the block where the eye expects the
  * middle to be.
  *
- * **It is applied as bottom padding, and bottom padding lifts a centered box by HALF its
- * value**, because shortening a box by 64 moves its midpoint up by 32. The first version
- * of this put a raw 64 on all three beats and produced 32dp of lift on the two that center
- * inside a `fillMaxSize` box and 64dp on the one that subtracts it from a viewport
- * minimum, so the three beats sat at two different heights. [OnboardingOpticalLiftPadding]
- * is what a caller applies; the constant above is what a reader should be able to measure
- * on the screen.
+ * **How it is applied took three attempts and the first two were both wrong.**
+ *
+ * Applied as bottom padding it lifts a centered box by HALF its value, because shortening
+ * a box by 64 moves its midpoint up by 32, so a raw 64 on all three beats produced 32dp of
+ * lift on the two that center inside a `fillMaxSize` box and 64dp on the one that
+ * subtracts it from a viewport minimum: three beats, two heights. Doubling it made them
+ * equal and cost 128dp of usable height on the two beats that have no scroll, which on
+ * beat 1's four cards at 200 percent text is the difference between fitting and clipping.
+ *
+ * [Modifier.onboardingLift] translates instead. The box keeps its full height, the
+ * arrangement still centers inside all of it, and the content is placed 64dp higher.
+ * Nothing is given up to buy it. Beat 2 keeps the padding form because it scrolls, so
+ * shortening its viewport minimum is free and is what makes a growing stage anchor.
  */
 val OnboardingOpticalLift: Dp = 64.dp
 
-/** Twice the lift, because bottom padding on a centered box buys half of what it spends. */
-val OnboardingOpticalLiftPadding: Dp = OnboardingOpticalLift * 2
+/**
+ * The lift for a beat that cannot scroll.
+ *
+ * A translation rather than a padding: the box keeps its full height, the arrangement
+ * still centers inside all of it, and the result is moved up by exactly
+ * [OnboardingOpticalLift]. Nothing is given up to buy it, which matters on the two beats
+ * that have no scroll to fall back on.
+ */
+fun Modifier.onboardingLift(): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    layout(placeable.width, placeable.height) {
+        placeable.place(0, -OnboardingOpticalLift.roundToPx())
+    }
+}

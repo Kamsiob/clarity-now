@@ -27,7 +27,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.semantics.text
@@ -149,17 +148,28 @@ fun ClarityTextField(
     )
 
     Column(modifier = modifier.fillMaxWidth()) {
-        // **The label is drawn here and spoken by the field below it, never both.**
-        // `BasicTextField` has no label slot, so a sibling `Text` is the only way to draw
-        // one and nothing associates the two: TalkBack announced "Edit box" plus whatever
-        // had been typed, which on the capture sheet is two consecutive fields that sound
-        // identical. The field takes the name and the drawn label is cleared, so it is
-        // read once.
+        // **The label is a plain, uncleared node immediately before the field, and both
+        // attempts to be cleverer than that were worse.**
+        //
+        // `BasicTextField` has no label slot and Compose exposes no `labeledBy` and no
+        // hint property, so `ContentDescription` and `Text` are the only two levers and
+        // both are wrong on an editable node. A `contentDescription` REPLACES what is read,
+        // so the field announced "Title" and hid "Buy milk". Moving the label to `text` is
+        // worse still: `getInfoText` resolves `editableText ?: text`, so the label is
+        // discarded outright whenever anything has been typed, and setting `Text` on the
+        // node flips its class from `EditText` to `TextView`, which stops it being a field
+        // at all. Verified by disassembly of the shipping Compose and by a uiautomator dump
+        // on the device: three of four fields on the capture sheet were silent, roleless
+        // stops with no name and no value.
+        //
+        // The arrangement that works is the ordinary one, and this project already had it:
+        // `OnboardingControls` draws an uncleared label and gives its field no semantics
+        // override at all. A screen reader reads the label node, then the field, which is
+        // how every Android form has always worked.
         Text(
             text = label,
             style = type.sidehead,
             color = colors.inkSecondary,
-            modifier = Modifier.clearAndSetSemantics { },
         )
         Spacer(Modifier.height(ClaritySpacing.scaled(FIELD_LABEL_GAP)))
         BasicTextField(

@@ -117,11 +117,8 @@ internal fun OnboardingBeatOne(onAdvance: () -> Unit, modifier: Modifier = Modif
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(
-                start = ClaritySpacing.screenPadding,
-                end = ClaritySpacing.screenPadding,
-                bottom = OnboardingOpticalLiftPadding,
-            ),
+            .padding(horizontal = ClaritySpacing.screenPadding)
+            .onboardingLift(),
         verticalArrangement = Arrangement.Center,
     ) {
         cards.forEachIndexed { index, card ->

@@ -104,10 +104,24 @@ class AccessibilityShapeTest {
     }
 
     /**
-     * **A `contentDescription` on an editable node replaces the typed text.**
+     * **Both attempts to name this field by hand were wrong, and this is the arrangement
+     * that works, dumped from the device rather than reasoned about.**
      *
-     * Naming the field that way announced "Title" and hid "Buy milk", which is worse than
-     * the anonymous field it replaced: a person could no longer hear what they had written.
+     * A `contentDescription` on an editable node REPLACES what is read, so the field
+     * announced "Title" and hid "Buy milk". Moving the label into `text` is worse:
+     * `getInfoText` resolves `editableText ?: text`, so the label is discarded the moment
+     * anything is typed, and setting `Text` on the node flips its class from `EditText` to
+     * `TextView`, which stops it being a field at all.
+     *
+     * The working arrangement is an uncleared label node before an unmodified field. The
+     * merged config on a Pixel 8 is then, verbatim:
+     *
+     * ```
+     * Text=[Title], InputText=Buy milk, EditableText=Buy milk, IsEditable=true
+     * ```
+     *
+     * with no `ContentDescription` at all: the name, the value and the role, which is what
+     * a screen reader needs and what neither hand written version produced.
      */
     @Test
     fun aFieldSaysItsNameAndAlsoWhatWasTyped() {

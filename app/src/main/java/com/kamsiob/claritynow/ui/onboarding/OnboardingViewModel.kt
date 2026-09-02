@@ -254,16 +254,6 @@ class OnboardingViewModel(
     }
 
     /**
-     * `Jump in`, from the persistent nav overlay. MASTER_BUILD_PROMPT 13.1.
-     *
-     * It records that onboarding is behind the person and writes nothing else. **It does
-     * not quietly create an area for them.** design-v3.md 10.15 specifies the zero areas
-     * state in full, down to the FAB creating an area while it holds, so leaving is a
-     * supported destination rather than a hole; creating something on behalf of someone
-     * who just declined to create anything would be the app making the one decision this
-     * whole phase exists to stop making for them.
-     */
-    /**
      * **The exit a skeptical person reaches for first, and it used to leave them with
      * nothing.**
      *
@@ -278,6 +268,18 @@ class OnboardingViewModel(
      * It runs the same write [commit] runs, so an early exit lands whatever was chosen so
      * far, and falls back to the one `Today` area when nothing was chosen at all. Skipping
      * setup should mean the app sets itself up, not that it has no setup.
+     *
+     * **This reverses a decision, and the old reasoning is deleted rather than left
+     * standing beside it.** It used to say that creating an area for somebody who declined
+     * to create one would be the app making the decision this phase exists to stop making,
+     * and that 10.15's zero areas state made leaving a supported destination. The first
+     * half is a fair argument and the second is true. What settled it is that six people
+     * were watched doing this, and the one who left fastest, at four seconds, was the
+     * persona the whole tone brief is written for: she recognized the shape of a setup
+     * flow, took the exit, and landed on a screen asking her to do the setup she had just
+     * declined. A zero areas state is a supported destination for somebody who arrives at
+     * it by deleting their last area. It is not a supported destination for somebody who
+     * pressed the button labeled Skip setup.
      */
     fun leaveEarly(todayName: String) {
         val current = _state.value

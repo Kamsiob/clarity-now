@@ -380,6 +380,15 @@ private fun AreaRow(
         coordinator = swipe,
         actions = actions,
         shape = shape,
+        // The two gestures beyond a tap. Both strings were written in phase 2 and had no
+        // call site until now, so a screen reader was told about neither the actions menu
+        // nor the reordering.
+        extraActions = listOfNotNull(
+            CustomAccessibilityAction(moreActionsLabel) { onLongPress(); true },
+            // Reordering is a long press and drag with no non-gesture path at all. `Move
+            // to front` is the reachable half of the same intent.
+            onMoveToFront?.let { move -> CustomAccessibilityAction(reorderLabel) { move(); true } },
+        ),
     ) { rowActions ->
         // design-v3.md 8.2 item 2 gives a card the same 0.97 press as a button, and
         // section 9 gives a card press the tap haptic. The largest target in the app
@@ -392,22 +401,9 @@ private fun AreaRow(
                 // The swipe row's three custom actions, on the node that also carries the
                 // card's description and its click, which is the node a screen reader
                 // actually stops on.
+                // Carries all five actions: the three swipe verbs plus the two gestures
+                // this card supports beyond a tap, built as one list inside SwipeableRow.
                 .then(rowActions)
-                // The two gestures this card supports beyond a tap, named. Both strings
-                // were written in phase 2 and had no call site until now, so a screen
-                // reader was told about neither the actions menu nor the reordering.
-                .semantics {
-                    customActions = customActions + listOfNotNull(
-                        CustomAccessibilityAction(moreActionsLabel) { onLongPress(); true },
-                        // Reordering is a long press and drag with no non-gesture path at
-                        // all, so a person using a screen reader or switch access could
-                        // not reach it. `Move to front` is the reachable half of the same
-                        // intent and the sheet already offers it.
-                        onMoveToFront?.let { move ->
-                            CustomAccessibilityAction(reorderLabel) { move(); true }
-                        },
-                    )
-                }
                 .then(reorderModifier)
                 .clarityPressScale(cardInteraction, label = "areaCardPress")
                 .clarityClickable(

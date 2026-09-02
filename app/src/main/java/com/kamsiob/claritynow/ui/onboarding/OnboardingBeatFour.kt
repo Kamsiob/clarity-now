@@ -124,11 +124,8 @@ internal fun OnboardingBeatFour(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(
-                    start = ClaritySpacing.screenPadding,
-                    end = ClaritySpacing.screenPadding,
-                    bottom = OnboardingOpticalLiftPadding,
-                ),
+                .padding(horizontal = ClaritySpacing.screenPadding)
+                .onboardingLift(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {

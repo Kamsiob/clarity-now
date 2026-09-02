@@ -1156,12 +1156,12 @@
     <string name="onboarding_beat_three_line">Nothing here can break.</string>
 
     <!-- Beat 4. The four captions are stated verbatim in 13.1. -->
-    <string name="onboarding_depth_philosophy_one">Every area holds one thing. The rest wait.</string>
+    <string name="onboarding_depth_philosophy_one">Most lists ask you to choose what is next. This one already has.</string>
     <string name="onboarding_depth_philosophy_two">Three more things worth knowing.</string>
     <string name="onboarding_depth_pulse_sample">Some days there will be a question waiting here.</string>
     <string name="onboarding_depth_pulse_option_one">That sounds right</string>
     <string name="onboarding_depth_pulse_option_two">Not quite</string>
-    <string name="onboarding_depth_pulse_caption">It asks about what you did, never about how you feel. One tap answers it, and you can turn it off.</string>
+    <string name="onboarding_depth_pulse_caption">A question about what you have been doing. One tap answers it, and you can turn it off in Settings.</string>
     <string name="onboarding_depth_momentum_caption">It counts what you did. There is no score anywhere in this app.</string>
     <string name="onboarding_depth_pulse_eyebrow">Pulse sample</string>
     <string name="onboarding_depth_report_eyebrow">Clarity Report</string>

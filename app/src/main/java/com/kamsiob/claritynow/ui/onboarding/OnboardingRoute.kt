@@ -25,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -56,6 +57,8 @@ import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.ContemplativeTheme
 import com.kamsiob.claritynow.ui.theme.LocalCalmMode
 import com.kamsiob.claritynow.ui.theme.LocalClarityShapes
+import androidx.compose.runtime.CompositionLocalProvider
+import com.kamsiob.claritynow.ui.theme.LocalIsContemplative
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.LocalContemplativeColors
 import com.kamsiob.claritynow.ui.theme.clarityMotion
@@ -111,6 +114,7 @@ fun OnboardingRoute(
         val state by viewModel.state.collectAsStateWithLifecycle()
         val motion = clarityMotion()
         val todayName = stringResource(R.string.onboarding_today_area)
+        val scope = rememberCoroutineScope()
 
         var moment by rememberSaveable { mutableIntStateOf(0) }
         val reveal = remember { Animatable(0f) }
@@ -169,107 +173,117 @@ fun OnboardingRoute(
 
         BackHandler(enabled = state.canGoBack) { viewModel.back() }
 
-        Box(modifier = modifier.fillMaxSize()) {
-            // Everything behind onboarding is untouchable, which matters from beat 3
-            // onward, when the live Areas screen is composed under it and part of this
-            // surface is transparent. A sibling drawn behind the content rather than an
-            // ancestor of it, so it can never starve the gestures below.
-            Spacer(Modifier.fillMaxSize().swallowsPointerInput())
+        // **Onboarding is a Contemplative surface and has to say so.**
+        //
+        // 3.3's deepBlack room, drawn outside `ClarityShell`, which is where every other
+        // Contemplative surface declares its world. Without the flag the press veil on
+        // Skip setup, Continue, the two choice panels, the area rows and all 48 color
+        // swatches was `inkPrimary` on near black in the light world: arithmetically
+        // present and invisible to a person. The swatches and the color rows carry no
+        // press scale either, so tapping one answered with nothing at all.
+        CompositionLocalProvider(LocalIsContemplative provides true) {
+            Box(modifier = modifier.fillMaxSize()) {
+                // Everything behind onboarding is untouchable, which matters from beat 3
+                // onward, when the live Areas screen is composed under it and part of this
+                // surface is transparent. A sibling drawn behind the content rather than an
+                // ancestor of it, so it can never starve the gestures below.
+                Spacer(Modifier.fillMaxSize().swallowsPointerInput())
 
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .pointerInput(Unit) {
-                        var travel = 0f
-                        detectHorizontalDragGestures(
-                            onDragStart = { travel = 0f },
-                            onDragEnd = {
-                                when {
-                                    travel <= -SWIPE_THRESHOLD_PX -> advanceNow()
-                                    travel >= SWIPE_THRESHOLD_PX -> goBackNow()
-                                    else -> Unit
-                                }
-                            },
-                        ) { _, amount -> travel += amount }
-                    }
-                    .pointerInput(tapAdvances) {
-                        if (!tapAdvances) return@pointerInput
-                        detectTapGestures { advanceNow() }
-                    },
-            ) {
-                // The iris. design-v3.md 8.2 item 18: a circular reveal from center over
-                // 600ms springGentle, and 16.6 item 18 replaces it with a crossfade when
-                // motion is reduced or calm mode is on. Both are the same value driving a
-                // different property, so there is one animation and one branch.
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .graphicsLayer {
-                            compositingStrategy = CompositingStrategy.Offscreen
-                            alpha = if (motion.reduced) 1f - reveal.value else 1f
+                        .pointerInput(Unit) {
+                            var travel = 0f
+                            detectHorizontalDragGestures(
+                                onDragStart = { travel = 0f },
+                                onDragEnd = {
+                                    when {
+                                        travel <= -SWIPE_THRESHOLD_PX -> advanceNow()
+                                        travel >= SWIPE_THRESHOLD_PX -> goBackNow()
+                                        else -> Unit
+                                    }
+                                },
+                            ) { _, amount -> travel += amount }
                         }
-                        .drawWithContent {
-                            drawContent()
-                            if (motion.reduced || reveal.value <= 0f) return@drawWithContent
-                            drawCircle(
-                                color = Color.Black,
-                                radius = hypot(size.width, size.height) / 2f * reveal.value,
-                                center = center,
-                                blendMode = BlendMode.DstOut,
-                            )
+                        .pointerInput(tapAdvances) {
+                            if (!tapAdvances) return@pointerInput
+                            detectTapGestures { advanceNow() }
                         },
                 ) {
-                    OnboardingBackdrop(glow = glowForMoment(state.beat, moment))
-
+                    // The iris. design-v3.md 8.2 item 18: a circular reveal from center over
+                    // 600ms springGentle, and 16.6 item 18 replaces it with a crossfade when
+                    // motion is reduced or calm mode is on. Both are the same value driving a
+                    // different property, so there is one animation and one branch.
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .statusBarsPadding()
-                            .navigationBarsPadding()
-                            .padding(top = NAV_HEIGHT),
+                            .graphicsLayer {
+                                compositingStrategy = CompositingStrategy.Offscreen
+                                alpha = if (motion.reduced) 1f - reveal.value else 1f
+                            }
+                            .drawWithContent {
+                                drawContent()
+                                if (motion.reduced || reveal.value <= 0f) return@drawWithContent
+                                drawCircle(
+                                    color = Color.Black,
+                                    radius = hypot(size.width, size.height) / 2f * reveal.value,
+                                    center = center,
+                                    blendMode = BlendMode.DstOut,
+                                )
+                            },
                     ) {
-                        when (state.beat) {
-                            OnboardingBeat.SEE_IT_WORK -> OnboardingBeatOne(onAdvance = advance)
+                        OnboardingBackdrop(glow = glowForMoment(state.beat, moment))
 
-                            OnboardingBeat.YOUR_AREAS -> OnboardingBeatTwo(
-                                state = state,
-                                onJustStart = viewModel::chooseJustStart,
-                                onPickAreas = viewModel::choosePickAreas,
-                                onFirstItemChange = viewModel::setFirstItemTitle,
-                                onToggleSuggestion = viewModel::toggleSuggestion,
-                                onAddCustom = viewModel::addCustom,
-                                onRemove = viewModel::remove,
-                                onFocus = viewModel::focusOn,
-                                onRecolor = viewModel::recolor,
-                                onContinue = viewModel::advance,
-                            )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .statusBarsPadding()
+                                .navigationBarsPadding()
+                                .padding(top = NAV_HEIGHT),
+                        ) {
+                            when (state.beat) {
+                                OnboardingBeat.SEE_IT_WORK -> OnboardingBeatOne(onAdvance = advance)
 
-                            // The reveal draws nothing of its own. What it is made of is
-                            // the black being taken away and the closing line above it.
-                            OnboardingBeat.THE_REVEAL -> Unit
+                                OnboardingBeat.YOUR_AREAS -> OnboardingBeatTwo(
+                                    state = state,
+                                    onJustStart = viewModel::chooseJustStart,
+                                    onPickAreas = viewModel::choosePickAreas,
+                                    onFirstItemChange = viewModel::setFirstItemTitle,
+                                    onToggleSuggestion = viewModel::toggleSuggestion,
+                                    onAddCustom = viewModel::addCustom,
+                                    onRemove = viewModel::remove,
+                                    onFocus = viewModel::focusOn,
+                                    onRecolor = viewModel::recolor,
+                                    onContinue = viewModel::advance,
+                                )
 
-                            OnboardingBeat.THE_DEPTH -> OnboardingBeatFour(
-                                moment = moment,
-                                onMoment = { moment = it },
-                                onFinish = onFinished,
-                            )
+                                // The reveal draws nothing of its own. What it is made of is
+                                // the black being taken away and the closing line above it.
+                                OnboardingBeat.THE_REVEAL -> Unit
+
+                                OnboardingBeat.THE_DEPTH -> OnboardingBeatFour(
+                                    moment = moment,
+                                    onMoment = { moment = it },
+                                    onFinish = onFinished,
+                                )
+                            }
                         }
                     }
-                }
 
-                if (closing.value > 0f) {
-                    ClosingLine(opacity = closing.value)
-                }
+                    if (closing.value > 0f) {
+                        ClosingLine(opacity = closing.value)
+                    }
 
-                OnboardingNav(
-                    beat = state.beat,
-                    canGoBack = state.canGoBack,
-                    onBack = viewModel::back,
-                    onJumpIn = {
-                        viewModel.leaveEarly(todayName)
-                        onFinished()
-                    },
-                )
+                    OnboardingNav(
+                        beat = state.beat,
+                        canGoBack = state.canGoBack,
+                        onBack = viewModel::back,
+                        onJumpIn = {
+                            viewModel.leaveEarly(todayName)
+                            onFinished()
+                        },
+                    )
+                }
             }
         }
     }
