@@ -5615,3 +5615,143 @@ All six are named in Addendum 01 Step 3a as components with no platform equivale
 with the instruction not to contort a platform component into their shape. Two of them
 were already built by hand in phase 2, before the rule existed, and are recorded here
 so the register is complete rather than only forward looking.
+
+---
+
+# The polish pass, September 2026
+
+A detail pass, run unattended, with an explicit constraint: no major overhauls. The
+direction was settled; what was wanted was the difference between an app that works and
+one that feels considered.
+
+It was driven by three consultations with a mock team of eight specialists and six
+personas. This section records what each round found and what was done about it, because
+the findings are the reasoning and the commits are only the result.
+
+## Consultation 1, before any work
+
+Eight specialists reviewed the built app in their own domain, then a product critic read
+every list and named what they had all missed.
+
+**108 findings, merged into a ranked list of 45**, plus 9 deferred as needing an overhaul.
+
+| specialist | the finding that mattered most |
+|---|---|
+| Visual designer | 633 raw dp literals in `ui/`, 328 off the 4dp grid, against 37 uses of the six token ladder that was declared for them |
+| Interaction designer | 54 tappable call sites, 15 with any press response |
+| Accessibility | `AreaCardSemantics` written in phase 2, documented as kept beside the card so the two could not drift, and never called |
+| UX writer | The home screen caption starts with a lowercase letter, on 177 corpus lines |
+| Behavioral scientist | The keyboard's action key is dead on every text field in the app |
+| Clinical psychologist | The Pulse offers `Not coping` as a one tap answer after a single quiet day, and keeps it forever |
+| Platform engineer | Android Lint has never run |
+| Edge case tester | A capture over 200 characters is destroyed on save with no message |
+
+**What the critic said everyone missed.** Nobody had diffed the build against
+`docs/VISUAL_DIRECTION.md`, which the brief calls "the refresh that just shipped" and which
+was largely not built. And the floating tab bar is a Daylight object standing on the
+Contemplative worlds, which the app's own direction document calls the single most cross
+cutting defect.
+
+## Part 2, six personas and two focus groups
+
+Six personas ran ten tasks each: 96 findings, grouped as **11 broke, 38 confused, 21 felt
+wrong, 26 missing**, because those need different fixes.
+
+**Five of six completed something by accident.** A right swipe commits on a flick, and
+completing was the only frequent act in the app with no way back: the single `UndoRequest`
+in the whole tree was built for delete. The app protected the rare destructive act and left
+the daily one bare.
+
+**All six were stopped by the same button.** A control reading `Import from a file`, on a
+sheet titled `Import from a file`, reached from a row titled `Import from a file`. Three of
+them believed it would reopen the file picker. In Replace mode it erases the phone.
+
+**Focus group A's five disagreements, and which side the product took.**
+
+- *How much the area card should say.* Kit wants the queue count; Susan would be put off by
+  density. **Sided with Kit, in Susan's typography**, and deferred as issue #65: Susan's
+  actual complaints across ten tasks were never about too much information, they were
+  unlabeled controls, undeclared consequences and unanswered questions.
+- *Whether the Pulse can be turned off.* Dan would leave over an amber dot he did not ask
+  for; Mara keeps the app partly because a Pulse she ignores is never counted. **Sided with
+  Dan**: these are not in conflict once separated, because an off switch counts nothing.
+- *Onboarding beat 4.* Kit would delete it; Tomas and Susan need what it holds. **Kept it
+  and fixed why it fails**, which was three defects rather than a case for deletion.
+- *The focus completion heading.* **Took Tomas's wording under Mara's principle**: `Session
+  ended` is equally true of twenty five minutes and of six, and stops one word meaning two
+  things 36dp apart.
+- *Predictability versus ignorability.* Not a real conflict: statements about the app are
+  fixed copy, observations about a person go through the engine, and every one of Tomas's
+  requests is a rule.
+
+## Part 3, the onboarding
+
+Three tone variants written and argued, recorded in `docs/ONBOARDING_VARIANTS.md`. Variant
+A ships on the brief's own test, which is *which sounds least like marketing*, with one
+line grafted from B.
+
+**That test is about shape, not sentiment.** B and C both reach for the two constructions
+advertising is built from: the antithesis (`a record, not a scorecard`) and the triad
+(`No account. No internet. No streaks.`). A uses neither. The graft is `Nothing here can
+break.`, which is a plain declarative and a fact rather than a promise: there is no streak,
+no score and no badge, so there is nothing a person can lose.
+
+**Focus group B then found that choosing a variant is not the same as auditing it.** Two
+lines had survived inside the chosen variant by being in it rather than by passing the
+test: the antithesis and the triad had both walked back in. It also found that nobody
+finished able to say where the rest of their work goes, because the word queue appears in
+no onboarding string.
+
+`MASTER_BUILD_PROMPT` 13.1 is amended in place for beat 1's line, and `design-v3.md` 10.5
+for the FAB. Both were pinned verbatim, both were wrong, and neither is left standing
+beside its replacement.
+
+## Consultation 2, and what the pass broke
+
+The same specialists reviewed the changed app and were asked for three things: what
+improved, what they raised that is still not fixed, and **what broke that was not broken
+before**. The third list had 36 entries, because a polish pass that introduces a regression
+is worse than no pass.
+
+The three that matter, and all three were fixes making things worse:
+
+- **Tapping Undo left the snackbar on screen permanently.** The accessibility rewrite moved
+  the handler into a Box for the 48dp target and dropped the `onDismiss()` the old inline
+  `Text` carried.
+- **Naming a text field by `contentDescription` hid the typed text**, because a
+  content description on an editable node replaces what is read.
+- **`mergeDescendants` on the swipe row created a second, nameless focus stop** and still
+  did not deliver the three actions, because a merging node cannot absorb another merging
+  node.
+
+## Consultation 3, the sign off
+
+Three reviewers. One said SHIP, two said DO NOT SHIP, and both were right.
+
+- **A crash, in code written for the people it would crash for.** `customActions =
+  customActions + ...` inside a semantics receiver. A semantics property cannot be read
+  inside its own receiver; it compiles and throws the moment an accessibility service
+  queries the tree.
+- **The second field fix was worse than the first.** Verified by disassembly and by a
+  device dump rather than by argument: a label in `text` is discarded once anything is
+  typed, and setting `Text` flips the node's class from `EditText` to `TextView`.
+- **A promise the app breaks.** The Pulse caption said it never asks how you feel. Seven
+  Pulse questions ask exactly that.
+
+## Three things this pass established as rules
+
+**A fix is not a fix until it has been checked the way the defect was found.** Every one of
+the three worst regressions was introduced by a correct-sounding change to accessibility
+code that nobody had run. `AccessibilityShapeTest` exists for that, and its assertions were
+checked against a sentinel to prove they fail when they should.
+
+**A baseline is a list of decisions with the reasons deleted.** `lint-baseline.xml`
+contained, verbatim, that `area_never_active` and `undo_area_archived` appeared to be
+unused, and the next commit added a hand written gate for those two strings being dead. The
+baseline had found them and been told to be quiet. `UnusedResources` is enforced now and
+`app/lint.xml` carries the two genuine exceptions with the reason written beside them.
+
+**Deleting a helper is a legitimate outcome.** `area_never_active` was written in phase 2,
+dead for eleven phases, wired up in this pass, and retired in the same pass, because using
+it produced two sentences making one point on the emptiest card in the app. Wiring
+something up is not the same as it being needed.

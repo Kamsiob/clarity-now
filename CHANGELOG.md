@@ -47,6 +47,25 @@ and 96 usability findings, merged, ranked and worked down.
   day, and the tap is written to the log, rendered in the Trail forever and quotable back
   weeks later.
 
+### Fixed in the second and third consultation rounds
+
+The pass reviewed its own work twice, and both rounds found it had broken things. These
+were introduced by this release and fixed inside it.
+
+- Tapping Undo left the snackbar on screen permanently.
+- Naming a text field for a screen reader hid the typed text, then the second attempt
+  stopped it being a field at all. The working arrangement is now verified on a device and
+  recorded in `AccessibilityShapeTest`.
+- Appending a custom action inside a semantics receiver compiles and throws when an
+  accessibility service reads the tree, which would have crashed the Areas screen for
+  screen reader users only.
+- The Pulse caption promised the app never asks how you feel; seven Pulse questions do.
+- The Trail briefly separated its two halves by color alone.
+- Momentum's figures briefly moved out of the serif.
+- Six vertical gaps briefly stopped responding to the Text size setting.
+- The Report tab bar briefly went from the loudest object on the page to no object.
+- Four rewritten Pulse labels read as neutral in a slot that is flagged by position.
+
 ### Fixed
 
 - A capture over 200 characters was destroyed on save with no message.

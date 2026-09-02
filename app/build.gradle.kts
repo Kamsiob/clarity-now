@@ -65,6 +65,14 @@ plugins {
 // done with the app, and the finding underneath it is a correction rather than a feature:
 // the corpus parse was running on the main thread while three code comments said it was
 // not.
+// 0.13.0: the polish and detail pass. A minor bump rather than a patch, on two things a
+// person can now do that they could not: undo a completion, which five of six people in
+// usability testing triggered by accident and could not take back, and finish a capture
+// from the keyboard, which was impossible at every one of twelve field call sites because
+// a non-null KeyboardActions suppresses the platform default. Everything else in the pass
+// corrects something that was already wrong, which is patch work, but those two are new
+// capability. Not a major bump because 1.0 is the release and no contract moved: the event
+// catalog, the backup format and the engine interfaces are untouched.
 // 0.12.0: the visual refresh, plus two acts a person could not perform before. A minor
 // bump rather than a patch on both halves of the same rule. It is not a patch, because
 // the app can now do two new things: promote a queued item to active in one tap from the
@@ -75,7 +83,7 @@ plugins {
 // phase 1. The visual work is large but by itself would have been a patch, because it
 // changes what the app looks like and not what it can do.
 val versionMajor = 0
-val versionMinor = 12
+val versionMinor = 13
 val versionPatch = 0
 
 // The application id and the one suffix that changes it, written once.
