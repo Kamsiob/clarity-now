@@ -455,6 +455,20 @@ data class ReportSectionSnapshot(
  * it the headline is the one rendered line in the app that can repeat itself word
  * for word, and it is the largest type on the screen.
  *
+ * **[weekStartKey] and [windowStartKey] are two different questions and this payload
+ * answers both.** MASTER_BUILD_PROMPT 12.3 generates a report on the first open in a
+ * calendar week and describes the trailing seven days, which on any day but Sunday are
+ * different spans. [weekStartKey] is the Sunday, and it is the report's identity: the
+ * merge rule below resolves two reports sharing it, and the writer refuses a second one.
+ * [windowStartKey] is the first of the seven days actually described, so a past report
+ * names the same span its own eyebrow named on the day it was read.
+ *
+ * [headlineText] is the rendered headline. The keys beside it drive the selector and
+ * cannot be turned back into prose: realizing the variant again months later would be a
+ * second path to a sentence, which CLAUDE.md rule 8 closes, and the facts that filled its
+ * slots are gone. Storing the words is the only way a past report can lead with the line
+ * it led with.
+ *
  * This is the proposed shape for issue #19 and the owner may still adjust it.
  */
 @Serializable
@@ -465,6 +479,8 @@ data class ReportGenerated(
     val renderedSections: List<ReportSectionSnapshot>,
     val factSnapshot: Map<String, String>,
     val headlineVariantKey: String? = null,
+    val windowStartKey: String? = null,
+    val headlineText: String? = null,
 ) : EventPayload {
     override val primaryEntityId get() = reportId
 }

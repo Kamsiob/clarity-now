@@ -294,7 +294,9 @@
         "focusMinutes": "25"
       },
       "generatedAt": 1768636800000,
-      "lastEventLamport": 49
+      "lastEventLamport": 49,
+      "windowStartKey": "2026-01-10",
+      "headlineText": "A steady week."
     }
   },
   "plans": {

@@ -712,7 +712,11 @@
     <string name="report_history_title">Past reports</string>
     <string name="report_history_week">Week of %1$s</string>
     <string name="report_history_empty_title">Nothing here yet</string>
-    <string name="report_history_empty_body">Every report this app writes is kept here, back to the week you installed it.</string>
+    <string name="report_history_empty_body">Every report this app writes is kept here, from the first one you open.</string>
+    <!-- The foot of the list, shown only when the log reaches back further than the
+         saved reports do. A date readout in a fixed frame, not an observation: it says
+         where the record starts and makes no claim about the person or the weeks. -->
+    <string name="report_history_before">Weeks before %1$s were shown at the time and not saved.</string>
 
     <!--
         Report content descriptions.

@@ -13,7 +13,9 @@ import com.kamsiob.claritynow.domain.corpus.SharedCatalog
 import com.kamsiob.claritynow.domain.engine.catalog.CorpusVolume
 import com.kamsiob.claritynow.domain.momentum.MomentumCoordinator
 import com.kamsiob.claritynow.domain.pulse.PulseCoordinator
+import com.kamsiob.claritynow.R
 import com.kamsiob.claritynow.ui.report.ReportCoordinator
+import com.kamsiob.claritynow.ui.report.ReportSideheads
 import com.kamsiob.claritynow.ui.theme.AndroidClarityHaptics
 import com.kamsiob.claritynow.ui.theme.ClarityHaptics
 import kotlinx.coroutines.Dispatchers
@@ -102,7 +104,21 @@ object ClarityGraph {
      * purpose.
      */
     val report: ReportCoordinator by lazy {
-        ReportCoordinator(repository = repository, clock = clock, catalog = catalog)
+        ReportCoordinator(
+            repository = repository,
+            clock = clock,
+            catalog = catalog,
+            // The Android half of the one seam this coordinator has. `REPORT_GENERATED`
+            // stores the labels beside the sentences, so a report read back in a year
+            // carries the labels it was written under. Resolved here rather than in the
+            // coordinator, which holds no Context.
+            sideheads = ReportSideheads(
+                yourWeek = appContext.getString(R.string.report_sidehead_your_week),
+                whatYouSaid = appContext.getString(R.string.report_sidehead_what_you_said),
+                focus = appContext.getString(R.string.report_sidehead_focus),
+                pattern = appContext.getString(R.string.report_sidehead_pattern),
+            ),
+        )
     }
 
     /** True once [install] has run. Guards against use from a ContentProvider that

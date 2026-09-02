@@ -471,7 +471,13 @@ private fun contentOf(event: ClarityEvent, context: TrailRowContext): TrailRowCo
 
         // The week key is passed through raw. Rendering it as a date is a locale
         // and format decision, which belongs to the screen and not to the log.
-        is ReportGenerated -> TrailRowContent(subject = payload.weekStartKey)
+        //
+        // The **described** week, not the calendar week the report is filed under.
+        // The report's own eyebrow and its row in the history list both name the
+        // first of the seven days it covered, and a Trail row naming a different
+        // Sunday for the same report is one report with two dates on it.
+        is ReportGenerated ->
+            TrailRowContent(subject = payload.windowStartKey ?: payload.weekStartKey)
 
         // Guidance. These two never appear as a pair and the absence of an
         // acceptance is never rendered as anything. CLAUDE.md rule 13: the

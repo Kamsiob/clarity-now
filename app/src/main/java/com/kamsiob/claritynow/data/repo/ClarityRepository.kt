@@ -33,6 +33,7 @@ import com.kamsiob.claritynow.data.event.ItemReordered
 import com.kamsiob.claritynow.data.event.ItemStatus
 import com.kamsiob.claritynow.data.event.PlanAccepted
 import com.kamsiob.claritynow.data.event.PlanOffered
+import com.kamsiob.claritynow.data.event.ReportGenerated
 import com.kamsiob.claritynow.data.event.PulseAnswered
 import com.kamsiob.claritynow.data.event.PulseGenerated
 import com.kamsiob.claritynow.data.event.SettingChanged
@@ -60,6 +61,7 @@ import com.kamsiob.claritynow.domain.replay.FocusSessionState
 import com.kamsiob.claritynow.domain.replay.ItemState
 import com.kamsiob.claritynow.domain.replay.OrderKey
 import com.kamsiob.claritynow.domain.replay.PlanState
+import com.kamsiob.claritynow.domain.replay.ReportState
 import com.kamsiob.claritynow.domain.replay.PulseEntryState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -1301,6 +1303,63 @@ class ClarityRepository(
      * [recordPulseGenerated]'s reason, which is that two foregrounds racing at launch would
      * otherwise both read an empty answer and both write.
      */
+    /**
+     * The report already filed for the calendar week that began at [weekBeganAtMillis], or
+     * null if that week has none. MASTER_BUILD_PROMPT 12.3.
+     *
+     * **The one implementation of 12.3's cadence.** "Generated automatically on first open
+     * in a new week" is a question with exactly one right answer at any moment, and asking
+     * it two ways is how a screen comes to disagree with the log it was drawn from. The
+     * writer below takes this under its own lock and `ReportCoordinator.isDue` calls it, so
+     * the question that decides whether to write and the question that reports whether one
+     * is due are the same function.
+     *
+     * Read off the projection rather than by scanning the log, which is the same fact: the
+     * projection is folded from the log on load and on every append, and `generatedAt` is
+     * the event's own wall clock.
+     */
+    fun reportFiledSince(weekBeganAtMillis: Long): ReportState? =
+        _state.value.reports.values
+            .filter { it.generatedAt >= weekBeganAtMillis }
+            .maxByOrNull { it.generatedAt }
+
+    /**
+     * Appends `REPORT_GENERATED` for a report that has just been composed, if 12.3's
+     * cadence says this calendar week has not had one yet. MASTER_BUILD_PROMPT 12.3.
+     *
+     * Returns the report now on file for the week, which is the one written or the one that
+     * was already there. **Writing is the exception rather than the rule**: the Report tab
+     * composes on every open and the regenerate control composes again on demand, and all
+     * but the first of those in a week must leave the log alone. Two guards, in this order:
+     *
+     * 1. A report already filed under [ReportGenerated.weekStartKey] is this week's report,
+     *    and a second event for it would be a duplicate the reducer would resolve as a
+     *    conflict against itself.
+     * 2. A report filed at any point since [weekBeganAtMillis] is this week's report too,
+     *    even under a different key, which is what a device whose clock crossed a week
+     *    boundary between two opens would produce.
+     *
+     * The check and the append are taken under one lock, for [recordAppOpened]'s reason:
+     * two compositions racing at launch would otherwise both read an empty answer and both
+     * write, and here that would be a visible duplicate row in the history list.
+     *
+     * **Nothing about the person is decided here.** The event is a record that a report was
+     * written and what it said, and the only thing downstream of it is the history page and
+     * `FiringHistory`. It carries no judgment, no count and no streak, and there is no
+     * surface anywhere that refers to how many weeks have one.
+     */
+    suspend fun recordReportGenerated(
+        payload: ReportGenerated,
+        weekBeganAtMillis: Long,
+    ): ReportState = mutex.withLock {
+        _state.value.reports[payload.weekStartKey]?.let { return@withLock it }
+        reportFiledSince(weekBeganAtMillis)?.let { return@withLock it }
+        commitLocked(payload)
+        requireNotNull(_state.value.reports[payload.weekStartKey]) {
+            "the reducer did not file the report ${payload.reportId}"
+        }
+    }
+
     suspend fun recordPlanOffered(payload: PlanOffered): PlanState = mutex.withLock {
         val existing = _state.value.plans[payload.planId]
         if (existing != null) return@withLock existing

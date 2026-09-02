@@ -573,6 +573,8 @@ object ClarityReducer {
             factSnapshot = payload.factSnapshot,
             generatedAt = event.wallClock,
             lastEventLamport = event.lamport,
+            windowStartKey = payload.windowStartKey,
+            headlineText = payload.headlineText,
         )
         // A regenerate on the same device replaces the week without a conflict; a
         // conflict is only recorded when the losing report came from elsewhere.

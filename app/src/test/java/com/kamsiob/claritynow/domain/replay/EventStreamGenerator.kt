@@ -564,6 +564,8 @@ class EventStreamGenerator(
             ),
             factSnapshot = mapOf("completions" to random.nextInt(1, 12).toString()),
             headlineVariantKey = "hd.steady.%02d".format(variant),
+            windowStartKey = weekStartKeyOf(wallClock - 7 * 86_400_000L),
+            headlineText = "A steady week.",
         )
     }
 

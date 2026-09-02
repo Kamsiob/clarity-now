@@ -26,6 +26,17 @@ data class ReportWeek(
     val window: TrailWindow,
     /** Local midnight starting the calendar week generation happened in. See [ReportSchedule]. */
     val currentWeekStartMillis: Long,
+    /**
+     * The Sunday that calendar week begins on, `yyyy-MM-dd`. **The identity of a report.**
+     *
+     * `REPORT_GENERATED` is filed under this and not under [weekStartKey], and the two are
+     * different on every day but Sunday. The reason is the merge rule in
+     * `docs/EVENT_FORMAT.md`: two reports sharing a week key are one week's report written
+     * twice, and the later one wins. Keyed on the trailing window instead, a phone opened
+     * on Wednesday and a laptop opened on Friday would file two reports for one week and
+     * neither would look like a duplicate to anything.
+     */
+    val currentWeekStartKey: String,
 )
 
 /**
@@ -79,6 +90,7 @@ object ReportSchedule {
                 toMillis = FactDates.startOfDayMillis(today, zone),
             ),
             currentWeekStartMillis = FactDates.startOfDayMillis(weekStart, zone),
+            currentWeekStartKey = FactDates.keyOf(weekStart),
         )
     }
 }

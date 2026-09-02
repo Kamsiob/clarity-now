@@ -124,7 +124,7 @@ data class ReportUiState(
      * `design-v3.md` 8.2 item 12 and 8.4. See [ReportViewModel.revealFinished].
      */
     val revealKey: String? = null,
-    val past: List<PastReport> = emptyList(),
+    val past: ReportHistory = ReportHistory.EMPTY,
     val pastLoading: Boolean = false,
 )
 

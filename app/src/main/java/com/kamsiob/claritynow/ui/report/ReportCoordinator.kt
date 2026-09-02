@@ -11,16 +11,19 @@ import com.kamsiob.claritynow.domain.engine.realize.Measures
 import com.kamsiob.claritynow.domain.parseDateKey
 import com.kamsiob.claritynow.domain.query.TrailQueries
 import com.kamsiob.claritynow.domain.replay.ReportState
+import com.kamsiob.claritynow.data.event.ClarityEvent
 import com.kamsiob.claritynow.data.event.PlanOffered
 import com.kamsiob.claritynow.domain.guidance.GuidanceResult
 import com.kamsiob.claritynow.domain.guidance.PlanHistory
 import com.kamsiob.claritynow.domain.report.ReportOutcome
+import com.kamsiob.claritynow.domain.report.ReportSection
 import com.kamsiob.claritynow.domain.report.ReportComposer
 import com.kamsiob.claritynow.domain.report.ReportLanguage
 import com.kamsiob.claritynow.domain.report.ReportSchedule
 import com.kamsiob.claritynow.domain.report.ReportWeek
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -69,12 +72,14 @@ data class ReportGeneration(
  * Every string here was written by the engine and stored on `REPORT_GENERATED`. Nothing on
  * that page composes a sentence and there is no field for one that could be composed.
  *
- * **[headline] is null for every report this build can store, and that is a gap rather
- * than a design.** `ReportGenerated` carries `headlineKey` and `headlineVariantKey` and
- * does not carry the headline's rendered text, while `renderedSections` carries the text of
- * every observation. `design-v3.md` section 5 gives past report headlines the display role,
- * so the page has a treatment for a string the payload cannot supply. See the note in
- * `ReportHistoryPage`.
+ * **[headline] is the line the report led with, stored rather than composed again.**
+ * `ReportGenerated` carries it beside `headlineKey` and `headlineVariantKey`, which are the
+ * keys the selector's rules are stated in and cannot be turned back into prose: realizing
+ * the variant again months later would be a second path to a sentence, and the facts that
+ * filled its slots are gone. Null only where that week produced no headline at all.
+ *
+ * [weekStart] is the first of the seven days the report described, not the Sunday it is
+ * filed under, so a row names the span the report's own eyebrow named.
  */
 @Immutable
 data class PastReport(
@@ -96,6 +101,56 @@ data class PastReport(
 )
 
 /**
+ * The History page's whole contents. `MASTER_BUILD_PROMPT.md` 12.3.
+ *
+ * [savedFrom] is the first week on file, and only when the log reaches back further than
+ * that. It exists so the page can say where the record starts rather than looking as though
+ * it lost the weeks before it: `REPORT_GENERATED` was not written until issue #64, so every
+ * install that predates that version has activity behind its oldest saved report, and a
+ * list that began halfway with no explanation would read as data loss.
+ *
+ * Null when there is nothing to explain, which is both a log with no reports in it and one
+ * whose first report is as old as its first event.
+ */
+@Immutable
+data class ReportHistory(
+    val reports: List<PastReport>,
+    val savedFrom: LocalDate?,
+) {
+    companion object {
+        val EMPTY = ReportHistory(reports = emptyList(), savedFrom = null)
+    }
+}
+
+/**
+ * The four section labels, supplied by the platform half of the app.
+ *
+ * They are `strings.xml` entries and `REPORT_GENERATED` stores them beside the sentences,
+ * so a report read back in a year carries the labels it was written under rather than
+ * whatever the app calls those sections by then. `domain` cannot read resources and this
+ * class will not hold a `Context`, so the seam is a function type declared here and given
+ * its Android half in `ClarityGraph`, the one file allowed to know both.
+ *
+ * A data class rather than four parameters, because three of the four are looked up by
+ * enum and one is not, and a caller that passed them positionally would eventually pass
+ * them in the wrong order and store `Focus` over the pattern break.
+ */
+@Immutable
+data class ReportSideheads(
+    val yourWeek: String,
+    val whatYouSaid: String,
+    val focus: String,
+    val pattern: String,
+) {
+    /** The label a section is read under. */
+    fun of(section: ReportSection): String = when (section) {
+        ReportSection.YOUR_WEEK -> yourWeek
+        ReportSection.WHAT_YOU_SAID -> whatYouSaid
+        ReportSection.FOCUS -> focus
+    }
+}
+
+/**
  * The Report lifecycle, wired. `MASTER_BUILD_PROMPT.md` 11.3 and 12.3.
  *
  * Everything impure about the surface is here: the clock, the log and the corpus text.
@@ -112,23 +167,27 @@ data class PastReport(
  * package line and an import. Nothing about it depends on Android, which is what makes the
  * move free.
  *
- * ## Step 9 is not here, and nothing else fills in for it
+ * ## Step 9, and the one write in the whole file
  *
  * 11.3's sequence ends `9. Write REPORT_GENERATED, and PLAN_OFFERED if a plan was
- * produced`, and that step belongs to `ClarityRepository`, which is the only writer in the
- * app and which has no method for it yet. So this composes and does not persist, and three
- * things follow that a later session must not mistake for design decisions:
+ * produced`. Both are written here, through `ClarityRepository`, and both are idempotent by
+ * a key derived from the week rather than from the moment, because this class composes on
+ * every open of the tab and again on every tap of regenerate. The rule is 12.3's: **one
+ * report per calendar week, written the first time that week's report is composed.**
  *
- * - **The cadence cannot be satisfied.** 12.3 generates on the first open in a new week
- *   and [isDue] asks the log exactly that question, correctly, against
- *   `ReportWeek.currentWeekStartMillis`. With nothing writing the event it always answers
- *   true, so the report is composed on every open. It is deterministic, so a person sees
- *   the same page every time, but it is not the specified cadence
- * - **`FiringHistory` never learns what the Report said.** The ninety day variant exclusion
- *   and the fourteen day family cooldowns are rebuilt from `REPORT_GENERATED` events, so
- *   until one is written the Report cannot vary itself week to week
- * - **Past reports are empty.** [pastReports] reads the projection, which is fed by the
- *   log, which is the right way round and has nothing in it
+ * The write is what makes three things work that would otherwise look like design
+ * decisions, and is worth naming so nobody removes it as noise:
+ *
+ * - **The cadence.** [isDue] and the writer ask `ClarityRepository.reportFiledSince` the
+ *   same question against `ReportWeek.currentWeekStartMillis`, so there is one answer
+ * - **`FiringHistory`.** The ninety day variant exclusion and the family cooldowns are
+ *   rebuilt from `REPORT_GENERATED`, so without it the Report could not vary week to week
+ * - **Past reports.** [pastReports] reads the projection, which is fed by the log
+ *
+ * **An empty or withheld week files nothing**, and that is the types saying so rather than
+ * a choice: `ReportOutcome.Empty` and `ReportOutcome.Suppressed` carry no report, so there
+ * is no payload to write. A quiet week leaves no row, which is honest, and a week composed
+ * before this writer existed leaves none either. The history page says so in as many words.
  *
  * ## The catalog is not built here
  *
@@ -140,6 +199,7 @@ class ReportCoordinator(
     private val repository: ClarityRepository,
     private val clock: ClarityClock,
     private val catalog: SharedCatalog,
+    private val sideheads: ReportSideheads,
 ) {
 
     /**
@@ -187,12 +247,46 @@ class ReportCoordinator(
         // writes nothing, and ignoring the offer still writes nothing. The id is derived
         // from the week, so a second generation of the same week files nothing new.
         val accepted = recordPlanIfOffered(outcome)
+        // 9's first half, and 12.3's cadence. At most one per calendar week, taken under
+        // the repository's lock so two compositions racing at launch cannot both write.
+        recordReportIfFirstThisWeek(outcome, week)
         return ReportGeneration(
             week,
             ribbon,
             outcome,
             languageFailure = null,
             planAccepted = accepted,
+        )
+    }
+
+    /**
+     * Appends `REPORT_GENERATED` for the report this generation produced, once a week.
+     * `MASTER_BUILD_PROMPT.md` 11.3 step 9 and 12.3.
+     *
+     * The id is derived from the calendar week, so the second composition of a week
+     * produces the identical id and the repository recognizes it before it writes. That is
+     * belt and braces beside the cadence guard, and it is the guard that matters after a
+     * merge: a report filed by another device is filed under the same id.
+     *
+     * **What is recorded is the week the report describes, never the day it was read.**
+     * The window's first day rides on the payload as `windowStartKey` and the calendar
+     * week's Sunday is the key. `ReportSchedule` and `ReportGenerated` both say at length
+     * why those are two questions.
+     *
+     * Nothing visible happens either way and the return value is deliberately dropped: the
+     * page is drawn from the composition in hand, not from what the log accepted, so a
+     * write that finds a report already on file changes nothing a person can see.
+     */
+    private suspend fun recordReportIfFirstThisWeek(outcome: ReportOutcome, week: ReportWeek) {
+        val composed = outcome as? ReportOutcome.Composed ?: return
+        repository.recordReportGenerated(
+            payload = composed.report.payload(
+                reportId = "report:${week.currentWeekStartKey}",
+                cadenceWeekStartKey = week.currentWeekStartKey,
+                patternSidehead = sideheads.pattern,
+                sidehead = sideheads::of,
+            ),
+            weekBeganAtMillis = week.currentWeekStartMillis,
         )
     }
 
@@ -250,16 +344,15 @@ class ReportCoordinator(
      * so a merged log answers it correctly. Every event carries its wall clock, which is
      * why this needs no field on the payload.
      *
-     * **It always answers true today**, because nothing writes the event. See the class
-     * note. It is written now so that the cadence is already correct on the day the writer
-     * lands rather than being derived a second time by whoever adds it.
+     * **The same call the writer makes**, and that is the point of it being one function
+     * rather than two readings of one rule. `generate` composes on every open regardless,
+     * because a person who opens the tab on Wednesday is owed a page; what this answers is
+     * whether opening it will file anything.
      */
     suspend fun isDue(): Boolean {
         repository.load()
-        val zone = clock.zone()
-        val week = ReportSchedule.weekAt(clock.nowMillis(), zone)
-        val queries = TrailQueries(repository.allEvents(), zone)
-        return queries.reportsGeneratedBetween(week.currentWeekStartMillis, Long.MAX_VALUE).isEmpty()
+        val week = ReportSchedule.weekAt(clock.nowMillis(), clock.zone())
+        return repository.reportFiledSince(week.currentWeekStartMillis) == null
     }
 
     /**
@@ -268,13 +361,34 @@ class ReportCoordinator(
      * Read from the projection, which is folded from the log, so a report survives a cache
      * rebuild and an import for the same reason every other row does.
      */
-    suspend fun pastReports(): List<PastReport> {
+    suspend fun pastReports(): ReportHistory {
         repository.load()
         val zone = clock.zone()
         val stored = repository.state.value.reports.values.sortedByDescending { it.generatedAt }
-        if (stored.isEmpty()) return emptyList()
-        val queries = TrailQueries(repository.allEvents(), zone)
-        return stored.map { report -> pastReportOf(report, queries, zone) }
+        if (stored.isEmpty()) return ReportHistory.EMPTY
+        val events = repository.allEvents()
+        val queries = TrailQueries(events, zone)
+        val reports = stored.map { report -> pastReportOf(report, queries, zone) }
+        return ReportHistory(reports = reports, savedFrom = savedFrom(reports, events, zone))
+    }
+
+    /**
+     * The first week on file, when there is activity behind it, and null when there is not.
+     *
+     * Compared as local calendar days rather than as milliseconds, because the question a
+     * person is asking is about weeks and the answer must not turn on the hour a report
+     * happened to be read at. The oldest report's own described window is the boundary: a
+     * log whose first event falls inside that window has nothing missing before it.
+     */
+    private fun savedFrom(
+        reports: List<PastReport>,
+        events: List<ClarityEvent>,
+        zone: ZoneId,
+    ): LocalDate? {
+        val oldest = reports.mapNotNull { it.weekStart }.minOrNull() ?: return null
+        val first = events.minOfOrNull { it.wallClock } ?: return null
+        val began = Instant.ofEpochMilli(first).atZone(zone).toLocalDate()
+        return oldest.takeIf { began.isBefore(it) }
     }
 
     // ------------------------------------------------------------------ the ribbon
@@ -298,7 +412,10 @@ class ReportCoordinator(
     }
 
     private fun pastReportOf(report: ReportState, queries: TrailQueries, zone: ZoneId): PastReport {
-        val start = runCatching { parseDateKey(report.weekStartKey) }.getOrNull()
+        // The seven days the report described, which is not the week it is filed under on
+        // any day but Sunday. A row names the span its own eyebrow named.
+        val describedKey = report.windowStartKey ?: report.weekStartKey
+        val start = runCatching { parseDateKey(describedKey) }.getOrNull()
         val window = start?.let { first ->
             val from = first.atStartOfDay(zone).toInstant().toEpochMilli()
             val to = first.plusDays(ReportSchedule.WINDOW_DAYS.toLong())
@@ -312,8 +429,7 @@ class ReportCoordinator(
         return PastReport(
             weekStartKey = report.weekStartKey,
             weekStart = start,
-            // Not on the payload. See the note on `PastReport`.
-            headline = null,
+            headline = report.headlineText,
             sections = report.sections.map { it.text },
             ribbon = window.orEmpty(),
             totals = totalsOf(report),

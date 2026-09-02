@@ -308,7 +308,11 @@ class CapacityGatePersonaTest {
                 weeks += Week(day, lines(gated.report), families(open), facts, history, suppressed = false)
                 log.add(
                     log.at(day, REPORT_HOUR),
-                    gated.report.payload("report-${persona.key}-$day") { it.key },
+                    gated.report.payload(
+                        reportId = "report-${persona.key}-$day",
+                        cadenceWeekStartKey = weekKey,
+                        patternSidehead = "pattern",
+                    ) { it.key },
                 )
             } else if (open is ReportOutcome.Composed) {
                 weeks += Week(

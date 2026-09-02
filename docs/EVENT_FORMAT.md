@@ -336,7 +336,7 @@ cheaper side of that trade.
 
 | type | payload |
 |---|---|
-| `REPORT_GENERATED` | `reportId`, `weekStartKey`, `headlineKey`, `renderedSections`, `factSnapshot`, `headlineVariantKey` (nullable) |
+| `REPORT_GENERATED` | `reportId`, `weekStartKey`, `headlineKey`, `renderedSections`, `factSnapshot`, `headlineVariantKey` (nullable), `windowStartKey` (nullable), `headlineText` (nullable) |
 | `PLAN_OFFERED` | `planId`, `weekStartKey`, `frameKey`, `cueKey`, `actionKey`, `familyKey`, `subjectId` (nullable), `offeredLine`, `committedLine`, `resolutionFactRef` |
 | `PLAN_ACCEPTED` | `planId` |
 
@@ -344,6 +344,21 @@ cheaper side of that trade.
 escalationStage, register, subjectId, subjectKind }`, where the last two are nullable
 and the rest are not. `weekStartKey` is the `yyyy-MM-dd` of the Sunday that starts the
 week.
+
+**A report is generated in one week and describes another, and both are on the event.**
+The cadence is "first open in a new calendar week"; the content is "the trailing seven
+days ending today". On any day but Sunday those are different spans. `weekStartKey` is
+the Sunday, and it is the report's identity: the merge rule below resolves two reports
+sharing it, and the writer refuses to file a second one for a week that already has one.
+`windowStartKey` is the first of the seven days actually described, carried so that a past
+report can name the span it named when it was current. A reader that has only
+`weekStartKey` is reading a report written before those fields existed and should treat
+the two as equal.
+
+`headlineText` is the rendered headline, stored because the keys beside it cannot be
+turned back into prose: realizing the variant again later would compose a second version
+of the same sentence, and the facts that filled its slots are gone. Absent where the week
+produced no headline at all, which `headlineKey` records as `none`.
 
 **The keys beside the rendered text are what make the selector's own history
 derivable, and the sentence alone is not enough.** Choosing what to say next excludes

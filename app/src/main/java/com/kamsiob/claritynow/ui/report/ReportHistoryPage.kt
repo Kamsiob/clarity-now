@@ -64,21 +64,24 @@ import java.util.Locale
  * The caption's numbers come off the report's own fact snapshot rather than from a fresh
  * query, so a row states what that week's report stated. See [PastReport.totals].
  *
- * ## What this page cannot show yet, named rather than approximated
+ * ## Where a row's headline comes from
  *
  * `design-v3.md` section 5 gives past report headlines the display role, and the payload
- * does not carry one: `ReportGenerated` records `headlineKey` and `headlineVariantKey` and
- * the rendered text of every section except the headline. Re-realizing the variant from the
- * corpus would be a second path to a sentence, which `CLAUDE.md` rule 8 closes, and the
- * facts of that week are gone in any case. So a row leads with its week and its ribbon, and
- * [PastReport.headline] is a field waiting for one more string on the payload.
+ * carries the rendered line so this page can render it without composing anything.
+ * `headlineKey` and `headlineVariantKey` ride beside it for the selector's own rules, and
+ * neither can be turned back into prose: re-realizing the variant would be a second path to
+ * a sentence, which `CLAUDE.md` rule 8 closes, and the facts of that week are gone.
  *
- * **The list is empty on every build that exists today**, because nothing writes
- * `REPORT_GENERATED`. See the note on [ReportCoordinator].
+ * ## The foot of the list says where the record starts
+ *
+ * `REPORT_GENERATED` was not written until issue #64, so an install older than that version
+ * has weeks of activity behind its oldest saved report. A list that simply began halfway
+ * would read as data loss. [RecordBegins] names the boundary in one line and makes no claim
+ * about the weeks before it, and it is drawn only when there is something behind them.
  */
 @Composable
 internal fun ReportHistoryPage(
-    reports: List<PastReport>,
+    history: ReportHistory,
     loading: Boolean,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -116,13 +119,17 @@ internal fun ReportHistoryPage(
                 Spacer(Modifier.height(ClaritySpacing.scaled(TITLE_GAP)))
             }
 
-            if (reports.isEmpty() && !loading) {
+            if (history.reports.isEmpty() && !loading) {
                 item(key = "empty") { HistoryEmptyState() }
             }
 
-            items(items = reports, key = { it.weekStartKey }) { report ->
+            items(items = history.reports, key = { it.weekStartKey }) { report ->
                 PastReportRow(report)
                 Spacer(Modifier.height(ClaritySpacing.scaled(ROW_GAP)))
+            }
+
+            history.savedFrom?.let { savedFrom ->
+                item(key = "savedFrom") { RecordBegins(savedFrom) }
             }
         }
 
@@ -171,6 +178,36 @@ private fun PastReportRow(report: PastReport, modifier: Modifier = Modifier) {
             Text(text = line, style = type.bodySerif, color = ReportPalette.body)
         }
     }
+}
+
+/**
+ * Where the saved record starts, at the foot of the list.
+ *
+ * A date readout in a fixed frame, which is why it lives in `strings.xml`: it names a
+ * boundary in the log and makes no claim about the person or about the weeks behind it.
+ * `CLAUDE.md` rule 8 puts observations in the corpus and direct readouts here, and there is
+ * nothing to observe in "the record starts here".
+ *
+ * Whitespace is its one separation device, per `design-v3.md` 12: no rule above it, no card
+ * around it and no second color. It reads as the end of the list rather than as a warning,
+ * which is what it is.
+ */
+@Composable
+private fun RecordBegins(savedFrom: LocalDate, modifier: Modifier = Modifier) {
+    val contemplative = LocalContemplativeColors.current
+    val type = LocalClarityTypography.current
+    val locale = Locale.getDefault()
+    val formatter = remember(locale) { DateTimeFormatter.ofPattern(HISTORY_WEEK_PATTERN, locale) }
+
+    Text(
+        text = stringResource(R.string.report_history_before, formatter.format(savedFrom)),
+        style = type.caption,
+        color = contemplative.textDim,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = ClaritySpacing.screenPadding)
+            .padding(top = ClaritySpacing.scaled(NOTE_TOP)),
+    )
 }
 
 /**
@@ -265,5 +302,6 @@ private val ROW_GAP = 34.dp
 private val ROW_ELEMENT_GAP = 12.dp
 private val LIST_BOTTOM = 40.dp
 private val EMPTY_SPACE = 48.dp
+private val NOTE_TOP = 12.dp
 private val CONTROL_INSET = 8.dp
 private val GLYPH_SIZE = 20.dp

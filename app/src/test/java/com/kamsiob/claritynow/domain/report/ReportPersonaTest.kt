@@ -104,7 +104,11 @@ class ReportPersonaTest {
                         // Written back, so next week's cooldowns and exclusions are real.
                         log.add(
                             log.at(day, REPORT_HOUR),
-                            report.payload("report-${persona.key}-$day") { it.key },
+                            report.payload(
+                                reportId = "report-${persona.key}-$day",
+                                cadenceWeekStartKey = report.weekStartKey,
+                                patternSidehead = "pattern",
+                            ) { it.key },
                         )
                     }
                 }

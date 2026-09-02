@@ -46,7 +46,13 @@ import com.kamsiob.claritynow.domain.guidance.GuidanceResult
  * the map did not outlive composition. Read them with [numberFor].
  */
 data class ClarityReport(
-    /** The Sunday the described week begins on, `yyyy-MM-dd`. The eyebrow reads it. */
+    /**
+     * The first of the seven days described, `yyyy-MM-dd`. The eyebrow reads it.
+     *
+     * Not the week the report is filed under, which is the Sunday the generation happened
+     * in and reaches [payload] as its own parameter. `ReportSchedule` says why those are
+     * two questions.
+     */
     val weekStartKey: String,
     /** One per report, under eight words. Null only where nothing qualified. */
     val headline: Candidate?,
@@ -124,23 +130,37 @@ data class ClarityReport(
     /**
      * The `REPORT_GENERATED` payload for this report.
      *
-     * [sidehead] resolves a section to its label. It is a parameter rather than a field
-     * because the labels are fixed interface strings in `strings.xml` and `domain` cannot
-     * read resources; the payload carries them so a past report renders from the log alone
-     * even after a label is reworded.
+     * [cadenceWeekStartKey] is the Sunday of the calendar week this generation happened in,
+     * which is the report's identity and is not this report's own [weekStartKey]: that one
+     * is the first of the seven days described, and it rides along as `windowStartKey`.
+     * `ReportSchedule` says at length why conflating the two is the mistake to avoid, and
+     * the payload keeps them apart rather than making a later reader choose.
+     *
+     * [sidehead] resolves a section to its label, and [patternSidehead] is the pattern
+     * break's own. They are parameters rather than fields because the labels are fixed
+     * interface strings in `strings.xml` and `domain` cannot read resources; the payload
+     * carries them so a past report renders from the log alone even after a label is
+     * reworded.
      *
      * Every section that **actually appeared** is recorded, and nothing else. `FiringHistory`
      * is rebuilt from exactly these fields, so a report that recorded a line it did not show
      * would exclude that line's variant from the next ninety days of reports nobody ever saw.
      */
-    fun payload(reportId: String, sidehead: (ReportSection) -> String): ReportGenerated = ReportGenerated(
+    fun payload(
+        reportId: String,
+        cadenceWeekStartKey: String,
+        patternSidehead: String,
+        sidehead: (ReportSection) -> String,
+    ): ReportGenerated = ReportGenerated(
         reportId = reportId,
-        weekStartKey = weekStartKey,
+        weekStartKey = cadenceWeekStartKey,
+        windowStartKey = weekStartKey,
         headlineKey = headline?.familyKey ?: NO_HEADLINE,
         headlineVariantKey = headline?.variantKey,
+        headlineText = headline?.rendered,
         renderedSections = buildList {
             observations.forEach { add(it.snapshot(sidehead(it.section))) }
-            pattern?.let { add(snapshotOf(PATTERN_SECTION_KEY, PATTERN_SECTION_KEY, it)) }
+            pattern?.let { add(snapshotOf(PATTERN_SECTION_KEY, patternSidehead, it)) }
         },
         factSnapshot = numbers.entries
             .sortedBy { it.key.toString() }

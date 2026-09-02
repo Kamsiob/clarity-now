@@ -273,6 +273,13 @@ object GoldenFixture {
                 // headlineKey names the family; the 90 day exclusion in
                 // CLARITY_LOGIC_ENGINE.md 7.6 step 1 needs the variant.
                 headlineVariantKey = "hd.steady.01",
+                // The seven days described, which is not the week the report is filed
+                // under. Day 13 is Saturday January 17, so the window opened on the
+                // Saturday before it and the report belongs to the week of the 11th.
+                windowStartKey = "2026-01-10",
+                // CORPUS_2_REPORT.md 1.14. Stored because the keys beside it cannot be
+                // turned back into prose a year later.
+                headlineText = "A steady week.",
             ))
             at(13, 8, payload = PlanOffered(
                 planId = "plan-1",

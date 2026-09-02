@@ -810,7 +810,9 @@
         "additions": "2",
         "focusMinutes": "25"
       },
-      "headlineVariantKey": "hd.steady.01"
+      "headlineVariantKey": "hd.steady.01",
+      "windowStartKey": "2026-01-10",
+      "headlineText": "A steady week."
     }
   },
   {

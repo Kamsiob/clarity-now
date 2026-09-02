@@ -114,6 +114,40 @@ android {
         ksp { arg("room.schemaLocation", "$projectDir/schemas") }
     }
 
+    /**
+     * Release signing, read from four properties that live in `~/.gradle/gradle.properties`
+     * and never in this repository.
+     *
+     * **It degrades to unsigned rather than failing.** A clone without the keystore still
+     * builds a release APK, it is just not signed, which is what a contributor should get.
+     * Only a machine holding the key produces a shippable artifact, and that is the whole
+     * point of a signing key.
+     *
+     * The keystore is a 4096 bit RSA key valid for 10,000 days. **Losing it means never
+     * updating this app under this package name again**, which is why HANDOFF.md carries
+     * the backup instruction rather than this comment.
+     */
+    val clarityStoreFile = providers.gradleProperty("CLARITY_STORE_FILE").orNull
+        ?.let(::file)
+        ?.takeIf { it.isFile }
+
+    signingConfigs {
+        if (clarityStoreFile != null) {
+            create("release") {
+                storeFile = clarityStoreFile
+                storePassword = providers.gradleProperty("CLARITY_STORE_PASSWORD").get()
+                keyAlias = providers.gradleProperty("CLARITY_KEY_ALIAS").get()
+                keyPassword = providers.gradleProperty("CLARITY_KEY_PASSWORD").get()
+                // **v3 only, and that is not a choice this file gets to make.** AGP
+                // enables v1 below minSdk 24 and v2 below 28; at minSdk 31 it drops both
+                // whatever this block asks for, and `apksigner verify -v` confirms v3 is
+                // the only scheme that verifies. Writing all three here and getting one
+                // would be a comment that lies, so only the one that applies is set.
+                enableV3Signing = true
+            }
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix = clarityDebugSuffix
@@ -126,6 +160,7 @@ android {
             )
         }
         release {
+            signingConfig = signingConfigs.findByName("release")
             resValue("string", "clarity_application_id", clarityApplicationId)
             isMinifyEnabled = true
             isShrinkResources = true
@@ -190,6 +225,14 @@ tasks.withType<Test>().configureEach {
     systemProperty(
         "clarity.fixtureDir",
         providers.gradleProperty("fixtureDir").getOrElse("/tmp/clarity-fixtures"),
+    )
+    // The day a dated fixture counts back from, `yyyy-MM-dd`. The Report describes the
+    // seven days before today, so a fixture meant to produce one has to be anchored to
+    // the day it will be read on rather than to the suite's fixed epoch. Passed in
+    // rather than read off the clock, so the file is reproducible from its command.
+    systemProperty(
+        "clarity.fixtureAnchor",
+        providers.gradleProperty("fixtureAnchor").getOrElse(""),
     )
     // Every file `CorpusFixture` opens off the repository root at runtime, rather than off the
     // test classpath. Gradle cannot see those reads, so without this the task reports

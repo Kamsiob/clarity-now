@@ -83,7 +83,7 @@ fun ReportRoute(
         ) {
             if (historyOpen) {
                 ReportHistoryPage(
-                    reports = state.past,
+                    history = state.past,
                     loading = state.pastLoading,
                     onBack = { historyOpen = false },
                 )

@@ -222,6 +222,14 @@ data class PulseEntryState(
     val isAnswered: Boolean get() = responseKey != null
 }
 
+/**
+ * One report, as the history page reads it back.
+ *
+ * [weekStartKey] is the Sunday the report is filed under and [windowStartKey] is the first
+ * of the seven days it described. See `ReportGenerated`, which says why both are kept.
+ * [windowStartKey] and [headlineText] are null only for a report written before those two
+ * fields existed, which is no report any install has: nothing wrote the event until then.
+ */
 @Serializable
 data class ReportState(
     val id: String,
@@ -231,6 +239,8 @@ data class ReportState(
     val factSnapshot: Map<String, String> = emptyMap(),
     val generatedAt: Long,
     val lastEventLamport: Long,
+    val windowStartKey: String? = null,
+    val headlineText: String? = null,
 )
 
 @Serializable
