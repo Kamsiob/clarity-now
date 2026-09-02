@@ -109,7 +109,7 @@ internal object WidgetTheme {
     /** 12.1: sans for everything that is not the single large element. */
     val caption = TextStyle(
         color = inkSecondary,
-        fontSize = 12.sp,
+        fontSize = 12.5.sp,
         fontWeight = FontWeight.Normal,
         textAlign = TextAlign.Center,
     )

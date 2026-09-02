@@ -348,7 +348,20 @@ private fun AreaRow(
         swapLabel = stringResource(R.string.action_swap),
         deleteLabel = stringResource(R.string.action_delete),
         onComplete = if (area.offersComplete) onComplete else null,
-        onSwap = if (area.offersSwap) onSwap else null,
+        // **Swap is offered on an idle area that has a queue, which is new.**
+        //
+        // `offersSwap` required an active item, so an area whose active slot is empty and
+        // whose queue is full revealed Delete and nothing else. That is the ordinary
+        // result of dismissing the swap chooser, of completing inside a focus session with
+        // `Choose from queue` set, and of the re-entry screen's second option, which puts
+        // every area into that state at once. Two usability testers swiped such a card to
+        // see what it offered and found only the destructive action.
+        //
+        // The verb does not change meaning: Swap has always meant "choose which item is
+        // active from this area's queue", and the chooser already handles there being
+        // nothing to demote, because `SwapChooserSheet.demotedTitle` is nullable and says
+        // so.
+        onSwap = if (area.offersSwap || area.offersPromote) onSwap else null,
         // An app with zero areas is reached deliberately through the archive view,
         // never by accident on a list, so the last card does not offer delete.
         onDelete = if (isLastArea) null else onDelete,

@@ -103,7 +103,7 @@ internal object AreaWidgetType {
      */
     val caption = TextStyle(
         color = WidgetTheme.inkSecondary,
-        fontSize = 12.sp,
+        fontSize = 12.5.sp,
         fontWeight = FontWeight.Normal,
     )
 
