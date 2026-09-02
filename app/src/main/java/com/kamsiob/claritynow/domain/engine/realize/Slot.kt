@@ -92,7 +92,37 @@ object SlotRenderer {
             }
         }
         out.append(text, cursor, text.length)
-        return out.toString()
+        return out.toString().capitalizedOpener(text, slots)
+    }
+
+    /**
+     * **A sentence that begins with a spelled number begins with a capital letter.**
+     *
+     * 177 corpus lines open with a numeric slot, and on a word spelling surface
+     * [number] returns `one`, `two`, `three` lowercase, so the Areas caption read
+     * "one completed this week" directly under a serif headline ending in a period, and
+     * the Pulse and the Momentum headline did the same. It fires on nearly every banner.
+     * Neighboring captions that happen to open with a word rather than a slot are
+     * capitalized in the corpus, so the surface was inconsistent with itself line by
+     * line.
+     *
+     * **Only when the template itself opened with the marker**, so a line whose first
+     * character is authored prose keeps exactly the case the corpus gave it, and
+     * **only for a spelled number**, because a name slot must never be recased: an area
+     * called `iPhone stuff` is that person's own capitalization and not a typo.
+     */
+    private fun String.capitalizedOpener(template: String, slots: Map<SlotKey, Slot>): String {
+        if (isEmpty()) return this
+        val first = MARKER.find(template) ?: return this
+        if (first.range.first != 0) return this
+        // Only a spelled number. A name, a date reference or a percent either carries a
+        // case its owner chose or is already a digit, and recasing any of them would be
+        // the app rewriting somebody's own words.
+        if (slots[first.groupValues[1]] !is Slot.Count && slots[first.groupValues[1]] !is Slot.Days) {
+            return this
+        }
+        if (!this[0].isLowerCase()) return this
+        return this[0].uppercaseChar() + substring(1)
     }
 
     /** One slot's own text, with no regard for what surrounds it. */

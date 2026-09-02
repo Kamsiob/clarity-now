@@ -25,6 +25,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.layout
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import com.kamsiob.claritynow.ui.theme.LocalClarityShapes
 import androidx.compose.ui.unit.dp
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -65,6 +71,7 @@ fun UndoSnackbar(
 ) {
     val colors = LocalClarityColors.current
     val type = LocalClarityTypography.current
+    val shapes = LocalClarityShapes.current
     val haptics = LocalClarityHaptics.current
     val motion = clarityMotion()
     val remaining = remember { Animatable(1f) }
@@ -114,7 +121,11 @@ fun UndoSnackbar(
                 // furniture in the app that keeps the content value. For five seconds
                 // this is the top plane on the screen, and what it holds is the only
                 // way back from a deletion. Chrome recedes; this cannot afford to.
-                .background(colors.card),
+                .background(colors.card)
+                // Nothing told a screen reader the snackbar had appeared, on a control
+                // with a five second life. Assertive, because polite would be queued
+                // behind whatever is speaking and the window would close first.
+                .semantics { liveRegion = LiveRegionMode.Assertive },
         ) {
             Column {
                 Row(
@@ -131,17 +142,36 @@ fun UndoSnackbar(
                         color = colors.inkPrimary,
                         modifier = Modifier.padding(end = 12.dp),
                     )
-                    Text(
-                        text = current?.actionLabel.orEmpty(),
-                        style = type.bodyStrong,
-                        color = colors.actionBlue,
-                        modifier = Modifier.clarityClickable(haptic = null) {
-                            undone = true
-                            haptics.perform(ClarityHapticEvent.UNDO)
-                            current?.onUndo?.invoke()
-                            onDismiss()
-                        },
-                    )
+                    // **The one way back from a deletion, and it was a bare word.**
+                    // No role, no click label, and a `bodyStrong` line box is about 24dp
+                    // against design-v3 13's 48dp floor, on a control that disappears
+                    // after five seconds. The box gives it the target; the role and the
+                    // label give a screen reader something to announce and act on.
+                    Box(
+                        modifier = Modifier
+                            .sizeIn(
+                                minWidth = ClaritySpacing.minTouchTarget,
+                                minHeight = ClaritySpacing.minTouchTarget,
+                            )
+                            .clip(shapes.pill)
+                            .clarityClickable(
+                                haptic = null,
+                                role = Role.Button,
+                                onClickLabel = current?.actionLabel.orEmpty(),
+                            ) {
+                                undone = true
+                                haptics.perform(ClarityHapticEvent.UNDO)
+                                current?.onUndo?.invoke()
+                            }
+                            .padding(horizontal = ClaritySpacing.snug),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = current?.actionLabel.orEmpty(),
+                            style = type.bodyStrong,
+                            color = colors.actionBlue,
+                        )
+                    }
                 }
                 Box(
                     modifier = Modifier

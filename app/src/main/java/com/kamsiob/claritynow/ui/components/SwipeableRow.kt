@@ -197,7 +197,15 @@ fun SwipeableRow(
     Box(
         modifier = modifier
             .onSizeChanged { rowWidth = it.width }
-            .semantics {
+            // **`mergeDescendants = true`, and without it none of this ever ran.**
+            // Merging in Compose flows downward only. The child here is the card, which
+            // carries `clickable` and is therefore itself a merging node, so this outer
+            // Box stayed a separate semantics node holding custom actions and no text,
+            // no role and nothing focusable. TalkBack never stopped on it, so the three
+            // actions design-v3 10.3.1 makes mandatory rather than optional were
+            // unreachable for anyone not using the gesture. Merged, this is one focus
+            // stop carrying the card's own description plus the three actions.
+            .semantics(mergeDescendants = true) {
                 // Swipe is invisible to a screen reader and is only ever an
                 // accelerator. These duplicates are what make it safe to have,
                 // alongside the long press menu and the detail sheet.

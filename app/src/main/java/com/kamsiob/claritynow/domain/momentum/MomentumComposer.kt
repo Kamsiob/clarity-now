@@ -11,6 +11,7 @@ import com.kamsiob.claritynow.domain.engine.catalog.Purpose
 import com.kamsiob.claritynow.domain.engine.validate.ClarityValidator
 import com.kamsiob.claritynow.domain.query.TrailQueries
 import com.kamsiob.claritynow.domain.query.TrailWindow
+import java.time.Instant
 import java.time.ZoneId
 import kotlin.math.roundToInt
 
@@ -129,6 +130,22 @@ internal class MomentumComposer(
         requireSameZone(queries)
         val language = catalog ?: return null
         val running = engine ?: return null
+        // **Nothing is said about a week on the day the app was installed.**
+        //
+        // Measured on a real first run: four minutes after finishing onboarding the home
+        // screen read "A week at the point where nothing is decided." over two cards that
+        // both said "Add your first item", with the caption "two of two areas active".
+        // Every word of it is derivable from the log and the whole of it is wrong about
+        // the person, because the absence it describes is the app's age and not theirs.
+        // The Report already refuses to speak from too little history, on the same
+        // grounds; the banner had no equivalent and spoke from event one.
+        //
+        // The gate is the calendar day rather than an event count, because the families
+        // that fire here are about a week and a day is not one. It costs one line and it
+        // is the difference between the app opening with an observation and opening with
+        // an accusation.
+        val firstEvent = queries.firstEventAt() ?: return null
+        if (dateKeyAt(firstEvent) == dateKeyAt(nowMillis)) return null
         val window = MomentumWindows.weekToDate(nowMillis, zone)
         val facts = FactExtractor(queries).extract(window)
         val history = FiringHistory.from(queries, nowMillis)
@@ -140,6 +157,9 @@ internal class MomentumComposer(
             caption = BannerCaptions.render(language, facts, running.momentOf(facts).dateKey, history),
         )
     }
+
+    private fun dateKeyAt(millis: Long): String =
+        Instant.ofEpochMilli(millis).atZone(zone).toLocalDate().toString()
 
     private fun requireSameZone(queries: TrailQueries) {
         require(queries.zone() == zone) {

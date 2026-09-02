@@ -20,6 +20,20 @@ make. All of it is below, with the exact steps.
 
 ## BLOCKED
 
+### RESOLVED, 2026-09-01: the phone was disconnected at the start of the polish pass
+
+Left here as a record rather than deleted, because the recovery is worth keeping.
+
+`adb devices` reported nothing and `lsusb` showed no Google device on the bus, so a fresh
+debug APK was built and a watcher armed that ran `adb wait-for-device` and installed the
+moment the cable went in. It landed a few minutes later, so nothing was lost and the
+polish pass ran on the real Pixel 8 throughout. An emulator was started and immediately
+stopped when the owner asked for the real device.
+
+If it happens again: build first with `./gradlew :app:assembleDebug`, then arm
+`adb wait-for-device && adb install -r app/build/outputs/apk/debug/app-debug.apk` in the
+background and keep working.
+
 ### Play Console setup, phase 13
 
 Only the account holder can do these, and none of them affects the app itself.

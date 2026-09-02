@@ -112,8 +112,15 @@ fun trailSentence(row: TrailRow): String {
  * where the timestamp is decided.
  */
 @Composable
-fun trailRowDescription(sentence: String, time: String): String =
-    stringResource(R.string.cd_trail_entry_at, sentence, time)
+fun trailRowDescription(sentence: String, time: String, areaName: String? = null): String {
+    val base = stringResource(R.string.cd_trail_entry_at, sentence, time)
+    // **The dot is the only thing that says which area an event belongs to, and a dot
+    // says nothing out loud.** design-v3 13 refuses color as a sole signal; here it was
+    // the sole signal twice over, because a screen reader got no area at all and a
+    // person with any color vision difference got two indistinguishable dots. The name
+    // goes last so the sentence and the time still arrive first.
+    return if (areaName.isNullOrBlank()) base else "$base, $areaName"
+}
 
 /**
  * The day header's description: its label and the number of entries under it.

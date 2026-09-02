@@ -61,13 +61,26 @@ val LocalScreenEntrance = compositionLocalOf { ScreenEntrance(false, 0) }
 
 enum class ClarityEntranceRole { HEADER, DOMINANT, ROW, CHROME }
 
+private const val ENTRANCE_FLOOR_ALPHA = 0.35f
+
 private val HEADER_FALL: Dp = (-10).dp
 private val DOMINANT_RISE: Dp = 8.dp
 private val ROW_RISE: Dp = 18.dp
 private const val DOMINANT_SCALE_FROM = 0.94f
 
-/** Long enough for the last staggered row of a full screenful to finish. */
-private const val ENTRANCE_WINDOW_MILLIS = 380L + 14L * 46L
+/**
+ * **The stagger has a ceiling.**
+ *
+ * Index times 46ms with no cap means the twelfth card on a long screen starts half a
+ * second after the first, by which time a thumb has already scrolled it, and the window
+ * below has to be long enough to cover a list of unknown length. Eight steps is the last
+ * one a person can still read as a sequence; past that everything arrives together, which
+ * is what "the rest of the list" should look like anyway.
+ */
+private const val MAX_STAGGER_STEPS = 8
+
+/** Long enough for the last staggered row to finish. */
+private const val ENTRANCE_WINDOW_MILLIS = 380L + MAX_STAGGER_STEPS * 46L
 
 /**
  * Plays the choreography every time the screen is entered, which is the change from the
@@ -128,7 +141,8 @@ fun Modifier.clarityEntrance(
 
     val settle = remember(entrance.generation) { Animatable(0f) }
     val fade = remember(entrance.generation) { Animatable(0f) }
-    val delayMillis = (index.coerceAtLeast(0) * motion.staggerMillis).toLong()
+    val delayMillis =
+        (index.coerceIn(0, MAX_STAGGER_STEPS) * motion.staggerMillis).toLong()
 
     LaunchedEffect(entrance.generation) {
         if (delayMillis > 0L) delay(delayMillis)
@@ -142,7 +156,15 @@ fun Modifier.clarityEntrance(
     }
 
     return graphicsLayer {
-        alpha = fade.value
+        // **Opacity starts at 0.35, not at 0, and the reason is the tab crossfade.**
+        //
+        // `AnimatedContent` in `ClarityShell` already fades the whole screen in on every
+        // tab switch. An element fading 0 to 1 underneath that is a second opacity ramp
+        // multiplied onto the first, so a card was arriving at 0.25 alpha when the screen
+        // itself was at 0.5, which reads as a wash rather than as an arrival. Starting
+        // partway up leaves the entrance doing what it is for, which is the transform,
+        // and lets the crossfade own the fade.
+        alpha = ENTRANCE_FLOOR_ALPHA + (1f - ENTRANCE_FLOOR_ALPHA) * fade.value
         translationY = (1f - settle.value) * travel
         val s = scaleFrom + (1f - scaleFrom) * settle.value
         scaleX = s

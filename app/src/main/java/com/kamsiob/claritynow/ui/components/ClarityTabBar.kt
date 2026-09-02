@@ -29,6 +29,8 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.kamsiob.claritynow.ui.theme.ClarityElevation
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
@@ -176,6 +178,11 @@ private fun TabItem(
                 onClickLabel = tab.label,
                 onClick = onClick,
             )
+            // **Which tab you are on was carried by color alone**: a 10 percent
+            // `actionBlue` pill, a filled icon variant and an `actionBlue` label, all
+            // three visual. design-v3 13 says color is never the only signal, and this is
+            // the app's primary navigation. TalkBack now reads "Momentum, selected, tab".
+            .semantics { this.selected = selected }
             .padding(horizontal = (14 + 4 * reveal).dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,

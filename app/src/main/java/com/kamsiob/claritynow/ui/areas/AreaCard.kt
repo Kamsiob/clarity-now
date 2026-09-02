@@ -156,7 +156,19 @@ fun AreaCardContent(
             }
             if (area.isIdle) {
                 Text(
-                    text = stringResource(R.string.area_idle_title),
+                    // **Which invitation depends on whether there is a queue behind it.**
+                    // An empty area has never been used and can be asked for a first item.
+                    // An area whose queue is full has plenty of items and no active one,
+                    // which is what dismissing the swap chooser, completing inside a focus
+                    // session with `Choose from queue` set, and the re-entry screen's
+                    // second option all produce, the last of them on every card at once.
+                    text = stringResource(
+                        if (area.queueLength > 0) {
+                            R.string.area_idle_queued_title
+                        } else {
+                            R.string.area_idle_title
+                        },
+                    ),
                     // 500 rather than itemTitle's 650, design-v3.md 10.3. The
                     // invitation is the same string at the same size as a real item
                     // title, one step lighter, so an empty card reads as a place

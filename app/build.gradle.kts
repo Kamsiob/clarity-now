@@ -158,6 +158,17 @@ tasks.withType<Test>().configureEach {
         "clarity.regenerateGolden",
         providers.gradleProperty("regenerateGolden").getOrElse("false"),
     )
+    // The same shape of switch for the content edge case fixtures the polish pass loads
+    // onto a device:
+    //   ./gradlew :app:testDebugUnitTest --tests '*EdgeCaseFixtures*' -PwriteFixtures=true
+    systemProperty(
+        "clarity.writeFixtures",
+        providers.gradleProperty("writeFixtures").getOrElse("false"),
+    )
+    systemProperty(
+        "clarity.fixtureDir",
+        providers.gradleProperty("fixtureDir").getOrElse("/tmp/clarity-fixtures"),
+    )
     // Every file `CorpusFixture` opens off the repository root at runtime, rather than off the
     // test classpath. Gradle cannot see those reads, so without this the task reports
     // UP-TO-DATE after a corpus edit and every gate over the corpus goes green without

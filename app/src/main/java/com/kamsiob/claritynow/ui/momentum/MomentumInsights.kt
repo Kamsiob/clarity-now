@@ -116,7 +116,7 @@ private fun AreaBalanceModule(balance: AreaBalance) {
     val type = LocalClarityTypography.current
 
     Sidehead(text = stringResource(R.string.momentum_sidehead_area_balance))
-    Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
+    Spacer(Modifier.height(ClaritySpacing.snug))
     Column(verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(12.dp))) {
         balance.shares.forEach { share ->
             InsightRow(
@@ -150,7 +150,7 @@ private fun CompletionPaceModule(pace: CompletionPace) {
     val description = stringResource(R.string.cd_momentum_pace, pace.weeks.size)
 
     Sidehead(text = stringResource(R.string.momentum_sidehead_completion_pace))
-    Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
+    Spacer(Modifier.height(ClaritySpacing.snug))
     Canvas(
         modifier = Modifier
             .fillMaxWidth()
@@ -207,7 +207,7 @@ private fun FocusPatternModule(pattern: FocusPattern) {
     val description = stringResource(R.string.cd_momentum_focus_strip, pattern.days.size)
 
     Sidehead(text = stringResource(R.string.momentum_sidehead_focus_patterns))
-    Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
+    Spacer(Modifier.height(ClaritySpacing.snug))
     Canvas(
         modifier = Modifier
             .fillMaxWidth()
@@ -255,7 +255,7 @@ private fun FocusPatternModule(pattern: FocusPattern) {
 @Composable
 private fun IdleAreasModule(areas: List<IdleArea>) {
     Sidehead(text = stringResource(R.string.momentum_sidehead_quiet_areas))
-    Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
+    Spacer(Modifier.height(ClaritySpacing.snug))
     Column(verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(12.dp))) {
         areas.forEach { area ->
             InsightRow(

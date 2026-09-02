@@ -1302,14 +1302,14 @@ ob.srvd.l11  [O]  You answered a pulse about {itemTitle}. It is still the active
 ob.srvd.l12  [O]  You said {priorLabel} about {itemTitle}. It has been active {ageDays}.
 ob.srvd.l13  [O]  The answer on record for {itemTitle} is {priorLabel}.
 ob.srvd.l14  [O]  {priorLabel} was your reading of {itemTitle}. It is still there.
-ob.srvd.l15  [O]  {itemTitle} has been active {ageDays} and it has an answer against it.
+ob.srvd.l15  [O]  {itemTitle} has been active {ageDays}. A Pulse from that stretch names it.
 ob.srvd.l16  [O]  You said {priorLabel}. {itemTitle} is still the active item in {areaName}.
 ob.srvd.l17  [O]  There were events in {areaName}. {itemTitle} stayed where it was.
 ob.srvd.l18  [O]  The answer you gave about {itemTitle} was {priorLabel}.
 ob.srvd.l19  [O]  {areaName} has had {itemTitle} in front for {ageDays}.
 ob.srvd.l20  [O]  {itemTitle} carries one answer from you and {ageDays} of being active.
 ob.srvd.l21  [O]  You were asked about {itemTitle} and you said {priorLabel}.
-ob.srvd.l22  [O]  The record holds {priorLabel} against {itemTitle}.
+ob.srvd.l22  [O]  The record holds {priorLabel} for {itemTitle}.
 ob.srvd.l23  [O]  {areaName} had a week. {itemTitle} is still its active item.
 ob.srvd.l24  [O]  You said {priorLabel} within the last month. {itemTitle} is still active.
 ob.srvd.l25  [O]  {itemTitle} is the item you answered about. It has not been replaced.

@@ -176,10 +176,22 @@ fun ClarityShell(
     // reach for, so the duration is written out, and the reduce motion branch has to
     // be written out with it: design-v3.md 8.3 replaces every animation with a 150ms
     // crossfade, and a literal duration is the one thing that global check cannot see.
-    val tabFade: FiniteAnimationSpec<Float> = tween(
-        durationMillis = if (motion.reduced) 150 else 180,
-        easing = EaseOutCubic,
-    )
+    // **Two specs, not one, because one spec is a double exposure.**
+    //
+    // Running the same 180ms tween on both halves holds combined opacity at exactly 1.0
+    // for the whole switch, so the midpoint is 50 percent Areas stacked on 50 percent
+    // Report and the eye reads a smear rather than a replacement. On the animation seen
+    // dozens of times a day. The outgoing screen leaves on the fast effects spring and
+    // the incoming one arrives on the default effects spring, so the old screen is
+    // mostly gone before the new one is mostly there and the crossing is brief.
+    //
+    // Both are `effects` springs, critically damped, because opacity that overshoots is
+    // a flicker. Reduced motion keeps the single symmetric tween, which is what 8.3 asks
+    // for and is one value rather than a shorter version of a two part idea.
+    val tabFadeIn: FiniteAnimationSpec<Float> =
+        if (motion.reduced) tween(150, easing = EaseOutCubic) else motion.effects()
+    val tabFadeOut: FiniteAnimationSpec<Float> =
+        if (motion.reduced) tween(150, easing = EaseOutCubic) else motion.effectsFast()
 
     val tabs = rememberClarityTabs(
         areasLabel = stringResource(R.string.tab_areas),
@@ -295,7 +307,7 @@ fun ClarityShell(
         Box(modifier = modifier.fillMaxSize().background(colors.canvas)) {
             AnimatedContent(
                 targetState = selected,
-                transitionSpec = { fadeIn(tabFade) togetherWith fadeOut(tabFade) },
+                transitionSpec = { fadeIn(tabFadeIn) togetherWith fadeOut(tabFadeOut) },
                 label = "tabContent",
             ) { tab ->
                 tabStates.SaveableStateProvider(tab) {

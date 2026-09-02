@@ -56,6 +56,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kamsiob.claritynow.R
 import com.kamsiob.claritynow.domain.query.TrailRow
@@ -186,6 +187,9 @@ fun TrailScreen(
     val colors = LocalClarityColors.current
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    // The filter chips already carry every live area's name, so a row can be told which
+    // area it belongs to without a second query.
+    val areaNames = remember(state.areas) { state.areas.associate { it.areaId to it.name } }
 
     // The footer is empty while there is more to load and nothing to say, and an
     // empty lazy item is not reliably reported as visible, so the trigger watches for
@@ -224,8 +228,10 @@ fun TrailScreen(
                             ScrollEdge.aboveTheBar,
                     ),
                 contentPadding = PaddingValues(
-                    start = ClaritySpacing.screenPadding,
-                    end = ClaritySpacing.screenPadding,
+                    // `step` 20 less `snug` 12, because every row now carries the other
+                    // 12 itself so the mint on a completion can bleed past its text.
+                    start = ClaritySpacing.screenPadding - ClaritySpacing.snug,
+                    end = ClaritySpacing.screenPadding - ClaritySpacing.snug,
                     // The list scrolls under the status bar rather than stopping at it.
                     top = statusBar + 8.dp,
                     // No FAB on this screen, so the trailing gap is 24dp rather than
@@ -237,7 +243,7 @@ fun TrailScreen(
                 item(key = "title") { TrailHeader() }
 
                 item(key = "filters") {
-                    Column {
+                    Column(modifier = Modifier.padding(horizontal = ClaritySpacing.snug)) {
                         TrailFilterRow(
                             areas = state.areas,
                             selectedAreaId = state.selectedAreaId,
@@ -270,7 +276,12 @@ fun TrailScreen(
                         )
                     }
                     items(day.rows, key = { "row:" + it.eventId }) { row ->
-                        TrailEventRow(row = row, zone = state.zone, onReopen = onReopen)
+                        TrailEventRow(
+                            row = row,
+                            zone = state.zone,
+                            areaNames = areaNames,
+                            onReopen = onReopen,
+                        )
                     }
                 }
 
@@ -336,7 +347,12 @@ private fun TrailHeader() {
         color = colors.inkPrimary,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = ClaritySpacing.snug, bottom = ClaritySpacing.tight),
+            .padding(
+                start = ClaritySpacing.snug,
+                end = ClaritySpacing.snug,
+                top = ClaritySpacing.snug,
+                bottom = ClaritySpacing.tight,
+            ),
     )
 }
 
@@ -437,7 +453,12 @@ private fun TrailDayHeader(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = if (isFirst) 0.dp else ClaritySpacing.sectionGap, bottom = 12.dp)
+            .padding(
+                start = ClaritySpacing.snug,
+                end = ClaritySpacing.snug,
+                top = if (isFirst) 0.dp else ClaritySpacing.sectionGap,
+                bottom = ClaritySpacing.snug,
+            )
             .clearAndSetSemantics { contentDescription = description },
     ) {
         // The label is capped rather than left to measure freely. A long date at 200
@@ -543,7 +564,12 @@ private fun trailDayLabel(date: LocalDate, today: LocalDate, referenceYear: Int)
  * even on the rows where the cluster rule hides it.
  */
 @Composable
-private fun TrailEventRow(row: TrailRow, zone: ZoneId, onReopen: (String, String) -> Unit) {
+private fun TrailEventRow(
+    row: TrailRow,
+    zone: ZoneId,
+    areaNames: Map<String, String>,
+    onReopen: (String, String) -> Unit,
+) {
     val colors = LocalClarityColors.current
     val type = LocalClarityTypography.current
     val shapes = LocalClarityShapes.current
@@ -552,7 +578,11 @@ private fun TrailEventRow(row: TrailRow, zone: ZoneId, onReopen: (String, String
         TIME_FORMAT.format(Instant.ofEpochMilli(row.wallClock).atZone(zone))
     }
     val text = trailRowText(row)
-    val description = trailRowDescription(trailSentence(row), time)
+    val description = trailRowDescription(
+        sentence = trailSentence(row),
+        time = time,
+        areaName = row.areaId?.let(areaNames::get),
+    )
     val accent = row.areaColorHex?.let { parseAreaColor(it) }
     // A completion is the one row that offers an act, so it is the one row that takes a
     // role, a click label and a press ground. Everything else stays a record.
@@ -587,8 +617,14 @@ private fun TrailEventRow(row: TrailRow, zone: ZoneId, onReopen: (String, String
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                // **Every row takes the same inset, so the rail is straight.** The
+                // padding used to be inside the mint background and applied only to a
+                // completion, so the one row a person scans for had its dot 12dp right of
+                // every sibling's and the day's left edge visibly kinked. The list's own
+                // horizontal padding is reduced by the same 12dp, so the text still lands
+                // on the 20dp measure and the mint bleeds symmetrically.
                 .padding(
-                    horizontal = if (row.isCompletion) ClaritySpacing.snug else 0.dp,
+                    horizontal = ClaritySpacing.snug,
                     vertical = ClaritySpacing.scaled(10.dp),
                 ),
             verticalAlignment = Alignment.Top,
@@ -624,16 +660,32 @@ private fun TrailEventRow(row: TrailRow, zone: ZoneId, onReopen: (String, String
                 // not an orphaned action at `caption`. The five rows that record what
                 // the app did stay quieter than a row about a person's own work, which
                 // is the ranking, but they still sit at a size a row can be read at.
+                // **`body` 15, not `caption` 12.5, and it is the half that varies.**
+                //
+                // Four consecutive rows in one day print the same subject, because a
+                // person works on one thing: Added, Filed, Swapped, Completed all under
+                // "Send the revised deck". The bold column therefore repeats and the
+                // action, which is the only thing that differs between the rows, was the
+                // smallest and faintest text on the screen. The eye scanned the loud
+                // column and read four identical lines. At `body` on `inkPrimary` the two
+                // halves are one step apart rather than three, and what changes is
+                // readable at the size the reader is actually scanning.
                 Text(
                     text = text.action,
-                    style = if (text.subject == null) type.body else type.caption,
-                    color = colors.inkSecondary,
+                    style = type.body,
+                    color = if (text.subject == null) colors.inkSecondary else colors.inkPrimary,
                 )
                 if (text.subject != null) {
                     Text(
                         text = text.subject,
-                        style = type.bodyStrong,
-                        color = colors.inkPrimary,
+                        // The subject drops to `read` weight on `inkSecondary`: it is the
+                        // constant across a day's rows and the thing a person already
+                        // knows. Two lines, one step apart, with the emphasis on the half
+                        // that is new.
+                        style = type.body,
+                        color = colors.inkSecondary,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(top = 1.dp),
                     )
                 }
@@ -714,12 +766,20 @@ private fun TrailFooter(loading: Boolean, endOfHistory: Boolean) {
     val type = LocalClarityTypography.current
     when {
         loading -> TrailShimmer()
+        // Left on the measure, not centered. Every day header, every row and the title
+        // start at 20dp; one centered line at the foot is the only thing on the screen
+        // that does not, and a terminal note is a quiet member of the list rather than a
+        // caption under it.
         endOfHistory -> Text(
             text = stringResource(R.string.trail_end_of_history),
             style = type.caption,
             color = colors.inkSecondary,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth().padding(vertical = ClaritySpacing.scaled(24.dp)),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = ClaritySpacing.snug,
+                    vertical = ClaritySpacing.scaled(24.dp),
+                ),
         )
         // Idle with more to come draws nothing. A row of dots would be a spinner
         // wearing a hat.

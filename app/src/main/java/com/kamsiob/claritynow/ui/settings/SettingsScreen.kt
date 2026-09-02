@@ -338,10 +338,19 @@ private fun PermissionCard() {
     }
 }
 
-/** design-v3.md section 6: 28dp between sections. */
+/**
+ * **`movement` 52, and this is the token's first call site.**
+ *
+ * Measured on the shipping build: a 56dp row with a 24dp line centered gives 16dp of air
+ * each side, plus `snug` 12 between rows, so row ink to row ink is 44dp. `sectionGap` 32
+ * then gives 16 + 32 = 48dp from the last row to the next sidehead. 44 against 48, a
+ * ratio of 1.09, so the only thing marking a new section was a 12.5sp label and a
+ * hairline and the air said nothing at all. A.5 gives peers `snug` and a new movement
+ * `movement`, which is 4.3 to 1 at the token level and lands at 64 against 44 here.
+ */
 @Composable
 private fun GroupGap() {
-    Spacer(Modifier.height(ClaritySpacing.sectionGap))
+    Spacer(Modifier.height(ClaritySpacing.movement))
 }
 
 private fun busyLabelOf(task: DataTask): Int = when (task) {

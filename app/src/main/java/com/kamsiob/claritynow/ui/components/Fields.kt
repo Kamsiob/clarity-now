@@ -27,6 +27,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
@@ -118,7 +121,17 @@ fun ClarityTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
     placeholder: String? = null,
     focusRequester: FocusRequester? = null,
-    onImeAction: () -> Unit = {},
+    /**
+     * **Null, not an empty lambda, and the difference is the whole of finding 2.**
+     *
+     * A non-null `KeyboardActions` handler *suppresses the platform default*. With
+     * `onImeAction: () -> Unit = {}` every one of the twelve call sites was silently
+     * installing a handler that did nothing, so Next never advanced focus and Done never
+     * dismissed the keyboard anywhere in the app, including on the capture sheet where
+     * the action key is the natural way to finish. Null restores the default behavior and
+     * a caller that wants its own still gets it.
+     */
+    onImeAction: (() -> Unit)? = null,
 ) {
     val colors = LocalClarityColors.current
     val shapes = LocalClarityShapes.current
@@ -135,7 +148,18 @@ fun ClarityTextField(
     )
 
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(text = label, style = type.sidehead, color = colors.inkSecondary)
+        // **The label is drawn here and spoken by the field below it, never both.**
+        // `BasicTextField` has no label slot, so a sibling `Text` is the only way to draw
+        // one and nothing associates the two: TalkBack announced "Edit box" plus whatever
+        // had been typed, which on the capture sheet is two consecutive fields that sound
+        // identical. The field takes the name and the drawn label is cleared, so it is
+        // read once.
+        Text(
+            text = label,
+            style = type.sidehead,
+            color = colors.inkSecondary,
+            modifier = Modifier.clearAndSetSemantics { },
+        )
         Spacer(Modifier.height(ClaritySpacing.scaled(FIELD_LABEL_GAP)))
         BasicTextField(
             value = value,
@@ -149,10 +173,14 @@ fun ClarityTextField(
                 keyboardType = keyboardType,
                 imeAction = imeAction,
             ),
-            keyboardActions = androidx.compose.foundation.text.KeyboardActions(
-                onDone = { onImeAction() },
-                onNext = { onImeAction() },
-            ),
+            keyboardActions = if (onImeAction == null) {
+                androidx.compose.foundation.text.KeyboardActions.Default
+            } else {
+                androidx.compose.foundation.text.KeyboardActions(
+                    onDone = { onImeAction() },
+                    onNext = { onImeAction() },
+                )
+            },
             decorationBox = { field ->
                 Box(
                     modifier = Modifier
@@ -185,6 +213,9 @@ fun ClarityTextField(
             },
             modifier = Modifier
                 .fillMaxWidth()
+                // The field carries the name the label above it draws, because
+                // `BasicTextField` has no label slot to associate them with.
+                .semantics { contentDescription = label }
                 .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier),
         )
     }

@@ -48,7 +48,20 @@
     <string name="areas_empty_title">No areas yet</string>
     <string name="areas_empty_body">An area is a part of your life you want to keep track of.</string>
     <string name="areas_empty_action">Create an area</string>
+    <!--
+        Two idle titles, because there are two idle states and they are not the same fact.
+
+        An area with nothing in it at all has never been used and the card can say so. An
+        area whose queue is full but whose active slot is empty is the ordinary result of
+        dismissing the swap chooser, of completing inside a focus session with `Choose
+        from queue` set, and of the re-entry screen's second option, which puts EVERY
+        area into this state at once. Telling somebody with a forty item queue to add
+        their first item is the app being confidently wrong about their own data on the
+        screen they open most, and 10.3 makes the card's title the most important string
+        in the product.
+    -->
     <string name="area_idle_title">Add your first item</string>
+    <string name="area_idle_queued_title">Pick what is next</string>
     <string name="area_add_item">Add an item</string>
     <string name="fab_add_item">Add an item</string>
     <string name="fab_add_area">Create an area</string>
@@ -125,7 +138,7 @@
 
     <string name="queue_empty">Nothing waiting.</string>
     <string name="completed_empty">Nothing completed yet.</string>
-    <string name="swap_demoting">This goes back to the top of the queue</string>
+    <string name="swap_demoting">This goes back to the front of the queue.</string>
     <string name="queue_choice_dismiss">Leave it idle</string>
 
     <!--
@@ -344,7 +357,7 @@
         <item quantity="one">Stopped after %1$d minute on %2$s</item>
         <item quantity="other">Stopped after %1$d minutes on %2$s</item>
     </plurals>
-    <string name="trail_pulse_generated">A Pulse was shown</string>
+    <string name="trail_pulse_generated">A Pulse was ready</string>
     <string name="trail_pulse_answered">Answered a Pulse with %1$s</string>
     <string name="trail_report_generated">A Report was written for the week of %1$s</string>
     <string name="trail_plan_offered">One thing was suggested</string>
@@ -379,7 +392,7 @@
         <item quantity="other">Sessions run for %d minutes. You can add more time without stopping.</item>
     </plurals>
     <string name="focus_chooser_needs_item">Add an item first</string>
-    <string name="focus_chooser_empty_title">Nothing to focus on yet</string>
+    <string name="focus_chooser_empty_title">Nothing active yet</string>
     <string name="focus_chooser_empty_body">An area with an active item appears here, ready to start.</string>
     <!-- Lowercase, and beneath the numeral rather than beneath the ring. design-v3.md 10.18. -->
     <string name="focus_remaining">remaining</string>
@@ -471,7 +484,17 @@
         about the person, which is what lets them live here. They appear only when the
         feature has never been used at all, in the whole log.
     -->
-    <string name="momentum_active_days">Active %1$d of last %2$d days</string>
+    <string name="momentum_active_days">Active on %1$d of the last %2$d days</string>
+    <!--
+        The zero case is its own string, because "Active 0 of the last 14 days" is a score
+        of nothing rendered under fourteen faded marks, and the two moments it appears are
+        the two where it costs the most: the day after installing, and the first screen
+        back from a long gap. 14b.4 withholds absence measures on re-entry and this
+        readout sat outside that rule because it is a direct count rather than an engine
+        sentence. It states the window and stops, which is the same fact without the
+        arithmetic of failure.
+    -->
+    <string name="momentum_active_days_none">The last %1$d days</string>
     <string name="momentum_sidehead_this_week">This week</string>
     <string name="momentum_stat_completed">Completed</string>
     <string name="momentum_stat_focused">Minutes focused</string>
@@ -552,7 +575,7 @@
         the ban. Which observation is read under which is decided in ReportSection, once,
         where it can be read against the corpus.
     -->
-    <string name="report_sidehead_your_week">Your week, honestly</string>
+    <string name="report_sidehead_your_week">Your week</string>
     <string name="report_sidehead_what_you_said">What you said</string>
     <string name="report_sidehead_focus">Focus</string>
     <string name="report_sidehead_pattern">Pattern</string>
@@ -804,10 +827,10 @@
         file is not encrypted is false for everybody who used one.
     -->
     <string name="settings_export_stale">Nothing here has been exported in the last 30 days.</string>
-    <string name="settings_export_done">Exported %1$d events to a readable file.</string>
+    <string name="settings_export_done">Exported %1$d events. The file is not encrypted.</string>
     <string name="settings_export_done_encrypted">Exported %1$d events to an encrypted file.</string>
     <string name="settings_import_done">Imported. The log now holds %1$d events.</string>
-    <string name="settings_erase_done">Everything on this phone has been erased.</string>
+    <string name="settings_erase_done">Everything in Clarity Now has been erased.</string>
 
     <!--
         The import refusals, MASTER_BUILD_PROMPT 14b.7.
@@ -1059,19 +1082,19 @@
     <string name="onboarding_today_area">Today</string>
 
     <!-- Beat 3. Stated verbatim in 13.1. -->
-    <string name="onboarding_beat_three_line">Your clarity starts here.</string>
+    <string name="onboarding_beat_three_line">This is yours now.</string>
 
     <!-- Beat 4. The four captions are stated verbatim in 13.1. -->
-    <string name="onboarding_depth_philosophy_one">You just organized your focus.</string>
-    <string name="onboarding_depth_philosophy_two">Now let the app learn how you work.</string>
+    <string name="onboarding_depth_philosophy_one">That is the whole setup.</string>
+    <string name="onboarding_depth_philosophy_two">Two more things worth knowing.</string>
     <string name="onboarding_depth_pulse_sample">Some days there will be a question waiting here.</string>
     <string name="onboarding_depth_pulse_option_one">That sounds right</string>
     <string name="onboarding_depth_pulse_option_two">Not quite</string>
     <string name="onboarding_depth_pulse_caption">One question a day. One tap.</string>
-    <string name="onboarding_depth_momentum_caption">Your rhythm, without the guilt.</string>
+    <string name="onboarding_depth_momentum_caption">Your rhythm, as it actually was.</string>
     <string name="onboarding_depth_report_eyebrow">Clarity Report</string>
     <string name="onboarding_depth_report_headline">Your week, in one page.</string>
-    <string name="onboarding_depth_report_caption">Every week, an honest mirror. Written on your device.</string>
+    <string name="onboarding_depth_report_caption">Every week, what actually happened. Written on your device.</string>
 
     <!--
         Addendum 01 8b, and the one line the whole item is about. It names the cadence, the
@@ -1243,7 +1266,7 @@
         the screen that can answer it before the tap rather than after.
     -->
     <string name="reentry_title">Everything is where you left it.</string>
-    <string name="reentry_body">Keep it that way, or start fresh by putting the active items back in their queues. Nothing is deleted and nothing is marked complete.</string>
+    <string name="reentry_body">Keep it that way, or put the active items back in their queues and choose again. Nothing is deleted and nothing is marked complete.</string>
     <string name="reentry_keep">Keep everything as it is</string>
     <string name="reentry_requeue">Put active items back in their queues</string>
 

@@ -59,6 +59,15 @@ data class AreaCardModel(
     /** Whether Complete and Swap are offered, design-v3.md 10.3.1 state gating. */
     val offersComplete: Boolean get() = !isIdle
     val offersSwap: Boolean get() = !isIdle && queueLength > 0
+
+    /**
+     * An idle area with a queue behind it can be started without leaving the card.
+     *
+     * Without this the only swipe on such a card is Delete, because Complete and Swap both
+     * require an active item, so the one card in the app that most obviously needs an
+     * action offered the destructive one and nothing else.
+     */
+    val offersPromote: Boolean get() = isIdle && queueLength > 0
 }
 
 @Immutable

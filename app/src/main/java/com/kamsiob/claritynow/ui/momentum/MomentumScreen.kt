@@ -204,7 +204,11 @@ private fun ActivityRow(activity: ActivityWindow) {
 
     Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
     Text(
-        text = stringResource(R.string.momentum_active_days, activity.activeCount, activity.length),
+        text = if (activity.activeCount == 0) {
+            stringResource(R.string.momentum_active_days_none, activity.length)
+        } else {
+            stringResource(R.string.momentum_active_days, activity.activeCount, activity.length)
+        },
         style = type.caption,
         color = colors.inkSecondary,
     )
@@ -282,7 +286,9 @@ private fun ThisWeek(view: MomentumView, dimmed: Boolean) {
     val stats = view.week.all
 
     Sidehead(text = stringResource(R.string.momentum_sidehead_this_week))
-    Spacer(Modifier.height(ClaritySpacing.scaled(16.dp)))
+    // A.5 fixes a sidehead to its content at `snug` 12. This was 16 here and 14 under all
+    // four insight sideheads, for one identical relationship.
+    Spacer(Modifier.height(ClaritySpacing.snug))
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -291,9 +297,16 @@ private fun ThisWeek(view: MomentumView, dimmed: Boolean) {
         stats.forEach { stat ->
             Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.Start) {
                 val figure = rolledFigure(stat.value)
+                // **`itemTitle` 21.5, not `displayTitle` 31.** A.3 clause 1 allows one
+                // element at a dominant step and this screen shipped three of them side
+                // by side, all louder than the 26sp engine sentence the page is anchored
+                // on, so the eye landed on "1 4 2" and read the sentence second. The
+                // sentence is the only thing here that was written; the figures are a
+                // readout. At 21.5 they still lead their own block and the serif headline
+                // above them is the largest thing on the page, which is what it is for.
                 TabularNumber(
                     text = figure.toString(),
-                    style = type.displayTitle,
+                    style = type.itemTitle,
                     color = if (dimmed || !stat.discovered) colors.inkSecondary else colors.inkPrimary,
                     contentDescription = figure.toString(),
                 )

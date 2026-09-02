@@ -27,7 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,6 +44,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.kamsiob.claritynow.R
+import com.kamsiob.claritynow.data.repo.ClarityRepository
 import com.kamsiob.claritynow.domain.replay.ItemState
 import com.kamsiob.claritynow.ui.components.ClarityButton
 import com.kamsiob.claritynow.ui.components.ClarityButtonRole
@@ -97,10 +98,17 @@ fun AddItemSheet(
 ) {
     val colors = LocalClarityColors.current
     val type = LocalClarityTypography.current
-    var title by remember { mutableStateOf("") }
-    var note by remember { mutableStateOf("") }
-    var firstStep by remember { mutableStateOf("") }
-    var estimate by remember { mutableStateOf("") }
+    // **`rememberSaveable`, because a half typed capture is the most expensive thing in
+    // this app to lose.** A plain `remember` is discarded when the process is killed
+    // behind a keyboard, which on a low memory phone is the ordinary case rather than the
+    // exceptional one, and the whole point of a capture is that it costs nothing. The two
+    // password fields and the three typed destructive confirmations deliberately stay on
+    // plain `remember`: a secret and an "I meant it" are the two things that should not
+    // survive the app going away.
+    var title by rememberSaveable { mutableStateOf("") }
+    var note by rememberSaveable { mutableStateOf("") }
+    var firstStep by rememberSaveable { mutableStateOf("") }
+    var estimate by rememberSaveable { mutableStateOf("") }
     val focus = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
 
@@ -120,9 +128,15 @@ fun AddItemSheet(
                 Text(text = areaName, style = type.label, color = colors.inkSecondary)
                 Spacer(Modifier.height(ClaritySpacing.scaled(16.dp)))
             }
+            // **Capped on input, not on save.** `ClarityRepository.addItem` refuses a
+            // title over `MAX_ITEM_TITLE` by returning null, so a long capture was
+            // silently destroyed at the moment a person tapped Add: no message, no
+            // recovery, and the sheet closed as though it had worked. `EstimateField`
+            // one screen down already argues for capping at the field, and this is the
+            // field where losing the text costs the most.
             ClarityTextField(
                 value = title,
-                onValueChange = { title = it },
+                onValueChange = { title = it.take(ClarityRepository.MAX_ITEM_TITLE) },
                 label = stringResource(R.string.field_title),
                 focusRequester = focus,
                 imeAction = ImeAction.Next,
@@ -278,7 +292,7 @@ fun EditItemSheet(
         ) {
             ClarityTextField(
                 value = title,
-                onValueChange = { title = it },
+                onValueChange = { title = it.take(ClarityRepository.MAX_ITEM_TITLE) },
                 label = stringResource(R.string.field_title),
                 imeAction = ImeAction.Next,
             )

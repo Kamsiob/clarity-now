@@ -59,7 +59,11 @@ class SlotRenderingTest {
     @Test
     fun `a count of one in front of no noun at all is left alone`() {
         assertEquals(
-            "one in, two out.",
+            // The noun is left alone, which is what this test is about. The opening
+            // letter is not: a sentence that begins with a spelled number begins with a
+            // capital, the same as one that begins with an authored word. See
+            // `a sentence opening on a spelled number is capitalized`.
+            "One in, two out.",
             render(
                 "{n} in, {m} out.",
                 Purpose.PULSE,
@@ -73,11 +77,50 @@ class SlotRenderingTest {
     fun `two through nine are words in Pulse and Momentum and digits in the Report`() {
         val line = "{n} things happened."
         val four = Slot.Count("n", 4, "thing", "things")
-        assertEquals("four things happened.", render(line, Purpose.PULSE, four))
-        assertEquals("four things happened.", render(line, Purpose.MOMENTUM_HEADLINE, four))
-        assertEquals("four things happened.", render(line, Purpose.AREAS_BANNER, four))
+        // Capitalized because the template opens on the marker. The word spelling is
+        // what this test pins; the case is pinned one test down.
+        assertEquals("Four things happened.", render(line, Purpose.PULSE, four))
+        assertEquals("Four things happened.", render(line, Purpose.MOMENTUM_HEADLINE, four))
+        assertEquals("Four things happened.", render(line, Purpose.AREAS_BANNER, four))
         assertEquals("4 things happened.", render(line, Purpose.REPORT_OBSERVATION, four))
         assertEquals("4 things happened.", render(line, Purpose.REPORT_HEADLINE, four))
+    }
+
+    /**
+     * The Areas caption read "one completed this week" under a serif headline ending in
+     * a period, on the screen a person opens most, and 177 corpus lines open with a
+     * numeric slot on a word spelling surface.
+     */
+    @Test
+    fun `a sentence opening on a spelled number is capitalized`() {
+        val one = Slot.Count("n", 1, "thing", "things")
+        assertEquals(
+            "One completed this week",
+            render("{n} completed this week", Purpose.AREAS_BANNER, one),
+        )
+        // A digit needs no help and must not be touched.
+        assertEquals(
+            "12 completed this week",
+            render("{n} completed this week", Purpose.AREAS_BANNER, Slot.Count("n", 12, "thing", "things")),
+        )
+        // A slot that is not first leaves the authored opening exactly as written.
+        assertEquals(
+            "you completed one thing",
+            render("you completed {n} thing", Purpose.AREAS_BANNER, one),
+        )
+    }
+
+    /**
+     * **A name is never recased.** An area a person called `iPhone stuff` is their own
+     * capitalization and not a typo, and this is the reason the rule is scoped to a
+     * number rather than applied to whatever lands at index zero.
+     */
+    @Test
+    fun `a name in the opening slot keeps the case its owner gave it`() {
+        assertEquals(
+            "iPhone stuff took the week.",
+            render("{areaName} took the week.", Purpose.AREAS_BANNER, Slot.Text("areaName", "iPhone stuff")),
+        )
     }
 
     @Test

@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
@@ -372,6 +373,9 @@ private fun AreaRow(
                 .clarityClickable(
                     interactionSource = cardInteraction,
                     haptic = ClarityHapticEvent.TAP,
+                    // The card answers with a scale, one line above. A veil as well would
+                    // be two press treatments on one element.
+                    showPress = false,
                     onClick = {
                         if (swipe.hasOpenRow) swipe.close() else onOpen()
                     },
@@ -383,6 +387,15 @@ private fun AreaRow(
                 area = area,
                 promotion = promotion,
                 onPromotionPlayed = onPromotionPlayed,
+                // **The card speaks as one node.** `AreaCardSemantics` was written in
+                // phase 2, documented as "kept next to the card so the semantics and the
+                // visuals cannot drift apart", and never called from anywhere, so the
+                // largest and most important object in the app reached TalkBack as five
+                // loose nodes: a dot with no name, an area label, a title, a first step
+                // and a status line, in that order, with no statement of what they are.
+                // It goes inside the clickable rather than above it, or
+                // `clearAndSetSemantics` would wipe the click action with them.
+                modifier = AreaCardSemantics(area),
             )
         }
     }
@@ -413,7 +426,11 @@ private fun AreasHeader(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(44.dp)
+                // `heightIn`, not `height`. A fixed height constrains its children, so
+                // the archive and settings glyphs that correctly declare `size(48.dp)`
+                // measured 48 by 44, and the 26sp serif inside clipped at the 200 percent
+                // scale design-v3 13 requires the app to survive.
+                .heightIn(min = ClaritySpacing.scaled(48.dp))
                 .clarityEntrance(0, ClarityEntranceRole.HEADER),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -579,7 +596,9 @@ private fun AreasAnchor(
 
     Box(
         modifier = modifier
-            .height(56.dp)
+            // The Column inside holds an 18sp label and a 12.5sp readout, which measure
+            // about 82dp at the 200 percent cap against a hard 56dp box.
+            .heightIn(min = ClaritySpacing.scaled(56.dp))
             .clarityPressScale(interaction, label = "anchorPress")
             .clarityShadow(ClarityElevation.card, shapes.pill, enabled = !colors.isDark)
             .clip(shapes.pill)

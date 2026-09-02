@@ -413,17 +413,17 @@ Rules reaching this stage carry a criterion asserting the record claim is genuin
 
 ```
 persistence.s4.01  [P]  {itemTitle} has been active for {ageDays}.
-persistence.s4.02  [O]  This has been active longer than anything you have ever kept active.
-persistence.s4.03  [O]  {itemTitle} is now the longest running item in the app's history.
+persistence.s4.02  [O]  {itemTitle} has been at the front of {areaName} the whole time.
+persistence.s4.03  [O]  {areaName} has meant one thing for {ageDays}.
 persistence.s4.04  [O]  A month of {areaName} has been {itemTitle}.
-persistence.s4.05  [O]  You have completed {n} things elsewhere while {itemTitle} stayed put.
+persistence.s4.05  [O]  Other items have come and gone from {areaName} in that time.
 persistence.s4.06  [O]  {itemTitle} has been active across {m} different weeks.
 persistence.s4.07  [R]  {ageDays}. At some point an item stops being a task and becomes furniture.
 persistence.s4.08  [R]  {itemTitle} has been there long enough to stop being noticed.
 persistence.s4.09  [R]  A month is long enough to ask a different question about this.
 persistence.s4.10  [R]  {areaName} has had the same answer for a month.
 persistence.s4.11  [P]  {itemTitle} became active {ageDays} ago. It is still active.
-persistence.s4.12  [O]  Nothing else in the app has ever lasted this long at the front.
+persistence.s4.12  [P]  {ageDays} at the front of {areaName}.
 persistence.s4.13  [P]  {itemTitle}, {ageDays} in.
 persistence.s4.14  [P]  Months now.
 persistence.s4.15  [P]  Still {itemTitle}, months on.
@@ -1485,23 +1485,34 @@ quietday.s1.q20  Off the app, or off entirely?
 
 ### Response pairs
 
-Three options here rather than two. Recharging and Busy elsewhere are positive, the third is flagged.
+Three options here rather than two. Recharging and Busy elsewhere are positive, the third
+is the honest one.
+
+**Every label names the day or the load. None of them names the person.** That is 6.4's
+own rule, applied at the one point in this product where a person taps a word about
+themselves: the tap is written to the log, rendered in the Trail forever, carried into the
+plaintext export, and quotable back weeks later as `{priorLabel}`. `Overwhelmed`, `Not
+coping`, `Underwater`, `Running on empty` and `Struggling` were all available after ONE
+day with fewer than two events, which is an ordinary Tuesday, and each of them is a
+diagnosis in the first person that the app then keeps. `Too much at once`, `A hard one`,
+`Too much on` and `Nothing left in the tank` describe the same day and make no claim about
+who lived it.
 
 ```
-quietday.s1.r01  Recharging / Busy elsewhere / Overwhelmed
+quietday.s1.r01  Recharging / Busy elsewhere / Too much at once
 quietday.s1.r02  Resting / Elsewhere / Stuck
-quietday.s1.r03  Deliberate / Life happened / Too much
-quietday.s1.r04  A day off / Off the app / Underwater
-quietday.s1.r05  Needed it / Doing other things / Not coping
-quietday.s1.r06  Rested / Busy elsewhere / Running on empty
-quietday.s1.r07  On purpose / Other things came up / Too much on
+quietday.s1.r03  Deliberate / Life happened / Too much on
+quietday.s1.r04  A day off / Off the app / No room for it
+quietday.s1.r05  Needed it / Doing other things / A hard one
+quietday.s1.r06  Rested / Busy elsewhere / Nothing left in the tank
+quietday.s1.r07  On purpose / Other things came up / A slow one
 quietday.s1.r08  A pause / Away / Stalled
-quietday.s1.r09  Needed the day / Out doing things / Could not start
-quietday.s1.r10  Chosen / Circumstance / Overloaded
+quietday.s1.r09  Needed the day / Out doing things / Never got started
+quietday.s1.r10  Chosen / Circumstance / A full day
 quietday.s1.r11  Time off / Time elsewhere / No time at all
-quietday.s1.r12  Fine / Busy / Struggling
-quietday.s1.r13  Recovered / Occupied / Worn out
-quietday.s1.r14  Slow on purpose / Slow by circumstance / Stuck
+quietday.s1.r12  Fine / Busy / A hard day
+quietday.s1.r13  Recovered / Occupied / A tiring one
+quietday.s1.r14  Slow on purpose / Slow by circumstance / Out of hours
 ```
 
 ## Stage 2, two to three consecutive quiet days
@@ -1604,17 +1615,17 @@ quietday.s2.q20  How is it going, away from here?
 ### Response pairs
 
 ```
-quietday.s2.r01  Recharging / Busy elsewhere / Overwhelmed
+quietday.s2.r01  Recharging / Busy elsewhere / Too much at once
 quietday.s2.r02  A break / Elsewhere / A stall
-quietday.s2.r03  Deliberate / Life happened / Too much
-quietday.s2.r04  Resting / Occupied / Underwater
-quietday.s2.r05  On purpose / Other things came up / Too much on
+quietday.s2.r03  Deliberate / Life happened / Too much on
+quietday.s2.r04  Resting / Occupied / A hard one
+quietday.s2.r05  On purpose / Other things came up / No room for it
 quietday.s2.r06  A pause / Away / Stuck in it
 quietday.s2.r07  Resting / Working elsewhere / Cannot get started
-quietday.s2.r08  Chosen / Circumstance / Overloaded
+quietday.s2.r08  Chosen / Circumstance / A full day
 quietday.s2.r09  Time off / Time elsewhere / No time at all
-quietday.s2.r10  Fine / Busy / Struggling
-quietday.s2.r11  Recovered / Occupied / Worn out
+quietday.s2.r10  Fine / Busy / A hard day
+quietday.s2.r11  Recovered / Occupied / A tiring one
 quietday.s2.r12  Coming back / Still away / Not ready
 quietday.s2.r13  Needed the days / Out doing things / Under it
 quietday.s2.r14  Slow on purpose / Slow by circumstance / Stopped
@@ -1721,17 +1732,17 @@ quietday.s3.q20  How long has it felt?
 ### Response pairs
 
 ```
-quietday.s3.r01  Recharging / Busy elsewhere / Overwhelmed
+quietday.s3.r01  Recharging / Busy elsewhere / Too much at once
 quietday.s3.r02  A break / Elsewhere / A stall
-quietday.s3.r03  Needed it / Doing other things / Not coping
-quietday.s3.r04  Deliberate / Life happened / Too much
-quietday.s3.r05  Resting / Elsewhere / Worn out
-quietday.s3.r06  A season / A break / A stall
-quietday.s3.r07  On purpose / Other things came up / Too much on
+quietday.s3.r03  Needed it / Doing other things / A hard one
+quietday.s3.r04  Deliberate / Life happened / Too much on
+quietday.s3.r05  Resting / Elsewhere / A tiring one
+quietday.s3.r06  A season / A break / No room for it
+quietday.s3.r07  On purpose / Other things came up / A slow one
 quietday.s3.r08  Coming back / Still away / Not ready
-quietday.s3.r09  Fine / Busy / Struggling
+quietday.s3.r09  Fine / Busy / A hard day
 quietday.s3.r10  Needed the time / Occupied / Under it
-quietday.s3.r11  Chosen / Circumstance / Overloaded
+quietday.s3.r11  Chosen / Circumstance / A full day
 quietday.s3.r12  Still fits / Needs a rethink / Too much on it
 quietday.s3.r13  Rested / Away / Run down
 quietday.s3.r14  Time off / Time elsewhere / No time at all

@@ -206,7 +206,10 @@ private fun AppearanceTile(
         Text(
             text = label,
             style = type.caption.copy(
-                fontSize = 9.5.sp,
+                // The scale's own floor is `meta` 12.5, and A.2 deleted the 10.5sp role by name
+                // for being the smallest type in the app on its highest consequence
+                // control. This then shipped 9.5sp, 40dp above the Text size setting.
+                fontSize = 12.5.sp,
                 fontWeight = if (selected) FontWeight(700) else FontWeight(400),
             ),
             color = if (selected) colors.actionBlue else colors.inkSecondary,
@@ -215,13 +218,26 @@ private fun AppearanceTile(
     }
 }
 
-/** One miniature Areas screen, drawn from a real token set. */
+/**
+ * One miniature Areas screen, drawn from a real token set.
+ *
+ * **The ground is `card`, not `canvas`, and that is what makes it a tile.** Painting the
+ * preview on the world's own canvas means the Light tile is `#D6D6DB` on a Settings page
+ * that is also `#D6D6DB`: contrast 1.00 to 1, no boundary of any kind, so it read as
+ * three loose bars floating on the page beside a Dark tile that read as a solid object.
+ * In dark mode it inverted and the Dark tile disappeared instead. Three tiles that are
+ * meant to be peers and one of them was never a tile.
+ *
+ * On `card` the Light tile reads 1.40 to 1 against the page, which is the ladder's own
+ * step, and the Dark tile 1.55 to 1. The rows step down to `raise` so the preview keeps
+ * its own internal hierarchy, and every value is still a real token.
+ */
 @Composable
 private fun MiniAreas(world: ClarityColors) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(world.canvas)
+            .background(world.raise)
             .padding(TILE_PADDING),
     ) {
         Box(
