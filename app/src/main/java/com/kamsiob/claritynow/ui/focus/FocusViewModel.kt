@@ -37,6 +37,16 @@ data class FocusAreaOption(
     val colorHex: String,
     val activeItemId: String?,
     val activeItemTitle: String?,
+    /**
+     * The active item's first step. `ADDENDUM_01` 4b, and issue #62.
+     *
+     * 4b exists so that a person who cannot start has already written down how to, and
+     * the moment it is for is this one: the chooser is where somebody decides which
+     * thing to sit down with. It was on the card, in the area sheet and on a widget,
+     * and missing from the two Focus screens, which are the two the field was written
+     * for.
+     */
+    val activeItemFirstStep: String? = null,
 ) {
     val selectable: Boolean get() = activeItemId != null
 }
@@ -59,6 +69,8 @@ data class FocusSessionModel(
     val itemId: String,
     val itemTitle: String,
     val plannedSeconds: Int,
+    /** The item's first step, read under the title while the ring runs. Issue #62. */
+    val itemFirstStep: String? = null,
 )
 
 /**
@@ -284,6 +296,24 @@ class FocusViewModel(
     }
 
     /**
+     * Sets the session length from the chooser. Issue #62.
+     *
+     * **The same preference `Settings` writes, and there is no second one.** A length
+     * chosen here is the length Settings then shows, which is the point: changing it used
+     * to mean leaving the surface, finding a row four screens away and coming back, and
+     * the person doing that is holding a decision they have already made.
+     *
+     * Nothing is appended to the log, exactly as nothing is appended when Settings writes
+     * it. `SettingsViewModel.setAfterCompleting` says at its own declaration which
+     * preferences belong in the log and which do not, and a session's length is read at
+     * the moment of starting and recorded on `FOCUS_STARTED` as `plannedSeconds`, so the
+     * log already carries the only version of this fact that a later reader can use.
+     */
+    fun setDurationMinutes(minutes: Int) {
+        viewModelScope.launch { preferences.setFocusDurationMinutes(minutes) }
+    }
+
+    /**
      * Ends a running session before its planned time. design-v3.md 10.15 and section 10.
      *
      * [elapsedSeconds] is a real duration and is never compared against the plan. Under
@@ -366,6 +396,7 @@ class FocusViewModel(
             colorHex = area.colorHex,
             activeItemId = active?.id,
             activeItemTitle = active?.title,
+            activeItemFirstStep = active?.firstStep,
         )
     }
 
@@ -380,6 +411,7 @@ class FocusViewModel(
             itemId = session.itemId,
             itemTitle = item.title,
             plannedSeconds = session.plannedSeconds,
+            itemFirstStep = item.firstStep,
         )
     }
 

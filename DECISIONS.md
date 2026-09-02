@@ -5866,3 +5866,110 @@ with it.
 separation device, and the same reasoning gives a control one answer to a thumb. The ground
 is the app's press everywhere else and it is invisible on a saturated fill, which is the
 whole of why this issue existed.
+
+## The one commitment this app asks for is kept where the app keeps things, #61
+
+The Report ends with `One thing` and a line naming something specific, and accepting it
+wrote `PLAN_ACCEPTED` and led nowhere. A first person acceptance the app then forgets is
+the shape rule 13 exists to keep away from, approached from the other side: the rule stops
+layer six telling somebody they broke a promise, and this let them make one nobody kept a
+record of.
+
+**Resolution 1 was taken: the accepted plan has a durable place, and that place is the
+Trail.** The row existed and said `Accepted one thing` with no subject, because
+`PlanAccepted` carries an id and no words. It names the line now, resolved from the
+`PLAN_OFFERED` that shares the id rather than copied onto the acceptance, because one
+sentence in two events is one sentence that can disagree with itself.
+
+**Resolution 2 was refused, and refusing it is the more interesting half.** The other
+option was to stop the accept control being a first person commitment. It fails on the
+authority order: the committed line's form is `CLARITY_LOGIC_ENGINE.md` 10.5's and its
+words are `CORPUS_2_REPORT.md`'s, so changing it changes what layer six is for, which the
+issue itself says is a product decision rather than a fix. It also mistakes the defect. The
+problem was never that the sentence was first person. A person deciding one small thing and
+saying it in their own words is the whole of what 10.4 is for. The problem was that the app
+asked for it and then had nowhere to put it.
+
+**No new surface, and that is a property rather than a saving.** A screen listing
+outstanding commitments is a mechanism that tells a person they broke one, through presence
+rather than words, and it would need a notion of done that this app has no event for. A
+Trail row is dated and finished: it records that this happened, on the day it happened,
+beside everything else that happened, and there is no field on a row that could carry
+whether it was acted on. `GuidanceNonComplianceTest`'s sixth assertion holds that, and
+holds the other half too: an offer nobody took names nothing, because 10.5 makes a decline
+and an ignored offer identical and both are referenced nowhere.
+
+Within the week the Report itself already carries the line, because `planAccepted` is read
+off the log and the closing block shows the stored first person sentence to somebody who
+accepted yesterday. So the record is in two places, both of which a person already visits,
+and neither of which can measure them.
+
+## Five minutes is three taps away, #62
+
+Focus is one of two anchors on the home screen and arranging a five minute session took
+eight interactions. Three gaps, all closed, and the composition question each one raised.
+
+**The length is on the surface the session starts from.** It was in Settings, four screens
+away, so changing it meant leaving the Contemplative world and coming back holding a
+decision already made. The obvious control for eight choices is a segmented track, which is
+what Settings uses; here that would be a second filled thing on a screen whose whole design
+is one dim room with text in it. A.4's one-turn law gives a Contemplative surface exactly
+one filled anchor and everything else as text with no container, so the lengths are eight
+numerals with nothing behind them, the chosen one bright and the rest dim. That is the same
+device the area rows below already use, and it is the only reason a control could be added
+to this screen at all. It writes the preference Settings writes: one list, one setting.
+
+**A session starts from the area sheet, on the item being read.** That is the moment
+somebody has decided, and until now the only way to act on it was to close the sheet, cross
+the home screen, open the chooser and find the same area again. Its own row rather than a
+third button beside Complete and Swap: three buttons across a sheet clip their labels at
+200 percent text, and these are two kinds of act, one that changes where an item stands and
+one that starts something and leaves the queue exactly as it was. The start goes through
+`FocusViewModel.startOnItem`, which is the path the `First Step` widget already uses, so
+the decision about whether a session may begin is taken once, in the repository, under the
+one lock.
+
+**The first step is on both Focus screens now.** `ADDENDUM_01` 4b exists so that a person
+who cannot start has already written down how to, and the two moments it was written for
+are choosing what to sit down with and looking at a ring counting down. It was on the card,
+in the area sheet and on a widget, and on neither of those.
+
+Counted on the Pixel 8: home screen, the Focus anchor, `5`, the area row. Three
+interactions to a five minute session, against the eight the issue counted, and the
+criterion asked for four.
+
+## Predictive back, and the three sites that must not have it, #63
+
+Every one of the eight `BackHandler` call sites was the non predictive form on an SDK where
+predictive back is on by default. Five are migrated and three are not, and the three are
+the interesting part: **a preview that uncovers a bare ground is a picture of leaving
+rather than a preview of a destination, and that is worse than no preview at all.**
+
+- **The shell's tab back must not have one.** Back there is a tab change, and the
+  destination tab is not composed while another is showing because the tab content is a
+  crossfade over one slot. The crossfade is the right animation because replacing the
+  content is what actually happens
+- **Onboarding must not have one.** Back goes to the previous beat, which is a step rather
+  than a screen behind this one, and one animation cannot mean both "leave the app", which
+  is what it does on the first beat, and "go back one", which is what it does on the rest
+- **The tutorial must not have one.** It dismisses a coach mark over a screen that is
+  already fully drawn, so nothing is covered and there is nothing to uncover
+
+Of the five that do, three are drawn over the tab they were opened from and simply uncover
+it. The two history pages swap with their surface rather than stacking over it, so they
+compose the destination while a gesture is in flight, which is what `PredictiveBackState.isDrawing`
+exists for. It costs the same composition the swap was about to make in any case.
+
+**8.3 collapses it rather than shortening it.** A shape change is spatial, so reduce motion
+and calm mode hold the progress at zero and back commits on release exactly as before.
+Somebody who asked for less motion gets the behavior without the movement, not a faster
+version of the movement. Verified on the Pixel 8 with `animator_duration_scale` at 0, and
+at 200 percent text, where the preview is a transform and does not vary.
+
+**There are no durations in it.** Under the finger the progress is the finger's, snapped;
+released short of the threshold it returns on `springStandard`, the spatial spring every
+other movement in the app uses. The spring home runs in a `LaunchedEffect` rather than in
+the handler's own catch, because a canceled gesture cancels the coroutine the handler's
+block runs in and every suspension inside a canceled coroutine throws at once, so an
+`animateTo` there would never draw a frame. That is the kind of thing that looks correct
+and does nothing, which is why it is written down here.

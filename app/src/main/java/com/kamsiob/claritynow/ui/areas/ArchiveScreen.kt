@@ -1,6 +1,5 @@
 package com.kamsiob.claritynow.ui.areas
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +31,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kamsiob.claritynow.R
+import com.kamsiob.claritynow.ui.components.predictiveBackPreview
+import com.kamsiob.claritynow.ui.components.rememberPredictiveBack
 import com.kamsiob.claritynow.ui.components.ClarityButton
 import com.kamsiob.claritynow.ui.components.ClarityButtonRole
 import com.kamsiob.claritynow.ui.components.ClarityCard
@@ -77,14 +78,17 @@ fun ArchiveRoute(
     // A pushed screen is left by back, design-v3.md 10.15. The shell's own handler is
     // disabled on the Areas tab, and a sheet is a window of its own that consumes back
     // before this ever sees it, so this is the only handler in play.
-    BackHandler { onBack() }
+    //
+    // Predictive, issue #63. This screen is drawn over the Areas tab rather than in place
+    // of it, so the room the preview uncovers is the room back arrives in.
+    val predictiveBack = rememberPredictiveBack(onBack = onBack)
 
     ArchiveScreen(
         areas = areas,
         onRestore = { viewModel.unarchiveArea(it.id) },
         onDelete = { deleting = it.id },
         onBack = onBack,
-        modifier = modifier,
+        modifier = modifier.predictiveBackPreview(predictiveBack),
     )
 
     // Read back out of the list rather than held as a value, so an area deleted or

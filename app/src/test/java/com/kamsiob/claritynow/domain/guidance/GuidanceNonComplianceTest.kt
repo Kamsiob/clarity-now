@@ -1,7 +1,10 @@
 package com.kamsiob.claritynow.domain.guidance
 
+import com.kamsiob.claritynow.data.event.PlanAccepted
+import com.kamsiob.claritynow.data.event.PlanOffered
 import com.kamsiob.claritynow.domain.engine.CueFacts
 import com.kamsiob.claritynow.domain.engine.FactSet
+import com.kamsiob.claritynow.domain.engine.FactRef
 import com.kamsiob.claritynow.domain.engine.FamilyKey
 import com.kamsiob.claritynow.domain.engine.FiringHistory
 import com.kamsiob.claritynow.domain.engine.PartOfDay
@@ -10,6 +13,9 @@ import com.kamsiob.claritynow.domain.engine.Weekday
 import com.kamsiob.claritynow.domain.engine.catalog.CorpusFixture
 import com.kamsiob.claritynow.domain.engine.catalog.Purpose
 import com.kamsiob.claritynow.domain.engine.validate.ValidateFixture
+import com.kamsiob.claritynow.domain.query.TrailSentenceKey
+import com.kamsiob.claritynow.domain.query.TrailTestLog
+import com.kamsiob.claritynow.domain.query.at
 import java.lang.reflect.Modifier
 import java.time.LocalDate
 import java.time.ZoneId
@@ -226,6 +232,71 @@ class GuidanceNonComplianceTest {
         )
     }
 
+    /**
+     * Assertion 6. The one durable record of an accepted plan says what, never whether.
+     *
+     * Issue #61 closed the other half of this file's subject. Accepting was recorded and
+     * led nowhere: the Trail row read `Accepted one thing` with no subject, so the app
+     * invited the one commitment it ever asks for and then forgot it. The row names the
+     * line now, on the day it was accepted, beside everything else that happened.
+     *
+     * **What is asserted here is that naming it did not open the door this file closes.**
+     * Three properties, and the second is the one that matters:
+     *
+     * 1. An acceptance names the line that was accepted, so the record is not empty
+     * 2. **An offer nobody accepted names nothing**, which is 10.5: a decline writes
+     *    nothing, costs nothing, is never counted and is never referenced, and ignoring
+     *    an offer is identical to declining it
+     * 3. The Trail's vocabulary for a plan is two sentences, both about something that
+     *    happened, and there is no third for something that did not
+     */
+    @Test
+    fun `the trail names what was accepted and has no sentence for what was not done`() {
+        val log = TrailTestLog()
+        log.add(at(1), planOffer())
+        log.add(at(1, hour = 10), PlanAccepted(PLAN_ID))
+        // A second plan, offered and never answered, which is what a decline looks like.
+        log.add(at(2), planOffer(id = "$PLAN_ID-2"))
+
+        val rows = log.queries().rows(log.events())
+        val accepted = rows.single { it.sentence == TrailSentenceKey.PLAN_ACCEPTED }
+        assertEquals(
+            "the one commitment this app asks for must be readable afterwards",
+            COMMITTED_LINE,
+            accepted.subject,
+        )
+        assertTrue(
+            "an offer nobody took must name nothing. 10.5: never counted, never referenced",
+            rows.filter { it.sentence == TrailSentenceKey.PLAN_OFFERED }.all { it.subject == null },
+        )
+        assertNull(
+            "the recorded line is the person's own words and must not be about a plan " +
+                "as a thing to be kept",
+            PlanVocabulary.referenceIn(accepted.subject.orEmpty()),
+        )
+
+        val planKeys = TrailSentenceKey.entries.filter { "PLAN" in it.name }
+        assertEquals(
+            "two sentences, both about something that happened. A third would be the one " +
+                "this file exists to keep out of the catalog",
+            listOf(TrailSentenceKey.PLAN_OFFERED, TrailSentenceKey.PLAN_ACCEPTED),
+            planKeys,
+        )
+    }
+
+    private fun planOffer(id: String = PLAN_ID) = PlanOffered(
+        planId = id,
+        weekStartKey = weekStartKey(0),
+        frameKey = "frm.01",
+        cueKey = "cue.band.01",
+        actionKey = "act.neg.01",
+        familyKey = MOTIVATING_FAMILY,
+        subjectId = NEGLECTED_AREA,
+        offeredLine = "One option for Wednesday morning: ten minutes in Reading.",
+        committedLine = COMMITTED_LINE,
+        resolutionFactRef = FactRef("area", "areaEvents:$NEGLECTED_AREA"),
+    )
+
     // ---------------------------------------------------------------- the fixture week
 
     /**
@@ -294,6 +365,18 @@ class GuidanceNonComplianceTest {
 
         /** `ValidateFixture.reading()`: live, visible, twenty one days still, and in `neglectedAreaIds`. */
         const val NEGLECTED_AREA: String = ValidateFixture.READING
+
+        const val PLAN_ID = "plan-2026-03-08"
+
+        /**
+         * A real committed line's shape: first person, conditional, and about an action.
+         *
+         * `PlanVocabulary.referenceIn` is run against it in assertion 6, so a line that
+         * talked about the plan rather than about the thing to be done would fail there
+         * rather than passing quietly.
+         */
+        const val COMMITTED_LINE =
+            "If it is Wednesday morning, I will spend ten minutes in Reading before opening Work."
 
         val FIRST_WEEK: LocalDate = LocalDate.parse("2026-03-08")
 

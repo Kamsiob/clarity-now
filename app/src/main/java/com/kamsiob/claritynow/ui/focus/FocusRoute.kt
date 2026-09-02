@@ -1,6 +1,5 @@
 package com.kamsiob.claritynow.ui.focus
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseInOutCubic
 import androidx.compose.animation.core.tween
@@ -16,6 +15,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kamsiob.claritynow.data.repo.FocusCountdown
+import com.kamsiob.claritynow.ui.components.predictiveBackPreview
+import com.kamsiob.claritynow.ui.components.rememberPredictiveBack
 import com.kamsiob.claritynow.di.ClarityViewModelFactory
 import com.kamsiob.claritynow.notifications.NotificationPermissionOnFocusStart
 import com.kamsiob.claritynow.ui.theme.ContemplativeTheme
@@ -94,8 +95,13 @@ fun FocusRoute(
         if (startOn != null) viewModel.startOnItem(startOn.itemId)
     }
 
-    // Back, from every phase. It leaves the surface and writes nothing.
-    BackHandler { viewModel.leave() }
+    // **Back, from every phase, previewed under the finger.** Issue #63, and this is the
+    // site the issue named: it is the one place in the app where a person most wants to
+    // know whether backing out will end a session before they commit to the gesture. It
+    // will not, it never has, and now the room appearing behind the surface says so while
+    // the finger is still down. Abandoning the gesture runs nothing at all, so the session
+    // is left running by the same code that leaves it running on a completed back.
+    val predictiveBack = rememberPredictiveBack { viewModel.leave() }
 
     // MASTER_BUILD_PROMPT 13.4: contextually, the first time a session starts, and
     // never at launch. The notifications package owns the rule and derives the moment
@@ -125,6 +131,10 @@ fun FocusRoute(
         Box(
             modifier = modifier
                 .fillMaxSize()
+                // The back preview wraps the arrival, so a person who starts a gesture
+                // while the room is still dimming sees one surface doing two things
+                // rather than two layers arguing about the same pixels.
+                .predictiveBackPreview(predictiveBack)
                 .graphicsLayer {
                     val arrived = arriving.value
                     alpha = arrived
@@ -142,6 +152,7 @@ fun FocusRoute(
                     options = current.options,
                     durationMinutes = current.durationMinutes,
                     onSelect = viewModel::start,
+                    onDurationChange = viewModel::setDurationMinutes,
                 )
 
                 is FocusPhase.Running -> FocusSessionScreen(

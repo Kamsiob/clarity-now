@@ -22,6 +22,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -169,6 +170,12 @@ fun ClarityShell(
     // the serial exists to prevent everywhere else.
     var focusStart by remember { mutableStateOf<FocusStart?>(null) }
 
+    // Issue #62. `FocusStart` is keyed by a serial so that asking twice for the same item
+    // fires twice, and an in app start needs one of its own. It counts down from zero
+    // while the deep link layer counts up, so the two can never produce the same value
+    // and a stale external request can never be mistaken for a fresh tap in the sheet.
+    var inAppFocusSerial by remember { mutableLongStateOf(0L) }
+
     // design-v3.md 8.2 entry 24 puts the tab crossfade at 180ms, one of the two places
     // in the document that names a duration rather than a spring. The nearest token,
     // motion.easeOut, is the 350ms entrance curve: nearly twice as long, and an
@@ -275,6 +282,14 @@ fun ClarityShell(
     // Disabled while the Focus surface is showing. That surface registers its own
     // handler after this one and would win anyway; saying so here is what stops a
     // later edit to either file from quietly making back mean two things at once.
+    // **Not predictive, issue #63, and this one must not be.** Back here is a tab change
+    // rather than a screen leaving: the destination is the Areas tab, which is not
+    // composed while another tab is showing, because the tab content is a `Crossfade` over
+    // one slot. A preview would therefore scale the tab a person is on and uncover the
+    // shell's bare canvas, which is a picture of leaving rather than a preview of a
+    // destination and is the one thing a half migrated predictive back does worse than
+    // none. The crossfade in `TabEntrance` is what says the content underneath has been
+    // replaced, and it is the right animation for this because that is what happened.
     BackHandler(enabled = !focusEntry.open && selected != TAB_AREAS) { selected = TAB_AREAS }
 
     // A tab's content leaves composition when another tab is selected, which throws
@@ -318,6 +333,17 @@ fun ClarityShell(
                                 viewModel = areasViewModel,
                                 request = areasRequest,
                                 onOpenFocus = { focusEntry = focusEntry.requested() },
+                                // Issue #62. The same two values the `First Step`
+                                // widget arrives on, so an in app start and an external
+                                // one take one path into the surface rather than two.
+                                // The serial is negative and counts down, so it can
+                                // never collide with an external request's, which the
+                                // deep link layer counts up.
+                                onFocusOnItem = { itemId ->
+                                    inAppFocusSerial -= 1
+                                    focusStart = FocusStart(inAppFocusSerial, itemId)
+                                    focusEntry = focusEntry.requested()
+                                },
                                 onOpenPulse = { pulseOpen = true },
                             )
 

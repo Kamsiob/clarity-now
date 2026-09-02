@@ -114,6 +114,25 @@ internal fun FocusSessionScreen(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.widthIn(max = TITLE_MEASURE),
             )
+            // **The first step, under the title, while the ring runs.** `ADDENDUM_01` 4b
+            // and issue #62: the field exists so that a person who cannot start has
+            // already written down how to, and a ring counting down over a title alone is
+            // the moment somebody who has lost the thread is looking at. It is text with
+            // no container, so the one-turn law holds; it is `caption` on `textDim`, one
+            // rank under the title, because the title is what the session is about and
+            // this is how to begin it.
+            session.itemFirstStep?.let { firstStep ->
+                Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
+                Text(
+                    text = firstStep,
+                    style = type.caption,
+                    color = contemplative.textDim,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.widthIn(max = TITLE_MEASURE),
+                )
+            }
             Spacer(Modifier.height(ClaritySpacing.scaled(36.dp)))
             FocusDial(
                 countdown = countdown,

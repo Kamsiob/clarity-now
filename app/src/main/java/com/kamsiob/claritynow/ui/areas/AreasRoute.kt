@@ -113,6 +113,7 @@ fun AreasRoute(
     viewModel: AreasViewModel,
     request: AreasRequest?,
     onOpenFocus: () -> Unit,
+    onFocusOnItem: (String) -> Unit,
     onOpenPulse: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -296,6 +297,14 @@ fun AreasRoute(
                         sheet = null
                     },
                     onSwap = { sheet = AreaSheet.Swap(area.id) },
+                    // The sheet closes and the Focus surface opens on this item. The
+                    // start itself belongs to `FocusViewModel`, through the same value
+                    // the `First Step` widget arrives on, because this app has one write
+                    // path and one place that decides whether a session may begin.
+                    onFocus = {
+                        area.activeItemId?.let(onFocusOnItem)
+                        sheet = null
+                    },
                     onArchive = {
                         viewModel.archiveArea(area.id)
                         // `undo_area_archived` has existed since phase 2 and was

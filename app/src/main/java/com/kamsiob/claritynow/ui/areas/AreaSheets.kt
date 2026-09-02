@@ -378,6 +378,7 @@ fun AreaDetailSheet(
     onEditArea: () -> Unit,
     onComplete: () -> Unit,
     onSwap: () -> Unit,
+    onFocus: () -> Unit,
     onArchive: () -> Unit,
     onDelete: () -> Unit,
     onOpenItem: (ItemState) -> Unit,
@@ -521,6 +522,23 @@ fun AreaDetailSheet(
                         )
                     }
                 }
+                // **Start here, on the thing being read.** Issue #62: this is the moment
+                // a person has decided what to work on, and until now the only way to
+                // begin was to close this, cross the home screen, open the chooser and
+                // find the same area again. Eight interactions to arrange five minutes.
+                //
+                // Its own row rather than a third button beside the two above. Three
+                // buttons across a sheet clip their labels at 200 percent text, and
+                // these are two different kinds of act: Complete and Swap change where
+                // this item stands, and this one starts something and leaves the queue
+                // exactly as it was.
+                Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
+                ClarityButton(
+                    label = stringResource(R.string.action_focus_on_this),
+                    role = ClarityButtonRole.SECONDARY,
+                    onClick = onFocus,
+                    modifier = Modifier.padding(horizontal = SheetPadding),
+                )
             }
 
             Spacer(Modifier.height(ClaritySpacing.scaled(26.dp)))

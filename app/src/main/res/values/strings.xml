@@ -91,6 +91,12 @@
     <!-- Swipe and row actions, design-v3.md 10.3.1 -->
     <string name="action_complete">Complete</string>
     <string name="action_swap">Swap</string>
+    <!--
+        Issue #62. Named for what it does to this item rather than for the surface it
+        opens, because a person reading it has already decided what to work on and the
+        word `Focus` alone reads as a place to go rather than a thing to start.
+    -->
+    <string name="action_focus_on_this">Focus on this</string>
     <string name="action_delete">Delete</string>
     <string name="action_archive">Archive</string>
     <string name="action_restore">Restore</string>
@@ -428,6 +434,18 @@
         <item quantity="other">Sessions run for %d minutes. You can add more time without stopping.</item>
     </plurals>
     <string name="focus_chooser_needs_item">Add an item first</string>
+    <!--
+        The length row on the chooser, issue #62. `focus_length_label` is the sidehead
+        over eight numerals, and the numeral itself is the whole of what a person taps,
+        so the spoken label has to say what the number means. Both are fixed interface
+        copy and a direct readout of a setting, which is what CLAUDE.md rule 8 keeps in
+        this file.
+    -->
+    <string name="focus_length_label">Length</string>
+    <plurals name="cd_focus_length_option">
+        <item quantity="one">%d minute session</item>
+        <item quantity="other">%d minute session</item>
+    </plurals>
     <string name="focus_chooser_empty_title">Nothing active yet</string>
     <string name="focus_chooser_empty_body">An area with an active item appears here, ready to start.</string>
     <!-- Lowercase, and beneath the numeral rather than beneath the ring. design-v3.md 10.18. -->

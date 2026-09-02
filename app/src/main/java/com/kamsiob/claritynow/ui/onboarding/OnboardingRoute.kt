@@ -171,6 +171,11 @@ fun OnboardingRoute(
         })
         val tapAdvances = state.beat != OnboardingBeat.YOUR_AREAS
 
+        // **Not predictive, issue #63.** Back inside onboarding goes to the previous
+        // beat, which is a step in a sequence rather than a screen behind this one, and
+        // nothing is composed underneath to uncover. A preview would also say the wrong
+        // thing about what the gesture does: on the first beat it leaves the app, and on
+        // every other beat it does not, and one animation cannot mean both.
         BackHandler(enabled = state.canGoBack) { viewModel.back() }
 
         // **Onboarding is a Contemplative surface and has to say so.**

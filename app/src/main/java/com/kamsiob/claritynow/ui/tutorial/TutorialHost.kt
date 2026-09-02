@@ -83,6 +83,11 @@ fun TutorialHost(
         viewModel.markSeen()
     }
 
+    // **Not predictive, issue #63.** This dismisses a coach mark, and the destination is
+    // the screen already fully drawn behind it: there is nothing to uncover because
+    // nothing is covered. What would move under a preview is the card and its scrim, and
+    // a card that slid away before the gesture was released would read as the tutorial
+    // being dragged rather than dismissed.
     BackHandler(enabled = step != null) { finish() }
 
     if (step == null || target == null) return

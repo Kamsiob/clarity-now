@@ -1,6 +1,5 @@
 package com.kamsiob.claritynow.ui.pulse
 
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -28,6 +27,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kamsiob.claritynow.di.ClarityViewModelFactory
+import com.kamsiob.claritynow.ui.components.predictiveBackPreview
+import com.kamsiob.claritynow.ui.components.rememberPredictiveBack
 import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.ContemplativeTheme
 import com.kamsiob.claritynow.ui.theme.LocalCalmMode
@@ -91,8 +92,10 @@ fun PulseRoute(
     // window of its own and `BackHandler` throws rather than degrading when no owner
     // reaches it. The visible back control on the page is the way out that does not
     // depend on this at all.
-    if (LocalOnBackPressedDispatcherOwner.current != null) {
-        BackHandler(enabled = historyOpen) { historyOpen = false }
+    val predictiveBack = if (LocalOnBackPressedDispatcherOwner.current != null) {
+        rememberPredictiveBack(enabled = historyOpen) { historyOpen = false }
+    } else {
+        null
     }
 
     ContemplativeTheme(calmMode = LocalCalmMode.current) {
@@ -101,16 +104,26 @@ fun PulseRoute(
             onDismiss = onDismiss,
             modifier = modifier,
         ) {
-            if (historyOpen) {
-                PulseHistoryPage(
-                    entries = state.past,
-                    onBack = { historyOpen = false },
-                )
-            } else {
+            // The Pulse itself is composed while the history page is being drawn back
+            // from, issue #63, for the reason `ReportRoute` states: the two swap rather
+            // than stack, and a preview that uncovered the sheet's bare ground would
+            // show a person leaving rather than where they are going.
+            if (!historyOpen || predictiveBack?.isDrawing == true) {
                 PulseSurface(
                     state = state,
                     onAnswer = viewModel::answer,
                     onOpenHistory = { historyOpen = true },
+                )
+            }
+            if (historyOpen) {
+                PulseHistoryPage(
+                    entries = state.past,
+                    onBack = { historyOpen = false },
+                    modifier = if (predictiveBack == null) {
+                        Modifier
+                    } else {
+                        Modifier.predictiveBackPreview(predictiveBack)
+                    },
                 )
             }
         }

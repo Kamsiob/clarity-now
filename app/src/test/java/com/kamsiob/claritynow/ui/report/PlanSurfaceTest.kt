@@ -64,6 +64,16 @@ class PlanSurfaceTest {
         "$main/data/widget",
         // The surface.
         "$main/ui/report",
+        // **The Trail, issue #61, and the one entry here that was a product decision.**
+        // Accepting used to lead nowhere: the row said `Accepted one thing` with no
+        // subject, so the app asked for the one commitment it ever asks for and then had
+        // nowhere to keep it. `TrailQueries` resolves the accepted plan's own line from
+        // the offer that shares its id, and the row names it. What this admits is a
+        // record of something that happened, on the day it happened; what it does not
+        // admit, and cannot, is any notion of whether it was acted on. There is no such
+        // event and no field on a row that could carry one, which is what
+        // `GuidanceNonComplianceTest`'s sixth assertion holds.
+        "$main/domain/query",
     )
 
     /**

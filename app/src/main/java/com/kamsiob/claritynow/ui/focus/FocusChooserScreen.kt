@@ -14,10 +14,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -34,10 +39,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kamsiob.claritynow.R
+import com.kamsiob.claritynow.data.prefs.ClarityPreferences
 import com.kamsiob.claritynow.ui.components.clarityClickable
 import com.kamsiob.claritynow.ui.components.clarityFocusRing
 import com.kamsiob.claritynow.ui.components.clarityPressScale
@@ -70,6 +78,7 @@ internal fun FocusChooserScreen(
     options: List<FocusAreaOption>,
     durationMinutes: Int,
     onSelect: (areaId: String, itemId: String) -> Unit,
+    onDurationChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val contemplative = LocalContemplativeColors.current
@@ -110,6 +119,10 @@ internal fun FocusChooserScreen(
             style = type.caption,
             color = contemplative.textDim,
         )
+
+        Spacer(Modifier.height(ClaritySpacing.scaled(LENGTH_TOP)))
+        FocusLengthRow(selected = durationMinutes, onSelect = onDurationChange)
+
         Spacer(Modifier.height(ClaritySpacing.sectionGap))
 
         if (options.isEmpty()) {
@@ -213,6 +226,101 @@ private fun FocusAreaRow(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
+        // **The first step, at the moment it was written for.** `ADDENDUM_01` 4b: it
+        // exists so that a person who cannot start has already written down how to, and
+        // this is the screen where somebody decides which thing to sit down with. One
+        // line, ellipsized, for the card's reason: the whole of it is in the area sheet,
+        // which is where reading happens, and a row that grew to four lines would put
+        // two areas on a screen that has to be scanned.
+        option.activeItemFirstStep?.takeIf { option.selectable }?.let { firstStep ->
+            Spacer(Modifier.height(ClaritySpacing.scaled(4.dp)))
+            Text(
+                text = firstStep,
+                style = type.caption,
+                color = contemplative.textDim,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/**
+ * The eight session lengths, on the surface the session starts from. Issue #62.
+ *
+ * Changing the length used to mean leaving the Contemplative world, finding a row in
+ * Settings four screens away, and coming back, which is a lot to ask of somebody who is
+ * holding a decision they have already made. It is `ClarityPreferences.FOCUS_DURATION_OPTIONS`
+ * here and in Settings, and writes the same preference, so there is one list and one
+ * setting rather than a second of either.
+ *
+ * ## The one-turn law holds, `docs/COMPONENT_AND_LAYOUT.md` A.4
+ *
+ * > A Contemplative surface carries exactly one filled anchor, and everything else on it
+ * > is text with no container.
+ *
+ * These are text with no container. No chip, no pill, no track, no segmented control and
+ * no fill of any kind: eight numerals in a row, the chosen one bright and the rest dim,
+ * separated by whitespace. That is the same device the area rows below already use, and
+ * it is why this could be added to this screen at all. **A segmented control was the
+ * obvious answer and is what Settings uses**, because Settings is a Daylight surface with
+ * a different law; putting one here would have been the second filled thing on a screen
+ * whose whole design is one dim room with text in it.
+ *
+ * The numeral alone is what a person reads, so the spoken label says what the number
+ * means and the selected state is announced rather than left to the brightness.
+ */
+@Composable
+private fun FocusLengthRow(selected: Int, onSelect: (Int) -> Unit) {
+    val contemplative = LocalContemplativeColors.current
+    val type = LocalClarityTypography.current
+
+    Column {
+        Text(
+            text = stringResource(R.string.focus_length_label),
+            style = type.caption,
+            color = contemplative.textDim,
+        )
+        Spacer(Modifier.height(ClaritySpacing.scaled(6.dp)))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .selectableGroup(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ClarityPreferences.FOCUS_DURATION_OPTIONS.forEach { minutes ->
+                val isSelected = minutes == selected
+                val label = pluralStringResource(R.plurals.cd_focus_length_option, minutes, minutes)
+                Box(
+                    modifier = Modifier
+                        // The numeral is small and the target is not. design-v3.md 13's
+                        // floor applies to the box a thumb lands in, not to the ink.
+                        .heightIn(min = ClaritySpacing.minTouchTarget)
+                        .widthIn(min = ClaritySpacing.minTouchTarget)
+                        .selectable(
+                            selected = isSelected,
+                            role = Role.RadioButton,
+                            onClick = { onSelect(minutes) },
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        )
+                        .semantics { contentDescription = label },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = minutes.toString(),
+                        style = type.itemTitle,
+                        // `textDim` and not `textFaint`. An unselected length is a
+                        // choice a person is being offered, not an inactive control, and
+                        // `FaintInkTest` allows the 32 percent token only where something
+                        // genuinely cannot be used. See the dimmed rows below, which can
+                        // take it because they cannot be started.
+                        color = if (isSelected) contemplative.textBright else contemplative.textDim,
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -262,6 +370,7 @@ private fun FocusChooserEmptyState() {
 }
 
 private val TITLE_TOP = 24.dp
+private val LENGTH_TOP = 18.dp
 private val ROW_PADDING = 14.dp
 private val ROW_GAP = 10.dp
 private val BOTTOM_ROOM = 48.dp

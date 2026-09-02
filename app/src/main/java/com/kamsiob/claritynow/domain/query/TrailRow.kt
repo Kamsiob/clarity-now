@@ -130,6 +130,19 @@ data class TrailRowContext(
     val itemTitle: String?,
     /** The area's name as of this event, for the payloads that carry no snapshot. */
     val areaName: String?,
+    /**
+     * The line a person accepted, for `PLAN_ACCEPTED` and for nothing else. Issue #61.
+     *
+     * `PlanAccepted` carries an id and no words, deliberately: the plan's language lives on
+     * the offer, and duplicating it onto the acceptance would put the same sentence in the
+     * log twice. It is resolved here, from the `PLAN_OFFERED` that shares the id.
+     *
+     * **This is only ever set for an acceptance, and that is rule 13's guard, not an
+     * accident of where the lookup was written.** An offer nobody took is never named
+     * anywhere: `CLARITY_LOGIC_ENGINE.md` 10.5 says a decline writes nothing, costs nothing
+     * and is never referenced, and ignoring an offer is identical to declining it.
+     */
+    val planLine: String? = null,
 )
 
 /**
@@ -483,7 +496,14 @@ private fun contentOf(event: ClarityEvent, context: TrailRowContext): TrailRowCo
         // acceptance is never rendered as anything. CLAUDE.md rule 13: the
         // mechanism must have no way to tell someone they broke a promise.
         is PlanOffered -> TrailRowContent()
-        is PlanAccepted -> TrailRowContent()
+        // **What was accepted, on the day it was accepted, and never anything else.**
+        // Issue #61: the acceptance was recorded and the row said `Accepted one thing`
+        // with no subject, so the one commitment this app invites led nowhere a person
+        // could return to. The row names the line now. What it must never grow is a
+        // second half: the Trail records that this happened, on the day it happened,
+        // beside everything else that happened, and there is no field on a row and no
+        // event in the catalog that could tell anybody whether they did it.
+        is PlanAccepted -> TrailRowContent(subject = context.planLine)
 
         is SettingChanged -> TrailRowContent()
 

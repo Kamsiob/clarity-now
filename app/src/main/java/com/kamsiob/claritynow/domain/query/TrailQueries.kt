@@ -902,7 +902,29 @@ class TrailQueries(
             areaColorHex = areaId?.let { areaColorHexAsOf(it, event.wallClock) },
             itemTitle = itemId?.let { itemTitleAsOf(it, event.wallClock) },
             areaName = areaId?.let { areaNameAsOf(it, event.wallClock) },
+            planLine = committedLineOf(event),
         )
+    }
+
+    /**
+     * The stored first person line of the plan an acceptance refers to. Issue #61.
+     *
+     * Null for every event that is not a `PLAN_ACCEPTED`, so an offer nobody took is
+     * never named: 10.5 makes a decline and an ignored offer identical, and both write
+     * nothing and are referenced nowhere.
+     *
+     * Read off the offer rather than carried on the acceptance, because the acceptance's
+     * payload is an id and one sentence in two events is one sentence that can disagree
+     * with itself. An acceptance whose offer is not in this log answers null and the row
+     * degrades to the sentence alone, which is what a partial import looks like.
+     */
+    private fun committedLineOf(event: ClarityEvent): String? {
+        val planId = (event.payload as? PlanAccepted)?.planId ?: return null
+        return byEntity[planId].orEmpty()
+            .asSequence()
+            .mapNotNull { it.payload as? PlanOffered }
+            .firstOrNull { it.planId == planId }
+            ?.committedLine
     }
 
     /**

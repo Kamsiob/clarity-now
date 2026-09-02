@@ -2,7 +2,6 @@ package com.kamsiob.claritynow.ui.settings
 
 import android.content.ContentResolver
 import android.net.Uri
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -22,6 +21,8 @@ import com.kamsiob.claritynow.data.export.BackupFormat
 import com.kamsiob.claritynow.data.export.ImportRefusal
 import com.kamsiob.claritynow.data.export.LocalFileTarget
 import com.kamsiob.claritynow.data.export.SyncTarget
+import com.kamsiob.claritynow.ui.components.predictiveBackPreview
+import com.kamsiob.claritynow.ui.components.rememberPredictiveBack
 import com.kamsiob.claritynow.ui.about.AboutScreen
 import com.kamsiob.claritynow.ui.theme.LocalCalmMode
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
@@ -100,11 +101,24 @@ internal fun SettingsSurface(onDismiss: () -> Unit, modifier: Modifier = Modifie
     // Back leaves About first and Settings second. A sheet is a window of its own and
     // consumes back before this handler ever sees it, which is also what makes the
     // erase sheet's "back dismisses without erasing" true with nothing written here.
-    BackHandler {
+    //
+    // Predictive, issue #63. This surface is drawn over the tab it was opened from, so
+    // the preview uncovers the room back arrives in. **About is the one exception on this
+    // screen and it keeps its preview anyway**: backing out of About goes to Settings,
+    // which is one composition down rather than one screen behind, so what the gesture
+    // shows there is the surface receding rather than a destination. That is the same
+    // thing the platform does for a nested destination and it is honest about direction
+    // if not about depth.
+    val predictiveBack = rememberPredictiveBack {
         if (aboutOpen) aboutOpen = false else onDismiss()
     }
 
-    Box(modifier = modifier.fillMaxSize().background(colors.canvas)) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .predictiveBackPreview(predictiveBack)
+            .background(colors.canvas),
+    ) {
         if (aboutOpen) {
             AboutScreen(onBack = { aboutOpen = false })
         } else {

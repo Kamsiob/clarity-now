@@ -1,6 +1,5 @@
 package com.kamsiob.claritynow.ui.report
 
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -15,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kamsiob.claritynow.di.ClarityViewModelFactory
+import com.kamsiob.claritynow.ui.components.predictiveBackPreview
+import com.kamsiob.claritynow.ui.components.rememberPredictiveBack
 import com.kamsiob.claritynow.ui.theme.ContemplativeTheme
 import com.kamsiob.claritynow.ui.theme.LocalCalmMode
 import com.kamsiob.claritynow.ui.theme.LocalContemplativeColors
@@ -68,8 +69,10 @@ fun ReportRoute(
     // Guarded on the dispatcher owner being present for the same reason `PulseRoute` guards
     // its own: `BackHandler` throws rather than degrading when no owner reaches it, and the
     // visible back control on the page does not depend on this at all.
-    if (LocalOnBackPressedDispatcherOwner.current != null) {
-        BackHandler(enabled = historyOpen) { historyOpen = false }
+    val predictiveBack = if (LocalOnBackPressedDispatcherOwner.current != null) {
+        rememberPredictiveBack(enabled = historyOpen) { historyOpen = false }
+    } else {
+        null
     }
 
     ContemplativeTheme(calmMode = LocalCalmMode.current) {
@@ -81,13 +84,13 @@ fun ReportRoute(
                 .fillMaxSize()
                 .background(LocalContemplativeColors.current.deepBlack),
         ) {
-            if (historyOpen) {
-                ReportHistoryPage(
-                    history = state.past,
-                    loading = state.pastLoading,
-                    onBack = { historyOpen = false },
-                )
-            } else {
+            // **The report is composed while the history page is being drawn back
+            // from**, issue #63. The two swap rather than stack, so without this the
+            // preview would uncover a black ground and show a person leaving rather
+            // than where they are going. It is the same composition the swap is about
+            // to make in any case: closing history mounts the report from scratch
+            // today, and this only mounts it a few hundred milliseconds earlier.
+            if (!historyOpen || predictiveBack?.isDrawing == true) {
                 ReportScreen(
                     state = state,
                     onHistory = { historyOpen = true },
@@ -95,6 +98,18 @@ fun ReportRoute(
                     onRevealFinished = viewModel::revealFinished,
                     onAccept = viewModel::acceptPlan,
                     onDecline = viewModel::declinePlan,
+                )
+            }
+            if (historyOpen) {
+                ReportHistoryPage(
+                    history = state.past,
+                    loading = state.pastLoading,
+                    onBack = { historyOpen = false },
+                    modifier = if (predictiveBack == null) {
+                        Modifier
+                    } else {
+                        Modifier.predictiveBackPreview(predictiveBack)
+                    },
                 )
             }
         }
