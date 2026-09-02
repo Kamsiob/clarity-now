@@ -47,10 +47,16 @@ import kotlinx.coroutines.launch
 /**
  * Beat 4, The Depth. MASTER_BUILD_PROMPT 13.1, and Addendum 01 8b's one line.
  *
- * Four auto paced moments with the captions 13.1 states verbatim, about twenty two
+ * Four moments with the captions 13.1 states verbatim, each advanced by a tap, about twenty two
  * seconds end to end, and a tap advances at any point.
  *
- * ## The last moment does not auto advance, and that is deliberate
+ * ## Nothing here auto advances any more, and that is the change
+ *
+ * Three of the four moments used to swap themselves after 5.5 seconds. Usability testing
+ * found people still reading when a panel left, and one about to tap a sample control that
+ * vanished under the finger. A tap anywhere advances, as it does on every other beat.
+ *
+ * ## The last moment never auto advanced, and that was always deliberate
  *
  * 13.1 puts the beat at twenty to twenty five seconds, which the three paced moments plus
  * moment four's own reveals spend. What moment four does not do is time out into the app:
@@ -86,11 +92,18 @@ internal fun OnboardingBeatFour(
 ) {
     val motion = clarityMotion()
 
-    LaunchedEffect(moment) {
-        if (moment >= ONBOARDING_LAST_MOMENT) return@LaunchedEffect
-        delay(MOMENT_MILLIS)
-        onMoment(moment + 1)
-    }
+    // **Beat 4 no longer moves on by itself.**
+    //
+    // Each panel used to swap after 5.5 seconds. Two of six usability testers were still
+    // reading when the Pulse panel replaced itself, and one of them had been about to tap
+    // a sample answer. For an audience whose difficulty is holding attention on a page,
+    // a page that leaves while they are on it is the worst behavior in the sequence, and
+    // it is also the one thing on the list that is pure loss: nothing is gained by the
+    // timer that the person's own tap does not do better.
+    //
+    // The whole beat still advances on a tap anywhere, which `OnboardingRoute` already
+    // provides and which every other beat uses, so the interaction is unchanged and only
+    // the clock is gone.
 
     Crossfade(
         targetState = moment,
@@ -101,7 +114,11 @@ internal fun OnboardingBeatFour(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = ClaritySpacing.screenPadding),
+                .padding(
+                    start = ClaritySpacing.screenPadding,
+                    end = ClaritySpacing.screenPadding,
+                    bottom = OnboardingOpticalLift,
+                ),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -369,7 +386,6 @@ internal fun glowForMoment(beat: OnboardingBeat, moment: Int): Color? = when (be
  * 5 before its closing line has arrived, which lands the beat inside 13.1's twenty to
  * twenty five and leaves the reading of the last line to the reader.
  */
-private const val MOMENT_MILLIS = 5_500L
 /**
  * The index of the last moment. Read by the route, which owns the moment because a tap
  * anywhere advances it and the gesture layer is up there.

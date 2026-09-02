@@ -270,15 +270,21 @@ internal fun TutorialOverlay(
                 .onSizeChanged { tooltipHeight = it.height },
         )
 
+        // **Skip sits on its own ground.** It is drawn over whatever the app happens to
+        // have in its top right, and on the Areas screen that is the settings gear: the
+        // word and the glyph landed on each other and neither could be read. A scrim at
+        // the world's own raised surface gives the word a surface to stand on, and it is
+        // one device rather than a second edge or a shadow.
         Text(
             text = stringResource(R.string.tutorial_skip),
             style = type.bodyStrong,
-            color = contemplative.textDim,
+            color = contemplative.textBright,
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .statusBarsPadding()
                 .padding(end = SCREEN_EDGE - SKIP_TOUCH_INSET, top = SKIP_TOP)
                 .clip(shapes.pill)
+                .background(contemplative.surfaceRaised.copy(alpha = 0.92f))
                 .clarityClickable(
                     haptic = ClarityHapticEvent.TAP,
                     role = Role.Button,

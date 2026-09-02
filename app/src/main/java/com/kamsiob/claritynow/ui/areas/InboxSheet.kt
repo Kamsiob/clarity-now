@@ -29,6 +29,7 @@ import com.kamsiob.claritynow.domain.replay.ItemState
 import com.kamsiob.claritynow.ui.components.ClarityButton
 import com.kamsiob.claritynow.ui.components.ClarityButtonRole
 import com.kamsiob.claritynow.ui.components.ClaritySheet
+import com.kamsiob.claritynow.ui.components.LocalSheetClose
 import com.kamsiob.claritynow.ui.components.clarityClickable
 import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
@@ -133,7 +134,14 @@ private fun InboxRow(item: ItemState, onOpen: () -> Unit, onMove: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Text(text = item.title, style = type.body, color = colors.inkPrimary)
+            Text(
+                    text = item.title,
+                    style = type.body,
+                    color = colors.inkPrimary,
+                    // A 200 character title in a list row is a row taller than the phone.
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+            )
             // Absent entirely when there is none, and never an invitation to add one.
             item.firstStep?.let { firstStep ->
                 Text(
@@ -268,7 +276,7 @@ fun FileItemSheet(
                     ClarityButton(
                         label = stringResource(R.string.action_never_mind),
                         role = ClarityButtonRole.TERTIARY,
-                        onClick = onDismiss,
+                        onClick = LocalSheetClose.current,
                     )
                 }
             }

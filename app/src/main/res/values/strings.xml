@@ -118,9 +118,9 @@
         that document names verbatim, and its placeholder is an example rather than an
         instruction, because an instruction to break a task down is a second task.
     -->
-    <string name="field_first_step">First step</string>
+    <string name="field_first_step">First step, optional</string>
     <string name="field_first_step_example">Open the doc and read what is there</string>
-    <string name="field_estimate_minutes">Estimate in minutes</string>
+    <string name="field_estimate_minutes">Estimate in minutes, optional</string>
 
     <string name="add_item_lands_active">This becomes the active item right away.</string>
     <string name="add_item_lands_queue">This joins the queue.</string>
@@ -192,6 +192,19 @@
     <string name="delete_area_confirm_word">DELETE</string>
     <string name="delete_area_keep">Keep this area</string>
     <string name="undo_item_deleted">Item deleted</string>
+    <!--
+        Completing is the easiest act in this app to trigger by accident, because a right
+        swipe commits on a flick, and it was the only frequent one with no way back. Five
+        of six people in usability testing hit it, most while scrolling. Delete has had a
+        five second window since phase 2; the daily act had none.
+
+        This one compensates rather than defers. A completion has to land immediately, or
+        the promotion of the next item cannot play and the whole point of the gesture is
+        lost, so the write happens and the undo reopens the item straight back into the
+        active slot. Both are real events in the log, which is the honest record of what
+        happened, and it is the same pair the Trail already offers on a completion row.
+    -->
+    <string name="undo_item_completed">Completed</string>
     <string name="undo_area_archived">Area archived</string>
 
     <!-- Content descriptions -->
@@ -266,7 +279,7 @@
         planned length or a person ended it sooner. There is no second, quieter
         version of this line for a shorter session.
     -->
-    <string name="focus_complete_notification_title">Session complete</string>
+    <string name="focus_complete_notification_title">Session ended</string>
 
     <!--
         The transition warning, off by default, per Addendum 01 4g. The exact phrase
@@ -346,16 +359,29 @@
     <string name="trail_item_deleted">Deleted %1$s</string>
     <string name="trail_focus_started">Started a focus session on %1$s</string>
     <plurals name="trail_focus_completed">
-        <item quantity="one">Finished %1$d minute of focus on %2$s</item>
-        <item quantity="other">Finished %1$d minutes of focus on %2$s</item>
+        <item quantity="one">%1$d minute of focus on %2$s</item>
+        <item quantity="other">%1$d minutes of focus on %2$s</item>
     </plurals>
     <plurals name="trail_focus_extended">
         <item quantity="one">Added %1$d minute to a focus session on %2$s</item>
         <item quantity="other">Added %1$d minutes to a focus session on %2$s</item>
     </plurals>
+    <!--
+        **One verb for both terminal focus events, and the duration carries the difference.**
+
+        Four people in usability testing raised the same contradiction unprompted: the
+        completion screen deliberately refuses to qualify a six minute session, saying only
+        that it ended, and then the Trail files it forever under "Stopped after 6 minutes"
+        one line below "Finished 25 minutes of focus" from a better day. The screen's
+        restraint is undone by the permanent record.
+
+        FOCUS_COMPLETED and FOCUS_ENDED_EARLY stay two separate events, because they are
+        two different facts and a replay has to be able to tell them apart. The distinction
+        belongs to the log. It does not belong in the sentence a person reads on a bad day.
+    -->
     <plurals name="trail_focus_stopped">
-        <item quantity="one">Stopped after %1$d minute on %2$s</item>
-        <item quantity="other">Stopped after %1$d minutes on %2$s</item>
+        <item quantity="one">%1$d minute of focus on %2$s</item>
+        <item quantity="other">%1$d minutes of focus on %2$s</item>
     </plurals>
     <string name="trail_pulse_generated">A Pulse was ready</string>
     <string name="trail_pulse_answered">Answered a Pulse with %1$s</string>
@@ -402,7 +428,14 @@
     <string name="focus_end_confirm_title">End this session?</string>
     <string name="focus_end_confirm_end">End</string>
     <string name="focus_end_confirm_keep">Keep going</string>
-    <string name="focus_complete_title">Session complete</string>
+    <!--
+        "Ended", not "complete". The word was doing two jobs on one screen 36dp apart: the
+        session is over, and the item is finished, which are different facts and one of
+        them is a button on the same page. "Ended" is equally true of a full twenty five
+        minutes and of six, carries no shortfall and no qualifier, and keeps the promise
+        the screen was built to make, which is that a short session is not editorialized.
+    -->
+    <string name="focus_complete_title">Session ended</string>
     <plurals name="focus_complete_duration">
         <item quantity="one">%1$d minute in %2$s</item>
         <item quantity="other">%1$d minutes in %2$s</item>
@@ -658,6 +691,17 @@
         any surface tells a person what they should have done. Neither of these states
         anything about the person's data, and neither carries a number.
     -->
+    <!--
+        The empty page's second line, and the reason it exists.
+
+        `ReportPage.Empty` rendered one corpus line and nothing else, and both the note and
+        the line behind it are nullable through four early exits, so a zero event week
+        could draw a dateline, three faint marks and an otherwise blank page while a 400ms
+        fade animated it in. Every other not-a-report state carries two sentences: one
+        saying what is happening and one saying what to expect. This is the third.
+    -->
+    <string name="report_empty_detail">Reports are written on Sunday from what the week actually held. Nothing is missing.</string>
+    <string name="report_empty_fallback">There is nothing to read for this week.</string>
     <string name="report_withheld">There is no report this week.</string>
     <string name="report_withheld_detail">Every number in a report is checked against the log before it is shown, and this one did not check out.</string>
     <string name="report_unavailable">The report could not be written.</string>
@@ -877,6 +921,18 @@
 
     <!-- The import choice, MASTER_BUILD_PROMPT 14b.7 -->
     <string name="settings_import_title">Import from a file</string>
+    <!--
+        **The confirm button names the act, and the act depends on the mode.**
+
+        All six people in usability testing were stopped by the same control: a button
+        reading `Import from a file`, on a sheet titled `Import from a file`, reached from
+        a settings row titled `Import from a file`. Three of them believed it would reopen
+        the file picker. In Replace mode that button erases the phone.
+
+        A button says what will happen when it is pressed. These two do.
+    -->
+    <string name="settings_import_do_merge">Merge these events</string>
+    <string name="settings_import_do_replace">Replace everything on this phone</string>
     <string name="settings_import_summary">%1$d events, written %2$s.</string>
     <string name="settings_import_replace">Replace everything</string>
     <string name="settings_import_merge">Merge with what is here</string>
@@ -1081,20 +1137,30 @@
     <!-- The name the Just start path gives its one area. 14b.11. -->
     <string name="onboarding_today_area">Today</string>
 
-    <!-- Beat 3. Stated verbatim in 13.1. -->
-    <string name="onboarding_beat_three_line">This is yours now.</string>
+    <!--
+        Beat 3, and the one line in onboarding taken from a different tone variant than
+        the rest. See docs/ONBOARDING_VARIANTS.md.
+
+        It is a fact and not a reassurance, which is the whole reason it survives the test
+        that removed the other candidates: there is no streak in this app, no score and no
+        badge, so there is nothing in it a person can lose. Everything else in the sequence
+        describes what the app does; this is the only line that says what it cannot do to
+        you, and for somebody who has abandoned four productivity apps that is the sentence
+        that decides whether they open it again in three weeks.
+    -->
+    <string name="onboarding_beat_three_line">Nothing here can break.</string>
 
     <!-- Beat 4. The four captions are stated verbatim in 13.1. -->
-    <string name="onboarding_depth_philosophy_one">That is the whole setup.</string>
+    <string name="onboarding_depth_philosophy_one">Every area holds one thing. The rest wait.</string>
     <string name="onboarding_depth_philosophy_two">Two more things worth knowing.</string>
     <string name="onboarding_depth_pulse_sample">Some days there will be a question waiting here.</string>
     <string name="onboarding_depth_pulse_option_one">That sounds right</string>
     <string name="onboarding_depth_pulse_option_two">Not quite</string>
-    <string name="onboarding_depth_pulse_caption">One question a day. One tap.</string>
-    <string name="onboarding_depth_momentum_caption">Your rhythm, as it actually was.</string>
+    <string name="onboarding_depth_pulse_caption">One question a day. One tap. You can turn it off.</string>
+    <string name="onboarding_depth_momentum_caption">What you did, counted. Nothing scored.</string>
     <string name="onboarding_depth_report_eyebrow">Clarity Report</string>
     <string name="onboarding_depth_report_headline">Your week, in one page.</string>
-    <string name="onboarding_depth_report_caption">Every week, what actually happened. Written on your device.</string>
+    <string name="onboarding_depth_report_caption">Every Sunday, a page about your week. Written on this phone.</string>
 
     <!--
         Addendum 01 8b, and the one line the whole item is about. It names the cadence, the

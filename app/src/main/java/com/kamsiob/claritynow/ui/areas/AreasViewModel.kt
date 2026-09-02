@@ -68,6 +68,21 @@ data class AreaCardModel(
      * action offered the destructive one and nothing else.
      */
     val offersPromote: Boolean get() = isIdle && queueLength > 0
+
+    /**
+     * **An area that has never held an item at all, which is not the same as an idle one.**
+     *
+     * Four people in usability testing read `Last active today` under a card of an area
+     * they had created ninety seconds earlier and had never put anything in, and three
+     * weeks later the same untouched area says `Last active 20 days ago`, which reads as
+     * though they used it once and stopped. It is a small false statement about a person
+     * on the screen they open most.
+     *
+     * `area_never_active` was written in phase 2 for exactly this and referenced by
+     * nothing.
+     */
+    val neverHeldAnything: Boolean
+        get() = isIdle && queueLength == 0 && completedCount == 0
 }
 
 @Immutable
@@ -423,6 +438,11 @@ class AreasViewModel(
     fun swapToItem(itemId: String) = viewModelScope.launch { repository.swapToItem(itemId) }
 
     fun reopenItem(itemId: String) = viewModelScope.launch { repository.reopenItem(itemId) }
+
+    /** Undoing a completion puts the item back where it was, which is the active slot. */
+    fun reopenItemAsActive(itemId: String) = viewModelScope.launch {
+        repository.reopenItemAsActive(itemId)
+    }
 
     fun moveItem(itemId: String, toIndex: Int) = viewModelScope.launch {
         repository.moveItem(itemId, toIndex)

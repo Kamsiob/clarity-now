@@ -42,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kamsiob.claritynow.R
 import com.kamsiob.claritynow.data.repo.ClarityRepository
@@ -51,6 +52,8 @@ import com.kamsiob.claritynow.ui.components.ClarityButtonRole
 import com.kamsiob.claritynow.ui.components.ClarityIcon
 import com.kamsiob.claritynow.ui.components.ClarityIcons
 import com.kamsiob.claritynow.ui.components.ClaritySheet
+import com.kamsiob.claritynow.ui.settings.confirmationMatches
+import com.kamsiob.claritynow.ui.components.LocalSheetClose
 import com.kamsiob.claritynow.ui.components.ClarityTextField
 import com.kamsiob.claritynow.ui.components.Sidehead
 import com.kamsiob.claritynow.ui.components.clarityClickable
@@ -134,12 +137,30 @@ fun AddItemSheet(
             // recovery, and the sheet closed as though it had worked. `EstimateField`
             // one screen down already argues for capping at the field, and this is the
             // field where losing the text costs the most.
+            // **Done, not Next, and it commits.** The capture sheet is the one screen in
+            // this app that promises to require no decisions, and the keyboard's action
+            // key walked into the note field, which is multi line and whose own action key
+            // is therefore a newline. There was no way to finish a capture from the
+            // keyboard at all: every one line thought ended with a thumb moving past
+            // three more fields to a button. The edit sheet keeps Next, because there the
+            // decision has already been made and moving between fields is the job.
             ClarityTextField(
                 value = title,
                 onValueChange = { title = it.take(ClarityRepository.MAX_ITEM_TITLE) },
                 label = stringResource(R.string.field_title),
                 focusRequester = focus,
-                imeAction = ImeAction.Next,
+                imeAction = ImeAction.Done,
+                onImeAction = {
+                    if (title.isNotBlank()) {
+                        keyboard?.hide()
+                        onAdd(
+                            title,
+                            note.ifBlank { null },
+                            firstStep.ifBlank { null },
+                            estimate.toMinutes(),
+                        )
+                    }
+                },
             )
             Spacer(Modifier.height(ClaritySpacing.scaled(20.dp)))
             ClarityTextField(
@@ -658,7 +679,14 @@ private fun QueueRow(item: ItemState, onClick: () -> Unit, onMakeActive: (() -> 
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
-                Text(text = item.title, style = type.body, color = colors.inkPrimary)
+                Text(
+                        text = item.title,
+                        style = type.body,
+                        color = colors.inkPrimary,
+                        // A 200 character title in a list row is a row taller than the phone.
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 // The note is a rank below the title and stays one: `caption` against
                 // `body`, design-v3.md 5.3. The ink is the same, because 3.1 gives this
                 // app two inks that carry text and the third is for shapes.
@@ -860,7 +888,7 @@ fun SwapChooserSheet(
                 ClarityButton(
                     label = stringResource(R.string.action_never_mind),
                     role = ClarityButtonRole.TERTIARY,
-                    onClick = onDismiss,
+                    onClick = LocalSheetClose.current,
                 )
             }
         }
@@ -884,7 +912,7 @@ fun QueueChooserSheet(
                 ClarityButton(
                     label = stringResource(R.string.queue_choice_dismiss),
                     role = ClarityButtonRole.TERTIARY,
-                    onClick = onDismiss,
+                    onClick = LocalSheetClose.current,
                 )
             }
         }
@@ -907,7 +935,14 @@ fun DeleteAreaSheet(
     val type = LocalClarityTypography.current
     var typed by remember { mutableStateOf("") }
     val required = stringResource(R.string.delete_area_confirm_word)
-    val armed = typed.trim().equals(required, ignoreCase = false)
+    // **Case insensitive, matching the two settings sheets that ask the same thing.**
+    //
+    // `confirmationMatches` in SettingsSheets.kt states the argument and is used by Erase
+    // and by Replace on import; this third confirmation was written separately and pinned
+    // `ignoreCase = false`, so typing `delete` on a phone that autocapitalizes nothing
+    // left the button grey with no explanation of why. The guard is meant to prove
+    // deliberateness, and typing the word is the proof. Holding shift is not.
+    val armed = confirmationMatches(typed, required)
     val haptics = com.kamsiob.claritynow.ui.theme.LocalClarityHaptics.current
 
     LaunchedEffect(armed) { if (armed) haptics.perform(ClarityHapticEvent.WARN) }
@@ -944,7 +979,7 @@ fun DeleteAreaSheet(
             ClarityButton(
                 label = stringResource(R.string.delete_area_keep),
                 role = ClarityButtonRole.TERTIARY,
-                onClick = onDismiss,
+                onClick = LocalSheetClose.current,
             )
         }
     }

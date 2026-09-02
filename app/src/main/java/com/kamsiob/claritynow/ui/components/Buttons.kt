@@ -162,6 +162,8 @@ fun ClarityFab(
     // pill to a 20dp squircle, because it is the one control that opens rather than
     // commits.
     val corner by animateDpAsState(
+        // 28dp on a 56dp tall box is a full pill at rest, so only the pressed state is
+        // visibly a change of shape.
         targetValue = if (pressed) 20.dp else 28.dp,
         animationSpec = motion.springSnappy(),
         label = "fabCorner",
@@ -171,18 +173,28 @@ fun ClarityFab(
     Box(
         modifier = modifier
             .scale(scale)
-            .size(48.dp)
+            // **64 by 56, not a 48dp circle.** A 48dp circle is the 2014 default and sits
+            // exactly on design-v3 13's touch floor, so the app's most used control had no
+            // margin at all. A wider pill reads as a control rather than as a badge and
+            // shares the vocabulary the anchors and chips already speak.
+            .size(width = 64.dp, height = 56.dp)
             // design-v3.md 6.1: "Dark and Contemplative worlds: elevation is
             // lightness only. No shadows at all." Every other clarityShadow call
             // site guards on this; the FAB was drawing its colored glow in dark.
+            //
+            // **`fabShape`, not `CircleShape`.** A.4 names the FAB as one of exactly two
+            // places in the app where shape changes on state, and the morph was computed
+            // on every frame of the press spring and then handed to nothing: the clip, the
+            // shadow and the ring all took a circle. The one shape law the app declares
+            // was not drawn.
             .clarityShadow(
                 ClarityElevation.fab(colors.actionBlue),
-                CircleShape,
+                fabShape,
                 enabled = !colors.isDark,
             )
-            .clip(CircleShape)
+            .clip(fabShape)
             .background(colors.actionBlue)
-            .clarityFocusRing(interaction, CircleShape)
+            .clarityFocusRing(interaction, fabShape)
             .clarityClickable(
                 interactionSource = interaction,
                 haptic = ClarityHapticEvent.TAP,

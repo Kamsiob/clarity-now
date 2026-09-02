@@ -1,0 +1,729 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 9.3.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.3.1)" variant="all" version="9.3.1">
+
+    <issue
+        id="MissingPermission"
+        message="Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with `checkPermission`) or explicitly handle a potential `SecurityException`"
+        errorLine1="        manager.notify(ID_RUNNING, runningNotification(model, promoted = canPromote()))"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/notifications/FocusNotificationPoster.kt"
+            line="124"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="MissingPermission"
+        message="Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with `checkPermission`) or explicitly handle a potential `SecurityException`"
+        errorLine1="        manager.notify(ID_COMPLETE, completionNotification(model))"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/notifications/FocusNotificationPoster.kt"
+            line="131"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="MissingPermission"
+        message="Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with `checkPermission`) or explicitly handle a potential `SecurityException`"
+        errorLine1="        manager.notify(ID_TRANSITION, transitionNotification(model))"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/notifications/FocusNotificationPoster.kt"
+            line="138"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="MissingPermission"
+        message="Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with `checkPermission`) or explicitly handle a potential `SecurityException`"
+        errorLine1="        manager.notify(ID_REMINDER, notification)"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/notifications/PulseReminderPoster.kt"
+            line="112"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="InlinedApi"
+        message="Field requires API level 33 (current min is 31): `android.Manifest.permission#POST_NOTIFICATIONS`"
+        errorLine1="        launcher.launch(Manifest.permission.POST_NOTIFICATIONS)"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/notifications/NotificationPermission.kt"
+            line="92"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="StartActivityAndCollapseDeprecated"
+        message="TileService#startActivityAndCollapse(Intent) is deprecated. Use TileService#startActivityAndCollapse(PendingIntent) instead."
+        errorLine1="            startActivityAndCollapse(intent)"
+        errorLine2="                                     ~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/tile/FocusTileService.kt"
+            line="208"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="NonObservableLocale"
+        message="Reading locale in a non-observable way in a composable function"
+        errorLine1="    val locale = Locale.getDefault()"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/ui/report/ReportHistoryPage.kt"
+            line="249"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NonObservableLocale"
+        message="Reading locale in a non-observable way in a composable function"
+        errorLine1="    val locale = Locale.getDefault()"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/ui/report/ReportScreen.kt"
+            line="533"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NonObservableLocale"
+        message="Reading locale in a non-observable way in a composable function"
+        errorLine1="            busiest.date.dayOfWeek.getDisplayName(DayNameStyle.FULL, Locale.getDefault()),"
+        errorLine2="                                                                     ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/ui/report/WeekRibbon.kt"
+            line="233"
+            column="70"/>
+    </issue>
+
+    <issue
+        id="ComposableNaming"
+        message="Composable functions with a return type should start with a lowercase letter"
+        errorLine1="fun AreaCardSemantics(area: AreaCardModel, modifier: Modifier = Modifier): Modifier {"
+        errorLine2="    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/ui/areas/AreaCard.kt"
+            line="373"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="            text = context.getString("
+        errorLine2="                   ^">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/widget/WidgetConfigurationActivity.kt"
+            line="196"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="                text = context.getString(R.string.widget_no_areas),"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/widget/WidgetConfigurationActivity.kt"
+            line="210"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="                label = context.getString(R.string.action_close),"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/widget/WidgetConfigurationActivity.kt"
+            line="216"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="                    label = context.getString(R.string.widget_config_automatic),"
+        errorLine2="                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/widget/WidgetConfigurationActivity.kt"
+            line="226"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="                    explainer = context.getString(R.string.widget_config_automatic_explainer),"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/widget/WidgetConfigurationActivity.kt"
+            line="227"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="                    text = context.getString(R.string.widget_config_all_explainer),"
+        errorLine2="                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/widget/WidgetConfigurationActivity.kt"
+            line="249"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="                    label = context.getString(R.string.action_done),"
+        errorLine2="                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/widget/WidgetConfigurationActivity.kt"
+            line="273"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="ModifierFactoryExtensionFunction"
+        message="Modifier factory functions should be extensions on Modifier"
+        errorLine1="fun AreaCardSemantics(area: AreaCardModel, modifier: Modifier = Modifier): Modifier {"
+        errorLine2="    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/ui/areas/AreaCard.kt"
+            line="373"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be named modifier"
+        errorLine1="    reorderModifier: Modifier,"
+        errorLine2="    ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/ui/areas/AreasScreen.kt"
+            line="336"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;days&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;cd_pulse_rhythm&quot;>Pulse rhythm, the last %1$d days&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="465"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;days&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;momentum_active_days&quot;>Active on %1$d of the last %2$d days&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="487"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;days&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;momentum_active_days_none&quot;>The last %1$d days&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="497"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;percent&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;momentum_percent&quot;>%1$d percent&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="526"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;events&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;momentum_area_balance_basis&quot;>Of %1$d events in the fortnight.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="531"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;completed&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;momentum_pace_busiest&quot;>Busiest week, %1$d completed&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="532"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;days&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;cd_momentum_activity&quot;>Activity, the last %1$d days&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="547"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;weeks&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;cd_momentum_pace&quot;>Completions by week, the last %1$d weeks&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="548"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;days&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;cd_momentum_focus_strip&quot;>Focus by day, the last %1$d days&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="549"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;completed&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;report_total_completed&quot;>%1$d completed&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="628"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;added&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;report_total_added&quot;>%1$d added&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="629"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;days&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;cd_report_ribbon&quot;>The week, %1$d days of activity&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="703"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;days&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;cd_report_ribbon_busiest&quot;>The week, %1$d days of activity. Busiest on %2$s.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="704"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;minutes&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;settings_session_length_value&quot;>%1$d minutes&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="762"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;events&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;settings_export_done&quot;>Exported %1$d events. The file is not encrypted.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="841"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;events&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;settings_export_done_encrypted&quot;>Exported %1$d events to an encrypted file.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="842"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;events&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;settings_import_done&quot;>Imported. The log now holds %1$d events.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="843"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;events&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;settings_import_summary&quot;>%1$d events, written %2$s.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="891"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;days&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;cd_widget_rhythm&quot;>Activity, the last %1$d days. Active on %2$d of them.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="1207"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="DataExtractionRules"
+        message="The attribute `android:allowBackup` is deprecated from Android 12 and may be removed in future versions. Consider adding the attribute `android:dataExtractionRules` specifying an `@xml` resource which configures backups and device transfers on Android 12 and higher."
+        errorLine1="        android:allowBackup=&quot;false&quot;"
+        errorLine2="                             ~~~~~">
+        <location
+            file="src/main/AndroidManifest.xml"
+            line="74"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="Unnecessary; `SDK_INT` is always >= 31"
+        errorLine1="        tools:targetApi=&quot;31&quot;>"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/AndroidManifest.xml"
+            line="80"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="This folder configuration (`v26`) is unnecessary; `minSdkVersion` is 31. Merge all the resources in this folder into `mipmap-anydpi`.">
+        <location
+            file="src/main/res/mipmap-anydpi-v26"/>
+    </issue>
+
+    <issue
+        id="StaticFieldLeak"
+        message="Do not place Android context classes in static fields (static reference to `FocusNotificationPoster` which has field `context` pointing to `Context`); this is a memory leak"
+        errorLine1="    private var poster: FocusNotificationPoster? = null"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/notifications/ClarityNotifications.kt"
+            line="385"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableLongStateOf` instead of `mutableStateOf`"
+        errorLine1="    var handledRequest by rememberSaveable { mutableStateOf(0L) }"
+        errorLine2="                                             ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/ui/areas/AreasRoute.kt"
+            line="154"
+            column="46"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+        errorLine1="    var revealed by remember(mood.name) { mutableStateOf(0) }"
+        errorLine2="                                          ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/ui/areas/ColorPicker.kt"
+            line="280"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableFloatStateOf` instead of `mutableStateOf`"
+        errorLine1="    if (motion.reduced) return remember { mutableStateOf(REDUCED_GLOW_OPACITY) }"
+        errorLine2="                                          ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/ui/focus/FocusBackdrop.kt"
+            line="107"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.raw.ofl_hanken_grotesk` appears to be unused">
+        <location
+            file="src/main/res/raw/ofl_hanken_grotesk.txt"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.raw.ofl_newsreader` appears to be unused">
+        <location
+            file="src/main/res/raw/ofl_newsreader.txt"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.areas_open_settings` appears to be unused"
+        errorLine1="    &lt;string name=&quot;areas_open_settings&quot;>Settings&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="46"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.area_never_active` appears to be unused"
+        errorLine1="    &lt;string name=&quot;area_never_active&quot;>Nothing here yet&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="75"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.action_edit` appears to be unused"
+        errorLine1="    &lt;string name=&quot;action_edit&quot;>Edit&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="85"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.action_cancel` appears to be unused"
+        errorLine1="    &lt;string name=&quot;action_cancel&quot;>Cancel&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="91"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.action_back` appears to be unused"
+        errorLine1="    &lt;string name=&quot;action_back&quot;>Back&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="97"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.sheet_color_title` appears to be unused"
+        errorLine1="    &lt;string name=&quot;sheet_color_title&quot;>Area color&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="104"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.field_note` appears to be unused"
+        errorLine1="    &lt;string name=&quot;field_note&quot;>Note&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="112"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.field_area` appears to be unused"
+        errorLine1="    &lt;string name=&quot;field_area&quot;>Area&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="115"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.completed_empty` appears to be unused"
+        errorLine1="    &lt;string name=&quot;completed_empty&quot;>Nothing completed yet.&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="140"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.undo_area_archived` appears to be unused"
+        errorLine1="    &lt;string name=&quot;undo_area_archived&quot;>Area archived&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="195"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.cd_area_color_dot` appears to be unused"
+        errorLine1="    &lt;string name=&quot;cd_area_color_dot&quot;>Area color&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="198"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.cd_reorder` appears to be unused"
+        errorLine1="    &lt;string name=&quot;cd_reorder&quot;>Reorder&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="200"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.cd_more_actions` appears to be unused"
+        errorLine1="    &lt;string name=&quot;cd_more_actions&quot;>More actions&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="201"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.cd_momentum_tile_active` appears to be unused"
+        errorLine1="    &lt;string name=&quot;cd_momentum_tile_active&quot;>%1$s, has an active item&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="550"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.cd_momentum_tile_idle` appears to be unused"
+        errorLine1="    &lt;string name=&quot;cd_momentum_tile_idle&quot;>%1$s, nothing active&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="551"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX function `createBitmap` instead?"
+        errorLine1="        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)"
+        errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/widget/WidgetCanvas.kt"
+            line="71"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX function `createBitmap` instead?"
+        errorLine1="        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)"
+        errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/widget/WidgetCanvas.kt"
+            line="144"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="            .setData(Uri.parse(&quot;claritynow://widget/configure/$appWidgetId&quot;))"
+        errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/widget/WidgetConfiguration.kt"
+            line="115"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="            .setData(Uri.parse(&quot;claritynow://widget/area/$areaId&quot;))"
+        errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/widget/WidgetIntents.kt"
+            line="146"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="            .setData(Uri.parse(&quot;claritynow://widget/focus/$itemId&quot;))"
+        errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/kamsiob/claritynow/widget/WidgetIntents.kt"
+            line="152"
+            column="22"/>
+    </issue>
+
+</issues>

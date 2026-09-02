@@ -39,6 +39,7 @@ import com.kamsiob.claritynow.ui.components.ClarityButtonRole
 import com.kamsiob.claritynow.ui.components.ClarityIcon
 import com.kamsiob.claritynow.ui.components.ClarityIcons
 import com.kamsiob.claritynow.ui.components.ClaritySheet
+import com.kamsiob.claritynow.ui.components.LocalSheetClose
 import com.kamsiob.claritynow.ui.components.ClarityTextField
 import com.kamsiob.claritynow.ui.components.clarityClickable
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
@@ -255,7 +256,7 @@ internal fun EraseSheet(
             )
             ClarityButton(
                 label = stringResource(R.string.settings_erase_keep),
-                onClick = onDismiss,
+                onClick = LocalSheetClose.current,
                 role = ClarityButtonRole.SECONDARY,
             )
         }
@@ -369,7 +370,7 @@ internal fun ImportPasswordSheet(
             )
             ClarityButton(
                 label = stringResource(R.string.settings_import_cancel),
-                onClick = onDismiss,
+                onClick = LocalSheetClose.current,
                 role = ClarityButtonRole.SECONDARY,
             )
         }
@@ -465,7 +466,15 @@ internal fun ImportSheet(
             }
             Spacer(Modifier.height(ClaritySpacing.scaled(2.dp)))
             ClarityButton(
-                label = stringResource(R.string.settings_import),
+                // The label follows the mode, because the two modes are not the same act
+                // and the button is the last thing anybody reads before one of them runs.
+                label = stringResource(
+                    if (mode == IngestMode.REPLACE) {
+                        R.string.settings_import_do_replace
+                    } else {
+                        R.string.settings_import_do_merge
+                    },
+                ),
                 onClick = { onConfirm(mode) },
                 role = if (mode == IngestMode.REPLACE) {
                     ClarityButtonRole.DESTRUCTIVE
@@ -476,7 +485,7 @@ internal fun ImportSheet(
             )
             ClarityButton(
                 label = stringResource(R.string.settings_import_cancel),
-                onClick = onDismiss,
+                onClick = LocalSheetClose.current,
                 role = ClarityButtonRole.SECONDARY,
             )
         }

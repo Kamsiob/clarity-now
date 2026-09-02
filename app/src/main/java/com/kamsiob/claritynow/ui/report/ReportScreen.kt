@@ -165,7 +165,14 @@ internal fun ReportScreen(
                         onDecline = onDecline,
                     )
 
-                    is ReportPage.Empty -> ReportNotice(line = page.note?.text, detail = null)
+                    // Never a blank page. `page.note` is nullable through four early
+                    // exits, so the fallback is a real sentence rather than an empty
+                    // string, and the detail is the same two line shape the other two
+                    // notices use.
+                    is ReportPage.Empty -> ReportNotice(
+                        line = page.note?.text ?: stringResource(R.string.report_empty_fallback),
+                        detail = stringResource(R.string.report_empty_detail),
+                    )
 
                     ReportPage.Withheld -> ReportNotice(
                         line = stringResource(R.string.report_withheld),

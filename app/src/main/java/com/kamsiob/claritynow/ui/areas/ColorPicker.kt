@@ -252,7 +252,7 @@ private fun MoodStrip(selected: AreaMood, onSelect: (AreaMood) -> Unit) {
                 Spacer(Modifier.height(ClaritySpacing.scaled(6.dp)))
                 Text(
                     text = mood.name,
-                    fontSize = 10.sp,
+                    fontSize = 12.5.sp,
                     fontWeight = if (isSelected) FontWeight(700) else FontWeight(400),
                     // `inkSecondary` rather than the `inkTertiary` design-v3.md 10.9
                     // named, which measures 2.402 to one on this sheet against section
@@ -261,7 +261,7 @@ private fun MoodStrip(selected: AreaMood, onSelect: (AreaMood) -> Unit) {
                     // whether or not the unselected names are also too faint to read.
                     // 10.9 is corrected rather than left standing beside 3.1.
                     color = if (isSelected) colors.inkPrimary else colors.inkSecondary,
-                    style = LocalClarityTypography.current.caption.copy(fontSize = 10.sp),
+                    style = LocalClarityTypography.current.caption.copy(fontSize = 12.5.sp),
                 )
             }
         }

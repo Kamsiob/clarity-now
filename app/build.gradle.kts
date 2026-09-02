@@ -129,6 +129,20 @@ android {
         }
     }
 
+    // **Android Lint never ran.** `verifyClarity` gates on em dashes and network
+    // permissions and not on the checks the app's own dependencies ship, and
+    // `allWarningsAsErrors` is the Kotlin compiler only, which sees none of this. A
+    // baseline is generated once so the existing findings are recorded rather than
+    // silently accepted, and anything new fails the build.
+    lint {
+        warningsAsErrors = true
+        abortOnError = true
+        checkDependencies = false
+        baseline = file("lint-baseline.xml")
+        // Two the app answers deliberately elsewhere and does not need repeated here.
+        disable += setOf("GradleDependency", "AndroidGradlePluginVersion")
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true

@@ -21,6 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.staticCompositionLocalOf
+import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
 import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
@@ -55,7 +60,31 @@ fun ClaritySheet(
     val type = LocalClarityTypography.current
     // Held internally so no caller has to name an experimental Material type.
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
 
+    // **A sheet closed by finishing it had no exit at all.**
+    //
+    // Every Save, Add, Done and Never mind in the app calls the caller's `onDismiss`
+    // directly, which flips the hosting boolean and removes the sheet from composition in
+    // one frame. Material plays the hide animation only on the scrim tap and the drag,
+    // so the two ways a person leaves by accident were animated and the way they leave on
+    // purpose was a cut, after entering on a 300ms lift. Saving an area was the least
+    // resolved moment in the product.
+    //
+    // `LocalSheetClose` hands every control inside a sheet the animated route out. It is a
+    // local rather than a parameter so the twenty three call sites did not each have to
+    // grow one, and it falls back to the caller's own `onDismiss` outside a sheet, which
+    // is what a preview or a test gets.
+    val close: () -> Unit = remember(sheetState, onDismiss, scope) {
+        {
+            scope.launch {
+                runCatching { sheetState.hide() }
+                onDismiss()
+            }
+        }
+    }
+
+    CompositionLocalProvider(LocalSheetClose provides close) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -91,7 +120,15 @@ fun ClaritySheet(
             Box(Modifier.height(ClaritySpacing.scaled(12.dp)))
         }
     }
+    }
 }
+
+/**
+ * The animated way out of the sheet a control is inside.
+ *
+ * Outside a sheet it does nothing, so a control that uses it is safe to reuse anywhere.
+ */
+val LocalSheetClose = staticCompositionLocalOf<() -> Unit> { {} }
 
 @Composable
 private fun SheetHandle() {

@@ -101,10 +101,33 @@ internal fun OnboardingBeatTwo(
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
-                .heightIn(min = viewport)
+                .heightIn(min = viewport - OnboardingOpticalLift)
                 .fillMaxWidth()
-                .padding(horizontal = ClaritySpacing.screenPadding),
-            verticalArrangement = Arrangement.Center,
+                .padding(
+                    start = ClaritySpacing.screenPadding,
+                    end = ClaritySpacing.screenPadding,
+                    bottom = OnboardingOpticalLift,
+                ),
+            // **The stage stops re-centering the moment it starts growing.**
+            //
+            // Picking an area appends a card, and picking the first one also opens a
+            // color picker under it, so the column got about 110dp taller. Centered, that
+            // moved everything already on screen UP by 55dp: the chip a person had just
+            // tapped, and the five they had not. Tapping Work and then reaching for
+            // Health landed on the text field instead, which then opened the keyboard
+            // over the rest of the list. Observed on a device on the first attempt.
+            //
+            // For an audience whose whole difficulty is holding a plan across two actions,
+            // a list that rearranges itself between them is the worst thing this screen
+            // could do. Centered while it fits, anchored to the top the moment it starts
+            // to grow, so nothing a person is aiming at ever moves.
+            verticalArrangement = if (state.stage == BeatTwoStage.PICK_AREAS &&
+                state.selections.isNotEmpty()
+            ) {
+                Arrangement.Top
+            } else {
+                Arrangement.Center
+            },
         ) {
             when (state.stage) {
                 BeatTwoStage.FORK -> Fork(onJustStart = onJustStart, onPickAreas = onPickAreas)

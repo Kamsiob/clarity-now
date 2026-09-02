@@ -138,7 +138,13 @@ fun AreaCardContent(
                 text = area.name,
                 style = type.label,
                 color = areaLabelColor(accent, colors),
-                modifier = Modifier.padding(start = ClaritySpacing.tight),
+                // A 40 character name wraps at 200 percent and pushed the dot out of
+                // shape. `fill = false` keeps the dot at its declared size.
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .padding(start = ClaritySpacing.tight)
+                    .weight(1f, fill = false),
             )
         }
 
@@ -195,6 +201,14 @@ fun AreaCardContent(
                     text = area.activeItemTitle.orEmpty(),
                     style = type.itemTitle,
                     color = colors.inkPrimary,
+                    // **Two lines, and design-v3 10.3's four line budget is why.** A title
+                    // may be 200 characters, which at 21.5sp on a 371dp measure is about
+                    // nine lines, so one long item could make a card taller than the
+                    // phone while the first step and the status line under it were both
+                    // capped at one. The full text is in the detail sheet, which is where
+                    // reading happens.
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = if (cue == null) {
                         Modifier
                     } else {
@@ -316,6 +330,10 @@ private fun IdleLine(area: AreaCardModel) {
 
     Text(
         text = when {
+            // An area nothing has ever been in has no last activity to report, and
+            // saying it was active today is untrue on the day it is created and gets
+            // less true every day after.
+            area.neverHeldAnything -> stringResource(R.string.area_never_active)
             area.daysSinceLastEvent <= 0 -> stringResource(R.string.area_last_active_today)
             else -> pluralStringResource(
                 R.plurals.area_last_active_days,

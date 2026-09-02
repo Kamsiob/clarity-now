@@ -154,6 +154,8 @@ fun AreasRoute(
     var handledRequest by rememberSaveable { mutableStateOf(0L) }
 
     val undoMessage = stringResource(R.string.undo_item_deleted)
+    val undoCompleted = stringResource(R.string.undo_item_completed)
+    val undoArchived = stringResource(R.string.undo_area_archived)
     val undoAction = stringResource(R.string.action_undo)
 
     // A widget or a shortcut, arriving as a value rather than as a call because
@@ -192,7 +194,19 @@ fun AreasRoute(
             onOpenArea = { sheet = AreaSheet.Detail(it) },
             onOpenArchive = { archiveOpen = true },
             onCompleteArea = { area ->
-                area.activeItemId?.let { viewModel.completeItem(area.id, it) }
+                area.activeItemId?.let { itemId ->
+                    viewModel.completeItem(area.id, itemId)
+                    // Compensating, not deferred. The completion writes now so the next
+                    // item can be promoted in front of the person who asked for it, and
+                    // the undo puts the item back in the active slot it left.
+                    undo = UndoRequest(
+                        id = itemId,
+                        message = undoCompleted,
+                        actionLabel = undoAction,
+                        onCommit = {},
+                        onUndo = { viewModel.reopenItemAsActive(itemId) },
+                    )
+                }
             },
             onSwapArea = { sheet = AreaSheet.Swap(it.id) },
             onDeleteArea = { sheet = AreaSheet.DeleteArea(it.id) },
@@ -215,7 +229,20 @@ fun AreasRoute(
             // area's own detail sheet, where the area is context rather than a choice.
             // Recorded in `DECISIONS.md`.
             onFabClick = {
-                sheet = if (state.isEmpty) AreaSheet.NewArea else AreaSheet.AddItem(areaId = null)
+                // **Where the plus goes, in three cases rather than two.**
+                //
+                // With no areas at all it makes an area, which was already right. With one
+                // area it now adds to that area, because there is no ambiguity to
+                // preserve and sending a person's first thought to an inbox they have
+                // never heard of is how five of six usability testers lost track of it.
+                // With more than one it still captures to the inbox, which is the whole
+                // point of the unfiled capture: no decision at the moment of writing.
+                val onlyArea = state.areas.singleOrNull()
+                sheet = when {
+                    state.isEmpty -> AreaSheet.NewArea
+                    onlyArea != null -> AreaSheet.AddItem(areaId = onlyArea.id)
+                    else -> AreaSheet.AddItem(areaId = null)
+                }
             },
         )
 
@@ -256,12 +283,33 @@ fun AreasRoute(
                     onAddItem = { sheet = AreaSheet.AddItem(area.id) },
                     onEditArea = { sheet = AreaSheet.EditArea(area.id) },
                     onComplete = {
-                        area.activeItemId?.let { viewModel.completeItem(area.id, it) }
+                        area.activeItemId?.let { itemId ->
+                            viewModel.completeItem(area.id, itemId)
+                            undo = UndoRequest(
+                                id = itemId,
+                                message = undoCompleted,
+                                actionLabel = undoAction,
+                                onCommit = {},
+                                onUndo = { viewModel.reopenItemAsActive(itemId) },
+                            )
+                        }
                         sheet = null
                     },
                     onSwap = { sheet = AreaSheet.Swap(area.id) },
                     onArchive = {
                         viewModel.archiveArea(area.id)
+                        // `undo_area_archived` has existed since phase 2 and was
+                        // referenced by nothing. Archiving takes a whole area and its
+                        // queue off the home screen in one tap, which is a bigger
+                        // disappearance than deleting one item, and it had no way back
+                        // short of finding the archive screen.
+                        undo = UndoRequest(
+                            id = area.id,
+                            message = undoArchived,
+                            actionLabel = undoAction,
+                            onCommit = {},
+                            onUndo = { viewModel.unarchiveArea(area.id) },
+                        )
                         sheet = null
                     },
                     onDelete = { sheet = AreaSheet.DeleteArea(area.id) },

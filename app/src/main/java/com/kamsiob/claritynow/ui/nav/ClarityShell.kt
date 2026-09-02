@@ -376,6 +376,10 @@ fun ClarityShell(
                     tabs = tabs,
                     selectedKey = selected,
                     onSelect = { selected = it },
+                    // The Report is the one tab hosted here that is a Contemplative
+                    // surface. Focus and the Pulse are full screen and cover the bar
+                    // entirely, so they need no branch.
+                    contemplative = selected == TAB_REPORT,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()

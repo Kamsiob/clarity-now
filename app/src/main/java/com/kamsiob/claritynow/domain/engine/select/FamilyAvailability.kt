@@ -123,6 +123,17 @@ internal object FamilyAvailability {
         "areaRevival" to "it names the days an area was still before it moved again",
         "comebackPattern" to "it counts the gaps an area has come back from",
         "familiarDip" to "a familiar stretch of low weeks is the absence in a kinder vocabulary",
+        // **The one the map missed, and it is the harshest line in the corpus.**
+        //
+        // `quietStretch` is withheld because it counts the active days of a fortnight
+        // nobody was here for. `cleanSlate` describes the same fortnight when the count
+        // is zero, which is exactly the fortnight a person who was away actually had, and
+        // it was not on this list: a fortnight with a little activity was protected and a
+        // fortnight of total silence was not. Its own bench opens with "An empty stretch
+        // of fourteen days.", set in the largest serif on the Momentum page, which was
+        // the first thing one usability tester saw after the re-entry screen had just
+        // deliberately said nothing about their gap.
+        "cleanSlate" to "an empty fortnight is what a fortnight away looks like",
     )
 
     /**

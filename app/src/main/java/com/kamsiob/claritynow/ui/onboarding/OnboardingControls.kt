@@ -376,7 +376,11 @@ internal fun OnboardingField(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = ClaritySpacing.scaled(8.dp))
-                .defaultMinSize(minHeight = 28.dp)
+                // design-v3 13's touch minimum. `Fields.kt` moved its own field off 28dp in
+                // phase 12b with the note that "a field is the most deliberate tap target
+                // on a sheet"; the onboarding twin never got the same change and is the
+                // first field anybody in this app ever touches.
+                .defaultMinSize(minHeight = ClaritySpacing.minTouchTarget)
                 .then(
                     if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier,
                 ),

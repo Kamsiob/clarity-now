@@ -36,6 +36,7 @@ import com.kamsiob.claritynow.ui.theme.ClarityElevation
 import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
 import com.kamsiob.claritynow.ui.theme.ClaritySpacing
 import com.kamsiob.claritynow.ui.theme.LocalClarityColors
+import com.kamsiob.claritynow.ui.theme.LocalContemplativeColors
 import com.kamsiob.claritynow.ui.theme.LocalClarityTypography
 import com.kamsiob.claritynow.ui.theme.clarityMotion
 import com.kamsiob.claritynow.ui.theme.opticallyCentered
@@ -93,15 +94,35 @@ fun ClarityTabBar(
     selectedKey: String,
     onSelect: (String) -> Unit,
     modifier: Modifier = Modifier,
+    /**
+     * **True while a Contemplative surface is showing, and the bar changes world with it.**
+     *
+     * The Report is the app's most art directed screen: a near black ground, gold rules
+     * and a serif hero. A `#EBEAE6` pill with a saturated `#004BAE` chip on it was
+     * measured as the brightest object on that page, so the one piece of Daylight chrome
+     * standing on it took the eye first and undid the room. The same is true of the Pulse.
+     *
+     * The bar does not disappear, because navigation that vanishes is worse, and it does
+     * not become transparent, because a floating pill needs a ground to float on. It
+     * changes register: `surfaceRaised` from 3.3 instead of `raise`, the Contemplative
+     * text tokens for its labels, and no shadow, because the Contemplative world has none.
+     */
+    contemplative: Boolean = false,
 ) {
     val colors = LocalClarityColors.current
+    val night = LocalContemplativeColors.current
+    val ground = if (contemplative) night.surfaceRaised else colors.raise
 
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 17.dp)
             .height(ClaritySpacing.tabBarHeight)
-            .clarityShadow(ClarityElevation.tabBar, CircleShape, enabled = !colors.isDark)
+            .clarityShadow(
+                ClarityElevation.tabBar,
+                CircleShape,
+                enabled = !colors.isDark && !contemplative,
+            )
             .clip(CircleShape)
             // `raise`, not `card`. design-v3.md 3.1 as amended in phase 3c: the
             // surface ladder is a rank, and chrome sits one step below content so it
@@ -109,7 +130,7 @@ fun ClarityTabBar(
             // value, which is why a screen of cards read as a screen of chrome. The
             // shadow stays: a lightness step stands in for a border, never for a
             // shadow, and 6.1's prohibition is on a hairline and a shadow together.
-            .background(colors.raise)
+            .background(ground)
             .padding(horizontal = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -118,6 +139,7 @@ fun ClarityTabBar(
             TabItem(
                 tab = tab,
                 selected = tab.key == selectedKey,
+                contemplative = contemplative,
                 onClick = { onSelect(tab.key) },
             )
         }
@@ -128,6 +150,7 @@ fun ClarityTabBar(
 private fun TabItem(
     tab: ClarityTab,
     selected: Boolean,
+    contemplative: Boolean,
     onClick: () -> Unit,
 ) {
     val colors = LocalClarityColors.current
@@ -151,8 +174,15 @@ private fun TabItem(
     // the scale reads the raw one.
     val reveal = expansion.coerceIn(0f, 1f)
 
+    val night = LocalContemplativeColors.current
+    // The Contemplative worlds have no action color of their own, so the selected tab
+    // takes the world's bright text and the rest take its dim text. That keeps the one
+    // signal a tab bar has to carry, without importing a Daylight accent into a room 3.3
+    // deliberately built without one.
+    val accent = if (contemplative) night.textBright else colors.actionBlue
+    val quiet = if (contemplative) night.textDim else colors.inkSecondary
     val tint by animateColorAsState(
-        targetValue = if (selected) colors.actionBlue else colors.inkSecondary,
+        targetValue = if (selected) accent else quiet,
         animationSpec = motion.effects(),
         label = "tabTint",
     )
@@ -169,7 +199,7 @@ private fun TabItem(
             // the pill instead of cutting the name in half.
             .heightIn(min = ClaritySpacing.minTouchTarget)
             .clip(CircleShape)
-            .background(colors.actionBlue.copy(alpha = 0.10f * reveal))
+            .background(accent.copy(alpha = (if (contemplative) 0.14f else 0.10f) * reveal))
             .clarityFocusRing(interaction, CircleShape)
             .clarityClickable(
                 interactionSource = interaction,
