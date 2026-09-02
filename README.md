@@ -1,192 +1,179 @@
 # Clarity Now
 
-A queue based personal productivity app for Android. Your life has a small number of
-areas of focus, each area has exactly one active item, and everything else waits in a
-queue. Complete the active item and the next one is promoted.
+**Most task apps hand you a list of forty things and ask you to pick. Picking is the hard
+part.**
 
-Around that sit three reflective features powered by one deterministic engine:
-**Clarity Pulse**, a daily behavioral observation with a one tap answer, **Momentum**,
-a calm progress mirror, and the **Clarity Report**, a weekly narrative. **Trail**, a
-chronological event log, is the source of truth from which every piece of state and
-every sentence derives.
+Clarity Now gives each area of your life one active item. Everything else waits in a queue
+behind it. You only ever see what is next.
 
-Alongside them: **focus sessions** on a dark screen with an arc instead of a countdown,
-**six home screen widgets** so the app does not have to be opened to be useful, an
-**unfiled inbox** for writing something down without deciding where it goes, an
-**encrypted backup** you make and keep yourself, an **adjustable text size** on top of
-the phone's own, and a **calm mode** that takes the color down without taking the
-meaning out.
+Free, open source, and offline by construction: the app has no `INTERNET` permission at
+all, which is a fact your phone enforces rather than a promise this file makes.
 
 Built by Kamsiob.
 
----
+<p align="center">
+  <img src="docs/screenshots/01-areas-light.png" width="260" alt="The Areas screen: one card per area, each showing its single active item">
+  <img src="docs/screenshots/02-area-sheet.png" width="260" alt="An area opened, showing its active item and the queue behind it">
+  <img src="docs/screenshots/05-trail.png" width="260" alt="The Trail: every event, newest first, grouped by day">
+</p>
 
-## What this app does not do
-
-These are checkable facts rather than promises, and most of them are enforced by a
-build test rather than by good intentions.
-
-- **No internet permission.** The merged manifest is checked on every build. Android
-  will refuse any attempt this app makes to open a connection, and you can verify that
-  yourself in the app info screen
-- **No accounts, no cloud, no servers.** There is nowhere for your data to go
-- **No analytics, no telemetry, no crash reporting, no advertising, no third party
-  SDKs**
-- **No AI, no model, no inference.** Every sentence the app writes about your week
-  comes from arithmetic over your own event log and a library of hand written
-  sentences. There is no model on the device and no call to one anywhere else
-- **No subscription, no in app purchase, no locked features, no upgrade prompts.**
-  Every feature is available to everyone immediately. The only money related element
-  in the whole app is one link, on two screens, that you never have to press
-
-Your areas, items, history, reflections and reports live in one database inside this
-app's private storage. Erase all data in Settings removes everything permanently, and
-so does uninstalling.
+<p align="center">
+  <em>Left: one active thing per area, everything else waiting.
+  Middle: open an area to see its queue and make any of it active in one tap.
+  Right: everything you have done, back to the day you installed it.</em>
+</p>
 
 ---
 
-## Build state
+## Why it works this way
 
-The app is being built in thirteen phases. **Twelve are done or built, and phase 9 is
-the one substantial piece left.**
+**Prioritizing is the expensive step, so the app does it once and then holds the result.**
+An area is a part of your life you want to keep track of. Each one holds exactly one
+active item, and the rest of that area's work sits in a queue you do not have to look at.
+Finishing the active item promotes the next one. There is no screen in this app that shows
+you forty things.
 
-Current state, in detail: `docs/BUILD_STATE.md`. Remaining work, with acceptance
-criteria on every ticket: the [issue board](https://github.com/kamsiob/clarity-now/issues).
+**Nothing here can break.** No streaks, no scores, no badges, no completion percentage.
+Leaving for a month costs nothing, and when you come back the app says so and offers to
+put your active items back in their queues so you can choose again. It never counts the
+days you were away back to you.
 
-| phase | what it delivers | state |
-|---|---|---|
-| 1 | Foundations: theme, fonts, event log, reducer, replay harness, golden fixture | done |
-| 2 | Areas, items, the queue, swipe gestures, the promotion animation | done |
-| 3 | Trail | done |
-| 3b | Executive function retrofit: the unfiled inbox, first steps, estimates, calm mode | done |
-| 3c | Design foundations: the value ladder, tracking, the type scale | done |
-| 4 | Focus sessions, and the first Contemplative surface | done |
-| 5 | The logic engine's five layers, and the simulator | done |
-| 6 | Pulse | done |
-| 7 | Momentum | done |
-| 8 | Week snapshots and the Clarity Report | done |
-| 9 | The sentence corpus | in progress |
-| 9b | Guidance, layer six | not started |
-| 10 | Onboarding and the tutorial | built |
-| 11 | Settings, About, export, import, erase | built |
-| 12 | Six widgets, three shortcuts, a quick settings tile | built |
-| 12b | Design surfaces: the scroll edge, the field, the Trail's icon column | built |
-| 12c | The re-entry screen | not started |
-| 13 | Baseline profile, accessibility pass, store listing, release | in progress |
+**Everything the app says about you comes from your own log, and it never invents.** The
+Pulse, the weekly Report and the Momentum screen are written by a deterministic engine
+over your own events, using a corpus of hand written sentences. There is no model on the
+device and no call to one anywhere else. A sentence that cannot be substantiated against
+the log is not shown.
 
-**What phase 9 is.** The engine, the rules, the facts and every surface exist and
-render. What the sentence benches do not yet have is depth: the families that fire
-most often carry eight to eighteen phrasings each against a target of sixty to a
-hundred, so the app is quiet more often than it should be and repeats itself sooner
-than it should. That is authoring, it is measured by a simulator that plays eleven
-synthetic years, and the current reading is in `docs/BUILD_STATE.md`.
+<p align="center">
+  <img src="docs/screenshots/04-report.png" width="260" alt="The Clarity Report, a dark page in a serif typeface with a week's observations">
+  <img src="docs/screenshots/03-momentum.png" width="260" alt="The Momentum screen: a fortnight of activity dots and this week's counts">
+</p>
+
+<p align="center">
+  <em>Left: a page about your week, written on your phone every Sunday.
+  Right: what you actually did, counted. Nothing scored.</em>
+</p>
+
+---
+
+## What is in it
+
+- **Areas and queues.** One active item each. Swipe right to complete, left to swap. Open
+  an area to see the queue and promote anything in it in one tap.
+- **Focus sessions.** One item on a timer with nothing else on the screen. Add time
+  without stopping. End early whenever you want: a six minute session is recorded as six
+  minutes of focus and the app does not comment on it.
+- **The Pulse.** One observation and one question a day, answered with one tap. Turn it
+  off in Settings.
+- **The Clarity Report.** A page about your week, written on your device every Sunday.
+- **The Trail.** Every event, back to the day you installed the app. It is the source of
+  truth; areas and items are a cache that can be rebuilt from it at any time.
+- **Six home screen widgets**, three shortcuts and a quick settings tile, so the app does
+  not have to be opened to be useful.
+- **An unfiled inbox** for writing something down without deciding where it goes.
+- **Backup you own.** Export the whole log to a file, encrypted with a password or not,
+  and import it back on any device.
+- **Adjustable text size** on top of the phone's own, and a **calm mode** that takes the
+  color and the motion down without taking the meaning out.
+
+---
+
+## Privacy
+
+These are checkable facts, and most of them fail the build if they stop being true.
+
+- **No `INTERNET` permission**, checked on every build against the *merged* manifest
+  rather than the source. Android will refuse any attempt this app makes to open a
+  connection, and you can verify it yourself in the app info screen.
+- **No account, no cloud, no server.** There is nowhere for your data to go.
+- **No analytics, no telemetry, no crash reporting, no advertising, no third party SDKs.**
+- **No AI and no machine learning**, not one library and not one call.
+- **No subscription, no in-app purchase, no locked feature, no upgrade prompt.** The only
+  money related element in the app is one link to Buy Me a Coffee, on two screens, that
+  you never have to press.
+
+Your areas, items, history, reflections and reports live in one database inside this app's
+private storage. `Erase all data` in Settings removes all of it permanently, and so does
+uninstalling.
 
 ---
 
 ## Building it
 
-Requires **JDK 21** and the **Android SDK**. Nothing else, and no system Gradle: the
-wrapper in this repository is the build.
+Requires JDK 21 and the Android SDK. The Android Gradle Plugin does not support JDK 26, so
+set `JAVA_HOME` before every Gradle invocation.
 
-```
-git clone https://github.com/kamsiob/clarity-now.git
-cd clarity-now
-echo "sdk.dir=$HOME/Android/Sdk" > local.properties
-./gradlew :app:installDebug
-```
+```bash
+export JAVA_HOME=/path/to/jdk-21
 
-If your default JDK is not 21, point the build at one:
-
-```
-JAVA_HOME=/path/to/jdk-21 ./gradlew :app:installDebug
+./gradlew verifyClarity          # every automated gate that runs offline
+./gradlew :app:testDebugUnitTest # the unit suite on its own
+./gradlew :app:installDebug      # build and install on a connected device
+./gradlew :app:lintDebug         # Android Lint, against app/lint-baseline.xml
 ```
 
-The debug build installs as `com.kamsiob.claritynow.debug` and is labeled
-`Clarity Now debug`, so it can sit alongside a release install.
+`verifyClarity` runs four things and all four have to stay green:
 
-### Verification
+- **`verifyLanguageHygiene`** fails on an em dash, an en dash, any character above
+  `U+007F`, or a British spelling, across every `.kt`, `.kts`, `.xml`, `.md` and `.pro`
+  file in the repository.
+- **`verifyNoInternetPermission`** fails if any variant's merged manifest declares a
+  network permission.
+- **The unit suite**, including the replay harness and a golden fixture, currently 1,089
+  tests.
+- **Android Lint**, with `warningsAsErrors` and a recorded baseline.
 
+Regenerating the golden fixture is deliberate and never a side effect of a test run:
+
+```bash
+./gradlew :app:testDebugUnitTest -PregenerateGolden=true
 ```
-./gradlew verifyClarity
+
+Content edge case fixtures for device testing, which write importable backup files for
+one area, twelve areas, a forty item queue, very long strings and an idle area:
+
+```bash
+./gradlew :app:testDebugUnitTest --tests '*EdgeCaseFixtures*' -PwriteFixtures=true
 ```
-
-Runs the automated gates: the merged manifest carries no network permission, no source
-or document contains an em dash, an en dash, a non ASCII character or a British
-spelling, and the whole unit test suite passes. Warnings are errors in this project,
-so a warning is a failed build.
-
-The suite is not only unit tests. It replays a committed golden log and asserts byte
-identical state, folds two diverged logs and asserts they merge to the same place,
-plays eleven synthetic years through the language engine and asserts every composition
-rule over the result, checks **every foreground and background pair the app can put on
-screen** against a contrast floor, and refuses a build in which any sentence about a
-person's own data reached a screen by a second path.
 
 ---
 
-## Repository layout
+## How the code is laid out
 
-```
-app/                      the Android application, one module
-CLAUDE.md                 how to work on this repository, read first
-DECISIONS.md              why decisions were made, and what was ruled out
-docs/BUILD_STATE.md       what is done, what is half done, what is known broken
-docs/ARCHITECTURE.md      the code map and the layering rules
-docs/EVENT_FORMAT.md      the event log contract, in prose
-docs/DESIGN_RESEARCH.md   the standing design review behind the visual decisions
-docs/STORE_LISTING.md     the Play listing as final text, and the health policy rules
-docs/CORPUS_ANCHORS.md    ten voice anchors per hot family, so authoring does not drift
-docs/CORPUS_REVIEW.md     a simulated year of engine output, annotated, for reading
-docs/addenda/            directives as they arrived, provenance and not authority
-HANDOFF.md                the things only the owner can do, with the exact steps
-testdata/                 the golden log and the exact state it must produce
-rationale/                review panels and superseded drafts, not needed to build
-```
+`docs/ARCHITECTURE.md` has the full map. The three things that surprise people:
 
-The specification lives in the repository alongside the code, because the app is
-almost entirely specification.
+- **`ClarityEvent` is plain Kotlin and `ClarityEventRow` is the Room entity.** The reducer
+  must not import `androidx.room`, so the log record and the database row are separate
+  types with mappers between them.
+- **`ClarityRepository` is the only writer.** View models never touch a DAO, composables
+  never touch a repository. One write path: build the event, assign lamport and originId,
+  then append and project inside one transaction.
+- **The in-memory `ClarityState` is the projection everything reads.** The Room cache
+  tables exist for cold start speed and paging and can be dropped and rebuilt from the log
+  at any time. A debug action does exactly that as a proof.
 
-| file | what it is |
+`domain.engine`, `domain.guidance`, `domain.query`, `domain.replay` and `domain.corpus`
+are pure Kotlin: no Android imports, no `System.currentTimeMillis`, no `Random`, no
+`String.hashCode()`. `DomainPurityTest` scans all five.
+
+---
+
+## Documents
+
+| file | authority over |
 |---|---|
-| `MASTER_BUILD_PROMPT.md` | behavior, data, build order, and how to operate the engine |
-| `design-v3.md` | visual and interaction source of truth, every dimension in dp |
+| `MASTER_BUILD_PROMPT.md` | behavior, data, build order |
+| `design-v3.md` | everything visual and interactive |
 | `CLARITY_LOGIC_ENGINE.md` | all six engine layers, including guidance |
-| `CORPUS_1_PULSE.md` | the Pulse language |
-| `CORPUS_2_REPORT.md` | the Report and guidance language |
-| `CORPUS_3_MOMENTUM.md` | the Momentum and banner language |
-| `clarity-now-visual-reference-v2.html` | static mock, most screens |
-| `clarity-now-visual-reference-v3.html` | static mock, the screens rebuilt in v3 |
-
-The two HTML files are mocks. Neither is shipping code and neither may be copied into
-the project.
-
----
-
-## The data model, briefly
-
-Every state change is an immutable, append only event. Areas, items, queue positions
-and completion states are computed by replaying the log. Everything else in the
-database is a cache that can be dropped and rebuilt with no data loss.
-
-This exists so that a Linux desktop companion can later sync by exchanging log files
-with no rework. Nothing in version 1 opens a socket. What version 1 has is the format,
-versioned from the first event, tombstones everywhere, a logical clock and a device id
-on every event, fractional order keys, and a replay harness that proves two devices
-diverging and merging reach byte identical state.
-
-`docs/EVENT_FORMAT.md` describes all of it. `testdata/` holds the fixture that any
-second implementation must agree with.
-
----
-
-## Fonts
-
-**Newsreader** and **Hanken Grotesk**, both variable, both under the SIL Open Font
-License, both committed as files in `app/src/main/res/font` with their license texts
-in `app/src/main/res/raw`.
-
-Android's Downloadable Fonts API is never used. It fetches over the network through
-Play Services, and this app has no internet permission.
+| `CORPUS_1_PULSE.md` | Pulse language |
+| `CORPUS_2_REPORT.md` | Report language and the guidance corpus |
+| `CORPUS_3_MOMENTUM.md` | Momentum headline and Areas banner language |
+| `docs/VISUAL_DIRECTION.md` | the visual refresh, its diagnosis and its amendments |
+| `docs/COMPONENT_AND_LAYOUT.md` | the control, container and layout systems |
+| `docs/MOTION_AND_STANDARDS.md` | motion taxonomy, tokens and enforcement |
+| `docs/ONBOARDING_VARIANTS.md` | three tone variants and why one shipped |
+| `DECISIONS.md` | why the project is the way it is |
+| `HANDOFF.md` | what only the owner can do |
 
 ---
 
@@ -194,11 +181,7 @@ Play Services, and this app has no internet permission.
 
 AGPL-3.0. See `LICENSE`.
 
-The source is public so that every privacy claim on this page can be checked rather
-than trusted.
-
 ---
 
-## Contact
-
-hello@kamsiob.com
+Clarity Now is a productivity tool. It does not provide medical advice, diagnosis or
+treatment.
