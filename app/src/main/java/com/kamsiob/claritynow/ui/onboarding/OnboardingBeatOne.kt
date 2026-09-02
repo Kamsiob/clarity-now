@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -289,6 +290,28 @@ private fun DemoCard(card: OnboardingDemoCard, index: Int, promoted: Boolean) {
                 )
             }
         }
+        // **The queue, shown rather than asserted.** Issue #66, and it could only be done
+        // once issue #65 put the same line on the real card: this is `queue_waiting`, the
+        // one plural the card and the All Areas widget also read, so it is the line a
+        // person meets on their own screen rather than a picture of one.
+        //
+        // The top card's count falls by one as the next item takes its place, and it does
+        // it on the same fade the two titles cross on, so the whole of "the rest wait in
+        // line behind it" happens in front of somebody in one movement. Absent at zero,
+        // as it is on the real card, which is the other half of what the object is.
+        val waiting = card.waiting - if (promoted) 1 else 0
+        if (waiting > 0) {
+            Spacer(Modifier.height(ClaritySpacing.scaled(6.dp)))
+            Text(
+                text = pluralStringResource(R.plurals.queue_waiting, waiting, waiting),
+                style = type.caption,
+                color = contemplative.textDim,
+                modifier = Modifier.graphicsLayer {
+                    alpha = parts[2].value
+                    translationY = (1f - parts[2].value) * rise.toPx()
+                },
+            )
+        }
     }
 }
 
@@ -299,6 +322,21 @@ private data class OnboardingDemoCard(
     val colorHex: String,
     val title: String,
     val nextTitle: String?,
+    /**
+     * How many items are behind the active one. Issue #66.
+     *
+     * **The queue was the one thing this beat asserted and never showed.** The line under
+     * the cards said the rest wait in line behind the active item, and four cards each
+     * holding one title with nothing visible behind them is a to do list with a haircut:
+     * a person finished onboarding having never seen evidence that anything was waiting.
+     *
+     * It is `queue_waiting`, which is the same string the real area card and the All
+     * Areas widget read, so what a person meets here is the line they meet on their own
+     * screen ten seconds later. Absent at zero on two of the four cards, exactly as the
+     * real card is absent at zero, because that is also part of the object: an area with
+     * nothing behind it says nothing.
+     */
+    val waiting: Int,
 )
 
 @Composable
@@ -308,24 +346,28 @@ private fun demoCards(): List<OnboardingDemoCard> = listOf(
         colorHex = AreaPalette.defaultColorForIndex(0),
         title = stringResource(R.string.onboarding_demo_item_one),
         nextTitle = stringResource(R.string.onboarding_demo_next_one),
+        waiting = 3,
     ),
     OnboardingDemoCard(
         areaName = stringResource(R.string.onboarding_demo_area_two),
         colorHex = AreaPalette.defaultColorForIndex(1),
         title = stringResource(R.string.onboarding_demo_item_two),
         nextTitle = null,
+        waiting = 0,
     ),
     OnboardingDemoCard(
         areaName = stringResource(R.string.onboarding_demo_area_three),
         colorHex = AreaPalette.defaultColorForIndex(2),
         title = stringResource(R.string.onboarding_demo_item_three),
         nextTitle = null,
+        waiting = 1,
     ),
     OnboardingDemoCard(
         areaName = stringResource(R.string.onboarding_demo_area_four),
         colorHex = AreaPalette.defaultColorForIndex(3),
         title = stringResource(R.string.onboarding_demo_item_four),
         nextTitle = null,
+        waiting = 0,
     ),
 )
 

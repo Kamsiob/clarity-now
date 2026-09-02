@@ -128,6 +128,15 @@ fun OnboardingRoute(
 
         LaunchedEffect(state.beat) {
             if (state.beat != OnboardingBeat.THE_REVEAL) {
+                // **The closing line is snapped away rather than left where it stopped.**
+                // Its fade runs in a child coroutine of this effect, and leaving beat 3
+                // cancels this effect and the child with it. A person who taps through
+                // beat 3 rather than waiting cancels it mid hold, at full opacity, and
+                // `Nothing here can break.` then stayed on the screen for the whole of
+                // beat 4, drawn over the Pulse sample's second answer. It is the one
+                // defect in this sequence that only appears on the fast path, which is
+                // the path the fifteen second budget is about.
+                closing.snapTo(0f)
                 // Leaving the reveal closes the iris again, which is design-v3.md 8.2
                 // item 6's world transition back into the Contemplative room that beat 4
                 // is read in. Beats 1 and 2 have never opened it, so this is a no-op.
@@ -275,7 +284,11 @@ fun OnboardingRoute(
                         }
                     }
 
-                    if (closing.value > 0f) {
+                    // Guarded on the beat as well as on the opacity, because the snap
+                    // above happens in an effect and effects run after the frame that
+                    // caused them. Without this the stranded line would still be drawn
+                    // once, on the first frame of beat 4.
+                    if (state.beat == OnboardingBeat.THE_REVEAL && closing.value > 0f) {
                         ClosingLine(opacity = closing.value)
                     }
 

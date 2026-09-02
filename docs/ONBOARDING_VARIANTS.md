@@ -160,3 +160,50 @@ the X-not-Y antithesis that `A record, not a scorecard` was rejected for, and
 `One question a day. One tap. You can turn it off.` is the three fragment triad that
 `No account. No internet. No streaks.` was rejected for. Choosing a variant is not the same
 as auditing it, and the audit found the same two shapes had walked back in.
+
+---
+
+## What issue #66 changed, and the arithmetic that had to still hold
+
+Focus group B found beat 1 saying the mechanic without showing it. The audit that opened
+issue #66 found the other half: of the five things onboarding exists to convey,
+`MASTER_BUILD_PROMPT` 13.1 lists two that had no carrier anywhere in the sequence.
+
+**The queue is shown now rather than asserted.** Beat 1's four demo cards carry the same
+`queue_waiting` line the real area card and the All Areas widget carry, so `3 waiting`
+under Work is the line a person meets on their own screen a few taps later rather than a
+picture of one. It falls to `2 waiting` on the same fade the completed title crosses on,
+so the whole of `The rest wait in line behind it` happens in front of somebody in one
+movement, and it is absent on the two cards with nothing behind them, because that is the
+other half of what the object is.
+
+**This was only possible because issue #65 landed first**, which is what the issue said:
+the real card refused to say how much was waiting, so onboarding could not show a person
+something they were about to stop seeing. Both were closed together for that reason.
+
+**The Report caption carries the promise about invention.** It reads:
+
+> Every Sunday, a page about your week. It notices what happened and says it plainly. It
+> does not make anything up. Written on this phone, never sent anywhere.
+
+The Report is the surface that does the noticing, so the promise belongs in its own caption
+rather than in a sixth moment, which the polish pass constraint excluded and which beat 4
+had no room for. `It does not make anything up` is six words in the register the rest of
+the sequence speaks: it describes the app rather than the reader, and it says what the app
+does not do as plainly as what it does. The other half of that conveyance, that it never
+judges, was already carried one card above by `There is no score anywhere in this app.`
+
+**The arithmetic, because the budget is a criterion rather than an aspiration.**
+
+Beat 4's Report caption went from 16 words to 28. Beat 1 gained no words at all: a count is
+two characters and reads at a glance. So the whole sequence grew by 12 words.
+
+At the 200 words per minute a slow reader manages on unfamiliar copy, 12 words is 3.6
+seconds. Counted rather than estimated: every onboarding string with the fork's longer
+branch taken comes to **238 words**, which is **71 seconds** read in full and leaves 19
+seconds of the 90 second budget. Before this change it was 226 words and 68 seconds.
+
+Tapped through without reading, nothing changed at all: four beats, one tap each, plus the
+fork's own tap, and the two auto advances that were removed earlier in the pass are still
+removed. That is five taps and no wait, which is the same count the 15 second budget was
+measured against.

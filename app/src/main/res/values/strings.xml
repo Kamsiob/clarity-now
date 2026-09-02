@@ -1200,7 +1200,21 @@
     <string name="onboarding_depth_pulse_eyebrow">Pulse sample</string>
     <string name="onboarding_depth_report_eyebrow">Clarity Report</string>
     <string name="onboarding_depth_report_headline">Your week, in one page.</string>
-    <string name="onboarding_depth_report_caption">Every Sunday, a page about your week. It is written on this phone and never sent anywhere.</string>
+    <!--
+        Issue #66, and the second sentence is why this line changed.
+
+        Five things onboarding exists to convey, and one had no carrier anywhere in the
+        sequence: that the app notices what actually happened and says it plainly, and
+        never invents. The Report is the surface that does the noticing, so its own
+        caption is where that belongs rather than in a sixth moment.
+
+        `It does not make anything up` is the whole of the promise in six words, in the
+        register the rest of the sequence uses: it describes the app, not the person, and
+        it says what the app does not do as plainly as what it does. The other half of the
+        conveyance, that it never judges, is already carried by the Momentum caption above
+        it, which says there is no score anywhere in this app.
+    -->
+    <string name="onboarding_depth_report_caption">Every Sunday, a page about your week. It notices what happened and says it plainly. It does not make anything up. Written on this phone, never sent anywhere.</string>
 
     <!--
         Addendum 01 8b, and the one line the whole item is about. It names the cadence, the

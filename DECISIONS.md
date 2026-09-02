@@ -5973,3 +5973,46 @@ the handler's own catch, because a canceled gesture cancels the coroutine the ha
 block runs in and every suspension inside a canceled coroutine throws at once, so an
 `animateTo` there would never draw a frame. That is the kind of thing that looks correct
 and does nothing, which is why it is written down here.
+
+## Onboarding shows the queue and says what the app will not do, #66
+
+Two of the five things `MASTER_BUILD_PROMPT` 13.1 says onboarding exists to convey had no
+carrier anywhere in the sequence. Both are closed without a new moment, which the polish
+pass constraint excluded and which beat 4's twenty five second budget had no room for.
+
+**The queue is shown rather than asserted, and issue #65 is what made that possible.** The
+demo cards carry the same `queue_waiting` line the real area card and the All Areas widget
+carry, so `3 waiting` under Work is the line a person meets on their own screen a few taps
+later rather than a picture of one. It falls to `2 waiting` on the same fade the completed
+title crosses on, so the whole of `The rest wait in line behind it` happens in front of
+somebody in one movement, and it is absent on the two cards with nothing behind them,
+because that is the other half of what the object is. The issue said these two were
+tangled and should be decided together, and they were.
+
+**The Report caption carries the promise about invention**, because the Report is the
+surface that does the noticing. `It does not make anything up` is six words in the register
+the rest of the sequence speaks: it describes the app rather than the reader, and it says
+what the app does not do as plainly as what it does. The other half of that conveyance,
+that it never judges, was already one card above, in `There is no score anywhere in this
+app.`
+
+The arithmetic is in `docs/ONBOARDING_VARIANTS.md` and it was counted rather than
+estimated: 238 words with the fork's longer branch taken, 71 seconds at 200 words per
+minute, against a 90 second budget. Tapped through, five taps and no wait, unchanged.
+
+## A defect found by reading the sequence rather than the diff
+
+Walking beat 3 on the phone to check the two changes above found something neither issue
+had named. **`Nothing here can break.` stayed on the screen through the whole of beat 4**,
+drawn over the Pulse sample's second answer, and it only ever happened to somebody who
+tapped through beat 3 rather than waiting.
+
+The closing line's fade runs in a child coroutine of the reveal's effect. Leaving beat 3
+cancels the effect and the child with it, so a tap during the hold strands the line at full
+opacity and nothing ever brings it back down. It is snapped away on the beat change now,
+and the line is guarded on the beat as well as on the opacity, because an effect runs after
+the frame that caused it and one stranded frame is still a stranded frame.
+
+It is worth recording as a shape rather than as a bug. **An animation that owns a piece of
+state has to put that state back on every exit, not only on the exit it was written for**,
+and the exit it was written for is always the slow one somebody watched while building it.
