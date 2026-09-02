@@ -2,6 +2,7 @@ package com.kamsiob.claritynow.ui.areas
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
@@ -9,6 +10,8 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -203,8 +207,20 @@ private fun MoodStrip(selected: AreaMood, onSelect: (AreaMood) -> Unit) {
     ) {
         AreaPalette.moods.forEach { mood ->
             val isSelected = mood.name == selected.name
+            val interaction = remember(mood.name) { MutableInteractionSource() }
+            val pressed by interaction.collectIsPressedAsState()
+            // **The ring thickens, issue #67.** A mood pill is six slivers of six
+            // different colors, so no single ink drawn on it reads on all of them and the
+            // 6 percent ground is as invisible here as it is on a swatch. What the pill
+            // already owns is a ring in the sheet's own ink, on the sheet's own ground,
+            // where `inkPrimary` is the verified reading. So a press brings it in at
+            // 1.5dp and a selected pill's 2dp ring grows to 3.5, which is a change on
+            // every pill in every state rather than only on the seven that are not
+            // selected. A swatch answers with a ring too and for the same reason, in the
+            // one ink measured against that swatch; the two controls speak one language
+            // in the two forms each of them owns.
             val ringWidth by animateDpAsState(
-                targetValue = if (isSelected) 2.dp else 0.dp,
+                targetValue = (if (isSelected) 2.dp else 0.dp) + (if (pressed) 1.5.dp else 0.dp),
                 animationSpec = motion.springSnappy(),
                 label = "moodRing",
             )
@@ -217,8 +233,12 @@ private fun MoodStrip(selected: AreaMood, onSelect: (AreaMood) -> Unit) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.clarityClickable(
+                    interactionSource = interaction,
                     haptic = ClarityHapticEvent.TAP,
                     onClickLabel = mood.name,
+                    // The ring above is this control's press, and rule 11 gives an
+                    // element one separation device and one answer to a thumb.
+                    showPress = false,
                 ) { onSelect(mood) },
             ) {
                 Box(
@@ -227,8 +247,8 @@ private fun MoodStrip(selected: AreaMood, onSelect: (AreaMood) -> Unit) {
                         .padding(1.5.dp)
                         .then(
                             // A zero width border still lays down a hairline, so the
-                            // ring is attached only while this mood is the selected one.
-                            if (isSelected) {
+                            // ring is attached only while there is a ring to draw.
+                            if (isSelected || pressed) {
                                 Modifier.border(ringWidth, colors.inkPrimary, RoundedCornerShape(9.5.dp))
                             } else {
                                 Modifier
@@ -314,10 +334,45 @@ private fun SwatchGrid(
     }
 }
 
+/**
+ * One color. Issue #67, and the one control in the app whose press cannot be a veil.
+ *
+ * `clarityClickable`'s 6 percent ink ground is the app's press treatment everywhere else
+ * and it is invisible here, because the thing being pressed **is** a color: 6 percent of
+ * near black over `#22C55E` is a shade of green a person cannot see under their own thumb.
+ * So this control opts out of it and answers with a ring instead.
+ *
+ * ## The ring is drawn inside, in the swatch's own contrast ink
+ *
+ * `swatchCheckColor` picks white or ink by measurement against this exact color, and the
+ * worst of the 48 reads 4.23 to one, so a ring in that ink is visible on every swatch in
+ * the palette by construction rather than by inspection. It is drawn **inside** the
+ * swatch, because the gutter outside it already belongs to the selection ring and two
+ * rings in one gutter is one ring nobody can read.
+ *
+ * ## Why not the obvious answer, `design-v3.md` 15
+ *
+ * The obvious answer is a press scale, which is what `clarityPressScale` exists for and
+ * what a button gets. On a tile in a grid of six it reads as a wobble: the neighbors do
+ * not move, so the pressed one appears to come loose. Scale also collides with what this
+ * control already says with size, since a **selected** swatch stands at 1.06. A ring
+ * cannot collide with either. Nothing in the grid moves, the tile keeps its footprint,
+ * and the press is legible next to a selection rather than confusable with it.
+ *
+ * ## Calm mode and reduce motion, 8.3
+ *
+ * The ring fades rather than travels, so 8.3's rule that every animation becomes a 150ms
+ * crossfade leaves it doing exactly what it already does. This is the reason the shape
+ * morph the FAB uses was not the answer here: 8.3 gates a spatial change off entirely,
+ * which would leave the swatches with no press feedback for the people who asked for less
+ * motion, which is the defect this fixes rather than a version of it.
+ */
 @Composable
 private fun Swatch(hex: String, selected: Boolean, onClick: () -> Unit) {
     val motion = clarityMotion()
     val accent = parseAreaColor(hex)
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
         targetValue = if (selected) 1.06f else 1f,
         animationSpec = motion.springSnappy(),
@@ -327,6 +382,16 @@ private fun Swatch(hex: String, selected: Boolean, onClick: () -> Unit) {
         targetValue = if (selected) 2.5.dp else 0.dp,
         animationSpec = motion.springSnappy(),
         label = "swatchRing",
+    )
+    // Alpha rather than width, so a press is a crossfade under 8.3 and not a movement.
+    val press by animateColorAsState(
+        targetValue = if (pressed) {
+            swatchCheckColor(accent).copy(alpha = PRESS_RING_ALPHA)
+        } else {
+            Color.Transparent
+        },
+        animationSpec = motion.effectsFast(),
+        label = "swatchPress",
     )
 
     Box(
@@ -345,7 +410,17 @@ private fun Swatch(hex: String, selected: Boolean, onClick: () -> Unit) {
             .aspectRatio(1f)
             .clip(RoundedCornerShape(16.dp))
             .background(accent)
-            .clarityClickable(haptic = ClarityHapticEvent.TAP, onClickLabel = hex, onClick = onClick),
+            .border(PRESS_RING_WIDTH, press, RoundedCornerShape(16.dp))
+            .clarityClickable(
+                interactionSource = interaction,
+                haptic = ClarityHapticEvent.TAP,
+                onClickLabel = hex,
+                // The one control in the app that opts out of the ink ground, and the
+                // ring above is what it opts out in favor of. See the note on this
+                // function: 6 percent of anything over a saturated fill is not a press.
+                showPress = false,
+                onClick = onClick,
+            ),
         contentAlignment = Alignment.Center,
     ) {
         AnimatedVisibility(
@@ -364,3 +439,15 @@ private fun Swatch(hex: String, selected: Boolean, onClick: () -> Unit) {
         }
     }
 }
+
+/**
+ * The press ring on a swatch. `design-v3.md` 8.2 sets the app's press ground at 6 percent
+ * and this is the one control that cannot use it, so the value is named here rather than
+ * pretending to belong to that ladder.
+ *
+ * 0.85 rather than full, so the ring reads as a touch rather than as a second selection
+ * mark, and 2dp because 1dp on a 16dp corner reads as an artifact of the clip.
+ */
+private const val PRESS_RING_ALPHA = 0.85f
+
+private val PRESS_RING_WIDTH = 2.dp

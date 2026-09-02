@@ -280,7 +280,7 @@ internal fun waitingLine(context: Context, queueCount: Int): String? =
     if (queueCount <= 0) {
         null
     } else {
-        context.resources.getQuantityString(R.plurals.widget_waiting, queueCount, queueCount)
+        context.resources.getQuantityString(R.plurals.queue_waiting, queueCount, queueCount)
     }
 
 /** design-v3.md 12.1's light tint, the middle of 3 to 5 percent. */

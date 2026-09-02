@@ -227,7 +227,7 @@ fun AreaCardContent(
         }
 
         FirstStepLine(area = area)
-        IdleLine(area = area)
+        StatusLine(area = area)
         }
         FocusDeck(area = area, accent = accent)
     }
@@ -322,30 +322,77 @@ private fun FocusDeck(area: AreaCardModel, accent: Color) {
     }
 }
 
+/**
+ * Row four, `design-v3.md` 10.3: the status line, drawn only when it carries information.
+ *
+ * > Idle areas show `Last active 21 days ago`. In-session areas show the live countdown.
+ * > An ordinary active area shows nothing.
+ *
+ * ## The queue count, issue #65, and why it is a choice rather than an addition
+ *
+ * This is a queue app whose main screen hid the queue: with eleven things behind Work the
+ * card was identical to the day there was one. The app knew and would not say, while the
+ * All Areas widget printed the count on the home screen. So the count is here now, in the
+ * card's own caption and ink, **with no badge, no dot and no color**, which is what the
+ * focus group asked for and what `CLAUDE.md` rule 10 requires in any case.
+ *
+ * It is one line and not two, because 10.3 caps the card at four rows and the budget was
+ * already spent. So this row states one thing, chosen in this order:
+ *
+ * 1. **A running session states nothing here.** The countdown is the status, and it has
+ *    its own deck below. Two status rows for one card is the four line budget broken by a
+ *    surface that already had its answer
+ * 2. **A queue states what is waiting.** This is the fact a person opens the screen for
+ * 3. **An idle area with no queue states how long it has been.** The count would be zero
+ *    and absent, so the row is free for the one thing left to say
+ *
+ * The obvious composition, `Last active 3 days ago, 3 waiting`, is the one thing rule 14
+ * says to interrogate, and it fails on its own terms: it wraps to two rows at 200 percent
+ * text and it says twice what the card already says once, because an idle area with a
+ * queue is titled `Pick what is next` two rows above. Speech has no line budget and takes
+ * both, which is what `areaCardDescription` builds.
+ */
 @Composable
-private fun IdleLine(area: AreaCardModel) {
+private fun StatusLine(area: AreaCardModel) {
     val colors = LocalClarityColors.current
     val type = LocalClarityTypography.current
-    if (!area.isIdle) return
-    // **An area nothing has ever been in draws no status line at all.**
-    //
-    // Fixing `Last active today` on a brand new card left it reading `Add your first item`
-    // over `Nothing here yet`, which is two sentences making one point on the emptiest card
-    // in the app. The title is the invitation and it is enough; the line below exists to
-    // report a last activity, and there has not been one.
-    if (area.neverHeldAnything) return
+
+    // 1. The deck is the status while a session is running.
+    if (area.focusMinutesRemaining != null) return
+
+    val text = when {
+        // 2. What is behind the active item, in the words the widget uses.
+        area.queueLength > 0 -> pluralStringResource(
+            R.plurals.queue_waiting,
+            area.queueLength,
+            area.queueLength,
+        )
+
+        // 3. **An area nothing has ever been in draws no status line at all.**
+        //
+        // Fixing `Last active today` on a brand new card left it reading `Add your first
+        // item` over `Nothing here yet`, which is two sentences making one point on the
+        // emptiest card in the app. The title is the invitation and it is enough; this
+        // line exists to report a last activity, and there has not been one.
+        !area.isIdle || area.neverHeldAnything -> return
+
+        area.daysSinceLastEvent <= 0 -> stringResource(R.string.area_last_active_today)
+
+        else -> pluralStringResource(
+            R.plurals.area_last_active_days,
+            area.daysSinceLastEvent,
+            area.daysSinceLastEvent,
+        )
+    }
 
     Text(
-        text = when {
-            area.daysSinceLastEvent <= 0 -> stringResource(R.string.area_last_active_today)
-            else -> pluralStringResource(
-                R.plurals.area_last_active_days,
-                area.daysSinceLastEvent,
-                area.daysSinceLastEvent,
-            )
-        },
+        text = text,
         style = type.caption,
         color = colors.inkSecondary,
+        // One line, for the budget. A count never reaches it and a last active line at
+        // 200 percent would, and the age is the half of this row that can be lost.
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
         modifier = Modifier.padding(top = ClaritySpacing.tight),
     )
 }

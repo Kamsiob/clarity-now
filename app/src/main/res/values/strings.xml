@@ -75,6 +75,18 @@
         <item quantity="one">In focus, %d minute left</item>
         <item quantity="other">In focus, %d minutes left</item>
     </plurals>
+    <!--
+        How many items are behind the active one. Read by the area card's status line
+        and by the All Areas widget, and it is deliberately one resource rather than
+        two identical ones: the same fact stated in two places is the definition of a
+        string that drifts. Absent at zero rather than reading `0 waiting`, for the
+        reason the inbox chip is absent at zero. A direct readout of a queried number,
+        which is what CLAUDE.md rule 8 keeps in this file.
+    -->
+    <plurals name="queue_waiting">
+        <item quantity="one">%d waiting</item>
+        <item quantity="other">%d waiting</item>
+    </plurals>
 
     <!-- Swipe and row actions, design-v3.md 10.3.1 -->
     <string name="action_complete">Complete</string>
@@ -1277,9 +1289,11 @@
         widget never reads a corpus, so every sentence it can draw is either here or is
         a name the person typed.
 
-        `widget_waiting` is a direct readout of a queried number, which is what CLAUDE.md
-        rule 8 keeps in this file. It is absent at zero rather than reading `0 waiting`,
-        for the reason the inbox chip is absent at zero.
+        The count of what is waiting is `queue_waiting`, up with the card status lines,
+        because the card's fourth row and this widget state one fact and must state it
+        one way. It is a direct readout of a queried number, which is what CLAUDE.md
+        rule 8 keeps in this file, and it is absent at zero rather than reading
+        `0 waiting`, for the reason the inbox chip is absent at zero.
 
         The two reconfigure lines are the one place a widget explains itself. They name
         what happened in one plain sentence and offer the fix in the next, per
@@ -1297,10 +1311,6 @@
     <string name="widget_all_areas_description">Every area, and what is active in each one.</string>
 
     <string name="widget_idle">Idle</string>
-    <plurals name="widget_waiting">
-        <item quantity="one">%d waiting</item>
-        <item quantity="other">%d waiting</item>
-    </plurals>
     <plurals name="widget_and_more">
         <item quantity="one">and %d more</item>
         <item quantity="other">and %d more</item>

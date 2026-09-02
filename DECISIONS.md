@@ -5755,3 +5755,114 @@ baseline had found them and been told to be quiet. `UnusedResources` is enforced
 dead for eleven phases, wired up in this pass, and retired in the same pass, because using
 it produced two sentences making one point on the emptiest card in the app. Wiring
 something up is not the same as it being needed.
+
+# Closing the deferred issues, September 2026
+
+The polish pass ended with seven issues logged as needing a decision rather than a detail
+fix. Deferring them was the right call at the time and closing them is the work here. Each
+one gets its reasoning recorded, and the ones that section 15 covers name the obvious
+answer and say why the chosen one serves as well or better.
+
+## The Report is recorded, and a report belongs to two weeks at once, #64
+
+`REPORT_GENERATED` had a type, a reducer branch, a Trail row and a reader in
+`FiringHistory`, and nothing wrote it, so the history page could never hold anything and
+the Report could not vary itself week to week. The write is four lines. What needed
+deciding is what a report is filed under.
+
+**A report is generated in one calendar week and describes a different seven days.** 12.3
+generates on the first open of a new week, Sunday start; 11.3 describes the trailing seven
+days ending today. On any day but Sunday those are different spans, and `ReportSchedule`
+already said at length that conflating them is the mistake to avoid. The event now carries
+both. `weekStartKey` is the Sunday, and it is the report's identity: `docs/EVENT_FORMAT.md`
+resolves two reports sharing it as one week's report written twice, and the writer refuses
+a second one for a week that already has one. `windowStartKey` is the first of the seven
+days described, so a past report names the same span its own eyebrow named on the day it
+was read. The Trail row moved onto the second of those, because one report with two
+different dates on it in two places is a defect a person can see.
+
+**The cadence is one function.** `ClarityRepository.reportFiledSince` answers "has this
+calendar week had its report", the writer decides with it under its own lock, and
+`ReportCoordinator.isDue` calls the same function. It was two implementations of one rule
+before, one reading the log and one reading the projection, and two readings of one rule
+are how a screen comes to disagree with the log it was drawn from.
+
+**The payload carries the rendered headline now.** The keys beside it drive the selector
+and cannot be turned back into prose: realizing the variant again months later would be a
+second path to a sentence, which rule 8 closes, and the facts that filled its slots are
+gone. `design-v3.md` section 5 gives past report headlines the display role, and the page
+had a treatment for a string the payload could never supply.
+
+**An empty or withheld week files nothing**, and that is the types saying so rather than a
+choice: `ReportOutcome.Empty` and `ReportOutcome.Suppressed` carry no report, so there is
+no payload to write. A quiet week leaves no row, which is honest.
+
+**An install older than this version has weeks of activity behind its oldest saved
+report.** A list that began halfway with no explanation reads as data loss, so the foot of
+the page names the boundary in one line: `Weeks before August 26, 2026 were shown at the
+time and not saved.` It is a date readout in a fixed frame and it lives in `strings.xml`,
+not the corpus, because there is nothing to observe in "the record starts here".
+
+## The card says how much is waiting, #65
+
+The focus group split and the resolution was to side with Kit in Susan's typography: plain
+text in the card's existing status line, no badge, no dot, no color. That is what shipped.
+The decision left open was where a fourth fact goes on a card `design-v3.md` 10.3 caps at
+four rows.
+
+**Row four states one thing, chosen in this order:** a running session states nothing
+there, because the countdown is the status and it has its own deck; a queue states what is
+waiting; an idle area with no queue states how long it has been.
+
+**The obvious composition is `Last active 3 days ago, 3 waiting`, and it fails on its own
+terms.** It wraps to two rows at 200 percent text, which breaks the budget on the screen
+the app opens on, and it says twice what the card already says once, because an idle area
+with a queue is titled `Pick what is next` two rows above. Speech has no line budget and
+takes both, which is what `areaCardDescription` already built and nothing called until the
+polish pass.
+
+**One resource, two readers.** `widget_waiting` became `queue_waiting` and the card reads
+the same plural the All Areas widget reads. Two identical strings is the definition of a
+string that drifts, and the acceptance criterion was that one fact is stated one way.
+
+## The color swatches answer a thumb with a ring, #67
+
+Section 15's open choice, answered.
+
+**The obvious answer is a press scale.** `clarityPressScale` exists, it is what a button
+gets, and it is one line. On a tile in a grid of six it reads as a wobble: the neighbors do
+not move, so the pressed one appears to come loose rather than to respond. It also collides
+with what this control already says with size, because a selected swatch stands at 1.06.
+
+**The chosen answer is a ring, and each control uses the ring it already owns.** A swatch
+draws it inside, in `swatchCheckColor(accent)`, which is the ink measured against that
+exact color and whose worst reading across the 48 is 4.23 to one, so visibility on every
+swatch is a property of the construction rather than something to spot check. Inside,
+because the gutter outside already belongs to the selection ring and two rings in one
+gutter is one ring nobody can read. A mood pill has no single ink that reads on six slivers
+at once, so its ring thickens instead: 1.5dp arrives on press and a selected pill's 2dp
+grows to 3.5, which is a change on every pill in every state rather than only on the seven
+that are not selected.
+
+**Why not the shape morph.** It was the strongest alternative and `ExpressiveShapes.kt` was
+written for it. 8.3 gates a spatial change off entirely under reduce motion and calm mode,
+which the FAB's own comment records, so a swatch whose only press was a morph would have no
+press feedback at all for the people who asked for less motion. That is the defect this
+issue is about, not a version of it. The ring fades rather than travels, so 8.3's rule that
+every animation becomes a 150ms crossfade leaves it doing exactly what it already does.
+Verified on the Pixel 8 with `animator_duration_scale` at 0.
+
+**`ExpressiveShapes.kt` is deleted, and so is its library.** `MorphShape`,
+`rememberMorph` and `morphingPressShape` had zero call sites and a doc claiming three: "the
+FAB, the completion mark, the color swatches". The FAB implements A.4's shape law with
+`RoundedCornerShape` and the app's own `clarityMotion` springs, which are the Expressive
+spring tokens, so nothing there is hand rolled; the completion mark never used it; and the
+swatches are decided against above. `MASTER_BUILD_PROMPT.md` 3 names the shape morphing
+library in its component list, and carrying an unused dependency to satisfy a word in a
+list is cargo rather than compliance. `androidx.graphics:graphics-shapes` left the build
+with it.
+
+**Both controls opt out of the 6 percent ink ground.** Rule 11 gives an element one
+separation device, and the same reasoning gives a control one answer to a thumb. The ground
+is the app's press everywhere else and it is invisible on a saturated fill, which is the
+whole of why this issue existed.
