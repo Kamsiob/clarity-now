@@ -492,184 +492,22 @@
             column="43"/>
     </issue>
 
-    <issue
-        id="UnusedResources"
-        message="The resource `R.raw.ofl_hanken_grotesk` appears to be unused">
-        <location
-            file="src/main/res/raw/ofl_hanken_grotesk.txt"/>
-    </issue>
 
-    <issue
-        id="UnusedResources"
-        message="The resource `R.raw.ofl_newsreader` appears to be unused">
-        <location
-            file="src/main/res/raw/ofl_newsreader.txt"/>
-    </issue>
 
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.areas_open_settings` appears to be unused"
-        errorLine1="    &lt;string name=&quot;areas_open_settings&quot;>Settings&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="46"
-            column="13"/>
-    </issue>
 
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.area_never_active` appears to be unused"
-        errorLine1="    &lt;string name=&quot;area_never_active&quot;>Nothing here yet&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="75"
-            column="13"/>
-    </issue>
 
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.action_edit` appears to be unused"
-        errorLine1="    &lt;string name=&quot;action_edit&quot;>Edit&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="85"
-            column="13"/>
-    </issue>
 
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.action_cancel` appears to be unused"
-        errorLine1="    &lt;string name=&quot;action_cancel&quot;>Cancel&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="91"
-            column="13"/>
-    </issue>
 
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.action_back` appears to be unused"
-        errorLine1="    &lt;string name=&quot;action_back&quot;>Back&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="97"
-            column="13"/>
-    </issue>
 
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.sheet_color_title` appears to be unused"
-        errorLine1="    &lt;string name=&quot;sheet_color_title&quot;>Area color&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="104"
-            column="13"/>
-    </issue>
 
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.field_note` appears to be unused"
-        errorLine1="    &lt;string name=&quot;field_note&quot;>Note&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="112"
-            column="13"/>
-    </issue>
 
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.field_area` appears to be unused"
-        errorLine1="    &lt;string name=&quot;field_area&quot;>Area&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="115"
-            column="13"/>
-    </issue>
 
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.completed_empty` appears to be unused"
-        errorLine1="    &lt;string name=&quot;completed_empty&quot;>Nothing completed yet.&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="140"
-            column="13"/>
-    </issue>
 
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.undo_area_archived` appears to be unused"
-        errorLine1="    &lt;string name=&quot;undo_area_archived&quot;>Area archived&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="195"
-            column="13"/>
-    </issue>
 
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.cd_area_color_dot` appears to be unused"
-        errorLine1="    &lt;string name=&quot;cd_area_color_dot&quot;>Area color&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="198"
-            column="13"/>
-    </issue>
 
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.cd_reorder` appears to be unused"
-        errorLine1="    &lt;string name=&quot;cd_reorder&quot;>Reorder&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="200"
-            column="13"/>
-    </issue>
 
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.cd_more_actions` appears to be unused"
-        errorLine1="    &lt;string name=&quot;cd_more_actions&quot;>More actions&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="201"
-            column="13"/>
-    </issue>
 
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.cd_momentum_tile_active` appears to be unused"
-        errorLine1="    &lt;string name=&quot;cd_momentum_tile_active&quot;>%1$s, has an active item&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="550"
-            column="13"/>
-    </issue>
 
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.cd_momentum_tile_idle` appears to be unused"
-        errorLine1="    &lt;string name=&quot;cd_momentum_tile_idle&quot;>%1$s, nothing active&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="551"
-            column="13"/>
-    </issue>
 
     <issue
         id="UseKtx"

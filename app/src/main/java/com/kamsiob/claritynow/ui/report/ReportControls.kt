@@ -45,7 +45,15 @@ import com.kamsiob.claritynow.ui.theme.LocalContemplativeColors
 internal fun ReportControls(
     onHistory: () -> Unit,
     onRegenerate: () -> Unit,
-    onCopy: () -> Unit,
+    /**
+     * **Null when there is nothing to copy, which is three of the page's four states.**
+     *
+     * `Empty`, `Withheld` and `Unavailable` have no report text, and the copy lambda was
+     * guarded by an `as?` with no else branch, so the glyph pressed, fired its haptic and
+     * did nothing. A control that acknowledges a press and then does nothing reads as a
+     * fault in the app rather than as an unavailable action.
+     */
+    onCopy: (() -> Unit)?,
     regenerating: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -67,11 +75,16 @@ internal fun ReportControls(
             enabled = !regenerating,
             onClick = onRegenerate,
         )
-        ReportControl(
-            icon = ClarityIcons.copy,
-            description = stringResource(R.string.cd_report_copy),
-            onClick = onCopy,
-        )
+        // Absent rather than disabled. A disabled glyph on a Contemplative surface is a
+        // grey shape a person has to work out; on a page with nothing to copy, the control
+        // simply is not one of the things this page offers.
+        if (onCopy != null) {
+            ReportControl(
+                icon = ClarityIcons.copy,
+                description = stringResource(R.string.cd_report_copy),
+                onClick = onCopy,
+            )
+        }
     }
 }
 

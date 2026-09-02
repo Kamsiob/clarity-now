@@ -192,9 +192,8 @@ internal fun ReportScreen(
         ReportControls(
             onHistory = onHistory,
             onRegenerate = onRegenerate,
-            onCopy = {
-                val composed = page as? ReportPage.Composed
-                if (composed != null) {
+            onCopy = (page as? ReportPage.Composed)?.let { composed ->
+                {
                     copyToClipboard(
                         context = context,
                         label = labels.clipboardLabel,

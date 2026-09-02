@@ -75,6 +75,8 @@ import com.kamsiob.claritynow.ui.components.TabBarHeight
 import com.kamsiob.claritynow.ui.components.TabBarInset
 import com.kamsiob.claritynow.ui.components.clarityClickable
 import com.kamsiob.claritynow.ui.components.clarityPressScale
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.Role
 import com.kamsiob.claritynow.ui.components.clarityFocusRing
 import com.kamsiob.claritynow.ui.components.clarityShadow
@@ -295,6 +297,8 @@ fun AreasScreen(
                         onComplete = { onCompleteArea(area) },
                         onSwap = { onSwapArea(area) },
                         onDelete = { onDeleteArea(area) },
+                        onLongPress = { onLongPressArea(area) },
+                        onMoveToFront = if (index == 0) null else { { onMoveArea(area.id, 0) } },
                         onPromotionPlayed = { onPromotionPlayed(area.id) },
                     )
                 }
@@ -338,10 +342,14 @@ private fun AreaRow(
     onComplete: () -> Unit,
     onSwap: () -> Unit,
     onDelete: () -> Unit,
+    onLongPress: () -> Unit,
+    onMoveToFront: (() -> Unit)?,
     onPromotionPlayed: () -> Unit,
 ) {
     val colors = LocalClarityColors.current
     val shape = RoundedCornerShape(18.dp)
+    val moreActionsLabel = stringResource(R.string.cd_more_actions)
+    val reorderLabel = stringResource(R.string.cd_reorder)
 
     val actions = SwipeActions(
         completeLabel = stringResource(R.string.action_complete),
@@ -385,6 +393,21 @@ private fun AreaRow(
                 // card's description and its click, which is the node a screen reader
                 // actually stops on.
                 .then(rowActions)
+                // The two gestures this card supports beyond a tap, named. Both strings
+                // were written in phase 2 and had no call site until now, so a screen
+                // reader was told about neither the actions menu nor the reordering.
+                .semantics {
+                    customActions = customActions + listOfNotNull(
+                        CustomAccessibilityAction(moreActionsLabel) { onLongPress(); true },
+                        // Reordering is a long press and drag with no non-gesture path at
+                        // all, so a person using a screen reader or switch access could
+                        // not reach it. `Move to front` is the reachable half of the same
+                        // intent and the sheet already offers it.
+                        onMoveToFront?.let { move ->
+                            CustomAccessibilityAction(reorderLabel) { move(); true }
+                        },
+                    )
+                }
                 .then(reorderModifier)
                 .clarityPressScale(cardInteraction, label = "areaCardPress")
                 .clarityClickable(

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Scoped lint suppressions, each with the reason written next to it.
+
+    This file exists because a baseline cannot hold a comment. A baseline is a list of
+    findings somebody decided not to act on, with no record of why, and the polish pass
+    found exactly what that costs: `area_never_active` and `undo_area_archived` sat in
+    `lint-baseline.xml` as accepted UnusedResources findings while a hand written test was
+    added in the next commit to catch the same two strings being dead. The baseline had
+    already found them and had been told to be quiet.
+
+    `UnusedResources` is now enforced. Anything that has to stay unused is named here with
+    its reason instead.
+-->
+<lint>
+    <!--
+        The two font license texts. Nothing in the app reads them: the licenses screen
+        renders string resources, not these files. They ship anyway because the SIL Open
+        Font License requires the license to accompany the font, so removing them because
+        no code points at them would be a licensing defect rather than a cleanup.
+    -->
+    <issue id="UnusedResources">
+        <ignore path="src/main/res/raw/ofl_hanken_grotesk.txt" />
+        <ignore path="src/main/res/raw/ofl_newsreader.txt" />
+    </issue>
+</lint>

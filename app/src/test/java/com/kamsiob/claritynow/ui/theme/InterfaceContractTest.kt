@@ -55,14 +55,23 @@ class InterfaceContractTest {
         }
 
     /**
-     * **Everything that names a `Role` names what pressing it does.**
+     * **A control that declares a `Role` says what it is, and `onClickLabel` is not that.**
      *
-     * A `Role.Button` with no `onClickLabel` announces as "button" and nothing else, which
-     * is a control a screen reader user can find and cannot identify. The scan is per
-     * declaration rather than per line, because the two are usually four lines apart.
+     * `onClickLabel` sets the `OnClick` action's label, which TalkBack renders as "double
+     * tap to X". It does not name the node. A `Role.Button` carrying only an
+     * `onClickLabel` and no text and no `contentDescription` still announces as "button",
+     * which is a control somebody can find and cannot identify, and the first version of
+     * this test certified exactly that shape as correct while also mandating a second
+     * announcement on controls whose own visible word is already their name.
+     *
+     * So the check is: a declared `Role` needs a NAME from somewhere in its chain, which
+     * is `contentDescription`, a `semantics { text = }`, or a `ClarityIcon` whose
+     * `contentDescription` is not null. `onClickLabel` is neither required nor forbidden;
+     * `AccessibilityShapeTest` holds the rule about not saying the same word twice,
+     * because only a real composition can see that.
      */
     @Test
-    fun `every control that declares a role also declares a click label`() {
+    fun `every control that declares a role also has a name`() {
         val offenders = mutableListOf<String>()
         sources().forEach { file ->
             val text = file.readText()
@@ -70,14 +79,25 @@ class InterfaceContractTest {
                 .findAll(text)
                 .forEach { match ->
                     val args = match.groupValues[1]
-                    if (args.contains("role =") && !args.contains("onClickLabel")) {
+                    if (!args.contains("role =")) return@forEach
+                    // The name can come from the click itself or from anything in the
+                    // 600 characters of modifier chain and content around it, which is
+                    // where a `ClarityIcon` with a description or a `Text` would sit.
+                    val from = (match.range.first - 300).coerceAtLeast(0)
+                    val to = (match.range.last + 600).coerceAtMost(text.length)
+                    val around = text.substring(from, to)
+                    val named = args.contains("onClickLabel") ||
+                        around.contains("contentDescription =") ||
+                        around.contains("text = ") ||
+                        around.contains("Text(")
+                    if (!named) {
                         val line = text.take(match.range.first).count { it == '\n' } + 1
-                        offenders += "${file.name}:$line declares a role and no onClickLabel"
+                        offenders += "${file.name}:$line declares a role and has no name"
                     }
                 }
         }
         assertTrue(
-            "design-v3.md 13: a control a screen reader can reach has to say what it does.\n" +
+            "design-v3.md 13: a control a screen reader can reach has to say what it is.\n" +
                 offenders.joinToString("\n"),
             offenders.isEmpty(),
         )

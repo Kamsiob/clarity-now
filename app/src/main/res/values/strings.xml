@@ -43,7 +43,6 @@
         <item quantity="one">Inbox, %d item</item>
         <item quantity="other">Inbox, %d items</item>
     </plurals>
-    <string name="areas_open_settings">Settings</string>
     <string name="areas_open_archive">Archived areas</string>
     <string name="areas_empty_title">No areas yet</string>
     <string name="areas_empty_body">An area is a part of your life you want to keep track of.</string>
@@ -81,26 +80,22 @@
     <string name="action_complete">Complete</string>
     <string name="action_swap">Swap</string>
     <string name="action_delete">Delete</string>
-    <string name="action_edit">Edit</string>
     <string name="action_archive">Archive</string>
     <string name="action_restore">Restore</string>
     <string name="action_move_to_front">Move to front</string>
     <string name="action_reopen">Reopen</string>
     <string name="action_save">Save</string>
-    <string name="action_cancel">Cancel</string>
     <string name="action_add">Add</string>
     <string name="action_done">Done</string>
     <string name="action_never_mind">Never mind</string>
     <string name="action_undo">Undo</string>
     <string name="action_close">Close</string>
-    <string name="action_back">Back</string>
 
     <!-- Sheets -->
     <string name="sheet_add_item_title">Add an item</string>
     <string name="sheet_edit_item_title">Edit item</string>
     <string name="sheet_new_area_title">New area</string>
     <string name="sheet_edit_area_title">Edit area</string>
-    <string name="sheet_color_title">Area color</string>
     <string name="sheet_swap_title">Swap</string>
     <string name="sheet_queue_choice_title">What is next</string>
     <string name="sheet_delete_area_title">Delete this area?</string>
@@ -108,10 +103,8 @@
     <string name="sheet_file_item_title">Move to an area</string>
 
     <string name="field_title">Title</string>
-    <string name="field_note">Note</string>
     <string name="field_note_optional">Note, optional</string>
     <string name="field_area_name">Name</string>
-    <string name="field_area">Area</string>
     <!--
         The two optional fields, design-v3.md 10.17. The first step label is the one
         that document names verbatim, and its placeholder is an example rather than an
@@ -136,7 +129,6 @@
     <string name="sidehead_area_actions">Area</string>
 
     <string name="queue_empty">Nothing waiting.</string>
-    <string name="completed_empty">Nothing completed yet.</string>
     <string name="swap_demoting">This goes back to the front of the queue.</string>
     <string name="queue_choice_dismiss">Leave it idle</string>
 
@@ -207,7 +199,6 @@
     <string name="undo_area_archived">Area archived</string>
 
     <!-- Content descriptions -->
-    <string name="cd_area_color_dot">Area color</string>
     <string name="cd_edit_area">Edit this area</string>
     <string name="cd_reorder">Reorder</string>
     <string name="cd_more_actions">More actions</string>
@@ -587,8 +578,6 @@
     <string name="cd_momentum_activity">Activity, the last %1$d days</string>
     <string name="cd_momentum_pace">Completions by week, the last %1$d weeks</string>
     <string name="cd_momentum_focus_strip">Focus by day, the last %1$d days</string>
-    <string name="cd_momentum_tile_active">%1$s, has an active item</string>
-    <string name="cd_momentum_tile_idle">%1$s, nothing active</string>
 
     <!--
         The Clarity Report, design-v3.md 11.1 and MASTER_BUILD_PROMPT.md 12.3.

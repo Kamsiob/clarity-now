@@ -364,7 +364,14 @@ fun AreasRoute(
                         sheet = back
                     },
                     onDelete = {
-                        sheet = back
+                        // **Everything closes, rather than returning to where it came
+                        // from.** `sheet = back` reopened the area or the inbox on top of
+                        // the undo snackbar and its scrim, so the only way back from a
+                        // delete sat behind the surface that covered it, while the item
+                        // stayed visibly in the list underneath because nothing is written
+                        // until the window closes. A person saw the thing they had just
+                        // deleted, could not see the undo, and had five seconds.
+                        sheet = null
                         // Nothing is written until the window closes, so undo has
                         // nothing to compensate for and the log stays honest. This is
                         // the delete an unfiled item gets too, per Addendum 01 4a:
