@@ -20,6 +20,41 @@ make. All of it is below, with the exact steps.
 
 ## BLOCKED
 
+### Release signing, and it is the one thing standing between this and a real release
+
+Added 2026-09-02, after the polish pass.
+
+The repository has **no release signing config**. `assembleRelease` produces an unsigned
+APK, so the one attached to the v0.13.0 GitHub release is signed with the Android debug
+key: it installs, it runs, and it is not shippable to anyone else.
+
+Two consequences worth knowing before you fix it. A debug signed build **cannot be
+upgraded** by a properly signed one, so anybody who installed the attached APK has to
+uninstall before installing a real release. And Play will refuse the upload outright.
+
+To do it:
+
+1. Create a keystore and keep it somewhere that is backed up and is not this repository:
+   ```
+   keytool -genkeypair -v -keystore clarity-now-release.jks -keyalg RSA -keysize 4096 \
+     -validity 10000 -alias clarity-now
+   ```
+2. Put its path and passwords in `~/.gradle/gradle.properties`, never in the repo:
+   ```
+   CLARITY_STORE_FILE=/absolute/path/clarity-now-release.jks
+   CLARITY_STORE_PASSWORD=...
+   CLARITY_KEY_ALIAS=clarity-now
+   CLARITY_KEY_PASSWORD=...
+   ```
+3. Add a `signingConfigs.release` block to `app/build.gradle.kts` reading those four
+   properties, and reference it from `buildTypes.release`. Make it degrade to unsigned when
+   the properties are absent, so a clone without the keystore still builds.
+4. `./gradlew :app:assembleRelease` and confirm with
+   `apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk`.
+5. **Back the keystore up.** Losing it means never updating this app on Play under the same
+   package name again.
+
+
 ### RESOLVED, 2026-09-01: the phone was disconnected at the start of the polish pass
 
 Left here as a record rather than deleted, because the recovery is worth keeping.
