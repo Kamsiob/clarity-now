@@ -874,6 +874,18 @@ Same purity contract as `domain.engine`. `PlanHistory` derives from `PLAN_OFFERE
 
 **`compose` takes three arguments this declaration does not name**, and each is something the rules below need that the declaration predates. `headline` is 10.4 rule 6, which is written in terms of a declining headline and cannot be evaluated from observations alone. `weekStartKey` is what the plan is filed under and what rule 4 measures two weeks back from; deriving it inside layer 6 would let it disagree with the key the report is filed under, and `ReportComposer.compose` already takes it for that reason. `history` is 7.6's ninety day variant exclusion, without which the same frame is offered every week of the year.
 
+**`PlanState` is the projection, and it is named here because this section is the only
+place in this document that reaches for it.** It is not an engine type. It is
+`domain.replay`'s fold of `PLAN_OFFERED` and `PLAN_ACCEPTED`, declared in `ClarityState.kt`
+beside every other projected entity, and it is what the report screen reads to know whether
+this week's plan has already been accepted. Layer 6 never reads it: composing a plan is a
+pure function of facts and history, and the acceptance is a fact about the log rather than
+an input to the sentence.
+
+```
+data class PlanState(...)   // domain.replay, ClarityState.kt. Not an engine type.
+```
+
 **Four fields of `ClarityPlan` are deliberately absent, and the omissions are the safeguard rather than tidiness.**
 
 - `acceptedAt`. A composed plan has not been accepted. Acceptance is a `PLAN_ACCEPTED` event, it lives in the log and in `PlanState`, and a second place holding one fact is how two devices come to disagree

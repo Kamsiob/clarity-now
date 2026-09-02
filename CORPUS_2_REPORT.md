@@ -2276,7 +2276,7 @@ ob.hard.e06  [N]  What the weeks were like is a different question from what the
 
 **The second branch of the capacity gate.** `MASTER_BUILD_PROMPT.md` 14b.9. When a fall has a precedent in this person's own record, the decline, neglect and fading families are removed from the ranking and this one speaks instead. Its three rules read the three precedent facts, one for the person's weeks, one for their focus, and one for a single area.
 
-**This is the most careful bench in the volume, and five constraints are held by every line in it.** It never states the depth, the duration or the date of any fall, because `Precedent` carries the verdict and nothing else and no measure can reach one. It never claims the person meant it. It never predicts a return. It may not say `this week`, because the precedent is read over twelve weekly buckets and the newest part week is skipped. And it reads as an observation and not as reassurance, which is the same test 6.4 puts on `hardStretch`.
+**This is the most careful bench in the volume, and five constraints are held by every line in it.** It never states the depth, the duration or the date of any fall, because `Precedent` carries the verdict and nothing else and no measure can reach one. It never claims the person meant it. It never predicts a return. It may not say `this week`, because the precedent is read over twelve weekly buckets and the newest part week is skipped. And it reads as an observation and not as reassurance, which is the same test 2.21 puts on `hardStretch`.
 
 **It never names what the shape is a precedent for.** The record holds a shape, the shape has occurred before, and everything past that is the person's to know and not the app's to say.
 

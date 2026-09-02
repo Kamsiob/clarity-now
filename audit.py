@@ -43,7 +43,10 @@ for name, t in TEXT.items():
         if m.group(1) not in TEXT and m.group(1) not in EXISTING_DOCS:
             fail("dangling-file", f"{name} references {m.group(1)}, which does not exist")
 
-secs = {n: {m.group(1) for m in re.finditer(r'^#{2,4}\s+(\d+(?:\.\d+)*)', t, re.M)} for n, t in TEXT.items()}
+# `#{1,4}`, not `#{2,4}`. CORPUS_1_PULSE.md numbers its eleven families as H1
+# (`# 10. QUEUE DRAIN`), so every cross reference to one of them was reported as
+# dangling while the reference was correct and this index was blind to the heading.
+secs = {n: {m.group(1) for m in re.finditer(r'^#{1,4}\s+(\d+(?:\.\d+)*)', t, re.M)} for n, t in TEXT.items()}
 for name, t in TEXT.items():
     for m in re.finditer(r'`?([A-Za-z0-9_\-]+\.md)`?\s+(?:section[s]?\s+)?(\d+(?:\.\d+)*)', t):
         tgt, sec = m.groups()
@@ -115,8 +118,15 @@ for label, pat in [
     if len({frozenset(x) for x in v.values()}) > 1:
         fail("contradiction", f"{label} disagrees across documents: {v}")
 
-# corpus totals must appear identically wherever stated
-for n in ['620','737','162','1,519','10,557','17,200']:
+# Corpus totals must appear identically wherever stated.
+#
+# `17,200` was removed: it was a sizing target from an early plan, it is stated nowhere
+# in the repository any more, and asserting its presence made this check fail on a
+# figure nothing claims. The real guarantee moved to `CorpusTotalsAuditTest`, which
+# recounts EVERY stated total against the keyed lines beneath it and names the file, the
+# stated figure and the counted one. That is why this list should not grow: a hardcoded
+# number here can only ever go stale, and the test cannot.
+for n in ['620','737','162','1,519','10,557']:
     where = [f for f in TEXT if f.endswith('.md') and n in TEXT[f]]
     if not where: fail("stale-total", f"total {n} is stated nowhere; counts may have drifted")
 

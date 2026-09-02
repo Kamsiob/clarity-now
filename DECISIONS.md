@@ -5439,7 +5439,7 @@ On 2026-09-06, the only `hardStretch` week in that persona's year:
   appeared rather than off what qualified, so **the heaviest week of the year stops
   looking heavy and gets a closing line**
 
-An accepted plan can therefore delete the one family `CORPUS_2_REPORT.md` 6.4 exists
+An accepted plan can therefore delete the one family `CORPUS_2_REPORT.md` 2.21 exists
 for, and turn a deliberate silence into a sentence.
 
 **It is a report composer property rather than a layer 6 one, and that was measured
