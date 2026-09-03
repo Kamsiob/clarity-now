@@ -30,8 +30,6 @@
         question is never chased, counted or mentioned. See PulseChip.kt.
     -->
     <string name="areas_chip_pulse_ready">Today\'s Pulse</string>
-    <!-- A direct readout of a queried state, not an observation. 10.12. -->
-    <string name="areas_pulse_ready_now">ready now</string>
     <!--
         The unfiled inbox chip, design-v3.md 10.1 and 10.16. The count is the label
         and the label is plain text: never a badge, never a dot, never a color that
@@ -115,7 +113,6 @@
     -->
     <string name="onboarding_opening_duration">Four screens, about a minute. Nothing is saved until you finish.</string>
     <string name="fab_add_item">Add an item</string>
-    <string name="fab_add_area">Create an area</string>
 
     <!-- Card status lines, design-v3.md 10.3 -->
     <plurals name="area_last_active_days">
@@ -250,6 +247,42 @@
     <string name="cd_archive_delete">Delete %1$s</string>
 
     <!--
+        Manage areas, reached from the header glyph between the archive and the gear.
+
+        **The screen exists because ordering had no visible control at all.** Areas are
+        reordered by picking a card up and holding it, which is a drag, and WCAG 2.2 SC
+        2.5.7 wants every drag to have a single pointer alternative. It had one only in
+        the long press menu, as `Move to top`, which moves a card exactly one place: to
+        the front. Anybody who wanted their third area second had a gesture and nothing
+        else, and a gesture nobody is told about is not a control.
+
+        `Set the order` and not `Reorder your areas`. The screen is titled for the
+        object; the lede is for the one job that is only doable here, and the second
+        sentence sends everything else to the menu that already exists rather than
+        building a second copy of it on this screen.
+    -->
+    <string name="manage_areas_title">Manage areas</string>
+    <string name="manage_areas_lede">Set the order they appear in. Tap an area for everything else.</string>
+    <string name="manage_areas_empty_body">Areas appear here once you have made one, and this is where you put them in the order you want to see them.</string>
+    <string name="cd_manage_areas_open">Manage areas</string>
+    <!--
+        What tapping the row itself does. The row is a button and it needs a name of its
+        own: the name and the count inside it describe the area, not the action, and a
+        screen reader stepping through controls alone would otherwise reach a button that
+        says `Groceries, 2 of 5` and nothing about what pressing it opens.
+    -->
+    <string name="cd_manage_open_area">Manage %1$s</string>
+    <string name="cd_manage_move_up">Move %1$s up</string>
+    <string name="cd_manage_move_down">Move %1$s down</string>
+    <!--
+        The position, spoken and not drawn. A sighted person reads the order off the
+        list; somebody stepping through with TalkBack gets one card at a time and has
+        no way to know where in the run they are, which is exactly the fact the two
+        move buttons act on.
+    -->
+    <string name="cd_manage_position">%1$d of %2$d</string>
+
+    <!--
         Deleting an area, from the Areas list or from the archive. One confirmation
         serves both, `MASTER_BUILD_PROMPT.md` section 5's typed confirmation, because
         one sentence about what a delete does belongs in one place.
@@ -258,7 +291,24 @@
     <string name="delete_area_confirm_hint">Type DELETE to confirm</string>
     <string name="delete_area_confirm_word">DELETE</string>
     <string name="delete_area_keep">Keep this area</string>
-    <string name="undo_item_deleted">Item deleted</string>
+    <!--
+        **Progressive, and the two below it are past tense, because the three acts differ
+        in when they are written.**
+
+        A completion and an archive land immediately and their undo compensates with a
+        second event, so `Item completed` is true the moment it is drawn. A delete is
+        deferred: nothing is written until the five second window closes, so that undoing
+        one leaves no pair of events in the Trail and the log stays an honest record of
+        what a person actually did.
+
+        Which meant that for five seconds the app said `Item deleted` while the item was
+        still on the card, still counted in the inbox door, and still in its queue. The
+        app stating a falsehood about a person's own data is the one thing this product
+        cannot do, and it was doing it on the most consequential act it offers.
+
+        `Deleting` is exactly what is happening, and it reads correctly beside `Undo`.
+    -->
+    <string name="undo_item_deleted">Deleting item</string>
     <!--
         Completing is the easiest act in this app to trigger by accident, because a right
         swipe commits on a flick, and it was the only frequent one with no way back. Five
@@ -967,6 +1017,15 @@
     <string name="settings_erase">Erase all data</string>
     <string name="settings_export_working">Writing the file</string>
     <string name="settings_import_working">Reading the file</string>
+    <!--
+        MASTER_BUILD_PROMPT 5.4's debug action, in debug builds only. The wording is a
+        diagnostic rather than a sentence about somebody's data, because the only person
+        who can see this row is the one building the app.
+    -->
+    <string name="settings_rebuild">Rebuild the cache from the log</string>
+    <string name="settings_rebuild_working">Folding the log</string>
+    <string name="settings_rebuild_done">The cache agreed with the log. Events folded: %1$d</string>
+    <string name="settings_rebuild_mismatch">The cache did not agree with the log. Events folded: %1$d</string>
     <string name="settings_erase_working">Erasing</string>
     <!--
         MASTER_BUILD_PROMPT 14b.7: one quiet line, in Settings only, when nothing
@@ -1010,6 +1069,14 @@
     <string name="import_refused_wrong_password">That password did not open this backup.</string>
     <string name="import_refused_inconsistent">This backup does not hold the history it says it holds.</string>
     <string name="settings_export_error">That file could not be written.</string>
+    <!--
+        **It says nothing changed, and that is a promise the code keeps rather than a
+        reassurance.** `ClarityRepository.ingestForeignLog` does the erase, the append and
+        the rebuild inside one `db.withTransaction`, so a failure anywhere in it rolls the
+        whole thing back. Somebody who has just typed REPLACE and seen an error needs that
+        sentence more than they need a diagnostic.
+    -->
+    <string name="settings_import_error">That file could not be read. Nothing on this phone has changed.</string>
 
     <!--
         The export sheet, MASTER_BUILD_PROMPT 14b.7 and Addendum 01 4h.
@@ -1107,6 +1174,14 @@
     <string name="licenses_newsreader">Newsreader</string>
     <string name="licenses_hanken">Hanken Grotesk</string>
     <string name="licenses_font_terms">SIL Open Font License 1.1</string>
+    <!--
+        Flexoki, by Steph Ango. MIT. The light and dark surface ladders and the ink are
+        its values, and its README asks for attribution and a link, which is why this is
+        the one entry on the screen that carries one.
+    -->
+    <string name="licenses_flexoki">Flexoki color scheme</string>
+    <string name="licenses_mit_terms">MIT License</string>
+    <string name="licenses_flexoki_note">Flexoki by Steph Ango. stephango.com/flexoki</string>
     <string name="licenses_symbols">Material Symbols</string>
     <string name="licenses_androidx">AndroidX and Jetpack Compose</string>
     <string name="licenses_apache_terms">Apache License 2.0</string>
@@ -1146,6 +1221,7 @@
     <string name="about_link_feedback_value">hello@kamsiob.com</string>
     <string name="about_license_app">Clarity Now is free software under the AGPL-3.0. The full source is public.</string>
     <string name="about_license_fonts">Newsreader and Hanken Grotesk are used under the SIL Open Font License 1.1.</string>
+    <string name="about_license_flexoki">The color scheme is Flexoki by Steph Ango, used under the MIT License.</string>
     <string name="about_license_symbols">Material Symbols, AndroidX and Jetpack Compose are used under the Apache License 2.0.</string>
 
     <!--
@@ -1292,7 +1368,7 @@
     <string name="onboarding_depth_pulse_sample">Some days there will be a question waiting here.</string>
     <string name="onboarding_depth_pulse_option_one">That sounds right</string>
     <string name="onboarding_depth_pulse_option_two">Not quite</string>
-    <string name="onboarding_depth_pulse_caption">A question about what you have been doing. One tap answers it, and you can turn it off in Settings.</string>
+    <string name="onboarding_depth_pulse_caption">A question about what you have been doing. One tap answers it, and the reminder can be turned off in Settings.</string>
     <string name="onboarding_depth_momentum_caption">It counts what you did. There is no score anywhere in this app.</string>
     <string name="onboarding_depth_pulse_eyebrow">Pulse sample</string>
     <!--
@@ -1324,7 +1400,15 @@
         and interface behavior that arrives unannounced is a real cost rather than a
         delightful surprise.
     -->
-    <string name="onboarding_pulse_announcement">The Pulse asks one question a day, and one tap answers it. You can turn it off in Settings.</string>
+    <!--
+        **`the reminder`, not `it`.** Both of these lines used to promise that the Pulse
+        could be turned off, and it cannot: the only preference is `pulseRemindersEnabled`,
+        which silences the notification. The app's own Settings copy says so correctly at
+        `settings_reflection_body_3`, so onboarding was promising a control that the rest
+        of the product then contradicted. The reassurance a person needs here is that
+        nothing will nag them, and that one is true.
+    -->
+    <string name="onboarding_pulse_announcement">The Pulse asks one question a day, and one tap answers it. The reminder can be turned off in Settings.</string>
 
     <!--
         The tutorial, MASTER_BUILD_PROMPT 13.2.
@@ -1491,9 +1575,23 @@
         The second choice says what it does rather than saying `Start fresh`, because
         the fear at that moment is losing the work, and the wording is the only thing on
         the screen that can answer it before the tap rather than after.
+
+        **The title used to be `Everything is where you left it.`, which is `quietday.s1.07`
+        word for word, tagged `[O]` in `CORPUS_1_PULSE.md`.** So the app had two paths to
+        one sentence, which is what `CLAUDE.md` rule 8 forbids in as many words, and the
+        practical consequence is worse than the rule: the engine's repeat filter works on
+        corpus line ids and cannot see a copy pasted into `strings.xml`, so a person could
+        be told the same thing twice in a week by an app that believed it had said it
+        once. `NoCorpusInStringsTest` now holds every string in this file against all
+        three corpora so it cannot happen again.
+
+        The replacement is an invitation rather than an observation, which is the side of
+        the line 14b.4 wants this screen on anyway: it makes no claim about what is in the
+        queues, so there is nothing for it to be right or wrong about, and the body says
+        what will and will not happen.
     -->
-    <string name="reentry_title">Everything is where you left it.</string>
-    <string name="reentry_body">Keep it that way, or put the active items back in their queues and choose again. Nothing is deleted and nothing is marked complete.</string>
+    <string name="reentry_title">Pick up where you left off</string>
+    <string name="reentry_body">Keep everything as it is, or put the active items back in their queues and choose again. Nothing is deleted and nothing is marked complete.</string>
     <string name="reentry_keep">Keep everything as it is</string>
     <string name="reentry_requeue">Put active items back in their queues</string>
 

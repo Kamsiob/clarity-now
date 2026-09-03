@@ -34,6 +34,7 @@ object ClarityIcons {
     val pulse = R.drawable.ic_graphic_eq
     val settings = R.drawable.ic_settings
     val archive = R.drawable.ic_inventory_2
+    val manageAreas = R.drawable.ic_stacked_cards
     val unarchive = R.drawable.ic_unarchive
     val completed = R.drawable.ic_check_circle
     val promoted = R.drawable.ic_arrow_circle_up

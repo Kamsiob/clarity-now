@@ -80,16 +80,27 @@ class InterfaceContractTest {
                 .forEach { match ->
                     val args = match.groupValues[1]
                     if (!args.contains("role =")) return@forEach
-                    // The name can come from the click itself or from anything in the
-                    // 600 characters of modifier chain and content around it, which is
-                    // where a `ClarityIcon` with a description or a `Text` would sit.
-                    val from = (match.range.first - 300).coerceAtLeast(0)
-                    val to = (match.range.last + 600).coerceAtMost(text.length)
-                    val around = text.substring(from, to)
+                    // **A name from before the control no longer counts unless it is one.**
+                    //
+                    // This used to accept a bare `Text(` anywhere in a 900 character
+                    // window straddling the call, which meant the label of whatever was
+                    // drawn above a control named the control. Half the app would have
+                    // passed with no name at all.
+                    //
+                    // The two kinds of name are now looked for in the places they can
+                    // actually be. An explicit one, `onClickLabel` or a
+                    // `contentDescription`, is written into the arguments or into the
+                    // modifier chain, which runs both sides of this call. An implicit one
+                    // comes from a `Text` the clickable node merges, and a merged child is
+                    // inside the content lambda, which is after it.
+                    val before = text.substring((match.range.first - 300).coerceAtLeast(0), match.range.first)
+                    val after = text.substring(match.range.last, (match.range.last + 600).coerceAtMost(text.length))
                     val named = args.contains("onClickLabel") ||
-                        around.contains("contentDescription =") ||
-                        around.contains("text = ") ||
-                        around.contains("Text(")
+                        args.contains("contentDescription") ||
+                        before.contains("contentDescription =") ||
+                        after.contains("contentDescription =") ||
+                        after.contains("text = ") ||
+                        after.contains("Text(")
                     if (!named) {
                         val line = text.take(match.range.first).count { it == '\n' } + 1
                         offenders += "${file.name}:$line declares a role and has no name"

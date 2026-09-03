@@ -40,6 +40,14 @@ internal fun activeItemAge(id: String, describe: String, test: (Int) -> Boolean)
  * described. A rule that could select such an area would produce a candidate that is
  * always vetoed, which is a silence with no reason anyone could find. Requiring it here
  * means the rule never gets that far.
+ *
+ * **It is also the event floor every share based rule carries**, CLARITY_LOGIC_ENGINE.md
+ * 3.1 and 13. `shareOfEvents` is the most misused fact in the system: one event in a one
+ * event week reads as 100 percent concentration, and the sentence that comes out of it is
+ * true arithmetic and a false claim. A catalog test asserts that every rule reading a
+ * share carries one of these, and the `area.hasEvents.` id prefix is what that test looks
+ * for. That paragraph used to sit two builders below, above `fortnightOfHistory`, where
+ * it documented the wrong function and no test could see it was in the wrong place.
  */
 internal fun areaHasEvents(minimum: Int = 1): Criterion = area(
     "area.hasEvents.$minimum",
@@ -52,14 +60,6 @@ internal fun holdingAreaHasEvents(minimum: Int = 1): Criterion = criterion(
     "the area holding the item has at least $minimum events in the window",
 ) { facts, subject -> (facts.areaHolding(subject)?.eventsInWindow ?: 0) >= minimum }
 
-/**
- * The event floor every share based rule carries. CLARITY_LOGIC_ENGINE.md 3.1 and 13.
- *
- * `shareOfEvents` is the most misused fact in the system: one event in a one event week
- * reads as 100 percent concentration, and the sentence that comes out of it is true
- * arithmetic and a false claim. A catalog test asserts that every rule reading a share
- * carries one of these, and the id prefix is what that test looks for.
- */
 /**
  * The app has existed for at least [days] days.
  *

@@ -96,19 +96,21 @@ class TrailContrastTest {
     }
 
     /**
-     * The light canvas is still the tightest of the six, and it now has a margin.
+     * The light canvas is still the tightest of the six, and the margin grew again.
      *
-     * It measured 4.5046 to one before phase 3c, which is the 4.50 this test was written
-     * to pin, and the darkening of `canvas` that phase 3c performs is exactly the change
-     * the old comment here predicted would break it: "a later darkening of `canvas`
-     * would take the whole Daylight world under the floor without touching this
-     * screen". It did, to 4.33, and that is why `inkSecondary` moved with it. The pair
-     * is now 4.88 to one and the surface order is unchanged.
+     * It measured 4.5046 to one before phase 3c, 5.19 after it, and **5.78 since the
+     * palette moved to Flexoki**: the new ink is `#100F0F` against the old `#17171C`,
+     * which is both darker and, more to the point, no longer a violet. Every ink level
+     * in the app improved by the same move.
+     *
+     * The band is what this pins rather than the number. A value drifting up is a value
+     * somebody should look at as much as one drifting down: `inkSecondary` climbing means
+     * the ladder is being flattened somewhere.
      */
     @Test
     fun `the light canvas is the tightest surface, with a margin since phase 3c`() {
         val tightest = ratioOn(ClarityLightColors.inkSecondary, ClarityLightColors.canvas)
-        assertTrue("expected about 5.19 to one, measured $tightest", tightest in 5.10..5.30)
+        assertTrue("expected about 5.78 to one, measured $tightest", tightest in 5.65..5.95)
         val others = listOf(
             ratioOn(ClarityLightColors.inkSecondary, ClarityLightColors.card),
             ratioOn(ClarityDarkColors.inkSecondary, ClarityDarkColors.canvas),

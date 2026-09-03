@@ -1,5 +1,6 @@
 package com.kamsiob.claritynow.ui.components
 
+import androidx.compose.ui.semantics.contentDescription
 import com.kamsiob.claritynow.ui.theme.LocalClarityShapes
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.selection.selectableGroup
@@ -105,9 +106,12 @@ data class ClarityTab(
  * expressed against `LocalDensity.current.fontScale` under the theme, the combined
  * figure, rather than against the platform's.
  *
- * **Nothing is lost when the labels go.** The glyph, the indicator and the semantics are
- * unchanged, and TalkBack reads the destination's name either way, because `Role.Tab`
- * plus `selected` plus the click label do not depend on a `Text` being drawn.
+ * **Nothing is lost when the labels go**, and the item has to do one thing to keep that
+ * true. The glyph, the indicator, `Role.Tab` and `selected` are all unchanged, but a
+ * label that is not drawn is a name that is not there: `onClickLabel` names the action
+ * and not the control, so an unlabeled item announced as "tab, selected, double tap to
+ * Momentum" rather than saying where the person was. The item sets `contentDescription`
+ * to the tab's name in exactly the case where the `Text` is absent, and in no other.
  *
  * ## A note on the default this used to blame itself for
  *
@@ -259,7 +263,18 @@ private fun TabItem(
             // `actionBlue` pill, a filled icon variant and an `actionBlue` label, all
             // three visual. design-v3 13 says color is never the only signal, and this is
             // the app's primary navigation. TalkBack now reads "Momentum, selected, tab".
-            .semantics { this.selected = selected },
+            //
+            // **The name, when the label is not drawn.** Above a 1.06 combined font scale
+            // the `Text` goes and the node has nothing left to be named by: `onClickLabel`
+            // names the action, not the control, so TalkBack read "tab, selected, double
+            // tap to Momentum" and never simply said where you were. The description is
+            // conditional rather than unconditional because setting it while the label is
+            // drawn would replace the `Text` this node already merges, which is the same
+            // sentence twice with one of them out of the theme's control.
+            .semantics {
+                this.selected = selected
+                if (!labeled) contentDescription = tab.label
+            },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {

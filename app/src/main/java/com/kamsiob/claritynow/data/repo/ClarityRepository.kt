@@ -1286,24 +1286,6 @@ class ClarityRepository(
     // Plans -------------------------------------------------------------------
 
     /**
-     * Appends `PLAN_OFFERED` unless this plan is already in the log.
-     * CLARITY_LOGIC_ENGINE.md 10.3 and `MASTER_BUILD_PROMPT.md` 11.3 step 9.
-     *
-     * **Offering is recorded and declining is not, and that asymmetry is the feature.**
-     * The offer has to be in the log because `FiringHistory` reads the frame, cue and
-     * action keys out of it for 7.6's ninety day exclusion, so a person does not meet the
-     * same frame twice in a season. What is never recorded is the answer, unless the
-     * answer was yes: 10.5 says declining writes nothing, costs nothing, is never counted
-     * and is never referenced, and there is no `PLAN_DECLINED` in the event catalog for
-     * anything to write.
-     *
-     * **At most one per week, and immutable once written.** A plan's id is derived from
-     * the week it belongs to, so a second generation of the same week's report cannot file
-     * a second plan; the check and the append are taken under one lock for
-     * [recordPulseGenerated]'s reason, which is that two foregrounds racing at launch would
-     * otherwise both read an empty answer and both write.
-     */
-    /**
      * The report already filed for the calendar week that began at [weekBeganAtMillis], or
      * null if that week has none. MASTER_BUILD_PROMPT 12.3.
      *
@@ -1360,6 +1342,24 @@ class ClarityRepository(
         }
     }
 
+    /**
+     * Appends `PLAN_OFFERED` unless this plan is already in the log.
+     * CLARITY_LOGIC_ENGINE.md 10.3 and `MASTER_BUILD_PROMPT.md` 11.3 step 9.
+     *
+     * **Offering is recorded and declining is not, and that asymmetry is the feature.**
+     * The offer has to be in the log because `FiringHistory` reads the frame, cue and
+     * action keys out of it for 7.6's ninety day exclusion, so a person does not meet the
+     * same frame twice in a season. What is never recorded is the answer, unless the
+     * answer was yes: 10.5 says declining writes nothing, costs nothing, is never counted
+     * and is never referenced, and there is no `PLAN_DECLINED` in the event catalog for
+     * anything to write.
+     *
+     * **At most one per week, and immutable once written.** A plan's id is derived from
+     * the week it belongs to, so a second generation of the same week's report cannot file
+     * a second plan; the check and the append are taken under one lock for
+     * [recordPulseGenerated]'s reason, which is that two foregrounds racing at launch would
+     * otherwise both read an empty answer and both write.
+     */
     suspend fun recordPlanOffered(payload: PlanOffered): PlanState = mutex.withLock {
         val existing = _state.value.plans[payload.planId]
         if (existing != null) return@withLock existing

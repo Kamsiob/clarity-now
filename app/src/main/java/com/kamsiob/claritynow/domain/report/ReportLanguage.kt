@@ -318,6 +318,12 @@ class ReportLanguage(private val catalog: ClarityCatalog, private val zone: Zone
          * stage and variant, which an auxiliary bench has none of. Two entries rather than a
          * second general table, and both name a measure rather than a field, so the number
          * they produce carries a re-readable reference like every other number in the app.
+         *
+         * **`m` named a measure that did not exist until the appeal pass.** `weeksOfData`
+         * was bound here and declared nowhere, so `Measures.byId` returned null, the
+         * `and {m} weeks of data` clause could never be filled, and three of the six basis
+         * lines in `CORPUS_2_REPORT.md` 5.2 dropped out of the bench on every report ever
+         * written. `Measures` declares it now.
          */
         val BINDINGS: Map<SlotKey, String> = mapOf(
             "n" to "answeredInWindow",

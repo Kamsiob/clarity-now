@@ -1,5 +1,6 @@
 package com.kamsiob.claritynow.ui.components
 
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -33,14 +34,6 @@ import com.kamsiob.claritynow.ui.theme.LocalClarityHaptics
 import com.kamsiob.claritynow.ui.theme.clarityMotion
 
 /**
- * Every tappable thing in the app goes through here.
- *
- * Indication is null on purpose: feedback is the scale press in design-v3.md 8.2
- * item 2, and a Material ripple underneath it would be a second, borrowed
- * treatment on the same gesture. The haptic fires once per action, never on the
- * way in and again on the way out.
- */
-/**
  * The press scale from design-v3.md 8.2 item 2: 0.97 on `springStandard`.
  *
  * A modifier rather than a copied block, because it was written twice inside
@@ -63,7 +56,27 @@ fun Modifier.clarityPressScale(
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
         targetValue = if (pressed && enabled) 0.97f else 1f,
-        animationSpec = motion.springStandard(),
+        // **`springStandard` was the wrong token here, and it is why the app feels
+        // soft.** That spring is 0.8 / 380, which reaches 98 percent of its travel at
+        // 193ms. On top of it `Modifier.clickable` withholds the press interaction for
+        // `ViewConfiguration.getTapTimeout()`, 100ms, whenever there is a scrollable
+        // parent, so that it can tell a tap from a scroll. **293ms to visible
+        // acknowledgment**, on the area card, every Settings row, every Trail row and
+        // every archive row. The band a press is meant to answer in is 100 to 160.
+        //
+        // 0.82 / 900 is critically damped and reaches 98 percent at about 31ms, which
+        // takes the total to roughly 131. The 100ms belongs to the gesture layer and can
+        // only be removed by leaving `clickable` for a hand written pointer loop, which
+        // is a separate piece of work on the app's most used modifier.
+        //
+        // Not `springSnappy`: this is a press, and 8.1 reserves that spring's overshoot
+        // for something with weight. A press that bounces back past its resting size is
+        // the tell 15.1 names.
+        animationSpec = if (motion.reduced) {
+            motion.effectsFast()
+        } else {
+            spring(dampingRatio = 0.82f, stiffness = 900f)
+        },
         label = label,
     )
     return scale(scale)

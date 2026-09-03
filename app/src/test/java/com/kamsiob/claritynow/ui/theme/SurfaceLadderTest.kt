@@ -153,28 +153,44 @@ class SurfaceLadderTest {
     }
 
     /**
-     * design-v3.md 1 asks light surfaces to "lean slightly cool grey with warmth in the
-     * cards", and until phase 3c every neutral in the app was cool or exactly neutral.
-     * The card is where the warmth was promised and the card is where it now is.
+     * **Every light surface is warm, and they are all warm by about the same amount.**
+     *
+     * This test used to assert the opposite of half of itself: a cool canvas with warm
+     * cards, which is what `design-v3.md` 1 asked for until September 3 2026. What that
+     * produced, measured in OKLCH, was canvas at hue 286, card at 85, raise at 95 and
+     * parchment at 103. **202 degrees of spread across four surfaces**, where every
+     * design system checked holds a neutral ramp inside about twenty.
+     *
+     * Surfaces on different hues are not one material, and that is the mechanical reason
+     * the cards read as blocks dropped onto a page rather than as raised parts of one.
+     * The section 1 clause is amended and this test is the amended version.
      *
      * Measured as red minus blue, which for a near-neutral is the whole of its
-     * temperature. The dark world is the unresolved half of the same sentence and is
-     * deliberately not asserted here; see the note on [ClarityDarkColors].
+     * temperature, and the four are held to a **band** rather than to a floor: a surface
+     * that is warm by 30 while its neighbor is warm by 5 is the same failure in a milder
+     * form.
      */
     @Test
-    fun `the light world is a cool page with warm surfaces on it`() {
+    fun `every light surface is warm, and by about the same amount`() {
         fun warmth(color: Color) = (color.red - color.blue) * 255f
-        assertTrue(
-            "the canvas is supposed to lean cool and measured ${warmth(ClarityLightColors.canvas)}",
-            warmth(ClarityLightColors.canvas) < -2f,
+        val surfaces = listOf(
+            "canvas" to ClarityLightColors.canvas,
+            "card" to ClarityLightColors.card,
+            "raise" to ClarityLightColors.raise,
+            "parchment" to ClarityLightColors.parchment,
         )
-        listOf("card" to ClarityLightColors.card, "raise" to ClarityLightColors.raise)
-            .forEach { (name, color) ->
-                assertTrue(
-                    "$name is supposed to lean warm and measured ${warmth(color)}",
-                    warmth(color) > 2f,
-                )
-            }
+        surfaces.forEach { (name, color) ->
+            assertTrue(
+                "$name is supposed to lean warm and measured ${warmth(color)}",
+                warmth(color) > 4f,
+            )
+        }
+        val spread = surfaces.maxOf { warmth(it.second) } - surfaces.minOf { warmth(it.second) }
+        assertTrue(
+            "the four light surfaces are supposed to be one material and their warmth " +
+                "spans $spread. They are on one hue or they are four different papers.",
+            spread <= 8f,
+        )
     }
 
     /**

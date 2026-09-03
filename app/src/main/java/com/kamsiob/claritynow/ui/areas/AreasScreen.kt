@@ -1,5 +1,13 @@
 package com.kamsiob.claritynow.ui.areas
 
+import com.kamsiob.claritynow.ui.theme.groundLight
+import androidx.compose.runtime.derivedStateOf
+import java.time.format.DateTimeFormatter
+import java.time.LocalDate
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import android.text.format.DateFormat
 import androidx.compose.ui.graphics.Brush
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
@@ -127,6 +135,7 @@ fun AreasScreen(
     state: AreasUiState,
     onOpenArea: (String) -> Unit,
     onOpenArchive: () -> Unit,
+    onOpenManageAreas: () -> Unit,
     onCompleteArea: (AreaCardModel) -> Unit,
     onSwapArea: (AreaCardModel) -> Unit,
     onDeleteArea: (AreaCardModel) -> Unit,
@@ -172,7 +181,7 @@ fun AreasScreen(
     // A drag owns the pointer, so a swipe must not also be listening.
     LaunchedEffect(reorder.isDragging) { swipe.enabled = !reorder.isDragging }
 
-    val cardHeightPx = with(density) { (CARD_HEIGHT_ESTIMATE + 11.dp).toPx() }
+    val cardHeightPx = with(density) { (CARD_HEIGHT_ESTIMATE + ClaritySpacing.cardGap).toPx() }
     val ordered = remember(state.areas, reorder.previewOrder) {
         val preview = reorder.previewOrder
         if (preview == null) state.areas else preview.mapNotNull { id -> state.areas.firstOrNull { it.id == id } }
@@ -181,7 +190,12 @@ fun AreasScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
+            // **Not a flat fill.** `groundLight` carries the whole argument: a field of
+            // one value has no anywhere in it, so the empty part of this screen read as
+            // vacancy rather than as room. Two and a half percent of lightness, one
+            // radial pair, no hue shift, no animation.
             .background(colors.canvas)
+            .groundLight(colors)
             // A tap anywhere while a row is open closes it, and is spent doing so.
             .clarityClickable(enabled = swipe.hasOpenRow, haptic = null) { swipe.close() },
     ) {
@@ -189,6 +203,37 @@ fun AreasScreen(
         // fade are measured from them. design-v3.md 6.1.
         val statusBar = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
         val navigationBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+
+        // **The plate's ground, drawn behind the list rather than inside it.**
+        //
+        // `scrollEdgeFade` composites the list into an offscreen layer and erases its
+        // alpha across the status bar, which is what stops a card clipping at a hard
+        // pixel edge under the clock. A ground painted inside that layer is erased with
+        // everything else, so the parchment arrived at the top of the screen as a
+        // gradient into canvas: a soft top edge on a region whose whole separation
+        // device is a hard one, and the exact treatment `design-v3.md` 15.1 lists.
+        //
+        // Behind the layer, the ground is crisp to y = 0 and the fade does what it was
+        // written for: the dateline and the doors dissolve into the parchment they sit
+        // on, rather than the parchment dissolving into the page.
+        //
+        // Its height tracks the plate's own bottom edge through the list's layout
+        // information, so it scrolls away exactly with the item it belongs to and is
+        // zero once that item is gone. No second measurement and no guessed constant.
+        val plateBottom by remember(listState) {
+            derivedStateOf {
+                val plate = listState.layoutInfo.visibleItemsInfo
+                    .firstOrNull { it.key == "header" }
+                    ?: return@derivedStateOf 0
+                (plate.offset + plate.size).coerceAtLeast(0)
+            }
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(with(density) { plateBottom.toDp() })
+                .background(colors.parchment),
+        )
 
         LazyColumn(
             state = listState,
@@ -208,15 +253,22 @@ fun AreasScreen(
                     bottom = navigationBar + TabBarInset + TabBarHeight +
                         ScrollEdge.aboveTheBar,
                 ),
+            // **No horizontal padding on the list, and that is what lets the plate
+            // bleed.** Content padding insets every item equally, so a full width
+            // region was impossible while it was set here. Each item that wants the
+            // measure now takes `screenPadding` itself, and the plate takes none.
+            //
+            // No top padding either: the plate carries the status bar inset inside its
+            // own padding, so its ground reaches y = 0 and the clock sits on parchment
+            // rather than on a strip of canvas above it.
             contentPadding = PaddingValues(
-                start = 20.dp,
-                end = 20.dp,
-                // The list scrolls under the status bar rather than stopping at it,
-                // so the first card passes behind the clock instead of clipping.
-                top = statusBar + 8.dp,
                 bottom = navigationBar + TabBarHeight + TabBarInset + 76.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(11.dp)),
+            // `cardGap`, which is `scaled(snug)`, rather than the 11dp literal that was
+            // here. Eleven is off the 4dp grid and off a token that already existed at
+            // 12 with no call sites, and the same 11 was repeated in the drag
+            // arithmetic, so the two could drift.
+            verticalArrangement = Arrangement.spacedBy(ClaritySpacing.cardGap),
         ) {
             // design-v3.md 8.2 item 4 and 8.4. The screen arrives as one sequence, the
             // title first and the cards behind it, on the first open of this tab per
@@ -235,23 +287,36 @@ fun AreasScreen(
             // an interruption that arrives when a merge produced one, carrying its own
             // reveal, rather than part of the screen's resting content.
             item(key = "header") {
-                AreasHeader(
+                AreasPlate(
+                    today = state.today,
                     unfiledCount = state.unfiledCount,
                     pulseReady = state.pulseReady,
                     onOpenFocus = onOpenFocus,
                     onOpenPulse = onOpenPulse,
                     onOpenArchive = onOpenArchive,
+                    onOpenManageAreas = onOpenManageAreas,
                     onOpenSettings = { settingsOpen = true },
                     onOpenInbox = onOpenInbox,
                 )
             }
 
+            // The plate's hard bottom edge to the first card is `rest`, and the list's
+            // own `cardGap` supplies 12 of it. A page's regions are separated by more
+            // than its rows are, or there are no regions.
+            item(key = "plateGap") { Spacer(Modifier.height(ClaritySpacing.rest - ClaritySpacing.snug)) }
+
             items(state.conflicts, key = { "conflict:${it.id}" }) { conflict ->
-                ConflictCard(conflict = conflict, onDismiss = { onDismissConflict(conflict.id) })
+                Box(modifier = Modifier.padding(horizontal = ClaritySpacing.screenPadding)) {
+                    ConflictCard(conflict = conflict, onDismiss = { onDismissConflict(conflict.id) })
+                }
             }
 
             if (state.isEmpty) {
-                item(key = "empty") { AreasEmptyState(onCreate = onFabClick) }
+                item(key = "empty") {
+                    Box(modifier = Modifier.padding(horizontal = ClaritySpacing.screenPadding)) {
+                        AreasEmptyState(onCreate = onFabClick)
+                    }
+                }
             }
 
             items(ordered, key = { it.id }) { area ->
@@ -265,6 +330,7 @@ fun AreasScreen(
 
                 Box(
                     modifier = Modifier
+                        .padding(horizontal = ClaritySpacing.screenPadding)
                         .animateItem(
                             placementSpec = motion.springStandard(),
                             fadeInSpec = motion.easeOut(),
@@ -293,7 +359,6 @@ fun AreasScreen(
                         area = area,
                         promotion = state.promotions[area.id],
                         swipe = swipe,
-                        isLastArea = ordered.size == 1,
                         reorderModifier = Modifier.reorderableItem(
                             state = reorder,
                             key = area.id,
@@ -329,21 +394,47 @@ fun AreasScreen(
             // more`, it is reached by the scroll a person is already doing, and it can
             // carry a word.
             if (!state.isEmpty) {
-                item(key = "newArea") { NewAreaRow(onClick = onNewArea) }
+                item(key = "newAreaGap") {
+                    Spacer(Modifier.height(ClaritySpacing.rest - ClaritySpacing.snug))
+                }
+                item(key = "newArea") {
+                    // The row carries `cardPaddingHorizontal` inside its own tap target,
+                    // so the measure is 2dp short of a card's edge here rather than 20
+                    // plus 18. The plus glyph lands on the edge the cards do.
+                    Box(
+                        modifier = Modifier.padding(
+                            start = ClaritySpacing.screenPadding - ClaritySpacing.cardPaddingHorizontal,
+                        ),
+                    ) {
+                        NewAreaRow(onClick = onNewArea)
+                    }
+                }
             }
         }
 
-        ClarityFab(
-            onClick = onFabClick,
-            contentDescription = stringResource(
-                if (state.isEmpty) R.string.fab_add_area else R.string.fab_add_item,
-            ),
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .navigationBarsPadding()
-                // Clears the floating tab bar: its own 17dp inset, its height, and
-                // a gap so the two never read as one control.
-                .padding(end = 20.dp, bottom = TabBarHeight + 17.dp + 14.dp)
+        // **Not composed at all while the list is empty.** `AreasEmptyState` names the
+        // same action in a labeled button 400dp higher up, calling the same lambda, so
+        // an empty screen offered one job twice: once in a word and once as an unlabeled
+        // circle in the corner. The button is the one that survives, because it says
+        // what it does.
+        if (!state.isEmpty) {
+            ClarityFab(
+                onClick = onFabClick,
+                contentDescription = stringResource(R.string.fab_add_item),
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .navigationBarsPadding()
+                    // Clears the floating tab bar: its own inset, its height, and a gap
+                    // so the two never read as one control.
+                    //
+                    // `TabBarInset` on the end as well, where a 20dp literal used to
+                    // sit. The bar below insets itself by 17, so the two objects that
+                    // sit closest together on the whole page were 3dp out of line with
+                    // each other.
+                    .padding(
+                        end = TabBarInset,
+                        bottom = TabBarHeight + TabBarInset + 14.dp,
+                    )
                 // **After the padding, and that is the whole of the fix.** A modifier to
                 // the left of another wraps it, so `onGloballyPositioned` reports the node
                 // including everything to its right. Registered first, this reported the
@@ -351,8 +442,9 @@ fun AreasScreen(
                 // 92dp that clears the tab bar, and the tutorial lit the entire bottom
                 // right corner of the screen instead of the button. `ClarityShell` states
                 // the same rule at the tab bar's own target, where it was got right.
-                .tutorialTarget(TutorialStep.FAB),
-        )
+                    .tutorialTarget(TutorialStep.FAB),
+            )
+        }
 
         // Above everything this screen draws, including the FAB. It is not above the
         // floating tab bar, which is a sibling of this whole screen in `ClarityShell`
@@ -371,7 +463,6 @@ private fun AreaRow(
     area: AreaCardModel,
     promotion: PromotionCue?,
     swipe: SwipeCoordinator,
-    isLastArea: Boolean,
     reorderModifier: Modifier,
     onOpen: () -> Unit,
     onComplete: () -> Unit,
@@ -405,9 +496,17 @@ private fun AreaRow(
         // nothing to demote, because `SwapChooserSheet.demotedTitle` is nullable and says
         // so.
         onSwap = if (area.offersSwap || area.offersPromote) onSwap else null,
-        // An app with zero areas is reached deliberately through the archive view,
-        // never by accident on a list, so the last card does not offer delete.
-        onDelete = if (isLastArea) null else onDelete,
+        // **The last card offers delete too, and it used to be the one card that did
+        // not.** The reasoning was that reaching zero areas should be deliberate, and
+        // the effect was that the swipe on a brand new person's only card revealed
+        // nothing at all: Complete needs an active item, Swap needs a queue, and Delete
+        // was suppressed, so the first gesture the app teaches did nothing on the first
+        // card it is tried on. Deliberateness is already carried by the thing that
+        // carries it everywhere else, `DeleteAreaSheet` and its typed confirmation, and
+        // an empty Areas list is not a hole to fall into: it has an empty state that
+        // invites making one, which is the screen this app opens on for everybody on
+        // their first day.
+        onDelete = onDelete,
     )
 
     SwipeableRow(
@@ -473,49 +572,127 @@ private fun AreaRow(
 }
 
 /**
- * design-v3.md 10.1. The serif title, the archive glyph, and the chip row beneath.
+ * The plate. `design-v3.md` 10.1 and 10.2, rewritten.
  *
- * The row was written in phase 2 as a shape the permanent chips could prepend to
- * without it being redrawn. Focus arrived in phase 4 and Pulse in phase 6, in that
- * order and both permanent, and the unfiled inbox chip, 10.16, stays last and present
- * only while the inbox holds something, so it can never displace them.
+ * ## What it replaces, and why four things became one
+ *
+ * This region used to be four objects stacked on the page ground: a serif wordmark row,
+ * the weekly banner, a row of two elevated white pills with a third chip under them,
+ * and a hairline rule to separate all of that from the areas. Every one of them was
+ * drawn on `canvas` in a rounded shape at one measure, so the screen read as a stack of
+ * pale rectangles with a line across it, and the line existed only because the two
+ * regions it divided were made of the same material.
+ *
+ * **The plate is one full bleed region of `parchment` with a hard top and a hard
+ * bottom.** Its only separation device is the ground change itself, `#EFEEE2` against
+ * `#D6D6DB`, which is eight steps of lightness and a shift from cool to warm; there is
+ * no shadow, no border, no radius and no gradient on it. That is `design-v3.md` 6.1's
+ * one device, and it is what lets the hairline go.
+ *
+ * It spends a token that was very nearly dead: `parchment` had one live call site in the
+ * whole app, and 3.1 assigns it to exactly this content.
+ *
+ * ## Why the app's name is gone
+ *
+ * `readSerif` at 26sp on the word `Clarity Now` was the largest type on the app's own
+ * home screen, sitting above a tab bar whose selected item already says `Areas`. The
+ * biggest type role in the product was spent naming the app to the person who had just
+ * opened it. In its place is the date, which is a fact that person may actually want:
+ * time blindness is documented in this audience, `what day is it` is a real question,
+ * and the Report and the Trail both carry a dateline already.
+ *
+ * The statistically common replacement is a greeting, with or without a name.
+ * `design-v3.md` 15 refuses it twice over: it would be a sentence about the person
+ * written in a composable rather than drawn from a corpus through the engine, which
+ * `CLAUDE.md` rule 8 forbids outright, and it is the single most recognizable
+ * assistant app opening of the year.
+ *
+ * ## Why the doors have no pill any more
+ *
+ * They cannot keep one. On parchment, `card` measures 1.09:1 and `raise` measures
+ * 1.01:1; no neutral in the palette separates from this ground. That is a measurement
+ * rather than a preference, and it is the whole reason Focus, the Pulse and the inbox
+ * became three bare labels in a `FlowRow` instead of two centered pills and a chip.
+ *
+ * What they gain is a leading edge. Centered content inside two `weight(1f)` boxes sat
+ * on no alignment at all, which was the screen's fourth left edge by way of having
+ * none. Hugging labels on the 20dp measure sit on the same edge as everything else and
+ * terminate ragged, which is a shape.
+ *
+ * **The press ground is a pill of ink at 6 percent and it exists only while a finger is
+ * down.** A press treatment is state and not a separation device, which `Interactions.kt`
+ * already establishes for the app's other unhoused controls.
+ *
+ * ## The doors sit above the sentence, not below it
+ *
+ * The sentence is variable in height and often absent. With the doors under it, the two
+ * permanent controls of this screen moved 52 to 92dp between one opening and the next,
+ * which is COGA o4p01 happening on the surface the owner opens every morning. Above it,
+ * their y depends on the status bar inset and nothing else, and the sentence grows
+ * downward into the plate.
  */
 @Composable
-private fun AreasHeader(
+private fun AreasPlate(
+    today: LocalDate?,
     unfiledCount: Int,
     pulseReady: Boolean,
     onOpenFocus: () -> Unit,
     onOpenPulse: () -> Unit,
     onOpenArchive: () -> Unit,
+    onOpenManageAreas: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenInbox: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalClarityColors.current
     val type = LocalClarityTypography.current
-    Column(modifier = modifier.fillMaxWidth().padding(top = ClaritySpacing.snug)) {
+    val statusBar = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            // **No background here.** The parchment is drawn by a sibling behind the
+            // whole list, in `AreasScreen`, and `PlateGround` carries why: the scroll
+            // edge fade erases the list's own alpha, so a ground painted inside the list
+            // would be erased along with the text and the plate would arrive at the top
+            // of the screen as a gradient rather than as an edge.
+            .clarityEntrance(0, ClarityEntranceRole.HEADER)
+            .padding(
+                start = ClaritySpacing.screenPadding,
+                end = ClaritySpacing.screenPadding,
+                top = statusBar + ClaritySpacing.snug,
+                bottom = ClaritySpacing.step,
+            ),
+    ) {
+        // The three doors out of this screen, on a row of their own.
+        //
+        // **The glyph trio is pushed out by 12dp so its ink lands on the measure.** A
+        // 22dp glyph centered in a 48dp target sits 13dp inside its own box, so a
+        // trailing target flush with the 20dp padding put the settings gear 13dp short
+        // of the right measure while every other element on the screen terminated on it.
+        // The targets keep their size and move; the ink lands where the eye expects an
+        // edge.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 // `heightIn`, not `height`. A fixed height constrains its children, so
-                // the archive and settings glyphs that correctly declare `size(48.dp)`
-                // measured 48 by 44, and the 26sp serif inside clipped at the 200 percent
-                // scale design-v3 13 requires the app to survive.
+                // the three glyphs that correctly declare `size(48.dp)` measured 48 by 44.
                 .heightIn(min = ClaritySpacing.scaled(48.dp))
-                .clarityEntrance(0, ClarityEntranceRole.HEADER),
+                .offset(x = 12.dp),
+            horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = stringResource(R.string.areas_title),
-                style = type.readSerif,
-                color = colors.inkPrimary,
-                modifier = Modifier.weight(1f),
-            )
             HeaderGlyph(
                 icon = ClarityIcons.archive,
                 label = stringResource(R.string.areas_open_archive),
                 tint = colors.inkSecondary,
                 onClick = onOpenArchive,
+            )
+            HeaderGlyph(
+                icon = ClarityIcons.manageAreas,
+                label = stringResource(R.string.cd_manage_areas_open),
+                tint = colors.inkSecondary,
+                onClick = onOpenManageAreas,
             )
             HeaderGlyph(
                 icon = ClarityIcons.settings,
@@ -524,195 +701,170 @@ private fun AreasHeader(
                 onClick = onOpenSettings,
             )
         }
-        AreasBanner(
-            modifier = Modifier
-                .padding(top = ClaritySpacing.snug)
-                .clarityEntrance(1, ClarityEntranceRole.DOMINANT),
+
+        // **The date is the masthead, in the app's own serif, at the app's own headline
+        // rank.**
+        //
+        // This is the correction of the change that removed the wordmark. Taking
+        // `Clarity Now` off the home screen was right: it was the largest type in the
+        // product, spent naming the app to somebody who had just opened it. Putting a
+        // 12.5sp grey sans dateline in its place was not, and the owner's verdict on
+        // that build was that it looked worse than before. What left with the wordmark
+        // was the only serif on the screen, which is to say the app's voice.
+        //
+        // The two surfaces in this app that are admired, the Report and Momentum, both
+        // open with a large serif line on a bare ground. The Areas screen is the one
+        // that opens with a stack of containers and no voice at all, and that is the
+        // difference a person feels before they read a word. So the date takes
+        // `readSerif` and `inkPrimary`: it is the app speaking, section 5.1, and it says
+        // something a person with time blindness actually wants to know.
+        //
+        // It carries the -0.06em stem correction Newsreader needs at this size, which is
+        // the same offset the banner below it takes.
+        Spacer(Modifier.height(ClaritySpacing.tight))
+        Text(
+            // Absent rather than a placeholder for the frame before the projection
+            // lands. A dateline is either right or it is not there.
+            text = today?.let { dateline(it) }.orEmpty(),
+            style = type.readSerif,
+            color = colors.inkPrimary,
+            // Two, so a long locale date wraps rather than ellipsizing a date.
+            maxLines = 2,
+            modifier = Modifier.offset(x = (-2).dp),
         )
-        AreasChipRow(
+
+        // **Above the sentence, not below it**, which is the one thing about this block
+        // that is load bearing. The sentence is variable in height and often absent, so
+        // doors underneath it moved 52 to 92dp between one opening and the next: COGA
+        // o4p01, on the surface the owner opens every morning. Above it, their y depends
+        // on the status bar inset and the date, both of which are constant.
+        Spacer(Modifier.height(ClaritySpacing.snug))
+        AreasDoors(
             unfiledCount = unfiledCount,
             pulseReady = pulseReady,
             onOpenFocus = onOpenFocus,
             onOpenPulse = onOpenPulse,
             onOpenInbox = onOpenInbox,
         )
-        SectionRule(
-            modifier = Modifier.clarityEntrance(3, ClarityEntranceRole.ROW),
+        AreasBanner(
+            modifier = Modifier
+                .padding(top = ClaritySpacing.snug)
+                .clarityEntrance(2, ClarityEntranceRole.DOMINANT),
         )
     }
 }
 
 /**
- * The rule between the two standing invitations and the areas themselves.
+ * Wednesday 3 September, in whatever shape the reader's locale writes that.
  *
- * **Why there is one at all.** Above it are two controls that open other rooms; below it
- * are the places this person's work actually lives. Those are different kinds of thing
- * drawn on the same ground with the same gap, and the screen read as one undifferentiated
- * column. `design-v3.md` 6.1 permits exactly one separation device per element, and this
- * one's is the rule; it carries no fill, no shadow and no second edge.
+ * `getBestDateTimePattern` and not a literal `EEEE d MMMM`. The app has five other date
+ * formatters and all five hardcode both an English word order and `Locale.US`, which is
+ * a defect this one declines to make a sixth time: a skeleton names the fields that
+ * should appear and lets the platform decide their order and their separators, so a
+ * device set to Japanese gets a Japanese dateline rather than an English one rendered in
+ * Japanese words.
  *
- * ## It is not a line across the screen, and that is the whole of the treatment
- *
- * A solid rule from margin to margin has two hard ends, and two hard ends on a page with
- * no other verticals is the single most common way a divider reads as cheap: it looks
- * ruled rather than composed. This one is a **horizontal gradient**, transparent at both
- * margins, at its full value across the middle 80 percent. The ends do not stop, they
- * stop being.
- *
- * **One physical pixel, not one dp.** A hairline is a hairline: `1.toDp()` is 0.38dp on
- * this phone, and a 1dp rule is nearly three device pixels, which is a line rather than a
- * hair. This is the difference between the treatment reading as drawn and reading as
- * printed, and it is the same reason the value is `hairline`, ink at 8 percent, rather
- * than any ink a person could name a color for.
- *
- * **More air above than below**, 24 against the list's own 11: the rule belongs to the
- * block it closes rather than to the one it opens, so it sits nearer the cards it
- * introduces. Symmetric spacing would make it a thing in its own right, which it is not.
+ * The year is deliberately not in the skeleton. A dateline on a home screen answers
+ * `what day is it`, and nobody opening this app is unsure what year it is.
  */
 @Composable
-private fun SectionRule(modifier: Modifier = Modifier) {
-    val colors = LocalClarityColors.current
-    val hairline = with(LocalDensity.current) { 1.toDp() }
-    // **Not the `hairline` token, and the difference is the ground.** That token is ink at
-    // 8 percent and every one of its call sites draws it on `card`, which is the lightest
-    // surface in the app. This draws on `canvas`, which is four steps darker, where the
-    // same ink at the same alpha is most of the way to invisible. 13 percent measures on
-    // canvas about what 8 measures on a card, which is what keeping one value would have
-    // been trying to achieve.
-    val ink = colors.inkPrimary.copy(alpha = if (colors.isDark) 0.16f else 0.13f)
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(top = ClaritySpacing.scaled(24.dp))
-            .height(hairline)
-            .background(
-                Brush.horizontalGradient(
-                    0f to Color.Transparent,
-                    0.1f to ink,
-                    0.9f to ink,
-                    1f to Color.Transparent,
-                ),
-            ),
-    )
-}
-
-@Composable
-private fun HeaderGlyph(
-    @DrawableRes icon: Int,
-    label: String,
-    tint: Color,
-    onClick: () -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .size(48.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .clarityClickable(onClickLabel = label, onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        ClarityIcon(
-            icon = icon,
-            contentDescription = label,
-            tint = tint,
-            modifier = Modifier.size(22.dp),
+private fun dateline(date: LocalDate): String {
+    val locale = LocalConfiguration.current.locales[0]
+    val formatter = remember(locale) {
+        DateTimeFormatter.ofPattern(
+            DateFormat.getBestDateTimePattern(locale, DATELINE_SKELETON),
+            locale,
         )
     }
+    return remember(date, formatter) { date.format(formatter) }
 }
 
+private const val DATELINE_SKELETON = "EEEEdMMMM"
+
 /**
- * design-v3.md 10.1 and 10.8. Pill chips in a horizontally scrolling row.
+ * Focus, the Pulse, and the inbox when it holds something.
  *
- * **Every chip here is an ordinary unselected `ClarityChip`, and exactly one of them
- * can carry a dot.** 10.1 gives the permanent chips soft elevation and no border, and
- * phase 3c moved app chrome down one step of the value ladder, so an unselected chip
- * sits at `raise` rather than at `card` and this row inherits that from the component
- * rather than restating it. The one dot is the warnAmber Pulse dot in 10.1, which 3.1
- * scopes to that single use; it lives in the Pulse anchor and nothing else in this row may
- * grow one. The inbox chip in particular carries a count in its label and never a
- * badge, per 10.16 and Addendum 01 4a.
+ * **A `FlowRow` and not a `Row` of weights.** Two halves of the measure forced both
+ * labels to be centered in a box they did not fill; hugging content leaves the row's
+ * right end ragged, which is the only ragged terminal on a screen where everything else
+ * runs to 371.4dp. At the 200 percent text scale `Today's Pulse` no longer fits beside
+ * `Focus` and wraps to a second line instead of clipping, which is the other thing the
+ * weights could not do.
  *
- * **Focus is permanent and is present even when nothing can be focused on.** The
- * obvious answer is to hide it, or to dim it, while there is no area with an active
- * item. 10.1 calls it permanent, and the chooser has an empty state of its own,
- * `Nothing to focus on yet`, which is a sentence that explains the situation where a
- * missing chip would leave a person wondering where the feature went. 10.16 settles
- * the same question for the inbox rows in the opposite direction, and the difference
- * is real: a disabled control is a question a person has to answer, while a permanent
- * one that leads to an explanation is an answer.
+ * **Focus is permanent and present even when nothing can be focused on**, which 10.1
+ * states and this rewrite does not change. The chooser has an empty state of its own,
+ * and a control that leads to an explanation beats a control that vanishes.
  *
- * **The chip does not become a countdown while a session is running**, and that is the
- * deliberate choice rather than the obvious one, per section 15. It would be one line,
- * and the area card two thumbs below it already carries the live countdown, 10.3, next
- * to the name of the item the session is on. Two surfaces reporting the same number in
- * one screenful is how a person learns to read neither, and the chip's job is to be the
- * way back in, which it does under the same label either way.
+ * **A waiting Pulse changes its label as well as growing a dot**, and that is a defect
+ * fix rather than a flourish. `areas_chip_pulse_ready` has existed since phase 6 and was
+ * referenced by nothing, so the only signal that a Pulse was ready was a 9dp amber dot:
+ * one channel, which section 13 forbids, and which 10.1 says in as many words is not the
+ * signal on its own.
  */
-/**
- * **Two anchors, not three chips, and each one says what it will do.**
- *
- * Focus and Pulse shipped as 38dp `ClarityChip`s in a horizontally scrolling row, the
- * same component and the same geometry as the Trail's filters, which set a filter, and
- * as the Inbox chip, which opens a sheet. One shape was doing navigation, filtering and
- * disclosure, and B.1 measured 26 of the app's 35 controls inside an 18dp band of
- * height. A screen with no rung ladder has no loud element and no quiet one, and that is
- * what "lifeless" is, mechanically.
- *
- * These are the Areas screen's two standing invitations, so they take the **Standard 48
- * rung at 56dp** and split the measure between them. Each carries a second line that is
- * a live readout rather than a label: `7:00 left` when a session is running, `ready now`
- * when a Pulse is waiting. **Only a chip with something true to say is filled**, so
- * color on this row is earned by state and never spent on decoration, which is 3.4's
- * rule applied to chrome instead of to an area.
- *
- * The Inbox chip keeps the old chip geometry deliberately and sits under the pair: it is
- * conditional, it is a disclosure rather than an invitation, and it should not look like
- * one of the two things this screen is for.
- */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun AreasChipRow(
+private fun AreasDoors(
     unfiledCount: Int,
     pulseReady: Boolean,
     onOpenFocus: () -> Unit,
     onOpenPulse: () -> Unit,
     onOpenInbox: () -> Unit,
 ) {
-    Column(
+    val colors = LocalClarityColors.current
+    FlowRow(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = ClaritySpacing.step)
-            .clarityEntrance(2, ClarityEntranceRole.ROW),
+            // The doors carry 12dp of their own so the press pill has something to
+            // fill, so the block moves out by the same 12 to put the first label's ink
+            // back on the measure.
+            .offset(x = (-12).dp)
+            .clarityEntrance(1, ClarityEntranceRole.ROW),
+        horizontalArrangement = Arrangement.spacedBy(ClaritySpacing.tight),
+        verticalArrangement = Arrangement.spacedBy(ClaritySpacing.hair),
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(ClaritySpacing.snug)) {
-            AreasAnchor(
-                icon = ClarityIcons.focus,
-                label = stringResource(R.string.areas_chip_focus),
-                readout = null,
-                dotColor = null,
-                onClick = onOpenFocus,
-                modifier = Modifier.weight(1f).tutorialTarget(TutorialStep.FOCUS_CHIP),
-            )
-            AreasAnchor(
-                icon = ClarityIcons.pulse,
-                label = stringResource(R.string.areas_chip_pulse),
-                readout = if (pulseReady) stringResource(R.string.areas_pulse_ready_now) else null,
-                dotColor = if (pulseReady) LocalClarityColors.current.warnAmber else null,
-                onClick = onOpenPulse,
-                modifier = Modifier.weight(1f).tutorialTarget(TutorialStep.PULSE_CHIP),
-            )
-        }
+        AreasDoor(
+            icon = ClarityIcons.focus,
+            label = stringResource(R.string.areas_chip_focus),
+            dotColor = null,
+            onClick = onOpenFocus,
+            modifier = Modifier.tutorialTarget(TutorialStep.FOCUS_CHIP),
+        )
+        AreasDoor(
+            icon = ClarityIcons.pulse,
+            label = stringResource(
+                if (pulseReady) R.string.areas_chip_pulse_ready else R.string.areas_chip_pulse,
+            ),
+            dotColor = if (pulseReady) colors.warnAmber else null,
+            onClick = onOpenPulse,
+            modifier = Modifier.tutorialTarget(TutorialStep.PULSE_CHIP),
+        )
         if (unfiledCount > 0) {
-            Row(modifier = Modifier.padding(top = ClaritySpacing.snug)) {
-                InboxChip(count = unfiledCount, onClick = onOpenInbox)
-            }
+            val description = pluralStringResource(
+                R.plurals.cd_areas_chip_inbox,
+                unfiledCount,
+                unfiledCount,
+            )
+            AreasDoor(
+                // 7.2 assigns the inbox no glyph, so it has none here either, and the
+                // count rides in the label rather than in a badge. 10.16 and Addendum
+                // 01 4a.
+                icon = null,
+                label = stringResource(R.string.areas_chip_inbox, unfiledCount),
+                dotColor = null,
+                onClick = onOpenInbox,
+                modifier = Modifier.semantics { contentDescription = description },
+            )
         }
     }
 }
 
+/**
+ * One door. A label, its glyph, and a press ground that is there only while pressed.
+ */
 @Composable
-private fun AreasAnchor(
-    @DrawableRes icon: Int,
+private fun AreasDoor(
+    @DrawableRes icon: Int?,
     label: String,
-    readout: String?,
     dotColor: Color?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -722,63 +874,83 @@ private fun AreasAnchor(
     val shapes = LocalClarityShapes.current
     val interaction = remember { MutableInteractionSource() }
 
-    Box(
+    Row(
         modifier = modifier
-            // The Column inside holds an 18sp label and a 12.5sp readout, which measure
-            // about 82dp at the 200 percent cap against a hard 56dp box.
-            .heightIn(min = ClaritySpacing.scaled(56.dp))
-            .clarityPressScale(interaction, label = "anchorPress")
-            .clarityShadow(ClarityElevation.card, shapes.pill, enabled = !colors.isDark)
+            .heightIn(min = ClaritySpacing.minTouchTarget)
             .clip(shapes.pill)
-            .background(colors.card)
             .clarityFocusRing(interaction, shapes.pill)
             .clarityClickable(
                 interactionSource = interaction,
                 haptic = ClarityHapticEvent.TAP,
                 role = Role.Button,
+                pressShape = shapes.pill,
+                onClickLabel = label,
+                onClick = onClick,
+            )
+            .padding(horizontal = ClaritySpacing.snug),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (dotColor != null) {
+            // A live state takes the dot; an idle one takes its own glyph. The two
+            // never appear together, so the row never grows.
+            Box(
+                modifier = Modifier
+                    .size(ClaritySpacing.areaDot)
+                    .clip(CircleShape)
+                    .background(dotColor),
+            )
+            Spacer(Modifier.width(ClaritySpacing.tight))
+        } else if (icon != null) {
+            ClarityIcon(
+                icon = icon,
+                contentDescription = null,
+                tint = colors.inkSecondary,
+                modifier = Modifier.size(20.dp),
+            )
+            Spacer(Modifier.width(ClaritySpacing.tight))
+        }
+        Text(text = label, style = type.bodyStrong, color = colors.inkPrimary)
+    }
+}
+
+/**
+ * One of the three targets at the top right of the plate.
+ *
+ * **It had no focus ring and no role.** `clarityClickable` supplies neither on its own,
+ * so a keyboard or a switch landing on the archive glyph showed nothing at all, and
+ * TalkBack announced the label without saying it was a button. Every other control in
+ * the app declares both; these three were written in phase 2 and never revisited.
+ */
+@Composable
+private fun HeaderGlyph(
+    @DrawableRes icon: Int,
+    label: String,
+    tint: Color,
+    onClick: () -> Unit,
+) {
+    val interaction = remember { MutableInteractionSource() }
+    val shape = RoundedCornerShape(24.dp)
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(shape)
+            .clarityFocusRing(interaction, shape)
+            .clarityClickable(
+                interactionSource = interaction,
+                role = Role.Button,
+                pressShape = shape,
                 onClickLabel = label,
                 onClick = onClick,
             ),
         contentAlignment = Alignment.Center,
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (dotColor != null) {
-                    // A live state takes the dot; an idle one takes its own glyph. The
-                    // two never appear together, so the row never grows.
-                    Box(
-                        modifier = Modifier
-                            .size(ClaritySpacing.areaDot)
-                            .clip(CircleShape)
-                            .background(dotColor),
-                    )
-                } else {
-                    ClarityIcon(
-                        icon = icon,
-                        contentDescription = null,
-                        tint = colors.inkSecondary,
-                        modifier = Modifier.size(18.dp),
-                    )
-                }
-                Spacer(Modifier.width(ClaritySpacing.tight))
-                Text(text = label, style = type.bodyStrong, color = colors.inkPrimary)
-            }
-            if (readout != null) {
-                Spacer(Modifier.height(2.dp))
-                Text(text = readout, style = type.caption, color = colors.inkSecondary)
-            }
-        }
+        ClarityIcon(
+            icon = icon,
+            contentDescription = label,
+            tint = tint,
+            modifier = Modifier.size(22.dp),
+        )
     }
-}
-
-@Composable
-private fun InboxChip(count: Int, onClick: () -> Unit) {
-    val description = pluralStringResource(R.plurals.cd_areas_chip_inbox, count, count)
-    ClarityChip(
-        label = stringResource(R.string.areas_chip_inbox, count),
-        onClick = onClick,
-        modifier = Modifier.semantics { contentDescription = description },
-    )
 }
 
 /**
@@ -844,9 +1016,13 @@ private fun NewAreaRow(onClick: () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
     val shape = LocalClarityShapes.current.card
 
+    // **It hugs its content rather than filling the width, and that is a collision fix
+    // rather than a preference.** The row was `fillMaxWidth`, so with four areas on the
+    // list it ran underneath the floating plus button: a full width tap target with an
+    // opaque circle sitting on its right half, which is both a visual overlap and a
+    // hit testing one. Hugging keeps the target on the words a person is aiming at.
     Row(
         modifier = Modifier
-            .fillMaxWidth()
             .heightIn(min = ClaritySpacing.minTouchTarget)
             .clip(shape)
             .clarityFocusRing(interaction, shape)
@@ -899,24 +1075,26 @@ private fun AreasEmptyState(onCreate: () -> Unit) {
         easing = EaseOutCubic,
     )
 
+    // **Left aligned on the measure, not centered.** Centering is the half of the
+    // conventional empty state that nobody questions, and every other block on this
+    // screen sits on the 20dp edge. A centered title, a centered paragraph inset by a
+    // further 24dp, and a centered button made three more alignments on a page that was
+    // already short of them, on the one screen a person sees on their first day.
+    // design-v3.md 15.
     AnimatedVisibility(visible = shown, enter = fadeIn(entrance)) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(top = ClaritySpacing.scaled(60.dp)),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth().padding(top = ClaritySpacing.rest),
         ) {
             Text(
                 text = stringResource(R.string.areas_empty_title),
                 style = type.readSerif,
                 color = colors.inkPrimary,
-                textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
             Text(
                 text = stringResource(R.string.areas_empty_body),
                 style = type.body,
                 color = colors.inkSecondary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 24.dp),
             )
             Spacer(Modifier.height(ClaritySpacing.scaled(24.dp)))
             ClarityButton(

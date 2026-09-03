@@ -314,9 +314,25 @@ fun OnboardingRoute(
                         beat = state.beat,
                         canGoBack = state.canGoBack,
                         onBack = viewModel::back,
+                        // **It waits for the write, and that is the whole of the bug.**
+                        // `leaveEarly` launches into `viewModelScope` and returns at once;
+                        // `onFinished` takes this route out of the composition, which
+                        // clears the ViewModel store, which cancels that scope. So the
+                        // areas and `hasCompletedOnboarding` were racing a teardown and
+                        // usually losing: **onboarding ran again on every single launch**,
+                        // and because the flag never went true, `Replay the welcome` had
+                        // nothing to flip either.
+                        //
+                        // Beat 3 already had this right and awaits `awaitCommitted` before
+                        // it hands over. The exit is the same act with the same writes and
+                        // it has to make the same promise. The wait is one DataStore round
+                        // trip; a person will not see it.
                         onJumpIn = {
-                            viewModel.leaveEarly(todayName)
-                            onFinished()
+                            scope.launch {
+                                viewModel.leaveEarly(todayName)
+                                viewModel.awaitCommitted()
+                                onFinished()
+                            }
                         },
                     )
                 }

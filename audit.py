@@ -10,7 +10,19 @@ Exit code 0 = clean, 1 = defects found.
 import pathlib, re, sys, collections, json
 
 ROOT  = pathlib.Path(__file__).parent
-DOCS  = [p for p in sorted(ROOT.glob('*.md')) if p.name != 'audit_report.md']
+# **`docs/` is audited now, and was not.** This read only the twelve root markdown
+# files, so ten specification documents were invisible to nineteen defect classes,
+# including `docs/COMPONENT_AND_LAYOUT.md`, which has been quietly superseding parts of
+# `design-v3.md`. A completeness audit that reports CLEAN over a set it never opened is
+# the failure this file exists to catch, committed by this file.
+#
+# `docs/addenda` stays out, for the reason the comment below gives: those are transcribed
+# source documents rather than specifications, nothing may cite them as authority, and
+# auditing them for section references would report every citation *to* them as a defect.
+DOCS  = [
+    p for p in sorted(ROOT.glob('*.md')) + sorted(ROOT.glob('docs/*.md'))
+    if p.name != 'audit_report.md'
+]
 HTML  = sorted(ROOT.glob('*.html'))
 ALL   = DOCS + HTML
 TEXT  = {p.name: p.read_text(encoding='utf-8') for p in ALL}

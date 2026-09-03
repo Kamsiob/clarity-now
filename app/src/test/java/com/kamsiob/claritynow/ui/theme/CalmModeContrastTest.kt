@@ -165,11 +165,17 @@ class CalmModeContrastTest {
             worstOnBareCard >= floor,
         )
         assertTrue(
+            // **Against the floor, not against a hand picked 4.0.** The threshold was
+            // 4.0 when the palette was Tailwind's, where the naive reading bottomed out
+            // at 3.71. Flexoki is better behaved and it bottoms out at 4.17, which is
+            // still a failure and was still worth the correction this test records. What
+            // the assertion is for is that the naive reading fails, and the floor is what
+            // failing means; a second number beside it only ever encodes one palette.
             "and to fail on the card as drawn, which is the point. It measured " +
                 "$worstOnWash to one, and if this is now above the floor then either " +
                 "the palette or the wash opacities changed and the finding needs " +
                 "re-checking rather than the test relaxing.",
-            worstOnWash < 4.0,
+            worstOnWash < floor,
         )
     }
 
@@ -235,7 +241,7 @@ class CalmModeContrastTest {
         assertTrue(
             "the in session card is supposed to stay the tightest of the grounds and " +
                 "measured $inSession to one",
-            inSession in 5.45..5.75,
+            inSession in 5.95..6.25,
         )
     }
 

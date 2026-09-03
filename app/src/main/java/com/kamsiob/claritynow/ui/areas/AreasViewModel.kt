@@ -10,6 +10,7 @@ import com.kamsiob.claritynow.data.repo.FocusCountdown
 import com.kamsiob.claritynow.domain.ClarityClock
 import com.kamsiob.claritynow.domain.dateKey
 import com.kamsiob.claritynow.domain.daysBetween
+import com.kamsiob.claritynow.domain.localDate
 import com.kamsiob.claritynow.domain.pulse.PulseDayState
 import com.kamsiob.claritynow.domain.replay.ClarityConflict
 import com.kamsiob.claritynow.domain.replay.ClarityState
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 /**
  * One area card. design-v3.md 10.3. Everything the card draws, and nothing else.
@@ -157,6 +159,20 @@ data class AreasUiState(
     val promotions: Map<String, PromotionCue> = emptyMap(),
     val unfiledCount: Int = 0,
     val pulseReady: Boolean = false,
+    /**
+     * Today, for the plate's dateline.
+     *
+     * **Read from the injected clock in the view model rather than from the composable**,
+     * which is the same rule `pulseReady` follows one field up and the same rule the
+     * whole of `domain` follows: nothing that draws reads a system clock. Null until the
+     * first emission, and the dateline is simply absent for that frame rather than
+     * drawing a wrong date and correcting itself.
+     *
+     * Recomputed on every emission of the projection, so a screen left open across
+     * midnight picks the new day up with the next thing that changes, which is the same
+     * seam and the same argument `pulseReady` carries.
+     */
+    val today: LocalDate? = null,
 ) {
     val isEmpty: Boolean get() = !loading && areas.isEmpty()
 }
@@ -263,6 +279,7 @@ class AreasViewModel(
                 // the same reason design-v3.md 8.2 item 7 puts one in the whole app.
                 pulseReady = PulseDayState.of(state.pulses[clock.dateKey()]) ==
                     PulseDayState.READY,
+                today = clock.localDate(),
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AreasUiState())
 

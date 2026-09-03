@@ -176,7 +176,7 @@ private fun ColorPreviewCard(
                 Text(
                     text = itemTitle ?: stringResource(R.string.area_idle_title),
                     style = if (itemTitle == null) {
-                        type.itemTitle.copy(fontWeight = FontWeight(500))
+                        type.itemTitle.copy(fontWeight = FontWeight(400))
                     } else {
                         type.itemTitle
                     },

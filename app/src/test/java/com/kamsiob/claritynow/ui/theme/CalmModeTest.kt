@@ -202,7 +202,7 @@ class CalmModeTest {
         val dark = ClarityDarkColors.calmed()
         assertEquals(0.09f, dark.cardWashAlpha, 0.0001f)
         assertEquals(0.16f, dark.cardWashActiveAlpha, 0.0001f)
-        assertEquals(0.18f, dark.cardDeckAlpha, 0.0001f)
+        assertEquals(0.13f, dark.cardDeckAlpha, 0.0001f)
 
         listOf(ClarityLightColors to light, ClarityDarkColors to dark).forEach { (ordinary, calm) ->
             assertEquals(
@@ -280,6 +280,13 @@ class CalmModeTest {
             // card takes no wash at all, because an archived area is idle and 3.4 gives
             // an idle card none, so there is no atmospheric use here to route.
             "ui/areas/ArchiveScreen.kt" to 1,
+            // The manage screen's row dot, at the same 9dp and the same two alphas the
+            // Areas card and the archive row use. **Identity, so excluded**, and this is
+            // the screen where the case is strongest: the whole job of that list is
+            // telling one area from another in order to put them in an order, and a dot
+            // that changed color between this row and the card it moves would be the one
+            // place the transform made an area harder to recognize rather than quieter.
+            "ui/areas/ManageAreasScreen.kt" to 1,
             // The area dot on each row of the filing chooser. Identity, so excluded:
             // it is how a person recognizes which area they are about to file into,
             // and 16.2 names the dot as one of the two uses that never transform.

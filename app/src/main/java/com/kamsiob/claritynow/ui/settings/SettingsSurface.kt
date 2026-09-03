@@ -1,5 +1,12 @@
 package com.kamsiob.claritynow.ui.settings
 
+import com.kamsiob.claritynow.ui.theme.clarityMotion
+import com.kamsiob.claritynow.ui.nav.pushedScreenScaleOut
+import com.kamsiob.claritynow.ui.nav.pushedScreenScaleIn
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.AnimatedContent
 import android.content.ContentResolver
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -109,6 +116,7 @@ internal fun SettingsSurface(onDismiss: () -> Unit, modifier: Modifier = Modifie
     // shows there is the surface receding rather than a destination. That is the same
     // thing the platform does for a nested destination and it is honest about direction
     // if not about depth.
+    val motion = clarityMotion()
     val predictiveBack = rememberPredictiveBack {
         if (aboutOpen) aboutOpen = false else onDismiss()
     }
@@ -119,7 +127,23 @@ internal fun SettingsSurface(onDismiss: () -> Unit, modifier: Modifier = Modifie
             .predictiveBackPreview(predictiveBack)
             .background(colors.canvas),
     ) {
-        if (aboutOpen) {
+        // **About used to appear between two frames.** The same hard cut the archive and
+        // manage areas had, and the same answer: a fade with a small scale from 0.97,
+        // out faster than in, and no scale at all under reduced motion.
+        //
+        // `AnimatedContent` rather than two `AnimatedVisibility` blocks, because these
+        // two are alternatives rather than a screen over a screen: Settings genuinely
+        // leaves while About is up, so only one of them should be composed and the
+        // transition should own the swap.
+        AnimatedContent(
+            targetState = aboutOpen,
+            transitionSpec = {
+                (fadeIn(motion.effects()) + pushedScreenScaleIn(motion))
+                    .togetherWith(fadeOut(motion.effectsFast()) + pushedScreenScaleOut(motion))
+            },
+            label = "aboutSwap",
+        ) { showingAbout ->
+        if (showingAbout) {
             AboutScreen(onBack = { aboutOpen = false })
         } else {
             SettingsScreen(
@@ -140,12 +164,25 @@ internal fun SettingsSurface(onDismiss: () -> Unit, modifier: Modifier = Modifie
                 onExport = { sheet = SettingsSheet.EXPORT },
                 onImport = { importLauncher.launch(IMPORT_MIME_FILTER) },
                 onOpenErase = { sheet = SettingsSheet.ERASE },
+                onRebuildCache = { viewModel.rebuildCache() },
                 onOpenPrivacy = { sheet = SettingsSheet.PRIVACY },
                 onOpenLicenses = { sheet = SettingsSheet.LICENSES },
-                onReplayTour = viewModel::replayTutorial,
-                onReplayWelcome = viewModel::replayWelcome,
+                // **Both close Settings, because both act on the screen behind it.**
+                // The tutorial spotlights the FAB, an area card, two anchors and the tab
+                // bar, every one of which is underneath this surface; the welcome replaces
+                // the whole app. A row that sets a flag and leaves the person looking at
+                // the row is the shape that made these two read as broken for four phases.
+                onReplayTour = {
+                    viewModel.replayTutorial()
+                    onDismiss()
+                },
+                onReplayWelcome = {
+                    viewModel.replayWelcome()
+                    onDismiss()
+                },
                 onOpenAbout = { aboutOpen = true },
             )
+        }
         }
     }
 

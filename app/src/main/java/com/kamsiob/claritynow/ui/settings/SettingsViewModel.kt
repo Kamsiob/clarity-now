@@ -32,7 +32,7 @@ import java.io.IOException
 import java.time.ZoneId
 
 /** Which long running data operation is in flight, if any. */
-internal enum class DataTask { EXPORTING, IMPORTING, ERASING }
+internal enum class DataTask { EXPORTING, IMPORTING, ERASING, REBUILDING }
 
 /**
  * What just happened to the person's data, said once and then dismissed.
@@ -51,6 +51,21 @@ internal sealed interface DataMessage {
     data class Imported(val eventCount: Int) : DataMessage
     data class ImportWasRefused(val reason: ImportRefusal) : DataMessage
     data class ExportFailed(val diagnostic: String) : DataMessage
+
+    /**
+     * The read or the write threw rather than refusing.
+     *
+     * **`ImportWasRefused` is not this.** A refusal is an answer: the file is not a
+     * backup, or the password is wrong, and the sheet offers the field again. This is the
+     * file becoming unreadable underneath the person, a cloud provider revoking the URI
+     * mid read, or the database failing to write, and until it existed every one of those
+     * threw out of `viewModelScope` and took the app down on the button that can replace
+     * somebody's entire history.
+     */
+    data class ImportFailed(val diagnostic: String) : DataMessage
+
+    /** What the cache rebuild found. [matched] false is the defect it exists to catch. */
+    data class Rebuilt(val eventCount: Int, val matched: Boolean?) : DataMessage
     data object Erased : DataMessage
 }
 
@@ -281,7 +296,21 @@ internal class SettingsViewModel(
         if (tasks.value.busy != null) return
         tasks.value = TaskState(busy = DataTask.IMPORTING)
         viewModelScope.launch {
-            tasks.value = when (val read = backups.read(target, password)) {
+            // The same three clause catch `export` has carried since it was written, and
+            // the reason is the same: the target deliberately does not swallow an
+            // `IOException`, so somebody has to. Nothing has been written at this point in
+            // either case, which is what the KDoc above promises.
+            val read = try {
+                backups.read(target, password)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (failure: IOException) {
+                tasks.value = TaskState(
+                    message = DataMessage.ImportFailed(failure.message ?: "no detail"),
+                )
+                return@launch
+            }
+            tasks.value = when (read) {
                 is BackupRead.Refused ->
                     TaskState(message = DataMessage.ImportWasRefused(read.reason))
 
@@ -300,7 +329,25 @@ internal class SettingsViewModel(
         val pending = tasks.value.pendingImport ?: return
         tasks.value = TaskState(busy = DataTask.IMPORTING)
         viewModelScope.launch {
-            val check = backups.apply(pending, mode)
+            // **The one button in the app that can replace a whole history had no catch
+            // at all.** An `IOException` out of the ingest went straight through
+            // `viewModelScope` and took the process down, on a screen whose previous step
+            // is a typed `REPLACE`.
+            //
+            // Nothing is half applied when this fires: `ingestForeignLog` does the erase,
+            // the append and the rebuild inside one `db.withTransaction`, so a throw
+            // rolls the whole thing back and the log is exactly as it was. That is what
+            // `settings_import_error` is able to say.
+            val check = try {
+                backups.apply(pending, mode)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (failure: IOException) {
+                tasks.value = TaskState(
+                    message = DataMessage.ImportFailed(failure.message ?: "no detail"),
+                )
+                return@launch
+            }
             tasks.value = TaskState(message = DataMessage.Imported(check.eventCount))
         }
     }
@@ -323,6 +370,34 @@ internal class SettingsViewModel(
         viewModelScope.launch {
             repository.eraseEverything()
             tasks.value = TaskState(message = DataMessage.Erased)
+        }
+    }
+
+    /**
+     * Drops every derived row and folds the log again. `MASTER_BUILD_PROMPT.md` 5.4.
+     *
+     * **The proof that the cache is a cache, and it had no way to be run.**
+     * `ClarityRepository.rebuildCacheFromLog` was written in phase 1, its own KDoc said it
+     * was "exposed in the debug menu", `CLAUDE.md` said "a debug action does exactly that
+     * as a proof", and nothing in the app called it. `allWarningsAsErrors` does not see an
+     * unused public function, so the claim stood for thirteen phases.
+     *
+     * `RebuildCheck.matched` is the interesting half: false means the state every screen
+     * has been reading disagrees with the log it was folded from, which is the one defect
+     * in this app that cannot be found by looking at it.
+     *
+     * Debug builds only, which is why it takes no `busy` guard of its own beyond the
+     * shared one and why its message is a diagnostic rather than a sentence. 5.4 asks for
+     * a debug action and this is one; a release build has no row that calls it.
+     */
+    fun rebuildCache() {
+        if (tasks.value.busy != null) return
+        tasks.value = TaskState(busy = DataTask.REBUILDING)
+        viewModelScope.launch {
+            val check = repository.rebuildCacheFromLog()
+            tasks.value = TaskState(
+                message = DataMessage.Rebuilt(check.eventCount, check.matched),
+            )
         }
     }
 

@@ -113,8 +113,42 @@ plugins {
 //
 // Not a major bump. 1.0 is the release, and nothing in the event catalog, the backup
 // format or the engine contract moved: every change is a surface, a string or a token.
+// 0.16.0: the plate, the swipe and the manage room. A minor bump rather than a patch on
+// three things a person can now do that they could not.
+//
+// **Order their areas without dragging one.** `MASTER_BUILD_PROMPT.md` 8.4 has the areas
+// in a list a person arranges, and the way to arrange it was to press and hold a card
+// until it lifted. WCAG 2.2 SC 2.5.7 wants a single pointer alternative for every drag,
+// and the only one was `Move to top` inside a menu reached by the same long press: one
+// destination, from a gesture nobody is told about. There is a room for it now, behind a
+// header glyph, with two labeled arrows on every row.
+//
+// **Delete their last area**, which was the one card in the app that refused. And **rebuild
+// the cache from the log**, in a debug build, which `MASTER_BUILD_PROMPT.md` 5.4 asked for,
+// which this file's own comments and `CLAUDE.md` both said existed, and which nothing
+// called for thirteen phases.
+//
+// It would have been a patch for everything else in the pass, which is correction work:
+// onboarding that replayed on every launch, two Settings rows that did nothing, a swipe
+// that opened a hole in the page, an app that said `Item deleted` about an item still on
+// the screen, an onboarding that promised a control the app does not have, a re-entry
+// title copied word for word out of the Pulse corpus, and the Areas screen itself, which
+// gains a plate and loses four objects. The Report also states a clause it has never been
+// able to state, because `{m}` bound to a measure nothing declared.
+//
+// It also carries the design work that followed the owner's second verdict, "it is uglier
+// than ever, it is dead and boring", and a research sweep across open source design work
+// that answered why. The Areas screen has a plate with the date set in the app's own
+// serif, the four light surfaces are on one hue instead of four, the type scale has no
+// collisions left, the eight area palettes are Flexoki rather than Tailwind's defaults,
+// the icons are a weight lighter, and three pushed screens stopped appearing between two
+// frames. None of it is new capability, which is why it does not move the minor on its
+// own account.
+//
+// Not a major bump. 1.0 is the release, and nothing in the event catalog, the backup
+// format or the engine contract moved.
 val versionMajor = 0
-val versionMinor = 15
+val versionMinor = 16
 val versionPatch = 0
 
 // The application id and the one suffix that changes it, written once.
@@ -282,6 +316,33 @@ tasks.withType<Test>().configureEach {
         rootProject.layout.projectDirectory.file("CLARITY_LOGIC_ENGINE.md"),
         rootProject.layout.projectDirectory.file("docs/CORPUS_ANCHORS.md"),
     ).withPropertyName("corpusFiles").withPathSensitivity(PathSensitivity.RELATIVE)
+
+    // **The same gap, in the other half of what the suite reads off disk.**
+    //
+    // The corpus files above were declared when phase 9 found `verifyClarity` passing in
+    // 499ms over two thousand lines it had never read. The fix was made for those five
+    // files and not for the rest, and the rest is most of the language gate: nineteen
+    // tests open `strings.xml` at runtime, and the manifest, the shortcuts, the font
+    // directory, the privacy policy and the store listing each have one.
+    //
+    // A `.kt` edit recompiles and the task reruns, which is why this was never noticed.
+    // A string edit does not: `strings.xml` reaches an Android unit test only if the test
+    // opens the file, which these do, and Gradle sees nothing. So the whole of the copy
+    // could change and every test that reads copy would report UP-TO-DATE.
+    //
+    // Found by editing one string to prove `NoCorpusInStringsTest` catches what it was
+    // written for, and getting a green run in 972ms.
+    inputs.files(
+        layout.projectDirectory.file("src/main/res/values/strings.xml"),
+        layout.projectDirectory.file("src/main/res/xml/shortcuts.xml"),
+        layout.projectDirectory.file("src/main/AndroidManifest.xml"),
+        rootProject.layout.projectDirectory.file("PRIVACY.md"),
+        rootProject.layout.projectDirectory.file("store-assets/LISTING.md"),
+    ).withPropertyName("clarityReadFiles").withPathSensitivity(PathSensitivity.RELATIVE)
+
+    inputs.dir(layout.projectDirectory.dir("src/main/res/font"))
+        .withPropertyName("fontFiles")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
 }
 
 kotlin {

@@ -122,7 +122,11 @@ fun ClarityColors.calmed(): ClarityColors = copy(
     // had, so calm mode still lightens the wash by exactly as much as it used to.
     cardWashAlpha = if (isDark) 0.09f else 0.05f,
     cardWashActiveAlpha = if (isDark) 0.16f else 0.08f,
-    cardDeckAlpha = if (isDark) 0.18f else 0.09f,
+    // The dark deck follows its ordinary value down. That value was 0.22, above the 16
+    // percent ceiling 3.4 sets for an area wash, and correcting it to 0.16 left the calm
+    // deck deeper than the ordinary one, which is calm mode meaning the opposite of what
+    // it means everywhere else. 0.13 keeps the same proportion the light pair has.
+    cardDeckAlpha = if (isDark) 0.13f else 0.09f,
 )
 
 // ---------------------------------------------------------------------------

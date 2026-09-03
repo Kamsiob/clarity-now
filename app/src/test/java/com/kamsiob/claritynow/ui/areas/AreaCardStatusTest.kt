@@ -7,17 +7,24 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The card's fourth row, and the count that was missing from it. `design-v3.md` 10.3 and
- * issue #65.
+ * The queue count on the card, and where it is drawn. `design-v3.md` 10.3 and issue #65.
  *
  * This is a queue app whose main screen hid the queue. With eleven items behind Work the
  * card was identical to the day there was one: a dot, a name, a title, and a status line
  * that only spoke when the area was idle. The All Areas widget printed the count on the
  * home screen while the screen the app opens on would not say it.
  *
- * The fix is one line of caption text, and everything that could go wrong with it is a
- * rule somebody could undo without noticing: a badge, a color, a zero, a second row, or a
- * second copy of the wording drifting away from the widget's. So they are asserted.
+ * **The count moved in the appeal pass and this file moved with it.** It was the card's
+ * fourth stacked line, in the same size, weight and color as the first step above it; it
+ * is now the trailing end of the identity row, which is the card's only right edge.
+ * `trailingReadout` draws it and `StatusLine` is what is left: the last active line, and
+ * nothing else.
+ *
+ * Everything that could go wrong with it is a rule somebody could undo without noticing:
+ * a badge, a color, a zero, a second copy of the count drawn at the same time as the age
+ * line, or a second copy of the wording drifting away from the widget's. So they are all
+ * asserted, and they are asserted about wherever the count now lives rather than about a
+ * function name.
  */
 class AreaCardStatusTest {
 
@@ -65,29 +72,60 @@ class AreaCardStatusTest {
         assertTrue("one line, so a long line cannot become two rows", "maxLines = 1" in status)
     }
 
+    /**
+     * The two facts stay mutually exclusive even though they are now drawn in two places.
+     *
+     * `Last active 3 days ago` and `3 waiting` were exclusive because they shared one row
+     * and the card has a four row budget. They no longer share a row, so nothing about the
+     * layout enforces it any more and only this branch does: `StatusLine` returns for any
+     * area that has a queue, which leaves the age line for areas that have none.
+     *
+     * Worth an assertion of its own, because the obvious tidy is to delete a `return` that
+     * now looks like it does nothing.
+     */
+    @Test
+    fun `an area with a queue does not also state how long it has been quiet`() {
+        assertTrue(
+            "the age line stands down whenever there is a count to draw",
+            "area.queueLength > 0 -> return" in statusLine(),
+        )
+    }
+
     /** Absent at zero rather than reading `0 waiting`, which is the criterion in the issue. */
     @Test
     fun `an empty queue states nothing rather than a zero`() {
+        val readout = trailingReadout()
         assertTrue(
             "the count is drawn only where there is a count",
-            "area.queueLength > 0 -> pluralStringResource(" in statusLine(),
+            "area.queueLength > 0 -> pluralStringResource(" in readout,
+        )
+        assertTrue("and nothing at all otherwise", "else -> null" in readout)
+        assertTrue(
+            "a running session states its time on the deck and nothing here",
+            "area.focusMinutesRemaining != null -> null" in readout,
         )
     }
 
     /**
      * `CLAUDE.md` rule 10, and the thing the focus group was explicit about: the count is
      * text in the card's own ink, not a badge, not a dot and not a color.
+     *
+     * Asserted over the identity row it is drawn in rather than over the function that
+     * returns the string, because a badge would be built at the call site.
      */
     @Test
     fun `the count carries no badge, no dot and no color of its own`() {
-        val status = statusLine()
-        assertTrue("the card's caption role", "style = type.caption" in status)
-        assertTrue("and the card's own secondary ink", "color = colors.inkSecondary" in status)
+        val row = eyebrow()
+        assertTrue("the card's caption role", "style = type.caption" in row)
+        assertTrue("and the card's own secondary ink", "color = colors.inkSecondary" in row)
         assertFalse(
             "a count on a filled shape is a badge, whatever it is called",
-            "background(" in status || "Badge" in status || "CircleShape" in status,
+            "Badge" in row,
         )
-        assertFalse("and an accent here would be a colored marker", "accent" in status)
+        assertFalse(
+            "and an accent on the count would be a colored marker",
+            "color = accent" in row,
+        )
     }
 
     // ------------------------------------------------------------------ speech
@@ -147,7 +185,19 @@ class AreaCardStatusTest {
 
     private fun strings(): String = File("src/main/res/values/strings.xml").readText()
 
-    /** The body of the one composable that draws row four. */
+    /** The body of the one composable that draws the last active line. */
     private fun statusLine(): String =
         card().substringAfter("private fun StatusLine(").substringBefore("\n/**")
+
+    /** The one function that decides what the identity row reports at its trailing end. */
+    private fun trailingReadout(): String =
+        card().substringAfter("private fun trailingReadout(").substringBefore("\n/**")
+
+    /**
+     * The identity row: the dot, the name and the trailing readout. Bounded by the block
+     * that draws the title underneath it, which is the next `Box` in the file.
+     */
+    private fun eyebrow(): String =
+        card().substringAfter("        Row(verticalAlignment = Alignment.CenterVertically) {")
+            .substringBefore("        Box(modifier = Modifier.fillMaxWidth()")
 }

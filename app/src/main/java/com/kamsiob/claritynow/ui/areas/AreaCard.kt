@@ -1,5 +1,7 @@
 package com.kamsiob.claritynow.ui.areas
 
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -133,9 +135,29 @@ fun AreaCardContent(
         Column(
             modifier = Modifier.padding(
                 horizontal = ClaritySpacing.cardPaddingHorizontal,
-                vertical = ClaritySpacing.scaled(16.dp),
+                // `cardPaddingVertical`, which is `scaled(12.dp)` and had no call sites
+                // at all, rather than the 16 that was hardcoded here. A token that
+                // exists and is not used is a number waiting to disagree with itself.
+                vertical = ClaritySpacing.cardPaddingVertical,
             ),
         ) {
+        // **The card had no right edge, and this row is where it gets one.**
+        //
+        // Every string on this card is leading aligned and ragged right, so the
+        // rightmost third to half of every card was empty and the only vertical
+        // alignment anywhere on the right half of the screen was the ragged ends of
+        // four titles. The queue count used to sit at the bottom left as a fourth
+        // stacked caption, indistinguishable in size, weight and color from the first
+        // step above it. Moved to the trailing end of the identity row it becomes the
+        // card's second alignment and stops being the card's fourth identical line.
+        //
+        // It is also what makes the area name's 55dp indent read: the name is now the
+        // leading half of a band that spans the card, rather than one stray line set in
+        // further than the title beneath it.
+        //
+        // **No badge, no pill, no color, and never a bare numeral.** `queue_waiting`
+        // reads `3 waiting`, in the card's own caption ink. CLAUDE.md rule 10 and
+        // design-v3.md 10.3.
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
@@ -155,6 +177,19 @@ fun AreaCardContent(
                     .padding(start = ClaritySpacing.tight)
                     .weight(1f, fill = false),
             )
+            Spacer(Modifier.weight(1f))
+            trailingReadout(area)?.let { readout ->
+                Text(
+                    text = readout,
+                    style = type.caption,
+                    color = colors.inkSecondary,
+                    textAlign = TextAlign.End,
+                    // Two, so a long name takes the width and this wraps rather than
+                    // either of them clipping at the 200 percent scale.
+                    maxLines = 2,
+                    modifier = Modifier.padding(start = ClaritySpacing.snug),
+                )
+            }
         }
 
         Box(modifier = Modifier.fillMaxWidth().padding(top = ClaritySpacing.tight)) {
@@ -187,7 +222,7 @@ fun AreaCardContent(
                     // nothing to resolve against and was dropped in silence. See
                     // ClarityType.kt. The tracking stays at the role's own value,
                     // because the size and the job have not changed.
-                    style = type.itemTitle.copy(fontWeight = FontWeight(500)),
+                    style = type.itemTitle.copy(fontWeight = FontWeight(400)),
                     // inkSecondary, and 10.3 says inkTertiary. **That is a
                     // contradiction inside design-v3.md and section 13 wins**, because
                     // a floor is a floor: `inkTertiary` measures 2.40 to one on the
@@ -245,10 +280,15 @@ fun AreaCardContent(
  * value of this field is that it is free, and a card that asks for it turns a help
  * into a chore. design-v3.md 10.3 says it in one line, `a card is not a form`.
  *
- * `caption` rather than `body`, which is the rule worth stating rather than leaving
- * to a style constant. At body weight it competes with the title. It is read second,
- * at the moment the title has already failed to start someone, and the hierarchy on
- * the card has to say so.
+ * **`body` 15 rather than `caption` 12.5, which reverses an earlier decision here.**
+ * That decision said a body sized first step competes with the title, and it is right
+ * that it must not; what it produced was a card with two type sizes doing four jobs, on
+ * which the identity line, the next physical action and the queue count were all drawn
+ * at 12.5 and stacked. 10.17 calls the first step the thing that makes an item
+ * startable, and it was set at the size of a timestamp. At 15 against the title's 21.5
+ * the hierarchy is unambiguous by size alone and does not need the extra step down; the
+ * competition the old comment feared was with a 12.5 count line that has since moved to
+ * the trailing end of row one.
  *
  * One line, ellipsized, because design-v3.md 10.3 caps the card at four lines and
  * makes this the row that truncates first when a status line is also present. The
@@ -265,7 +305,7 @@ private fun FirstStepLine(area: AreaCardModel) {
 
     Text(
         text = firstStep,
-        style = type.caption,
+        style = type.body,
         color = colors.inkSecondary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
@@ -374,6 +414,34 @@ private fun idleTitleFor(area: AreaCardModel): Int = when {
  * queue is titled `Pick what is next` two rows above. Speech has no line budget and takes
  * both, which is what `areaCardDescription` builds.
  */
+/**
+ * What the identity row reports at its trailing end, or null for nothing.
+ *
+ * **Nothing while a session is running.** The deck under the card carries the live
+ * countdown next to the area's own accent, and two surfaces reporting one card's state
+ * in one screenful is how a person learns to read neither.
+ *
+ * **Nothing when the queue is empty**, rather than `0 waiting`, for the same reason the
+ * inbox door is absent at zero: an app that prints its zeroes is an app keeping score.
+ * A card with no queue has its full width for its name, which is what a person with a
+ * long area name and nothing waiting should get.
+ *
+ * This is deliberately not the whole of the old status line. `Last active 3 days ago`
+ * stays where it is, under the title, because it is an observation about an absence and
+ * belongs in the quiet register rather than at the top of the card. `StatusLine` carries
+ * why the two facts are mutually exclusive.
+ */
+@Composable
+private fun trailingReadout(area: AreaCardModel): String? = when {
+    area.focusMinutesRemaining != null -> null
+    area.queueLength > 0 -> pluralStringResource(
+        R.plurals.queue_waiting,
+        area.queueLength,
+        area.queueLength,
+    )
+    else -> null
+}
+
 @Composable
 private fun StatusLine(area: AreaCardModel) {
     val colors = LocalClarityColors.current
@@ -383,12 +451,12 @@ private fun StatusLine(area: AreaCardModel) {
     if (area.focusMinutesRemaining != null) return
 
     val text = when {
-        // 2. What is behind the active item, in the words the widget uses.
-        area.queueLength > 0 -> pluralStringResource(
-            R.plurals.queue_waiting,
-            area.queueLength,
-            area.queueLength,
-        )
+        // 2. **The queue count is not here any more; it is the trailing end of row
+        //    one.** The exclusivity this list encodes is unchanged, and it has to be:
+        //    `Last active 3 days ago` and `3 waiting` still never appear together,
+        //    because this branch returns for any area that has a queue. What changed is
+        //    only where the count is drawn.
+        area.queueLength > 0 -> return
 
         // 3. **An area nothing has ever been in draws no status line at all.**
         //

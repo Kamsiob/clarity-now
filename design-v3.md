@@ -75,7 +75,26 @@ Five words govern every decision: **calm, warm, honest, layered, restrained.**
 
 **Calm.** Nothing flashes, shakes, or shames. Motion is springy but soft. Empty states are welcoming. Calm is also a setting: section 16 states what calm mode turns down, and it exists so the expressive direction can be taken further everywhere else.
 
-**Warm.** Backgrounds are never pure white or pure black. Light surfaces lean slightly cool grey with warmth in the cards. Dark surfaces are warm blacks.
+**Warm.** Backgrounds are never pure white or pure black. **Every light surface is warm, on one hue, and the cards are the warmest of them.** Dark surfaces are warm blacks.
+
+> **Amended, September 3 2026, and this is the sentence that had to change.** It read
+> "light surfaces lean slightly cool grey with warmth in the cards", the build followed
+> it exactly, and the result measured like this in OKLCH: canvas at hue 286, card at 85,
+> raise at 95, parchment at 103. **The four light surfaces spanned 202 degrees of hue.**
+> Every design system that was checked holds its neutral ramp inside about 20.
+>
+> That is not a subtle failing. Surfaces on different hues are not one material, so the
+> cards did not read as raised parts of a page, they read as blocks dropped onto a
+> different background, which is the owner's verdict on the built app word for word.
+> Canvas hue 286.3 is also Tailwind `zinc` to a decimal place, and the eight area moods
+> were Tailwind v3 defaults, which together are the single most replicated palette in
+> template interfaces since 2021.
+>
+> A clause cannot ask for cool grounds and warm cards and get one material. The rule is
+> now one hue for every light surface, and the depth comes from lightness, which is what
+> section 6.1 already says depth comes from.
+
+
 
 **Honest.** The app never decorates data. Numbers shown are real numbers. Language observes, it does not judge. Both answers to any Pulse question feel equally valid.
 

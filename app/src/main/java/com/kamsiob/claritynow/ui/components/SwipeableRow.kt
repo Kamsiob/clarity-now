@@ -249,10 +249,27 @@ fun SwipeableRow(
         // so a revealed action is the full height of the row and is clipped by the
         // card's own radius. matchParentSize does not feed back into the parent's
         // measurement, which is what keeps the card the thing that sets the height.
+        // **The revealed ground follows the card, and it did not.**
+        //
+        // Each face used to be a fixed `ACTION_WIDTH` block pinned to its edge, so the
+        // moment the card traveled further than 66dp there was nothing behind it: a
+        // strip of bare page opened between the face and the card and widened with the
+        // drag. The commit threshold is 55 percent of the row, which on this phone is
+        // about 180dp, so **every swipe that was far enough to do anything showed the
+        // gap**, and it is what the owner saw as the swipe being broken.
+        //
+        // The action strip is as wide as the card has moved, floored at the faces' own
+        // width, so there is no state in which the page shows through. The face nearest
+        // the card is the one that grows, which is the behavior a person already knows
+        // from every mail app: the action you are pulling toward opens up, and the one
+        // beyond it stays put at the edge.
+        val revealed = with(density) { abs(liveOffset).toDp() }
         Box(modifier = Modifier.matchParentSize().clip(shape)) {
             if (liveOffset > 0f && actions.onComplete != null) {
                 SwipeActionSlot(
-                    modifier = Modifier.align(Alignment.CenterStart),
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .width(maxOf(ACTION_WIDTH, revealed)),
                     background = colors.positiveGreen,
                     baseAlpha = 0.18f,
                     reveal = reveal,
@@ -270,11 +287,17 @@ fun SwipeableRow(
 
             if (liveOffset < 0f && leftActions.isNotEmpty()) {
                 Row(
-                    modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .width(maxOf(ACTION_WIDTH * leftActions.size, revealed))
+                        .fillMaxHeight(),
                     horizontalArrangement = Arrangement.End,
                 ) {
                     actions.onSwap?.let { swap ->
                         SwipeActionSlot(
+                            // The inner face takes the overflow. With Delete beyond it,
+                            // this is the one the thumb is pulling toward.
+                            modifier = Modifier.weight(1f),
                             background = colors.actionBlue,
                             baseAlpha = 0.12f,
                             reveal = reveal,
@@ -291,6 +314,12 @@ fun SwipeableRow(
                     }
                     actions.onDelete?.let { delete ->
                         SwipeActionSlot(
+                            // Fixed, unless it is the only one, in which case it grows.
+                            modifier = if (actions.onSwap == null) {
+                                Modifier.weight(1f)
+                            } else {
+                                Modifier.width(ACTION_WIDTH)
+                            },
                             background = colors.deleteMuted,
                             baseAlpha = 0.13f,
                             reveal = reveal,
@@ -380,8 +409,9 @@ private fun SwipeActionSlot(
     // `card`.
     val ground = LocalClarityColors.current.card
     Box(
+        // **The width comes from the caller now.** It was fixed here, which is what left
+        // a hole between the face and a card that had traveled further than one face.
         modifier = modifier
-            .width(ACTION_WIDTH)
             .fillMaxHeight()
             .background(ground)
             .background(background.copy(alpha = alpha)),

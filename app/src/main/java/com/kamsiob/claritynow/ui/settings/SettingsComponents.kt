@@ -50,34 +50,24 @@ import com.kamsiob.claritynow.ui.theme.clarityMotion
 import com.kamsiob.claritynow.ui.theme.opticallyCentered
 
 /**
- * The Settings row, design-v3.md 10.11.
+ * The Settings row's floor and its air, design-v3.md 10.11.
  *
- * **No card containers.** Rows sit directly on the canvas, separated by hairlines and
- * grouped under sideheads. A row carries a 26dp rounded square icon badge tinted at 11
- * to 14 percent of a per group color, a title at 15sp semibold, a trailing value at
- * caption inkTertiary, and a chevron where it navigates.
+ * **No card containers.** Rows sit directly on the canvas, grouped under sideheads, and
+ * a row is a title at `readStrong` 18/600 on the 20dp measure, a caption under it where
+ * one helps, a trailing value, and a chevron where it navigates.
  *
- * The hairline is this element's one separation device, per design-v3.md 6.1. Nothing
- * here may also take a shadow, a lightness step or a border, and the reason the group
- * is not a card is that a card would be a second one.
+ * Air is this element's one separation device, per 6.1. Nothing here may also take a
+ * shadow, a lightness step, a border or a hairline, and the reason the group is not a
+ * card is that a card would be a second one.
+ *
+ * **This paragraph described a badge and a per-row hairline until the appeal pass**, both
+ * of which `SettingsRowFrame` deletes and explains at length. Two orphaned blocks
+ * describing the badge's geometry and its tint stood underneath it, attached to nothing,
+ * documenting a component that had been removed; Kotlin binds only the block adjacent to
+ * a declaration, so they were invisible to every reader but a person scrolling the file.
  */
 private val ROW_MIN_HEIGHT = 56.dp
 private val ROW_PADDING_VERTICAL = 10.dp
-
-/**
- * The badge, its glyph and the gap before the title, all fixed at every text size.
- *
- * The badge holds an icon rather than a string, so nothing inside it grows, and the gap
- * before the title is horizontal, which is the axis a phone runs out of first. A badge
- * that grew with the type would take the room a settings title needs at exactly the size
- * it needs it most. design-v3.md 10.11 and 13.
- */
-
-/**
- * The badge tint, design-v3.md 10.11's "11 to 14 percent of a per group color".
- *
- * The midpoint of the range, so neither end of it is a rounding accident.
- */
 
 /**
  * The per group colors, chosen here because 10.11 requires one per group and names

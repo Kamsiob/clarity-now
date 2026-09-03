@@ -472,9 +472,19 @@ class ReportCompositionTest {
         assertTrue(basis!!.rendered, basis.rendered.startsWith("Based on 2 Pulse response"))
     }
 
+    /**
+     * Nothing to state means both clauses are zero, and it did not have to before.
+     *
+     * `{m}` bound to a measure nothing declared until the appeal pass, so the weeks of
+     * data clause could never fill and this passed with the fixture's `weeksOfData` at 17.
+     * `ReportLanguageTest` carries the whole of that.
+     */
     @Test
     fun `the basis line is absent when there is nothing about the basis to state`() {
-        val facts = ValidateFixture.facts(pulse = ValidateFixture.pulse(answeredInWindow = 0))
+        val facts = ValidateFixture.facts(
+            pulse = ValidateFixture.pulse(answeredInWindow = 0),
+            history = ValidateFixture.history(weeksOfData = 0),
+        )
         val report = composed(listOf(ReportFixture.workShare()), facts = facts)
         assertNull(report.basis)
     }

@@ -546,6 +546,17 @@ internal fun PrivacySheet(onDismiss: () -> Unit) {
                     )
                 }
             }
+
+            // **One entry asks for more than its name and its terms.** Flexoki's license
+            // is MIT, which requires only the notice, but its author asks in the README
+            // for attribution and a link. That is a request rather than a condition, and
+            // it costs one line to honor it properly rather than technically.
+            Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
+            Text(
+                text = stringResource(R.string.licenses_flexoki_note),
+                style = type.caption,
+                color = colors.inkSecondary,
+            )
         }
     }
 }
@@ -567,6 +578,7 @@ internal fun LicensesSheet(onDismiss: () -> Unit) {
                 R.string.licenses_app to R.string.licenses_app_terms,
                 R.string.licenses_newsreader to R.string.licenses_font_terms,
                 R.string.licenses_hanken to R.string.licenses_font_terms,
+                R.string.licenses_flexoki to R.string.licenses_mit_terms,
                 R.string.licenses_symbols to R.string.licenses_apache_terms,
                 R.string.licenses_androidx to R.string.licenses_apache_terms,
             ).forEachIndexed { index, (name, terms) ->

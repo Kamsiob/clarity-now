@@ -108,6 +108,33 @@ fun FirstRunGate(
         }
     }
 
+    // **The two replay rows in Settings did nothing, and the latch above is why.**
+    //
+    // `Replay the welcome` and `Replay the tour` set their flag and stop. The decision is
+    // taken once per process, so nothing was listening: a person tapped a row, the screen
+    // did not move, and the only way to see any effect was to force quit the app, which
+    // nothing tells anybody to do. Both rows had been dead since phase 11.
+    //
+    // **The latch is still right and is not what changes.** It exists so that beat 3
+    // setting `hasCompletedOnboarding` in the middle of the reveal cannot swap onboarding
+    // out from under itself, and an observer alone would do exactly that. So this watches
+    // for the one transition the latch cannot see and the replay rows are the only source
+    // of: a flag going **false** while the app is already showing. Beat 3's write is the
+    // opposite direction and is ignored here, which is what keeps the reveal intact.
+    LaunchedEffect(preferences) {
+        preferences.hasCompletedOnboarding.collect { completed ->
+            if (!completed && decision is FirstRunRoute.App) decision = FirstRunRoute.Onboarding
+        }
+    }
+    LaunchedEffect(preferences) {
+        preferences.hasSeenTutorial.collect { seen ->
+            val current = decision
+            if (!seen && current is FirstRunRoute.App && !current.tutorialQueued) {
+                decision = FirstRunRoute.App(tutorialQueued = true)
+            }
+        }
+    }
+
     when (val route = decision) {
         // One or two frames while DataStore answers. Deliberately paints nothing, so what
         // shows is the launch window's own background rather than a color chosen here

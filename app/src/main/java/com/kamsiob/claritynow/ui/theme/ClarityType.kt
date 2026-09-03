@@ -51,15 +51,31 @@ private fun newsreader(weight: Int, opticalSize: Float): FontFamily = FontFamily
 )
 
 /**
- * Every weight the design system asks Hanken Grotesk for, in one family.
+ * Every weight the design system asks Hanken Grotesk for, in one family. Three.
  *
- * 250 is the timer numeral, 400 body and caption, 500 the idle card title, 600
- * bodyStrong and label, 650 itemTitle, 700 title, sidehead and swipeLabel and the
- * selected mood name. A request for a weight that is not on this list resolves to
- * the nearest one that is, which is the ordinary contract and is what makes a
- * missing entry a slightly wrong rendering rather than a silent no-op.
+ * 250 is the timer numeral, 400 is everything read as prose, 700 is everything read
+ * as a heading or a marker. A request for a weight that is not on this list resolves
+ * to the nearest one that is, which is the ordinary contract.
+ *
+ * ## Why 500, 600 and 650 are gone
+ *
+ * They were doing nothing, and this is measurable rather than a matter of taste.
+ * Hanken Grotesk's stem widths per 1000 em are 187 at weight 600, 191 at 650 and 194
+ * at 700. At 18sp that is **0.126sp of ink between `bodyStrong` and `title`**, which
+ * is under a sixth of a physical pixel on this phone. The scale declared fourteen
+ * roles and rendered about seven.
+ *
+ * **And a real accessibility defect on top of it.** Compose adds Android's `Bold
+ * text` adjustment of +300 to the requested weight and clamps at 1000, and the font
+ * clamps at 900. With that setting on, 600, 650 and 700 all became 900: six roles
+ * collapsed to one, and because `bodyStrong` and `title` also shared 18sp they became
+ * pixel identical. Three weights survive it as two, which is a hierarchy.
+ *
+ * The separation the middle weights were pretending to make is carried by size now.
+ * See `ClarityTypeScale`, where the sans ramp has no two roles at one size except the
+ * pair 5.3 separates deliberately by tracking.
  */
-private val HANKEN_WEIGHTS = listOf(250, 400, 500, 600, 650, 700)
+private val HANKEN_WEIGHTS = listOf(250, 400, 700)
 
 /**
  * Hanken Grotesk, one variable file, exposed as a family carrying a named instance
@@ -131,19 +147,29 @@ data class ClarityTypography(
  * only two of the nine sans roles carried a value, so the seven that make up almost
  * every string on both built screens ran at whatever the file happened to ship.
  *
+ * ## The code had drifted off this ramp, and the drift is what "dead and boring" was
+ *
+ * The paragraphs below have described a ramp of 12.5 / 13.5 / 15 / 17 / 19.5 / 21.5
+ * since phase 3b. What shipped was `caption`, `label` and `sidehead` all at 12.5, and
+ * `bodyStrong` and `title` both at 18 with **identical** tracking, separated only by
+ * weight 600 against 700, which is 0.126sp of stem. Four collisions, and the weight
+ * axis could not carry any of them: see `HANKEN_WEIGHTS`. A scale with fourteen names
+ * and seven distinguishable sizes reads as one size, and a screen set in one size
+ * reads as a form.
+ *
+ * The values below are now what the code sets. The only pair sharing a size is
+ * `label` and `sidehead`, which 5.3 separates by tracking on purpose.
+ *
  * The ramp, in size order, and why each value is what it is.
  *
- * - `swipeLabel` 10.5sp, **+0.032em**, the most open value in the scale. It is the
- *   smallest type in the app, it is set at 700, and it is read once, quickly, off a
- *   row that is moving under the thumb. Legibility outranks evenness of color here
- *   and nowhere else.
- * - `caption` 12sp, **+0.022em**. Timestamps, helper text and the first step line,
- *   all of which are read at a glance next to something larger. This is the size at
- *   which the default fit first becomes visibly tight.
- * - `label` 13sp, **+0.016em**. Area labels, tab labels and chips. Short strings in
+ * - `caption` 12.5sp, **+0.024em**. Timestamps, helper text and the queue count, all
+ *   read at a glance next to something larger. This is the size at which the default
+ *   fit first becomes visibly tight, and it is the floor `COMPONENT_AND_LAYOUT` A.2
+ *   sets for the sans. Nothing in the app is smaller.
+ * - `label` 13.5sp, **+0.014em**. Area labels, tab labels and chips. Short strings in
  *   a contained shape, where a little air is what separates a label from a caption
  *   that happens to be bold.
- * - `sidehead` 13sp, **+0.024em**, deliberately off the ramp, above `label` at the
+ * - `sidehead` 13.5sp, **+0.026em**, deliberately off the ramp, above `label` at the
  *   same size. A section label has to read as a marker rather than as a sentence,
  *   and the conventional way to buy that is capitals, which 5.3 and 15.1 both
  *   forbid. Tracking delivers the same signal at a fraction of the volume and
@@ -151,18 +177,38 @@ data class ClarityTypography(
  * - `body` 15sp, **+0.004em**. Running interface prose and list rows. Almost the
  *   pivot: the face is close to right here, and the small opening is for the fact
  *   that a list row is scanned rather than read.
- * - `bodyStrong` 17sp, **-0.006em**. Semibold at a heading size, where the thicker
- *   stems already close the counters, so the space between letters can come in with
- *   them.
- * - `title` 19sp, **-0.014em**. Sheet titles at 700. The first size where an untouched
+ * - `bodyStrong` 17sp, **-0.006em**. A heading size, where the thicker stems already
+ *   close the counters, so the space between letters can come in with them.
+ * - `title` 19.5sp, **-0.014em**. Sheet titles. The first size where an untouched
  *   fit reads as loose rather than merely comfortable.
- * - `itemTitle` 21sp, **-0.022em**, unchanged. Already specified in 5.3.
+ * - `itemTitle` 21.5sp, **-0.022em**, unchanged. Already specified in 5.3.
+ * - `leadStrong` 31sp, **-0.028em**. The one dominant a list screen is allowed.
  * - `timerNumeral` 64sp, **-0.030em**, unchanged. Already specified in 5.3.
  *
- * The serif roles are not on this ramp and do not need one. Newsreader ships an
- * optical size axis and each serif role sets it, which is the same correction made
- * inside the outlines instead of between them. `displayHero` carries an additional
- * -0.012em because 5.3 asks for it at 40sp.
+ * ## The serif roles grew, because they were reading smaller than the sans
+ *
+ * They are not on the tracking ramp and do not need one: Newsreader ships an optical
+ * size axis and each serif role sets it, which is the same correction made inside the
+ * outlines instead of between them.
+ *
+ * What they did need is size. Newsreader's x-height varies with the optical axis,
+ * 0.426em at `opsz` 18 and 0.474em at 48; Hanken's is a flat 0.493em at every weight.
+ * So `voiceSerif` at 21.5sp rendered a 9.43sp x-height beside `itemTitle` at the same
+ * nominal 21.5sp rendering 10.60sp: **the app's own voice was drawn 11 percent smaller
+ * than the person's content at nominal parity**, on every surface where the two meet.
+ * Radix Themes corrects the same thing with a 1.18 font-size-adjust and USWDS with a
+ * measured cap height per family. Here the correction is in the role, because there
+ * are five of them and they are set once.
+ *
+ * Each serif role also drives its `opsz` harder than its point size, which is what
+ * buys stroke contrast: thick to thin runs 2.14 at `opsz` 18 and 4.62 at 72. A display
+ * line set at the text optical size is the single most common way a serif looks
+ * ordinary.
+ *
+ * **Line height is no longer snapped to the 4dp grid.** That snapping is what
+ * compressed every ratio into the band 1.28 to 1.60, which is a body text band applied
+ * to display type. It runs 1.05 to 1.67 now, monotonically with size, which is what
+ * Radix, Carbon and Geist all do.
  *
  * **Not a design tell.** 15.1's typographic entries are named families, all caps
  * section labels and serif italic accents. Optical tracking is none of the three,
@@ -170,64 +216,66 @@ data class ClarityTypography(
  */
 val ClarityTypeScale = ClarityTypography(
     displayHero = TextStyle(
-        fontFamily = newsreader(weight = 400, opticalSize = 68f),
+        fontFamily = newsreader(weight = 400, opticalSize = 72f),
         fontWeight = FontWeight(400),
         fontSize = 40.sp,
-        lineHeight = 44.sp,
-        letterSpacing = (-0.012).em,
+        lineHeight = 42.sp,
+        letterSpacing = (-0.018).em,
         lineHeightStyle = TrimmedLineHeight,
     ),
     displayTitle = TextStyle(
-        fontFamily = newsreader(weight = 400, opticalSize = 48f),
+        fontFamily = newsreader(weight = 400, opticalSize = 58f),
         fontWeight = FontWeight(400),
         fontSize = 31.sp,
-        lineHeight = 40.sp,
-        letterSpacing = (-0.006).em,
+        lineHeight = 35.sp,
+        letterSpacing = (-0.012).em,
         lineHeightStyle = TrimmedLineHeight,
     ),
     readSerif = TextStyle(
-        fontFamily = newsreader(weight = 400, opticalSize = 34f),
+        fontFamily = newsreader(weight = 400, opticalSize = 46f),
         fontWeight = FontWeight(400),
-        fontSize = 26.sp,
-        lineHeight = 36.sp,
+        fontSize = 28.sp,
+        lineHeight = 34.sp,
+        letterSpacing = (-0.008).em,
         lineHeightStyle = TrimmedLineHeight,
     ),
     voiceSerif = TextStyle(
-        fontFamily = newsreader(weight = 400, opticalSize = 26f),
+        fontFamily = newsreader(weight = 400, opticalSize = 34f),
         fontWeight = FontWeight(400),
-        fontSize = 21.5.sp,
-        lineHeight = 28.sp,
+        fontSize = 24.sp,
+        lineHeight = 31.sp,
+        letterSpacing = (-0.004).em,
         lineHeightStyle = TrimmedLineHeight,
     ),
     leadStrong = TextStyle(
         fontFamily = HankenGrotesk,
-        fontWeight = FontWeight(600),
+        fontWeight = FontWeight(700),
         fontSize = 31.sp,
-        lineHeight = 40.sp,
-        letterSpacing = (-0.026).em,
+        lineHeight = 35.sp,
+        letterSpacing = (-0.028).em,
         lineHeightStyle = TrimmedLineHeight,
     ),
     bodySerif = TextStyle(
         fontFamily = newsreader(weight = 400, opticalSize = 18f),
         fontWeight = FontWeight(400),
         fontSize = 18.sp,
-        lineHeight = 28.sp,
+        lineHeight = 30.sp,
         lineHeightStyle = TrimmedLineHeight,
     ),
     itemTitle = TextStyle(
         fontFamily = HankenGrotesk,
-        fontWeight = FontWeight(650),
+        fontWeight = FontWeight(700),
         fontSize = 21.5.sp,
-        lineHeight = 28.sp,
+        lineHeight = 27.sp,
         letterSpacing = (-0.022).em,
         lineHeightStyle = TrimmedLineHeight,
     ),
     title = TextStyle(
         fontFamily = HankenGrotesk,
         fontWeight = FontWeight(700),
-        fontSize = 18.sp,
-        lineHeight = 24.sp,
-        letterSpacing = (-0.008).em,
+        fontSize = 19.5.sp,
+        lineHeight = 25.sp,
+        letterSpacing = (-0.014).em,
         lineHeightStyle = TrimmedLineHeight,
     ),
     // 15sp, down from 16. This role and bodyStrong were both 16sp until phase 3c,
@@ -252,41 +300,41 @@ val ClarityTypeScale = ClarityTypography(
     // section. 1.35 puts it between body at 1.5 and title at 1.26.
     bodyStrong = TextStyle(
         fontFamily = HankenGrotesk,
-        fontWeight = FontWeight(600),
-        fontSize = 18.sp,
-        lineHeight = 24.sp,
-        letterSpacing = (-0.008).em,
+        fontWeight = FontWeight(700),
+        fontSize = 17.sp,
+        lineHeight = 23.sp,
+        letterSpacing = (-0.006).em,
         lineHeightStyle = TrimmedLineHeight,
     ),
     label = TextStyle(
         fontFamily = HankenGrotesk,
-        fontWeight = FontWeight(600),
-        fontSize = 12.5.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.016.em,
+        fontWeight = FontWeight(700),
+        fontSize = 13.5.sp,
+        lineHeight = 18.sp,
+        letterSpacing = 0.014.em,
         lineHeightStyle = TrimmedLineHeight,
     ),
     sidehead = TextStyle(
         fontFamily = HankenGrotesk,
         fontWeight = FontWeight(700),
-        fontSize = 12.5.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.024.em,
+        fontSize = 13.5.sp,
+        lineHeight = 18.sp,
+        letterSpacing = 0.026.em,
         lineHeightStyle = TrimmedLineHeight,
     ),
     caption = TextStyle(
         fontFamily = HankenGrotesk,
         fontWeight = FontWeight(400),
         fontSize = 12.5.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.022.em,
+        lineHeight = 17.sp,
+        letterSpacing = 0.024.em,
         lineHeightStyle = TrimmedLineHeight,
     ),
     timerNumeral = TextStyle(
         fontFamily = HankenGrotesk,
         fontWeight = FontWeight(250),
         fontSize = 64.sp,
-        lineHeight = 68.sp,
+        lineHeight = 66.sp,
         letterSpacing = (-0.03).em,
         lineHeightStyle = TrimmedLineHeight,
     ),

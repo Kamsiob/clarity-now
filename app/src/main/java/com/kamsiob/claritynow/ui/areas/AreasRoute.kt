@@ -1,5 +1,11 @@
 package com.kamsiob.claritynow.ui.areas
 
+import com.kamsiob.claritynow.ui.theme.clarityMotion
+import com.kamsiob.claritynow.ui.nav.pushedScreenScaleOut
+import com.kamsiob.claritynow.ui.nav.pushedScreenScaleIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -117,6 +123,7 @@ fun AreasRoute(
     onOpenPulse: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val motion = clarityMotion()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val queueChoiceFor by viewModel.queueChoiceFor.collectAsStateWithLifecycle()
     var sheet by remember { mutableStateOf<AreaSheet?>(null) }
@@ -137,6 +144,12 @@ fun AreasRoute(
     // composition with it, and a screen that closed itself while somebody was reading
     // the Report is a screen that cannot be trusted.
     var archiveOpen by rememberSaveable { mutableStateOf(false) }
+
+    // Manage areas, the header glyph between the archive and the gear. A pushed screen
+    // for the reason the archive is one: it is left by back and by nothing else, and
+    // ordering is a job done while looking at the whole list rather than a peek over
+    // the top of it. Saveable, same reason again.
+    var manageOpen by rememberSaveable { mutableStateOf(false) }
 
     // The [AreasRequest.serial] this tab has already acted on.
     //
@@ -194,6 +207,7 @@ fun AreasRoute(
             state = state,
             onOpenArea = { sheet = AreaSheet.Detail(it) },
             onOpenArchive = { archiveOpen = true },
+            onOpenManageAreas = { manageOpen = true },
             onCompleteArea = { area ->
                 area.activeItemId?.let { itemId ->
                     viewModel.completeItem(area.id, itemId)
@@ -260,7 +274,52 @@ fun AreasRoute(
                 .padding(bottom = TabBarHeight + 26.dp),
         )
 
-        if (archiveOpen) {
+        // **These two used to be bare `if` blocks, and that is the app's real hard cut.**
+        //
+        // A pushed screen appeared between two frames, with nothing between the list and
+        // a full screen of new content. Three sites had it: the archive, manage areas,
+        // and About inside Settings. `design-v3.md` 8.2 item 6 calls a world transition a
+        // fade with a small scale, and none of the three had either.
+        //
+        // The spec, and why each half of it:
+        //
+        // **A fade plus a scale from 0.97, never from zero.** Below about 0.9 an element
+        // reads as arriving from nowhere rather than as coming forward; 0.97 is the same
+        // value the app's own press uses, so the gesture and the arrival are the same
+        // language.
+        //
+        // **No slide.** Horizontal travel in this app means a finger is on the element,
+        // which is the swipe. A screen sliding in from the right with no finger on it is
+        // the platform default doing the talking.
+        //
+        // **Out faster than in**, 102ms against 157, which is the 50 to 100ms gap NN/g
+        // puts between an exit and its entrance.
+        //
+        // **Under reduced motion the scale goes and the fade stays.** Scaling is the
+        // vestibular trigger; opacity is the sanctioned substitute, and `motion.effects`
+        // already resolves to a 150ms tween there.
+        AnimatedVisibility(
+            visible = manageOpen,
+            enter = fadeIn(motion.effects()) + pushedScreenScaleIn(motion),
+            exit = fadeOut(motion.effectsFast()) + pushedScreenScaleOut(motion),
+        ) {
+            // Drawn before the archive, so an archive opened from anywhere lands on top
+            // of it and back peels them off in the order they were pushed.
+            Spacer(Modifier.fillMaxSize().swallowsPointerInput())
+            ManageAreasRoute(
+                areas = state.areas,
+                onOpenArea = { sheet = AreaSheet.LongPressMenu(it.id) },
+                onMove = { area, index -> viewModel.moveArea(area.id, index) },
+                onNewArea = { sheet = AreaSheet.NewArea },
+                onBack = { manageOpen = false },
+            )
+        }
+
+        AnimatedVisibility(
+            visible = archiveOpen,
+            enter = fadeIn(motion.effects()) + pushedScreenScaleIn(motion),
+            exit = fadeOut(motion.effectsFast()) + pushedScreenScaleOut(motion),
+        ) {
             // The Areas screen stays composed underneath, so coming back lands on the
             // list where it was left rather than at the top of it, and something has to
             // stop a thumb reaching it through an opaque screen. A full size sibling

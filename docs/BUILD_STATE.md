@@ -2,7 +2,7 @@
 
 Where the build actually is. Updated at the end of every phase.
 
-**Last updated:** September 3, 2026, end of the appeal pass.
+**Last updated:** September 3, 2026, end of the plate and palette pass.
 
 **Everything specified is built, installed and checked on the device.** All thirteen
 phases, the facts phase, the slot bindings phase, the rules pass, the reach passes, the
@@ -10,13 +10,25 @@ accessibility pass, the polish pass and the deferred issue pass. The one thing o
 is not code: shipping to Play needs a Play Console account, and the exact steps are in
 `HANDOFF.md` under BLOCKED.
 
-**Version:** 0.15.0, versionCode 1500. The reasoning for every number is at the top of
+**Version:** 0.16.0, versionCode 1600. The reasoning for every number is at the top of
 `app/build.gradle.kts`, one line per release, and 16.7 requires it to be a deliberate
 choice rather than an increment.
 
-**Installed and verified on:** Pixel 8 (`shiba`), over USB, throughout the polish pass and
-the deferred issue pass. `adb logcat` was checked after every device step in both, and the
-count of fatal exceptions across both is zero.
+**Installed and verified on:** Pixel 8 (`shiba`), over USB, throughout the polish pass, the
+deferred issue pass, the appeal pass and the plate pass. `adb logcat` was checked after
+every device step in all four, and the count of fatal exceptions across them is zero.
+
+**The light world is Flexoki and the palette is no longer Tailwind's.** The four light
+surfaces measured 202 degrees of hue apart in OKLCH, which is why the cards read as blocks
+dropped on a page; they are 3 degrees apart now. `design-v3.md` section 1 was amended
+before the code changed, per the authority order, and the amendment is quoted in the
+document itself. Attribution is on the licenses screen and in About.
+
+**Everything the specification asks for now has a caller.** The plate pass closed the last
+one: `ClarityRepository.rebuildCacheFromLog` had been written in phase 1, was named in
+`MASTER_BUILD_PROMPT.md` 5.4, was described as existing by its own KDoc and by `CLAUDE.md`,
+and nothing in the app called it. It is a debug only Settings row now, and on the device it
+reports `Rebuilt from 5 events. The cache agreed with the log.`
 
 **The open issues are the ones that are genuinely open.** Two are optional by the
 specification's own word or blocked on somebody else's code: #39, the two optional widgets

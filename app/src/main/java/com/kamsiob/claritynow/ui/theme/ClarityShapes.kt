@@ -27,7 +27,6 @@ data class ClarityShapes(
     val swatch: RoundedCornerShape = RoundedCornerShape(18.dp),
     val moodPill: RoundedCornerShape = RoundedCornerShape(8.dp),
     val appearanceTile: RoundedCornerShape = RoundedCornerShape(12.dp),
-    val weeklyBanner: RoundedCornerShape = RoundedCornerShape(18.dp),
     val markBadge: RoundedCornerShape = RoundedCornerShape(18.dp),
     val snackbar: RoundedCornerShape = RoundedCornerShape(12.dp),
 )

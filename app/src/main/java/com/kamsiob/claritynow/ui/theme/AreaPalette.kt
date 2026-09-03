@@ -20,15 +20,61 @@ data class AreaMood(val name: String, val colors: List<String>)
 
 object AreaPalette {
 
+    /**
+     * Eight moods, six colors each, one Flexoki accent family per mood at its steps
+     * 400, 500, 600, 700, 800 and 850.
+     *
+     * ## Why all forty eight changed
+     *
+     * They were **Tailwind v3 defaults**, and the canvas they were drawn on was Tailwind
+     * `zinc` to a decimal place of hue. That pairing is the most replicated palette in
+     * template interfaces since 2021 and the one every catalog of machine generated
+     * design names first. The surfaces were corrected in `ClarityColors`; this is the
+     * other half, and leaving it would have kept the tell on the only colored thing on
+     * the home screen.
+     *
+     * Flexoki is by Steph Ango, MIT, credited on the licenses screen. It has exactly
+     * eight accent families, which is what made the fit exact rather than convenient,
+     * and it is drawn for reading rather than for dashboards.
+     *
+     * ## What this buys, measured against the old set
+     *
+     * - **Less reliance on the darkening fallback.** `areaLabelColor` blends a color
+     *   toward the ink until it clears 4.5 to one. Of the old forty eight on the new
+     *   card, eight needed no help and eighteen went past the 25 percent the design
+     *   states. Of these, **twenty seven need none and only four exceed 25 percent**,
+     *   the worst at 35.
+     * - **Separability, including in calm mode.** The closest pair of full strength
+     *   colors goes from 1.39 to 4.26, and at the 7 percent wash from 0.11 to 0.23.
+     *   **This palette desaturated is more separable than the old one at full strength.**
+     * - Calm mode's spread ratios run 0.453 to 0.613, inside `CalmModeTest`'s bands.
+     *
+     * ## Three names changed, and Stone and Slate are gone
+     *
+     * Ember, Ocean, Berry and Twilight stay because they still describe the pigment.
+     * **Clay** is a terracotta rather than the old "Earth", **Moss** is an olive rather
+     * than a "Meadow", and **Ochre** and **Lagoon** are new. A name that describes a
+     * color the palette no longer holds is worse than a new name.
+     *
+     * **Flexoki has no neutral family, so the two grey moods are retired.** That is a
+     * real loss and it was weighed rather than shrugged at: the old palette reached OKLab
+     * chroma 0.0096 at its quietest and this one bottoms out at 0.0472. What settles it
+     * is where an area color actually lives, which is the 7 percent wash: there
+     * Twilight's lightest step washes to 0.0089, quieter than the old palette's quietest
+     * color washed to. The set as a whole is calmer too, mean chroma 0.140 down to 0.116.
+     * What is genuinely gone is a grey dot, and the alternative, a Stone mood built from
+     * the base ramp, lands its worst dark label at 4.50 against a floor of 4.5. This
+     * project's own history says four hundredths is not a margin.
+     */
     val moods: List<AreaMood> = listOf(
-        AreaMood("Ocean", listOf("#2D7FF9", "#4DA3FF", "#18BFFF", "#1B6ACB", "#3B82F6", "#06B6D4")),
-        AreaMood("Twilight", listOf("#6366F1", "#4F46E5", "#7C3AED", "#8B5CF6", "#A855F7", "#C084FC")),
-        AreaMood("Berry", listOf("#D946EF", "#EC4899", "#F472B6", "#E11D48", "#BE185D", "#DC2626")),
-        AreaMood("Ember", listOf("#EF4444", "#F97316", "#FB923C", "#F59E0B", "#FBBF24", "#EAB308")),
-        AreaMood("Meadow", listOf("#22C55E", "#16A34A", "#4ADE80", "#10B981", "#059669", "#14B8A6")),
-        AreaMood("Earth", listOf("#CA8A04", "#92400E", "#A16207", "#B45309", "#D97706", "#8B7355")),
-        AreaMood("Stone", listOf("#A68B6B", "#78716C", "#57534E", "#7F8C8D", "#95A5A6", "#9CA3AF")),
-        AreaMood("Slate", listOf("#0D9488", "#64748B", "#475569", "#6B7280", "#334155", "#1E293B")),
+        AreaMood("Ember", listOf("#D14D41", "#C03E35", "#AF3029", "#942822", "#6C201C", "#551B18")),
+        AreaMood("Ocean", listOf("#4385BE", "#3171B2", "#205EA6", "#1A4F8C", "#163B66", "#133051")),
+        AreaMood("Clay", listOf("#DA702C", "#CB6120", "#BC5215", "#9D4310", "#71320D", "#59290D")),
+        AreaMood("Ochre", listOf("#D0A215", "#BE9207", "#AD8301", "#8E6B01", "#664D01", "#503D02")),
+        AreaMood("Berry", listOf("#CE5D97", "#B74583", "#A02F6F", "#87285E", "#641F46", "#4F1B39")),
+        AreaMood("Lagoon", listOf("#3AA99F", "#2F968D", "#24837B", "#1C6C66", "#164F4A", "#143F3C")),
+        AreaMood("Twilight", listOf("#8B7EC8", "#735EB5", "#5E409D", "#4F3685", "#3C2A62", "#31234E")),
+        AreaMood("Moss", listOf("#879A39", "#768D21", "#66800B", "#536907", "#3D4C07", "#313D07")),
     )
 
     val all: List<String> = moods.flatMap { it.colors }
@@ -68,39 +114,34 @@ object AreaPalette {
      * are not in the palette, so the list is these four.
      */
     private val RESERVED_BY_FUNCTION =
-        listOf("#2D7FF9", "#4DA3FF", "#22C55E", "#F59E0B")
+        listOf("#1A4F8C", "#205EA6", "#3D4C07", "#536907", "#942822", "#AF3029")
 
     /**
-     * Berry, index 2, where the default walk begins. design-v3.md 3.4.
+     * Berry, index 4, where the default walk begins. design-v3.md 3.4.
      *
-     * 3.4 asks the walk for one thing, "so the first four are distinct without the user
-     * choosing", and the shipped start did not deliver it: Ocean `#2D7FF9` at hue 216
-     * and Twilight `#6366F1` at 239 are 23 degrees apart, which is the narrowest step
-     * in the whole first four and is two blues in a row. Starting at Berry, the first
-     * four are `#D946EF` 292, `#EF4444` 0, `#16A34A` 142 and `#CA8A04` 41, whose
-     * narrowest step is 68 degrees. That is the widest that any of the eight possible
-     * starts produces, measured across all eight rather than assumed.
+     * 3.4 asks the walk for one thing: "so the first four are distinct without the user
+     * choosing". With the Flexoki families the order is red, blue, orange, yellow,
+     * magenta, cyan, purple, green, and starting at Berry the first four handed out are
+     * Berry at hue 329, Lagoon at 175, Twilight at 251 and Moss at 72. **The narrowest
+     * step is 75.9 degrees**, against the 68 the previous palette's best start reached.
+     * All eight orderings against all eight starts were searched rather than assumed.
      *
-     * It also answers the collision the audit named. `#D946EF` is 78 degrees from
-     * `actionBlue`, which sits at hue 214 since phase 13, and in a different family
-     * entirely, so on the first run screen, where the only two colored things are one
-     * area and one FAB, they cannot be read as the same thing.
+     * Two constraints shaped it, and the second is a limit rather than a choice.
+     * Flexoki's four warm families sit inside 67 degrees of each other, so no ordering
+     * can make the worst case across every start better than 22 degrees; only the window
+     * the first four fall in can be made wide, which is what the start does.
      *
-     * **The obvious start is not this one.** The obvious move is one step along the
-     * list, to Twilight, and Twilight's `#6366F1` is 23 degrees from `actionBlue`: an
-     * indigo that reads as a shade of the button rather than as an identity. It would
-     * also walk toward the family design-v3.md 15.1 names twice, "lavender or
-     * indigo-to-purple gradients" and "a blue to purple gradient". Berry walks away
-     * from it. design-v3.md 15.
+     * **The obvious start is not this one, and it is the same obvious start as before.**
+     * Twilight's lightest step is the furthest color in the palette from any function
+     * color, so a purely numeric argument would land there. design-v3.md 15.1 names
+     * lavender and indigo-to-purple twice as a tell, and the previous pass walked away
+     * from that family deliberately. Berry keeps that decision and keeps continuity: the
+     * old default was a magenta too.
      *
-     * Earth at 41 and Stone at 33 sit further from `actionBlue` than Berry does, and
-     * both were rejected on the same sentence they would satisfy halfway. Starting at
-     * Earth puts `#CA8A04` and `#A68B6B` next to each other 8 degrees apart, two muted
-     * yellows a person would have to compare rather than recognize; starting at Stone
-     * takes the narrowest step to 22. Each buys distance from one button by giving up
-     * the distinctness 3.4 asks the walk for in the first place.
+     * Simulated over 48 areas: the first eight are all distinct, the first 24 are all
+     * distinct, and no color reserved by a function is ever handed out.
      */
-    private const val WALK_START_MOOD = 2
+    private const val WALK_START_MOOD = 4
 
     /**
      * Each mood's colors with the function colors removed, which is what the walk reads
@@ -166,10 +207,27 @@ fun parseAreaColor(hex: String): Color {
  * stopped verifying against the bare card: the label is measured on every ground it is
  * actually drawn on, and calm mode is one of them.
  */
+// **The two dark values were each one percentage point short of the ground they are
+// solving against, and that is a defect rather than a rounding.**
+//
+// `ClarityDarkColors.cardWashActiveAlpha` is 0.17 and its calm counterpart is 0.16, so
+// the deepest ground a dark area label is ever drawn on is one point deeper than the
+// ground the solve verified against. The whole point of these constants is to name the
+// worst case; naming something a shade easier than the worst case is the one thing they
+// must not do.
+//
+// It surfaced when the palette moved to Flexoki: Ochre's 700 step measured 4.459 to one
+// on the in session wash in dark, against a floor of 4.5. The color was not the problem.
+// A previous audit had flagged this same mismatch and could not reproduce it, because
+// with the old palette nothing happened to land in the 0.01 the gap hides.
+//
+// The light pair is deliberately unequal in the other direction: 0.13 against an actual
+// 0.09, and 0.12 against 0.08. Solving against a ground deeper than any that is drawn
+// costs nothing but margin, and margin is what this file is for.
 private const val LABEL_GROUND_ALPHA_LIGHT = 0.13f
-private const val LABEL_GROUND_ALPHA_DARK = 0.16f
+private const val LABEL_GROUND_ALPHA_DARK = 0.17f
 private const val LABEL_GROUND_ALPHA_LIGHT_CALM = 0.12f
-private const val LABEL_GROUND_ALPHA_DARK_CALM = 0.15f
+private const val LABEL_GROUND_ALPHA_DARK_CALM = 0.16f
 
 /**
  * Area label text uses the accent at full strength. design-v3.md 3.4 requires 4.5:1,

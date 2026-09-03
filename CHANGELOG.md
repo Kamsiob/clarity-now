@@ -5,6 +5,133 @@ Every released version, newest first. Dates are the day the version was tagged.
 The format is one section per release: what a person can now do that they could not
 before, what changed about what they already had, and what was wrong and is not any more.
 
+## 0.16.0, 2026-09-03
+
+The plate, the swipe and the manage room. Six things the owner reported on the phone,
+plus an audit that ran across the whole app while they were being fixed. The reasoning
+for every decision is in `DECISIONS.md`.
+
+### New
+
+- **Manage areas**, behind a new glyph in the header between the archive and the gear.
+  Two labeled arrows on every row move an area one place up or one place down, which is
+  the single pointer alternative WCAG 2.2 SC 2.5.7 wants for the drag that was the only
+  way to reorder. Tapping a row opens the same menu the long press opens on the Areas
+  list, so nothing about an area has a second copy of itself here.
+- **The last area can be deleted.** It was the one card in the app that refused, which
+  meant the first card a new person tries a left swipe on revealed nothing at all.
+- **The Report can say how many weeks it is based on.** Three of the six basis lines in
+  the corpus read `and {m} weeks of data`, and `{m}` was bound to a measure that nothing
+  declared, so those three dropped out of the bench on every report ever written.
+- **Rebuild the cache from the log**, in a debug build. `MASTER_BUILD_PROMPT.md` 5.4 asks
+  for it, this repository said in three places that it existed, and nothing called it.
+
+### Changed
+
+- **The Areas screen has a top.** The wordmark row, the weekly banner, two elevated white
+  pills, a chip and a hairline rule are replaced by one full bleed parchment plate with a
+  hard top and a hard bottom, carrying the date, three bare doors and the engine's
+  sentence. Its one separation device is the ground change, which is what lets the rule
+  go: that line existed only because the two regions it divided were made of the same
+  material.
+- **The app's name is off its own home screen.** It was the largest type in the product,
+  above a tab bar whose selected item already says `Areas`. The date is there instead.
+- **A waiting Pulse changes its label as well as growing a dot.** The string for it has
+  existed since phase 6 and was referenced by nothing, so the only signal was color.
+- **The area card has a right edge.** The queue count moved from the bottom left, where it
+  was the fourth stacked caption in the same size and color as the two above it, to the
+  trailing end of the identity row.
+- **The first step is set at 15 rather than 12.5**, the size of a timestamp, for the line
+  that is supposed to make an item startable.
+- **The Areas empty state is left aligned** on the same measure as everything else, and
+  the plus button is not drawn while it is showing, because both named the same action.
+- **The re-entry screen's title** is an invitation rather than an observation.
+- **Onboarding no longer promises the Pulse can be turned off.** Only its reminder can,
+  which is what the Settings copy has always said correctly.
+
+### How it looks
+
+The owner's verdict on the build before this one was that it was uglier than ever, dead
+and boring. Four research passes went over open source design work to find out why, and
+the answer was measurable rather than a matter of taste.
+
+- **The four light surfaces were on four different hues.** Measured in OKLCH: the canvas
+  at 286 degrees, the card at 85, the raised chrome at 95, the parchment at 103. **202
+  degrees of spread**, where every design system checked holds its neutral ramp inside
+  about twenty. Surfaces on different hues are not one material, which is the mechanical
+  reason the cards read as blocks dropped onto a page rather than as raised parts of one.
+  The whole light world is Flexoki now, by Steph Ango, MIT licensed and credited under
+  Settings, Open source licenses. The spread is 3 degrees.
+- **The area colors were Tailwind's defaults**, on a canvas that was Tailwind `zinc` to a
+  decimal place of hue. That pairing is the most replicated palette in template interfaces
+  since 2021. All forty eight are Flexoki accents now, and by the numbers the new set
+  desaturated in calm mode is more separable than the old set at full strength.
+- **The date is the home screen's masthead**, set in the app's own serif at its headline
+  rank. The version before this one removed the wordmark, correctly, and put a small grey
+  sans dateline in its place, which took the only serif off the screen. Both surfaces this
+  app does well, Momentum and the Report, open with a large serif line on a bare ground.
+- **The type scale had four size collisions**, and its weight axis could not separate
+  anything: `bodyStrong` and `title` were both 18sp, and 600 against 700 in this face is
+  0.126sp of ink. Fourteen named roles rendered as about seven. Worse, Android's Bold text
+  setting adds 300 and clamps, so with it on **six roles became one weight**. Three weights
+  now, no size collisions, and the hierarchy survives that setting.
+- **The serif was drawn 11 percent smaller than the sans at nominal parity**, because
+  Newsreader's x-height varies with its optical axis and Hanken's does not. The serif roles
+  are sized for what they measure, not for what they are called.
+- **The icons went from weight 500 to weight 400.** At 24dp beside 15sp text a 2.275dp stem
+  put every icon at the optical weight of the words next to it.
+- **The ground has a center.** Two and a half percent of lightness in one radial pair
+  behind the Areas list. Emptiness on a flat field reads as vacancy; the same emptiness on
+  a field with a center reads as room.
+
+### How it moves
+
+- **Three screens stopped appearing between two frames.** The archive, manage areas and
+  About had no transition at all.
+- **A press took 293 milliseconds to answer.** The press scale ran on the travel spring,
+  which reaches its value at 193ms, on top of the 100ms the platform withholds so it can
+  tell a tap from a scroll. The band a press should answer in is 100 to 160.
+- **`springSnappy` goes back to what `design-v3.md` specifies.** It had been changed to a
+  bouncier spring than the design asks for, on the smallest and most frequent controls in
+  the app.
+- **Reduced motion stops deleting the reading order.** It zeroed the entrance stagger, and
+  a stagger carries no displacement, so there was nothing about it to reduce. The guidance
+  from MDN, WebKit and Apple is unanimous that the instruction is about magnitude, not
+  existence.
+
+### Fixed
+
+- **Settings crashed on open** after the palette changed, because a top level value looked
+  up two moods by name that no longer existed and threw inside a static initializer. A test
+  now holds every mood name the app writes down against the palette that has to contain it.
+- **Dark area labels were solved against a ground a shade lighter than the deepest one they
+  are drawn on.** One percentage point, invisible until a color landed inside it.
+- **Onboarding ran on every launch.** `Skip setup` fired an asynchronous write and then
+  tore down the composition that owned it, so the write was canceled every time.
+- **`Replay the tour` and `Replay the welcome` did nothing.** The first run gate decides
+  once per process and latches, which it has to; it now also listens for somebody asking
+  for the tour again.
+- **The swipe opened a hole in the page.** Each face was a fixed 66dp block, so any drag
+  past that showed bare canvas between the face and the card, and the commit threshold is
+  three times that far. The revealed strip follows the card now.
+- **The app said `Item deleted` while the item was still on the screen.** Nothing is
+  written until the five second window closes, deliberately, so the sentence is
+  `Deleting item` and it is true.
+- **Importing a file could take the app down.** The one button that can replace an entire
+  history had no error handling at all; a failure now says so, and says that nothing on
+  the phone changed, which is true because the whole ingest is one transaction.
+- **The tab bar was unnamed at large text sizes**, where its labels are not drawn.
+- **A corpus observation was pasted into `strings.xml`**, so the app could have told
+  somebody the same sentence twice while believing it had said it once. A test now holds
+  every interface string against all three corpora.
+- Five dead or misplaced explanations, a dead glyph table, an unused shape token and a
+  wash 6 percent over its own ceiling in dark.
+- **`verifyClarity` could pass over a `strings.xml` it had never read**, because nineteen
+  tests open that file at runtime and Gradle could not see it. The same gap was found and
+  fixed for the corpus files in phase 9 and not for the rest.
+- **`audit.py` reported CLEAN over ten documents it never opened.** It read the twelve
+  root markdown files and none of `docs/`.
+
 ## 0.15.0, 2026-09-03
 
 The appeal pass. Four research agents and two usability walkthroughs went over the built

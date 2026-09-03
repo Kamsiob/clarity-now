@@ -283,6 +283,22 @@ internal object Measures {
         },
         Measure("longestEverActiveDays", "history", MeasureKind.DAYS, MeasureScope.WINDOW,
             "the longest anything has ever stayed active") read@{ facts, _, _ -> days(facts.history.longestEverActiveDays) },
+        // **The measure three authored lines were waiting on.**
+        //
+        // `CORPUS_2_REPORT.md` 5.2 has six basis lines and three of them read `and {m}
+        // weeks of data`. `ReportLanguage.BINDINGS` has bound `m` to this id since the
+        // slice that wrote it, and nothing here declared it, so `Measures.byId` returned
+        // null, the clause could never be filled and those three lines dropped out of the
+        // bench every week. The report has been stating the shorter, true line since it
+        // shipped: authored content that could not reach a screen.
+        //
+        // `HistoryFacts.weeksOfData` was already computed and already correct; two other
+        // engine families gate on it. This is the same number given a re-readable
+        // reference, which is what a measure is for.
+        Measure("weeksOfData", "history", MeasureKind.COUNT, MeasureScope.WINDOW,
+            "whole weeks of history behind this report", "week", "weeks") read@{ facts, _, _ ->
+            count(facts.history.weeksOfData)
+        },
         // The two estimate calibration measures of MASTER_BUILD_PROMPT 14b.8. Both are
         // counts and neither is a percent, which is the section's own rule: a ratio of 2.4
         // rendered as 240 percent is one literal hundred away from `You were off by 140

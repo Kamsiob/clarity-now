@@ -1,5 +1,6 @@
 package com.kamsiob.claritynow.ui.momentum
 
+import androidx.compose.foundation.layout.offset
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.layout.Column
@@ -103,8 +104,25 @@ fun AreasBanner(
             Column(modifier = modifier.fillMaxWidth()) {
                 Text(
                     text = current.sentence,
-                    style = type.displayTitle,
+                    // **`voiceSerif` 21.5, not `displayTitle` 31, and there are two
+                    // reasons.**
+                    //
+                    // Measured: at 31sp a typical corpus sentence takes two or three
+                    // lines on a 371dp measure, and the block reached a third of the
+                    // screen before a single area was visible. At 21.5 it takes one or
+                    // two.
+                    //
+                    // Hierarchy: 10.3 calls an item title the most important string on
+                    // the Areas screen, and it is set at 21.5. A banner drawn at 31
+                    // outranked it. What distinguishes the app's voice from a person's
+                    // things here is the serif, the parchment ground, and the position,
+                    // rather than the app simply being louder.
+                    style = type.voiceSerif,
                     color = colors.inkPrimary,
+                    // The -0.06em stem correction for Newsreader at this size. A serif
+                    // set flush against a sans caption above it reads a hair inset,
+                    // because its first stem sits inside its own side bearing.
+                    modifier = Modifier.offset(x = (-2).dp),
                 )
                 current.caption?.let { caption ->
                     Spacer(Modifier.height(ClaritySpacing.tight))

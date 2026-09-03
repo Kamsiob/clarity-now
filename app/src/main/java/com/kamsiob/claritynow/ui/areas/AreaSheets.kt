@@ -640,7 +640,7 @@ fun AreaDetailSheet(
                 // by color alone and the idle one measured 2.402 to one.
                 Text(
                     text = stringResource(R.string.area_idle_title),
-                    style = type.itemTitle.copy(fontWeight = FontWeight(500)),
+                    style = type.itemTitle.copy(fontWeight = FontWeight(400)),
                     color = colors.inkSecondary,
                     modifier = Modifier.padding(horizontal = SheetPadding),
                 )

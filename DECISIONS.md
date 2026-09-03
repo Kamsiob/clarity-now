@@ -6325,3 +6325,276 @@ had been watched running on the device twenty minutes earlier. **Recorded becaus
 of that agent's report was excellent and was acted on**, and a report that is right about
 nine things and confidently wrong about the tenth is the ordinary case rather than the
 exception.
+
+# The plate, the swipe and the manage room, September 2026
+
+Six things the owner reported on the phone, and the pass they turned into.
+
+## Onboarding replayed on every launch
+
+`onJumpIn` called `viewModel.leaveEarly(todayName)` and then `onFinished()` on the same
+frame. `leaveEarly` writes into `viewModelScope`, `onFinished` removes the onboarding route
+from the composition, and removing it clears the ViewModel store, which cancels that scope.
+The write to `hasCompletedOnboarding` was being canceled somewhere in the middle, every
+time, so the next launch found the flag unset and started the tour again.
+
+It is awaited now, in a `rememberCoroutineScope` that belongs to the route rather than to
+the model that is about to be torn down. **The lesson is not about this call site**: any
+`onSomething()` that both writes and navigates has the same shape, and the write is the
+half that loses.
+
+## Replaying the tour or the welcome from Settings did nothing
+
+`FirstRunGate` decides once per process which of three things to show and latches it, which
+is right: without the latch, beat 3's own write to `hasCompletedOnboarding` would swap the
+onboarding out from under the reveal it is in the middle of playing. So `replayTutorial`
+cleared the flag and nothing read it again until the app was killed.
+
+Two collectors now watch for the **false** transition specifically. Setting a flag back to
+false is not something the app does in its ordinary course; it happens only when a person
+asks for the tour again, and that is exactly the event the gate needs to hear. Settings
+closes itself as well, or the tour would start behind it.
+
+## The swipe left a hole
+
+Each swipe face was a fixed 66dp block pinned to its edge, so any drag further than 66dp
+opened a strip of bare page between the face and the card, widening with the thumb. The
+commit threshold is 55 percent of the row, which on this phone is about 180dp, so **every
+swipe far enough to do anything showed the gap.**
+
+The revealed strip is now as wide as the card has moved, floored at the faces' own width,
+and the face nearest the card takes the overflow. That is the behavior a person already
+knows from every mail app on the platform.
+
+## The last area now offers delete
+
+It was the one card that did not, so that reaching zero areas would be deliberate. What it
+produced was a first run in which the only card on the screen revealed nothing on a left
+swipe at all: Complete needs an active item, Swap needs a queue, and Delete was suppressed.
+The first gesture the app teaches did nothing on the first card anybody tries it on.
+Deliberateness was already carried by the typed confirmation, and an empty Areas list is not
+a hole to fall into, because its empty state invites making one.
+
+## Manage areas
+
+A new pushed screen behind a third header glyph, between the archive and the gear.
+
+**It exists because ordering had no visible control.** `MASTER_BUILD_PROMPT.md` 8.4 has the
+areas in a list the person arranges, and the way to arrange it was to press and hold a card
+until it lifted. WCAG 2.2 SC 2.5.7 wants a single pointer alternative for every drag, and
+the only one was `Move to top` inside a menu reached by the same long press. Somebody who
+wanted their third area second could not get there at all.
+
+**The screen owns exactly one job.** Two labeled arrows per row, spent rather than absent at
+the ends of the run so the row's shape does not change under a traveling thumb, and a
+spoken `2 of 5` so a screen reader stepping through one card at a time knows where it is.
+Everything else about an area, renaming, recoloring, archiving, deleting, is reached by
+tapping the row, which opens the same `AreaMenuSheet` the long press opens on the Areas
+list. A management screen that grows its own copy of those actions is how two copies drift,
+and the second copy is always the one that misses the next action added.
+
+The glyph is three dots each with a name beside it, hand drawn rather than taken from
+Material Symbols. The first version was two stacked cards, and on the device it read as a
+second archive box, because the archive glyph beside it is a rounded rectangle with a line
+near its top and so is a pair of stacked rounded rectangles at 26dp. Two adjacent header
+glyphs a person cannot tell apart is worse than a familiar shape.
+
+## The Areas screen, which the owner said looked like dropped blocks
+
+He was right, and the mechanism is nameable. Seven objects on that screen were made of one
+material: `colors.card`, a soft shadow and a rounded corner served as the area card, the
+Focus anchor, the Pulse anchor, the conflict card and, one step down, the tab bar. Every
+drawn element was 371.4dp wide or centered inside 371.4dp, so nothing bled, nothing hugged
+and nothing terminated ragged. A page with one material and one measure is a stack.
+
+**The fix is one region, not twelve corrections.** The wordmark row, the weekly banner, the
+two elevated pills, the inbox chip and the hairline rule are gone, replaced by a full bleed
+parchment plate with a hard top and a hard bottom, carrying the date, three bare doors and
+the engine's sentence. Its one separation device is the ground change itself, eight steps of
+lightness and a shift from cool to warm, which is what lets the hairline go: that rule
+existed only because the two regions it divided were made of the same thing.
+
+Measured, at two areas: the largest void against the tallest element goes from 4.13 to about
+1.18, and the void against the content from 0.77 to 0.46. No filler, no anchoring formula,
+nothing invented to occupy space.
+
+Five things that follow from it, each of which was also independently a defect:
+
+- **The app's name is gone from its own home screen.** `Clarity Now` at 26sp serif was the
+  largest type in the product, sitting above a tab bar whose selected item already says
+  `Areas`. In its place is the date, which is a fact this audience may actually want.
+- **The doors lost their pill because they cannot keep one.** On parchment, `card` measures
+  1.09:1 and `raise` measures 1.01:1. No neutral in the palette separates from that ground.
+  What they gain is a leading edge: centered content in two `weight(1f)` boxes sat on no
+  alignment at all.
+- **A waiting Pulse changes its label now.** `areas_chip_pulse_ready` has existed since
+  phase 6 and was referenced by nothing, so the only signal was a 9dp amber dot. One
+  channel, which section 13 forbids, on the one state in the app it forbids it for.
+- **The doors sit above the sentence.** Underneath it they moved 52 to 92dp between one
+  opening and the next, because the sentence is variable in height and often absent. That is
+  COGA o4p01 happening on the surface the owner opens every morning.
+- **The card has a right edge.** The queue count moved from the bottom left, where it was
+  the fourth stacked caption in the same size, weight and color as the two above it, to the
+  trailing end of the identity row. It is the card's second alignment, and it is what makes
+  the area name's indent read as the leading half of a band rather than as a stray line.
+
+## The plate's ground is drawn behind the list
+
+`scrollEdgeFade` composites the list into an offscreen layer and erases its alpha across the
+status bar, which is what stops a card clipping at a hard pixel edge under the clock. A
+ground painted inside that layer is erased with everything else, so the first build of the
+plate arrived at the top of the screen as a gradient into canvas: a soft top edge on a
+region whose entire separation device is a hard one, and the exact treatment `design-v3.md`
+15.1 lists by name.
+
+The ground is a sibling behind the list, its height tracking the plate item's own bottom
+edge through the list's layout information, so it scrolls away with the item it belongs to
+and is zero once that item is gone. The fade then does what it was written for: the dateline
+and the doors dissolve into the parchment they sit on, rather than the parchment dissolving
+into the page.
+
+## Nine smaller things found in the same files
+
+- `areas_pulse_ready_now` and `ClarityShapes.weeklyBanner` had no call sites. Deleted.
+- `ClaritySpacing.cardPaddingVertical` and `ClaritySpacing.cardGap` had no call sites while
+  the values they hold were written as `16.dp` and `11.dp` literals a few lines away. The 11
+  was also repeated in the drag reorder arithmetic, where it could drift.
+- `cardDeckAlpha` was 0.22 in dark, above the 16 percent ceiling 3.4 sets for an area wash.
+- The FAB's end inset was a 20dp literal against the tab bar's `TabBarInset` of 17, a
+  visible misalignment between the two objects that sit closest together on the page.
+- The FAB and `AreasEmptyState` called the same lambda 400dp apart on an empty screen, so
+  one job was offered twice, once in a word and once as an unlabeled circle. The FAB is not
+  composed at all now while the list is empty.
+- `HeaderGlyph` had no focus ring and no `Role.Button`, so a keyboard landing on the archive
+  glyph showed nothing and TalkBack did not say it was a button.
+- The first step was set at `caption` 12.5, the size of a timestamp, for the line 10.17
+  calls the thing that makes an item startable.
+- The empty state was centered, and its paragraph inset a further 24dp, on a screen where
+  every other block sits on the 20dp measure.
+- Five date formatters in this app hardcode an English word order and `Locale.US`. The
+  dateline declines to be a sixth: it asks the platform for the best pattern for the
+  reader's locale from a field skeleton.
+
+# Why it looked dead, and what the measurement said
+
+The owner's verdict on 0.15.0 was six out of ten. The verdict on the build after it was
+"uglier than ever, dead and boring", with an instruction to go and find open source design
+work and integrate it. Four research passes ran against primary sources: repository LICENSE
+files, shipped CSS, androidx source, the app's own font binaries measured with fontTools,
+and the app's own tokens converted to OKLCH.
+
+**Almost none of the answer was taste.** Four of the five findings are arithmetic, and each
+one names a mechanism rather than a feeling.
+
+## 202 degrees
+
+Converted to OKLCH, the four light surfaces measured hue 286 for the canvas, 85 for the
+card, 95 for `raise` and 103 for `parchment`. Every design system checked holds its neutral
+ramp inside about twenty degrees. **Surfaces on four hues are not one material**, and that
+is why the cards read as blocks dropped onto a background rather than as raised parts of a
+page. It is the owner's complaint, restated as a number.
+
+`design-v3.md` section 1 caused it: "light surfaces lean slightly cool grey with warmth in
+the cards". The build followed it exactly. A clause cannot ask for cool grounds and warm
+cards and get one material, so the clause changed before the code did, which is the order
+`CLAUDE.md` requires.
+
+Two more things fell out of the same conversion. Canvas hue 286.3 **is Tailwind `zinc`** to
+a decimal place, and the eight area moods were Tailwind v3 defaults. That pairing is the
+most replicated palette in template interfaces since 2021, and three independent catalogs
+of machine generated design trace the tell to it directly. And `parchment` was already
+within 0.0001 chroma of Flexoki's paper: the palette held one correct value and was not
+allowed to set the rule.
+
+## Fourteen type roles, seven sizes
+
+`caption`, `label` and `sidehead` were all 12.5sp. `bodyStrong` and `title` were both 18sp
+with identical tracking, separated only by weight 600 against 700. Measured on the actual
+font binary, Hanken Grotesk's stems run 187, 191 and 194 units per thousand em at 600, 650
+and 700: **0.126sp of ink between `bodyStrong` and `title`**, under a sixth of a physical
+pixel.
+
+The file's own documentation had described the correct ramp since phase 3b. The code had
+drifted off it and nothing was holding it there.
+
+Worse, and this one is an accessibility defect rather than an aesthetic one: Compose adds
+Android's Bold text adjustment of +300 and clamps, and the font clamps at 900. **With that
+setting on, six roles became one weight**, and the two that also shared a size became
+pixel identical. Three weights survive it as two, which is a hierarchy.
+
+The serif was also being drawn 11 percent smaller than the sans at nominal parity, because
+Newsreader's x-height moves with its optical axis, 0.426em at `opsz` 18 to 0.474 at 48,
+while Hanken's is a flat 0.493 at every weight. Radix corrects the same thing with a 1.18
+font-size-adjust. Here it is corrected in the five serif roles, which are set once.
+
+## The wordmark, and the mistake made removing it
+
+Taking `Clarity Now` off the home screen was right: it was the largest type in the product,
+spent naming the app to somebody who had just opened it. Replacing it with a 12.5sp grey
+sans dateline was not, and the owner's verdict landed on that build.
+
+What left with the wordmark was the only serif on the screen. Both surfaces of this app
+that are admired open with a large serif line on a bare ground. The date is that line now.
+It is the app's own voice, it says something a person with time blindness actually wants,
+and unlike an observation it needs no corpus because it is not about them.
+
+## Three screens with no transition, and a press that took 293 milliseconds
+
+The archive, manage areas and About were bare `if` blocks. They appeared between two
+frames.
+
+The press was two additive delays: `Modifier.clickable` withholds the press interaction for
+the platform's 100ms tap timeout so it can tell a tap from a scroll, and the scale animated
+on `springStandard`, which reaches its value at 193ms. Every row in the app answered in
+about 293ms against a literature band of 100 to 160. The spring was simply the wrong token:
+it is the travel spring, and a press is not travel.
+
+## What the research got wrong, recorded because it matters
+
+The motion pass reported `MotionScheme` as public in this project's material3 and gave a
+ready implementation. Writing it produced `Cannot access 'interface MotionScheme': it is
+internal in file` at four sites. The KDoc that said it was internal was right, and it now
+also says how the claim was tested, so the next reader does not spend the hour: write the
+override and compile, which takes a minute, rather than read a release note.
+
+The same pass corrected two of its own overstatements without being asked, from 20 Material
+call sites to 4 and from eleven hard cut surfaces to three. The color pass discovered a
+contrast miss only after the test suite caught it in dark mode.
+
+**The pattern is the one this file has recorded before**: a report can be right about nine
+things and confidently wrong about the tenth, and the way to tell which is to compile it.
+
+## Two defects the palette change surfaced
+
+**Settings crashed on open.** `AppearancePicker` takes its three miniature dot colors from
+the palette by name so that it cannot drift from the color picker, which is the right
+design. Two of the three names no longer existed, so a top level `val` threw inside a
+static initializer and the trace named a composable eighty lines away. `AppearancePickerTest`
+now holds every mood name the app writes down against the palette that has to contain it,
+and it was checked by breaking it deliberately.
+
+**Dark area labels were solved against the wrong ground.** `LABEL_GROUND_ALPHA_DARK` was
+0.16 while `ClarityDarkColors.cardWashActiveAlpha` is 0.17, so the contrast solve ran
+against a ground one point lighter than the deepest one a label is ever drawn on. A
+previous audit flagged the mismatch and could not reproduce it, because with the old
+palette nothing happened to land in the hundredth the gap hides. Flexoki's Ochre 700 landed
+in it at 4.459 against a floor of 4.5.
+
+## What was refused
+
+- **Switching icon sets.** Thirteen were checked against their actual LICENSE files. Three
+  are not usable in an AGPL app at all. The disqualifier for the rest is that no candidate
+  has a fill axis on every glyph, and the tab bar needs filled and outlined pairs. The
+  lever was the weight axis, not the set.
+- **Switching typefaces.** `design-v3.md` 15.3 forbids it and names the likely
+  replacements. The research supported the rule rather than overriding it. Newsreader has
+  the widest optical size range of any OFL serif checked.
+- **Fontshare and Indian Type Foundry faces**, permanently. Their license forbids
+  redistribution through a repository, which rules out a public AGPL repo, and it cannot be
+  sublicensed. Switzer, General Sans, Satoshi, Cabinet Grotesk and Gambarino are all out.
+- **Source Serif 4 and IBM Plex**, on a smaller point: their upstream attribution text
+  contains characters above U+007F and would fail this repository's own language gate.
+- **Film grain.** It is not an AI tell, and Linear and Raycast both ship it. But the
+  position that grain is landing page grammar rather than product grammar is a sourced one,
+  and the ground light does the same job for two and a half percent of lightness and one
+  draw call.

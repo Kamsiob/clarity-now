@@ -576,8 +576,23 @@ object ClarityReducer {
             windowStartKey = payload.windowStartKey,
             headlineText = payload.headlineText,
         )
-        // A regenerate on the same device replaces the week without a conflict; a
-        // conflict is only recorded when the losing report came from elsewhere.
+        // **Both halves of the sentence that used to be here were backwards.** It said a
+        // regenerate on the same device replaces the week, and that a conflict is recorded
+        // when the losing report came from elsewhere. Neither is what this function does,
+        // and neither is what should happen.
+        //
+        // A report id is `report:${weekStartKey}` and nothing else, so every report for a
+        // given week carries the same id whichever device wrote it. The early return two
+        // lines above therefore catches both of the cases that sentence described: a
+        // regenerate does not replace anything, and a report merged in from a second
+        // device does not raise a conflict. That is deliberate and `ReportCoordinator`
+        // states it correctly: 12.3 allows one report per calendar week, regenerate
+        // recomposes the page in hand without writing, and a deterministic id is what
+        // makes a merge quiet.
+        //
+        // What reaches this branch is a week that already has a report under a *different*
+        // id, which the id scheme above cannot produce and an imported log from an older
+        // one can. That is a genuine duplicate and it is what the conflict names.
         val conflicts = if (existing == null) {
             state.conflicts
         } else {

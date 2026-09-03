@@ -706,57 +706,6 @@ private fun TrailEventRow(
     }
 }
 
-/**
- * The glyph for a row shape. Exhaustive, so a twenty sixth shape fails the build.
- *
- * Twenty five row shapes onto eighteen drawables that already exist, thirteen of them
- * named by design-v3.md 7 directly. Nothing is invented for this screen, which is how
- * it avoids 15.1's "Interchangeable thin line icons with no relationship to the
- * product". There is deliberately no sparkle for the two generated types:
- * design-v3.md 7 bans `auto_awesome` by name because it reads as an AI affordance,
- * which is the opposite of what this app claims.
- */
-@DrawableRes
-private fun iconFor(sentence: TrailSentenceKey): Int = when (sentence) {
-    TrailSentenceKey.AREA_CREATED -> ClarityIcons.areas
-    TrailSentenceKey.AREA_RENAMED -> ClarityIcons.edit
-    TrailSentenceKey.AREA_RECOLORED -> ClarityIcons.appearance
-    TrailSentenceKey.AREA_REORDERED -> ClarityIcons.reorder
-    TrailSentenceKey.AREA_ARCHIVED -> ClarityIcons.archive
-    TrailSentenceKey.AREA_UNARCHIVED -> ClarityIcons.unarchive
-    TrailSentenceKey.AREA_DELETED -> ClarityIcons.erase
-    // Filing puts a captured thing into an area, so it takes the areas glyph, the
-    // same one AREA_CREATED uses. Reuse is the point: design-v3.md 7 wants the set
-    // small and coherent, and twenty nine row shapes still map onto nineteen
-    // drawables that already exist.
-    TrailSentenceKey.ITEM_FILED -> ClarityIcons.areas
-    TrailSentenceKey.ITEM_ESTIMATED -> ClarityIcons.time
-    TrailSentenceKey.ITEM_ESTIMATE_CLEARED -> ClarityIcons.time
-    TrailSentenceKey.FOCUS_EXTENDED -> ClarityIcons.focusEvent
-
-    TrailSentenceKey.ITEM_ADDED -> ClarityIcons.add
-    TrailSentenceKey.ITEM_EDITED -> ClarityIcons.edit
-    TrailSentenceKey.ITEM_QUEUED -> ClarityIcons.expand
-    TrailSentenceKey.ITEM_PROMOTED -> ClarityIcons.promoted
-    TrailSentenceKey.ITEM_SWAPPED -> ClarityIcons.swap
-    TrailSentenceKey.ITEM_COMPLETED -> ClarityIcons.completed
-    TrailSentenceKey.ITEM_REOPENED -> ClarityIcons.regenerate
-    TrailSentenceKey.ITEM_REORDERED -> ClarityIcons.reorder
-    TrailSentenceKey.ITEM_DELETED -> ClarityIcons.erase
-
-    TrailSentenceKey.FOCUS_STARTED -> ClarityIcons.focusEvent
-    TrailSentenceKey.FOCUS_COMPLETED -> ClarityIcons.focusEvent
-    TrailSentenceKey.FOCUS_STOPPED -> ClarityIcons.focusEvent
-
-    TrailSentenceKey.PULSE_GENERATED -> ClarityIcons.pulse
-    TrailSentenceKey.PULSE_ANSWERED -> ClarityIcons.pulse
-
-    TrailSentenceKey.REPORT_GENERATED -> ClarityIcons.report
-    TrailSentenceKey.PLAN_OFFERED -> ClarityIcons.report
-    TrailSentenceKey.PLAN_ACCEPTED -> ClarityIcons.check
-
-    TrailSentenceKey.SETTING_CHANGED -> ClarityIcons.settings
-}
 
 /**
  * The bottom of the list in its three states: loading, finished, or nothing at all.

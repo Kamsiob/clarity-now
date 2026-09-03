@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Hand drawn to the Material Symbols Rounded grid rather than taken from the set,
+    which is why it carries no license line and the others do.
+
+    ## What it is a picture of
+
+    Three rows, each a dot and a name. That is not a generic list glyph that happens to
+    fit; it is the Areas list drawn small. An area is a colored dot beside a title on
+    the Areas card, on the archive card, in the long press menu and on the manage screen
+    this opens, so the glyph and the room agree about what an area looks like.
+
+    ## Why not the obvious one, and why not the first thing drawn here
+
+    design-v3.md section 15. The common glyph for a manage screen is a pencil, a gear or
+    a slider set, and all three are taken or wrong: the gear is the settings glyph two
+    positions along, the pencil is `edit`, and `tune` is already the edit-an-area glyph.
+
+    The first version of this file drew two stacked cards, and on the device it read as
+    a second archive box: the archive glyph beside it is a rounded rectangle with a
+    horizontal line near its top, which is what a pair of stacked rounded rectangles at
+    26dp also is. Two adjacent header glyphs a person cannot tell apart is worse than a
+    familiar shape, so the dots carry the difference. Nothing else in the icon set has a
+    filled circle in it.
+
+    Stroked at 90 units on a 960 grid for the names, which measures the same weight as
+    the outline symbols beside it; the dots are filled, as the real ones are.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="960"
+    android:viewportHeight="960">
+    <group
+        android:translateX="0"
+        android:translateY="960">
+        <path
+            android:fillColor="#FF000000"
+            android:pathData="M235,-768 m-68,0 a68,68 0 1,0 136,0 a68,68 0 1,0 -136,0 z" />
+        <path
+            android:fillColor="#FF000000"
+            android:pathData="M235,-480 m-68,0 a68,68 0 1,0 136,0 a68,68 0 1,0 -136,0 z" />
+        <path
+            android:fillColor="#FF000000"
+            android:pathData="M235,-192 m-68,0 a68,68 0 1,0 136,0 a68,68 0 1,0 -136,0 z" />
+        <path
+            android:fillColor="#00000000"
+            android:strokeColor="#FF000000"
+            android:strokeWidth="90"
+            android:strokeLineCap="round"
+            android:pathData="M430,-768 L750,-768" />
+        <path
+            android:fillColor="#00000000"
+            android:strokeColor="#FF000000"
+            android:strokeWidth="90"
+            android:strokeLineCap="round"
+            android:pathData="M430,-480 L750,-480" />
+        <path
+            android:fillColor="#00000000"
+            android:strokeColor="#FF000000"
+            android:strokeWidth="90"
+            android:strokeLineCap="round"
+            android:pathData="M430,-192 L750,-192" />
+    </group>
+</vector>

@@ -80,7 +80,11 @@ data class ClarityColors(
  * whichever reads on the swatch, and a swatch is neither a Daylight surface nor a
  * Contemplative one so it cannot take a world's ink token.
  */
-internal val InkLight = Color(0xFF17171C)
+// Flexoki black, which is warm and very slightly off neutral rather than the cool
+// near-black it replaces. `#17171C` sat at hue 286 with the old canvas, which is to say
+// the ink was violet too. Ian Storm Taylor's rule: never use black, and never use a
+// neutral that disagrees with the light in the room.
+internal val InkLight = Color(0xFF100F0F)
 private val InkDark = Color(0xFFF0EEF1)
 
 /**
@@ -181,19 +185,43 @@ private val InkDark = Color(0xFFF0EEF1)
  */
 val ClarityLightColors = ClarityColors(
     isDark = false,
-    canvas = Color(0xFFD6D6DB),
-    card = Color(0xFFFCFBF9),
-    raise = Color(0xFFEBEAE6),
+    // **One hue, and that is the whole of this change.**
+    //
+    // These four surfaces used to measure, in OKLCH, hue 286 for the canvas, 85 for the
+    // card, 95 for `raise` and 103 for `parchment`: **202 degrees of spread**, where every
+    // system checked holds a neutral ramp inside about twenty. Surfaces on four hues are
+    // not one material, which is the mechanical reason the cards read as blocks dropped
+    // onto a page rather than as raised parts of it. 286.3 is also Tailwind `zinc` to a
+    // decimal place, and the eight area moods were Tailwind v3 defaults, which together
+    // are the most replicated palette in template interfaces since 2021.
+    //
+    // The values are Flexoki's, by Steph Ango, MIT licensed, credited on the licenses
+    // screen. It is the one candidate designed for reading and long dwell rather than for
+    // dashboards, and its chroma peaks at the paper and falls to almost nothing at the
+    // ink, which is the paper metaphor made literal: the surfaces carry the material and
+    // the type stays neutral. `parchment` was already within 0.0001 chroma of Flexoki's
+    // paper, so the palette already held one correct value and was not allowed to set the
+    // rule.
+    //
+    // The spread is 3 degrees now. Every ink level improved, and every gate in
+    // `SurfaceLadderTest` and the contrast suite passes unchanged: ground to chrome 7.01,
+    // chrome to content 4.22, ground to content 11.23.
+    //
+    // `canvas` is the one derived value. Flexoki has no step at the L* 87.8 the ladder
+    // needs, so it sits 63 percent of the way from base-100 to base-150 at hue 97.5.
+    canvas = Color(0xFFDEDCD2),
+    card = Color(0xFFFFFCF0),
+    raise = Color(0xFFF2F0E5),
     inkPrimary = InkLight,
     inkSecondary = InkLight.copy(alpha = 0.68f),
     inkTertiary = InkLight.copy(alpha = 0.38f),
     hairline = InkLight.copy(alpha = 0.08f),
-    actionBlue = Color(0xFF004BAE),
+    actionBlue = Color(0xFF1A4F8C),
     positiveGreen = Color(0xFF22C55E),
-    positiveInk = Color(0xFF03652B),
+    positiveInk = Color(0xFF3D4C07),
     warnAmber = Color(0xFFF59E0B),
-    parchment = Color(0xFFEFEEE2),
-    deleteMuted = Color(0xFF724444),
+    parchment = Color(0xFFE6E4D9),
+    deleteMuted = Color(0xFF942822),
     // 7 rather than 5, which is the top of the 5 to 7 band design-v3.md 3.1 gives the
     // Daylight wash rather than a new value. At 5 percent over `card` an area's color was
     // present arithmetically and gone visually: the Daylight world's cards read as white
@@ -269,7 +297,7 @@ val ClarityDarkColors = ClarityColors(
     deleteMuted = Color(0xFFB98685),
     cardWashAlpha = 0.10f,
     cardWashActiveAlpha = 0.17f,
-    cardDeckAlpha = 0.22f,
+    cardDeckAlpha = 0.16f,
 )
 
 /**

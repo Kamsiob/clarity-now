@@ -41,7 +41,7 @@ import java.time.ZoneOffset
  *
  * There is no fallback. No "if the slot is unbound, use the window count". A default here
  * would be a guess about what a sentence means, applied to every line nobody has read yet,
- * which is the mechanism by which a corpus of 1,519 authored lines starts producing claims
+ * which is the mechanism by which a corpus of nearly five thousand authored lines starts producing claims
  * no author wrote.
  */
 internal object SlotBindings {

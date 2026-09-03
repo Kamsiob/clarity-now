@@ -86,7 +86,7 @@ class EdgeCaseFixtures {
         write(
             "one-area",
             log().apply {
-                stocked(1, "solo", "Today", "#D8453A", "a0", "Rewrite the proposal introduction")
+                stocked(1, "solo", "Today", "#D14D41", "a0", "Rewrite the proposal introduction")
             }.events(),
         )
 
@@ -100,8 +100,8 @@ class EdgeCaseFixtures {
                     "Money", "Friends", "Garden", "The move", "Music", "Reading",
                 )
                 val colors = listOf(
-                    "#2D7FF9", "#D8453A", "#F59E0B", "#10B981", "#6366F1", "#A16207",
-                    "#0D9488", "#D946EF", "#22C55E", "#EF4444", "#7C3AED", "#64748B",
+                    "#4385BE", "#D14D41", "#D0A215", "#3AA99F", "#8B7EC8", "#DA702C",
+                    "#2F968D", "#CE5D97", "#879A39", "#C03E35", "#735EB5", "#5E409D",
                 )
                 names.forEachIndexed { i, n ->
                     stocked(1 + i, "ar$i", n, colors[i], "a" + ORDER[i], "The one thing in $n")
@@ -115,7 +115,7 @@ class EdgeCaseFixtures {
         write(
             "forty-queue",
             log().apply {
-                area(at(1, 8), "deep", "Work", "#2D7FF9", "a0")
+                area(at(1, 8), "deep", "Work", "#4385BE", "a0")
                 item(at(1, 9), "deep-0", "deep", "Send the revised deck", "a0", "Work")
                 promote(at(1, 9, 1), "deep-0", "deep", "Send the revised deck", "Work")
                 repeat(40) { i ->
@@ -139,10 +139,10 @@ class EdgeCaseFixtures {
                 val areaName = "Reading and the long slow book pile"
                 val title = "Finish reading the chapter about the second half of the " +
                     "nineteenth century before the reading group meets on Thursday"
-                area(at(1, 8), "long", areaName, "#7C3AED", "a0")
+                area(at(1, 8), "long", areaName, "#735EB5", "a0")
                 item(at(1, 9), "long-1", "long", title, "a0", areaName)
                 promote(at(1, 9, 1), "long-1", "long", title, areaName)
-                area(at(2, 8), "short", "Home", "#0D9488", "a1")
+                area(at(2, 8), "short", "Home", "#2F968D", "a1")
                 item(at(2, 9), "short-1", "short", "Bin", "a0", "Home")
                 promote(at(2, 9, 1), "short-1", "short", "Bin", "Home")
             }.events(),
@@ -153,8 +153,8 @@ class EdgeCaseFixtures {
         write(
             "idle-and-live",
             log().apply {
-                stocked(1, "live", "Work", "#2D7FF9", "a0", "Send the revised deck")
-                area(at(1, 8), "idle", "Garden", "#22C55E", "a1")
+                stocked(1, "live", "Work", "#4385BE", "a0", "Send the revised deck")
+                area(at(1, 8), "idle", "Garden", "#879A39", "a1")
                 item(at(1, 9), "idle-1", "idle", "Cut back the ivy", "a0", "Garden")
                 promote(at(1, 9, 1), "idle-1", "idle", "Cut back the ivy", "Garden")
                 complete(at(2, 10), "idle-1", "idle", "Cut back the ivy", "Garden")
@@ -207,22 +207,22 @@ class EdgeCaseFixtures {
 
         val seeds = listOf(
             Seed(
-                "work", "Work", "#2D7FF9", "a0",
+                "work", "Work", "#4385BE", "a0",
                 "Send the revised deck", "Open the deck and read slide one",
                 listOf("Book the follow up call", "Reply to the landlord", "Draft the handover note"),
             ),
             Seed(
-                "health", "Health", "#D8453A", "a1",
+                "health", "Health", "#D14D41", "a1",
                 "Walk before the call", null,
                 listOf("Book the eye test"),
             ),
             Seed(
-                "family", "Family", "#F59E0B", "a2",
+                "family", "Family", "#D0A215", "a2",
                 "Plan the weekend", null,
                 emptyList(),
             ),
             Seed(
-                "reading", "Reading", "#7C3AED", "a3",
+                "reading", "Reading", "#735EB5", "a3",
                 null, null,
                 listOf("Finish chapter three", "Start the second essay"),
             ),
@@ -305,9 +305,9 @@ class EdgeCaseFixtures {
                 .toInstant()
                 .toEpochMilli()
 
-        log.area(on(27, 8), "work", "Work", "#2D7FF9", "a0")
-        log.area(on(27, 8, 1), "health", "Health", "#D8453A", "a1")
-        log.area(on(27, 8, 2), "reading", "Reading", "#7C3AED", "a2")
+        log.area(on(27, 8), "work", "Work", "#4385BE", "a0")
+        log.area(on(27, 8, 1), "health", "Health", "#D14D41", "a1")
+        log.area(on(27, 8, 2), "reading", "Reading", "#735EB5", "a2")
 
         var n = 0
         // One ordinary day: an item captured, promoted and finished in an area.

@@ -81,7 +81,7 @@ internal fun TextSizePicker(
             // The same treatment a settings row title takes, so this reads as one more
             // thing in the Appearance group rather than as a second sidehead inside it.
             text = stringResource(R.string.settings_text_size),
-            style = type.body.copy(fontWeight = FontWeight(600)),
+            style = type.body.copy(fontWeight = FontWeight(700)),
             color = colors.inkPrimary,
         )
         Spacer(Modifier.height(ClaritySpacing.scaled(TITLE_GAP)))

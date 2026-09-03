@@ -94,7 +94,14 @@ private const val SYSTEM_SPLIT_DEGREES = 103f
  * excludes the area dot from the transform by name, because a dot is identity rather
  * than atmosphere, and a miniature of a dot is a picture of the same thing.
  */
-private val MINI_DOT_COLORS: List<Color> = listOf("Ocean", "Meadow", "Earth").map { mood ->
+private val MINI_DOT_COLORS: List<Color> = listOf("Ocean", "Moss", "Clay").map { mood ->
+    // **`first { }` and not `firstOrNull`, deliberately, and it threw once.** The palette
+    // moved to Flexoki in the appeal pass and two of the three names here no longer
+    // existed, so this top level `val` threw inside a static initializer and took the
+    // Settings screen down with an `ExceptionInInitializerError` that named neither the
+    // list nor the palette. A crash is the right answer to a name that is not there: the
+    // alternative is a picker quietly drawing two dots instead of three. What was missing
+    // was a test, and `AppearancePickerTest` is it.
     parseAreaColor(AreaPalette.moods.first { it.name == mood }.colors.first())
 }
 

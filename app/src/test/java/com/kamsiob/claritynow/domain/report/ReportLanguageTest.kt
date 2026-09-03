@@ -114,10 +114,29 @@ class ReportLanguageTest {
         }
     }
 
+    /**
+     * 5.2: a clause is omitted when its value is zero, and the whole line when they all
+     * are. **Both of them have to be zero now**, which they did not before: `{m}` bound to
+     * a measure nothing declared, so this test used to pass with `weeksOfData` at the
+     * fixture's 17 and prove nothing about the second clause.
+     */
     @Test
     fun `the basis line is absent when every clause of it would be zero`() {
-        val facts = ValidateFixture.facts(pulse = ValidateFixture.pulse(answeredInWindow = 0))
+        val facts = ValidateFixture.facts(
+            pulse = ValidateFixture.pulse(answeredInWindow = 0),
+            history = ValidateFixture.history(weeksOfData = 0),
+        )
         assertNull(language.basis(facts, ReportFixture.DATE_KEY))
+    }
+
+    /** And each clause stands on its own when the other is zero. */
+    @Test
+    fun `weeks of data alone is a basis line`() {
+        val facts = ValidateFixture.facts(
+            pulse = ValidateFixture.pulse(answeredInWindow = 0),
+            history = ValidateFixture.history(weeksOfData = 6),
+        )
+        assertEquals("Based on 6 weeks of data.", language.basis(facts, ReportFixture.DATE_KEY)?.rendered)
     }
 
     @Test
@@ -129,26 +148,23 @@ class ReportLanguageTest {
     }
 
     /**
-     * The gap this slice found and did not paper over, held by a test so it cannot be
-     * forgotten.
+     * The gap that test recorded is closed, and this is what closed it.
      *
-     * Three of the six basis lines read `and {m} weeks of data`, `{m}` is
-     * `HistoryFacts.weeksOfData`, and no entry in `Measures` reads it, so those three cannot
-     * be filled and drop out of the bench. The report states the shorter, true line instead.
-     *
-     * **When somebody adds that measure, this test fails**, and the thing to do is delete
-     * this test and the note on `ReportLanguage`, because the gap will have closed. A gap
-     * recorded only in a comment is a gap nobody finds.
+     * The previous version of this test asserted that `Measures.byId("weeksOfData")` was
+     * null and that the basis line therefore never said `weeks`, and its own KDoc said
+     * that when somebody declared the measure the test should be replaced. This is the
+     * replacement: the same two facts, both inverted, so the clause cannot silently go
+     * back to dropping out.
      */
     @Test
-    fun `the weeks of data clause waits on a measure, and says so`() {
-        assertNull(
-            "`Measures` now declares weeksOfData. The fuller basis lines in CORPUS_2_REPORT.md " +
-                "5.2 can be filled, so delete this test and the note on ReportLanguage",
+    fun `the weeks of data clause has its measure and fills`() {
+        assertNotNull(
+            "`m` binds to a measure that Measures does not declare, so three of the six " +
+                "basis lines in CORPUS_2_REPORT.md 5.2 can never be filled",
             Measures.byId(ReportLanguage.BINDINGS.getValue("m")),
         )
         val basis = language.basis(facts, ReportFixture.DATE_KEY)
-        assertFalse("the basis line states weeks of data: ${basis?.rendered}", "weeks" in basis!!.rendered)
+        assertTrue("the basis line states weeks of data: ${basis?.rendered}", "weeks" in basis!!.rendered)
     }
 
     // ------------------------------------------------------------------- the caption

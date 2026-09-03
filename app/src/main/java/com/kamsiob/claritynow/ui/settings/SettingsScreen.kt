@@ -65,6 +65,7 @@ internal fun SettingsScreen(
     onExport: () -> Unit,
     onImport: () -> Unit,
     onOpenErase: () -> Unit,
+    onRebuildCache: () -> Unit,
     onOpenPrivacy: () -> Unit,
     onOpenLicenses: () -> Unit,
     onReplayTour: () -> Unit,
@@ -211,6 +212,16 @@ internal fun SettingsScreen(
                 title = stringResource(R.string.settings_erase),
                 onClick = onOpenErase,
             )
+            // MASTER_BUILD_PROMPT 5.4's debug action, and the only row on this screen
+            // that is not in a release build. `SettingsViewModel.rebuildCache` carries
+            // why it exists and why it had no caller for thirteen phases.
+            if (BuildConfig.DEBUG) {
+                SettingsRow(
+                    title = stringResource(R.string.settings_rebuild),
+                    onClick = onRebuildCache,
+                    chevron = false,
+                )
+            }
             // MASTER_BUILD_PROMPT 14b.7, in Settings only and nowhere else in the app.
             // Addendum 01 4h's plain statement about an unencrypted file is on the
             // export sheet rather than here, because with the password built it is
@@ -322,6 +333,7 @@ private fun busyLabelOf(task: DataTask): Int = when (task) {
     DataTask.EXPORTING -> R.string.settings_export_working
     DataTask.IMPORTING -> R.string.settings_import_working
     DataTask.ERASING -> R.string.settings_erase_working
+    DataTask.REBUILDING -> R.string.settings_rebuild_working
 }
 
 /**
@@ -353,8 +365,18 @@ private fun dataMessageText(message: DataMessage): String = when (message) {
     // screen: there is nothing a person can do with the difference between a revoked
     // grant and a full disk except pick somewhere else.
     is DataMessage.ExportFailed -> stringResource(R.string.settings_export_error)
+    is DataMessage.ImportFailed -> stringResource(R.string.settings_import_error)
 
     DataMessage.Erased -> stringResource(R.string.settings_erase_done)
+
+    is DataMessage.Rebuilt -> stringResource(
+        if (message.matched == false) {
+            R.string.settings_rebuild_mismatch
+        } else {
+            R.string.settings_rebuild_done
+        },
+        message.eventCount,
+    )
 
     is DataMessage.ImportWasRefused -> importRefusalText(message.reason)
 }

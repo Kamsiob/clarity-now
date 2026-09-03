@@ -154,12 +154,13 @@ internal fun AboutScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             listOf(
                 R.string.about_license_app,
                 R.string.about_license_fonts,
+                R.string.about_license_flexoki,
                 R.string.about_license_symbols,
             ).forEach { line ->
                 Text(
                     text = stringResource(line),
                     style = type.caption,
-                    // The three license lines. What makes them quiet is 30dp of space
+                    // The four license lines. What makes them quiet is 30dp of space
                     // and the smallest role in 5.3, 6.1's first separation device.
                     // design-v3.md 3.1 and 13.
                     color = colors.inkSecondary,
