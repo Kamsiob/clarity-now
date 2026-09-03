@@ -33,13 +33,29 @@ enum class ClarityThemeSetting { LIGHT, DARK, SYSTEM }
 data class ShadowLayer(val offsetY: Dp, val blur: Dp, val color: Color)
 
 object ClarityElevation {
+    /**
+     * **The ink a shadow is made of, and it is not black.**
+     *
+     * A shadow is the ground with less light on it, so it keeps the ground's hue. Pure
+     * black over a colored surface desaturates whatever is under it, which is why a black
+     * drop shadow makes a page look dusty rather than lit, and it is one of the most
+     * reliable tells that a palette was assembled rather than mixed.
+     *
+     * This is the Daylight canvas `#D6D6DB`, taken most of the way to black. It is a very
+     * slightly violet near black, which nobody will ever name, and the whole point is
+     * that nobody names it: the cards stop sitting on a grey smudge and start sitting on
+     * the page they are actually on. The alphas are unchanged, so no shadow gets heavier;
+     * `design-v3.md` 6.1's two layer geometry is untouched.
+     */
+    private val ShadowInk = Color(0xFF0B0B10)
+
     val card = listOf(
-        ShadowLayer(1.dp, 3.dp, Color.Black.copy(alpha = 0.04f)),
-        ShadowLayer(6.dp, 20.dp, Color.Black.copy(alpha = 0.05f)),
+        ShadowLayer(1.dp, 3.dp, ShadowInk.copy(alpha = 0.04f)),
+        ShadowLayer(6.dp, 20.dp, ShadowInk.copy(alpha = 0.05f)),
     )
     val tabBar = listOf(
-        ShadowLayer(2.dp, 10.dp, Color.Black.copy(alpha = 0.07f)),
-        ShadowLayer(10.dp, 30.dp, Color.Black.copy(alpha = 0.08f)),
+        ShadowLayer(2.dp, 10.dp, ShadowInk.copy(alpha = 0.07f)),
+        ShadowLayer(10.dp, 30.dp, ShadowInk.copy(alpha = 0.08f)),
     )
     /**
      * design-v3.md 6.1's sheet value, **and it has no call site, which phase 12b settled

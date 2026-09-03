@@ -196,7 +196,13 @@
     <string name="sidehead_color">Color</string>
     <string name="sidehead_mood">Mood</string>
     <string name="sidehead_preview">Preview</string>
-    <string name="sidehead_area_actions">Area</string>
+    <!--
+        `Manage this area` and not `Area`. After sections labeled `Active`, `Queue` and
+        `Completed`, a section labeled `Area` reads as a fourth list rather than as the
+        place where an area is renamed, archived or deleted, which is what it is. The
+        owner could not find area management and this heading is half the reason.
+    -->
+    <string name="sidehead_area_actions">Manage this area</string>
 
     <string name="queue_empty">Nothing waiting.</string>
     <string name="swap_demoting">This goes back to the front of the queue.</string>
@@ -1289,6 +1295,11 @@
     <string name="onboarding_depth_pulse_caption">A question about what you have been doing. One tap answers it, and you can turn it off in Settings.</string>
     <string name="onboarding_depth_momentum_caption">It counts what you did. There is no score anywhere in this app.</string>
     <string name="onboarding_depth_pulse_eyebrow">Pulse sample</string>
+    <!--
+        The Momentum moment was the only one of beat 4's four with no name on it, and its
+        caption begins `It counts what you did`, so the pronoun had nothing to refer to.
+    -->
+    <string name="onboarding_depth_momentum_eyebrow">Momentum</string>
     <string name="onboarding_depth_report_eyebrow">Clarity Report</string>
     <string name="onboarding_depth_report_headline">Your week, in one page.</string>
     <!--

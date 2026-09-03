@@ -2,8 +2,7 @@
 
 Where the build actually is. Updated at the end of every phase.
 
-**Last updated:** September 2, 2026, end of the deferred issue pass, which followed the
-polish pass in the same tree.
+**Last updated:** September 3, 2026, end of the appeal pass.
 
 **Everything specified is built, installed and checked on the device.** All thirteen
 phases, the facts phase, the slot bindings phase, the rules pass, the reach passes, the
@@ -11,7 +10,7 @@ accessibility pass, the polish pass and the deferred issue pass. The one thing o
 is not code: shipping to Play needs a Play Console account, and the exact steps are in
 `HANDOFF.md` under BLOCKED.
 
-**Version:** 0.14.0, versionCode 1400. The reasoning for every number is at the top of
+**Version:** 0.15.0, versionCode 1500. The reasoning for every number is at the top of
 `app/build.gradle.kts`, one line per release, and 16.7 requires it to be a deliberate
 choice rather than an increment.
 
@@ -64,6 +63,7 @@ worse than either of them**, and the way to edit these is to replace the whole b
 | The reach passes, and the tenth measurement | done. Silence 65.7 to 56.0 percent, repeats 7,370 to 2,286 | no issue |
 | The polish pass, and three consultations | done, device checked | closed |
 | The deferred issue pass | done, device checked. All eight polish pass deferrals closed, plus #60, #17 and #14 | closed |
+| The appeal pass | done, device checked. Four research agents, two usability walkthroughs, eleven owner complaints | closed |
 | 13. Ship | the buildable half is done, and the release is signed. What is left needs a Play Console account and is in `HANDOFF.md` | #12 |
 
 ---

@@ -113,7 +113,14 @@ fun calmAccent(accent: Color): Color = accent.calmed(LocalCalmMode.current)
  * belongs to the area's own color, which is user data and never a token.
  */
 fun ClarityColors.calmed(): ClarityColors = copy(
-    cardWashAlpha = if (isDark) 0.09f else 0.04f,
+    // **The light value follows the ordinary one, and the gap between them is the number
+    // that matters rather than either value on its own.** `CalmModeContrastTest` holds
+    // that switching calm mode on moves a measured label contrast by less than half a
+    // ratio point, and what moves it is this alpha difference, not the desaturation.
+    // Raising the ordinary Daylight wash from 5 to 7 and leaving this at 4 tripled the gap
+    // and moved contrast by 0.78. Six keeps the one point difference the pair has always
+    // had, so calm mode still lightens the wash by exactly as much as it used to.
+    cardWashAlpha = if (isDark) 0.09f else 0.05f,
     cardWashActiveAlpha = if (isDark) 0.16f else 0.08f,
     cardDeckAlpha = if (isDark) 0.18f else 0.09f,
 )

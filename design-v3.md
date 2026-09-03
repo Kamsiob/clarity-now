@@ -634,7 +634,17 @@ Three actions across two directions. **Delete is never reachable by a full swipe
 - **Scroll wins over swipe.** A gesture whose initial direction is predominantly vertical is a scroll and never becomes a swipe, even if it curves
 
 ### 10.4 Floating tab bar
-A 61dp tall pill inset 17dp from the edges and bottom, at the `raise` rank of 3.1's ladder, elevation only. Four items, each a 48dp target. The active item sits in an inner pill with actionBlue at 10 percent, filled icon and label in actionBlue. Inactive at inkSecondary. The inner pill slides with springStandard.
+A **68dp** tall pill inset 17dp from the edges and bottom, at the `raise` rank of 3.1's ladder, elevation only. **Four equal slots**, each a 48dp target, each a glyph over its own name. The current slot's glyph sits in a 56 by 32dp indicator carrying actionBlue at 11 percent, and its glyph and label take actionBlue. The others are inkSecondary. **Only the indicator changes; no slot ever moves.**
+
+**Amended in the appeal pass, and every part of the amendment is a measurement.** It was 61dp of glyphs in a `SpaceEvenly` row where the current destination expanded sideways into a pill carrying its label and the other three were unlabeled. Three things were wrong with that, and none of them is a matter of taste.
+
+**Three of four destinations had no name.** COGA o4p06, `Use Clear Visible Labels`, names ADHD among the conditions it is written for and asks that a label be visible and next to its control; o1p07 frames an icon as sitting beside content rather than replacing it. NN/g measured the general case: navigation whose destinations are not named made people 15 percent slower, cut content discovery by more than 20 percent and raised perceived difficulty by 21 percent. This app's audience pays that most.
+
+**Every tap moved the other three.** A pill that grows to fit a word pushes its neighbors along, so the bar reflowed on every navigation. COGA o4p01 is `Ensure Controls and Content Do Not Move Unexpectedly`, written for people with an impaired ability to screen out movement.
+
+**And the previous version of this section blamed a default that does not exist.** It recorded the unlabeled state as "adopting a Material 3 Expressive default because it is the default". Compose's `NavigationBarItem` defaults `alwaysShowLabel` to **true**; selected-only labels are the Views library's `LABEL_VISIBILITY_AUTO` behavior at four or more items, which this app does not use.
+
+**The labels are dropped above a 1.06 combined font scale.** The bar spans 314dp between its insets and its own padding on a 360dp phone, which is 78dp a slot, and `Momentum` is about 68dp of that at 13sp. A single word cannot wrap, so there is a scale at which they must go. **The combined scale is the one that counts**, because `ClarityTextSize` multiplies the platform's: a person on a stock phone who moves only this app's own text control to its top setting is at 1.5. Android's scale is seven discrete stops, 0.85, 1.0, 1.15, 1.30, 1.50, 1.80 and 2.0, so a threshold between two of them decides which stop loses the names rather than naming a fraction anybody lands on. 1.06 gives the default one stop of headroom. Nothing else changes when they go: the glyph, the indicator and every semantic stay, and TalkBack reads the name either way.
 
 **An inactive tab is its glyph alone, and one label of four is the rule rather than an accident.** v3 was silent here, so phase 2 took the platform default, which is the move 15.3 names by itself: "adopting a Material 3 Expressive default because it is the default". Section 15 requires the choice to be made and recorded, and it is made the same way it was found: by measurement.
 

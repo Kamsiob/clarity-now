@@ -836,6 +836,17 @@ fun AreaDetailSheet(
                 modifier = Modifier.padding(horizontal = SheetPadding),
             )
             Spacer(Modifier.height(ClaritySpacing.scaled(4.dp)))
+            // **Renaming was behind an unlabeled glyph in a corner and is a labeled row
+            // here too.** The glyph stays, because it is where somebody who has already
+            // found it will look, but a 44dp pencil at the top right of a scrolling sheet
+            // is not how a person discovers that an area can be renamed or recolored. It
+            // leads the group because it is the only one of the three that is not
+            // destructive.
+            SheetActionRow(
+                icon = ClarityIcons.editArea,
+                label = stringResource(R.string.area_edit),
+                onClick = onEditArea,
+            )
             SheetActionRow(
                 icon = ClarityIcons.archive,
                 label = stringResource(R.string.action_archive),

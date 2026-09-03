@@ -189,7 +189,12 @@ class CalmModeTest {
     @Test
     fun `calm mode pins the wash opacities and changes no other token`() {
         val light = ClarityLightColors.calmed()
-        assertEquals(0.04f, light.cardWashAlpha, 0.0001f)
+        // 0.05, which is the low end of 3.1's own `5 to 7 percent` band for the Daylight
+        // wash. It was 0.04, below the range the specification states, and that was
+        // invisible while the ordinary value sat at the bottom of the band too. The
+        // appeal pass moved the ordinary value to 7, and this is the pinning rule this
+        // test's own comment describes, applied rather than assumed.
+        assertEquals(0.05f, light.cardWashAlpha, 0.0001f)
         assertEquals(0.08f, light.cardWashActiveAlpha, 0.0001f)
 
         assertEquals(0.09f, light.cardDeckAlpha, 0.0001f)

@@ -194,7 +194,13 @@ val ClarityLightColors = ClarityColors(
     warnAmber = Color(0xFFF59E0B),
     parchment = Color(0xFFEFEEE2),
     deleteMuted = Color(0xFF724444),
-    cardWashAlpha = 0.05f,
+    // 7 rather than 5, which is the top of the 5 to 7 band design-v3.md 3.1 gives the
+    // Daylight wash rather than a new value. At 5 percent over `card` an area's color was
+    // present arithmetically and gone visually: the Daylight world's cards read as white
+    // rectangles with a colored dot, while the same cards in the Contemplative world,
+    // where the wash is 10, are unmistakably the person's own colors. Identity was being
+    // spent in one world and withheld in the other for no reason either document gives.
+    cardWashAlpha = 0.07f,
     cardWashActiveAlpha = 0.09f,
     cardDeckAlpha = 0.11f,
 )

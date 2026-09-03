@@ -97,8 +97,24 @@ plugins {
 // written by an older build replays to the same state, and the golden fixture needed no
 // regeneration for the closing. Not a major bump, because 1.0 is the release and an
 // additive schema change is not a break.
+// 0.15.0: the appeal pass. The owner's report was six out of ten, not fun to use and not
+// fun to look at, with eleven specific complaints. A minor bump, and this one is not a
+// close call: **creating a second area was impossible**. Both doors to the new area sheet
+// were gated on having none, so a person who finished setup with three areas had three
+// forever. That is a capability the app did not have and now has, which is what a minor
+// has meant every other time in this file.
+//
+// Four more things a person can do that they could not: pick which area a capture goes to
+// at the moment of writing it; reach every verb an area has from one labeled menu, which
+// design-v3.md 10.3.1 called mandatory and which was wired to open the wrong sheet;
+// reorder an area without dragging, which WCAG 2.2 SC 2.5.7 requires and which had a
+// TalkBack custom action as its only alternative; and read what the Pulse is at the two
+// moments they are looking at it.
+//
+// Not a major bump. 1.0 is the release, and nothing in the event catalog, the backup
+// format or the engine contract moved: every change is a surface, a string or a token.
 val versionMajor = 0
-val versionMinor = 14
+val versionMinor = 15
 val versionPatch = 0
 
 // The application id and the one suffix that changes it, written once.

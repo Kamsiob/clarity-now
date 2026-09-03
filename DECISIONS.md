@@ -6093,3 +6093,235 @@ paragraph layout on the app's most-read prose, to correct an optical detail that
 only when somebody quotes their own item title. **Declined**, and the reason is the one the
 same section gives for rejecting circle scaling: applying a correct general rule where the
 condition it corrects does not occur is cargo.
+
+# The appeal pass, September 2026
+
+The owner's report: about six out of ten, not fun to use, not fun to look at, not
+encouraging as a design language. Eleven specific complaints and one general one. Four
+research agents and two usability walkthroughs ran against the built app, and the largest
+finding was not about appeal at all.
+
+## Creating a second area was impossible
+
+`AreaSheet.NewArea` had exactly one trigger, gated on `state.isEmpty`. The inbox's own
+`Create an area` was gated on `areas.isEmpty()`. Onboarding was the third and last caller
+of `createArea`. **So a person who finished setup with three areas had three forever**,
+and the only routes to a fourth were deleting all of them, or Settings, Help, `Replay the
+welcome` plus a force restart, which re-runs onboarding against an empty selection list
+and creates a second area with the same name.
+
+That is the whole of "I designed the app and I can't figure out how to manage areas". It
+was not hidden. It was absent, and it survived the September usability study because none
+of the sixty tasks was "add a second area".
+
+**The door is at the foot of the list rather than in the header**, which is the deliberate
+choice rather than the obvious one. A glyph beside the archive and settings icons would be
+one more unlabeled 24dp target in a corner, which is the shape the two people in testing
+who read labels never find. The end of a list is where this platform puts `add one more`,
+it is reached by a scroll a person is already doing, and it can carry a word. `A new area`
+is also a destination in the filing chooser and a chip in the capture sheet now, because
+those are the two other places wanting one is explicit.
+
+## The app had no opening, and that was a defect before it was an absence
+
+`themes.xml` sets a flat `launch_canvas` window background, `#F1F1F6` in light. Onboarding
+is Contemplative on `deepBlack`. **The first frame anybody on a light phone ever saw was a
+near white rectangle that slammed to near black**, and then four demo cards arrived with no
+title, no name and nothing saying what they were.
+
+**A brand moment is earned when removing it would cost the reader information.** Android's
+own splash guidance recommends against a branding image, caps an animated icon at 1000ms,
+and warns that showing an incomplete interface is jarring; Nielsen's one second limit is
+the boundary for uninterrupted thought. Held time is a tax unless it buys something.
+
+This one buys something no other app's could. `design-v3.md` 4.1: the mark is "a queue seen
+face on: one solid card in front, two narrower cards peeking out behind it at decreasing
+opacity. It is the product's core idea, one thing at the front and the rest waiting,
+expressed as a shape." **The logo is the mechanic.** Drawing it a card at a time is the
+first sentence of the lesson, and it shows the thing beat 1 was failing to show: that there
+is something behind the front one.
+
+The ground begins at `launch_canvas` and crosses to `deepBlack`, which is 2's own "entering
+a Contemplative surface feels like the room dimming" made literal at the one moment the app
+crosses from the system's world into its own. **It is the only thing in the sequence that
+advances itself**, and that is not an exception to the no-auto-advance rule: a title card
+carrying the app's name and one line about the next minute is not a page, and one that
+waited for a tap would be asking permission to say hello. A tap still skips it.
+
+## Beat 1 says what it is
+
+`An example: four areas.` Two words. The owner's complaint was that he did not know what he
+was looking at, and the diagnosis is precise: four colored rectangles arrive with no frame,
+and the sentence under them then uses two coined nouns, `area` and `item`, against shapes
+nothing has named. `An example` says these are not your things, which nothing anywhere
+said. `four areas` gives the sentence below an antecedent.
+
+The same defect ran through beat 4, where the Momentum moment was the only one of the four
+with no name on it and its caption opens with `It counts what you did`. It has an eyebrow
+now, like the two either side of it.
+
+## The tab bar
+
+Recorded in `design-v3.md` 10.4 with its measurements. The short version: three of four
+destinations had no name, every tap pushed the other three sideways, and 61dp for a 24dp
+glyph is a strip rather than a control.
+
+**Labels come back at a cost that had to be paid rather than argued away.** They cannot
+survive a large text scale, because a single word cannot wrap. So there is a threshold, and
+choosing it is choosing which of Android's seven discrete stops loses them. The old design
+avoided the threshold by never having the labels, which is the trade this reverses.
+
+## Capture
+
+**The defect was height, not taps.** Capture was already two interactions. But four stacked
+fields came to about 520dp and the keyboard takes half a phone, so the line saying where the
+thought was going and the button that puts it there were both under the IME while a person
+typed. Somebody who types and taps Done never saw either, which is the mechanism behind
+five of six testers losing their first capture: not that the app failed to say where it
+went, but that it said so underneath the keyboard.
+
+The three optional fields are behind one disclosure. Addendum 01 4b is blunt that nothing
+may prompt for a first step or an estimate, and **order is the quietest prompt there is**:
+four fields in a column is a form.
+
+**Every destination is a chip on the sheet.** The owner asked not to default to the inbox
+unless nothing is picked, and that is exactly what this does: the route's own answer is
+preselected, the inbox is what an untouched sheet still does, and not deciding is now
+visibly one choice among others rather than the only thing on offer.
+
+**It does not remember the last one used**, and that was researched rather than assumed.
+None of TickTick, Apple Reminders, Superlist or Structured remembers a last-used list, and
+`MASTER_BUILD_PROMPT.md` 13.5 already refuses adaptive ordering in the app shortcuts for a
+reason that applies here word for word: "a shortcut list that reordered itself around what
+the user did most would be a measurement of the user".
+
+## The long press menu, which was specified as mandatory and never built
+
+`design-v3.md` 10.3.1: "All three actions must also be reachable from a long press context
+menu on the card **and** from the area detail sheet." `AreaSheet.LongPressMenu` existed as a
+type, and its handler read `sheet = AreaSheet.Detail(current.areaId)`.
+
+It carries every verb an area has, because the discoverability problem was never that the
+operations were missing: renaming was behind an unlabeled 44dp pencil in a corner, and
+archiving and deleting were under a sidehead reading `Area`, below the active item, the
+whole queue, an add row and the completed list. The sidehead reads `Manage this area` now
+and the detail sheet carries a labeled `Edit this area` row beside them.
+
+**`Move to the top` is a conformance fix.** WCAG 2.2 SC 2.5.7 requires a single pointer
+alternative to any drag operation, and reordering was long press and drag with a TalkBack
+custom action as its only alternative, which serves a screen reader user and nobody else.
+
+## The divider, and why it is not a line
+
+The owner asked for "some kind of premium dividing line" between the anchors and the areas,
+with breathing room, and said it cannot be a solid black line. It is a **horizontal
+gradient at one physical pixel**: transparent at both margins, full value across the middle
+80 percent, so the ends do not stop, they stop being. A rule from margin to margin has two
+hard ends, and two hard ends on a page with no other verticals is the most common way a
+divider reads as ruled rather than composed.
+
+**One device pixel, not one dp.** `1.toDp()` is 0.38dp on this phone; a 1dp rule is nearly
+three device pixels, which is a line rather than a hair. And **not the `hairline` token**,
+whose every call site draws on `card`, the lightest surface in the app: this draws on
+`canvas`, four steps darker, where the same alpha is most of the way to invisible.
+
+More air above than below, because the rule belongs to the block it closes rather than the
+one it opens.
+
+## Why the app looked stale, and what was actually done about it
+
+The research finding that explains it: **the Contemplative world got art direction and the
+Daylight world got correctness.** Contemplative surfaces have glows, specks, a ground that
+shifts with the time of day and gradient rules. Daylight got flat grey and a contrast
+audit. The owner spends almost all of his time in Daylight.
+
+Two changes, neither of them decoration:
+
+**The Daylight card wash goes to 7 percent**, the top of the 5 to 7 band 3.1 already gives
+it rather than a new value. At 5 an area's color was present arithmetically and gone
+visually: Daylight cards read as white rectangles with a colored dot, while the same cards
+in the Contemplative world, where the wash is 10, are unmistakably the person's own colors.
+Identity was being spent in one world and withheld in the other for no reason either
+document gives.
+
+**Shadows stop being black.** A shadow is the ground with less light on it, so it keeps the
+ground's hue; pure black over a colored surface desaturates what is under it, which is why
+a black drop shadow makes a page look dusty rather than lit. They are the canvas taken most
+of the way to black now, a very slightly violet near black nobody will ever name. The
+alphas and the two layer geometry in 6.1 are untouched.
+
+**What was refused.** A gradient ground, a grain overlay, a lit bevel or a two-tone keyline
+on the divider, and a cream page. Each is a 2026 cliche, and the last three are two
+separation devices on one element, which 6.1 forbids outright.
+
+## Entrances go back to once per session
+
+`TabEntrance` had been changed to replay on every entry, with a comment arguing that a tab
+opened forty times a day is the surface that most needs to feel alive. `design-v3.md` 8.4
+answers it directly and the authority order gives 8.4 the last word: "an entrance that fires
+every time is not delight, it is a toll: it delays the content by its own duration, every
+time, for the reader least able to afford the wait."
+
+The walkthrough measured the cost. Returning to Areas re-assembled the whole screen over
+748ms, and the transform is a spring that outlives its own 200ms opacity tween, so the page
+was still moving under text a reader had already begun. **The comment in `AreasScreen.kt`
+asserting the opposite of what shipped was the worse half of the defect**, because the next
+reader reasons from it.
+
+## Where the Pulse explains itself
+
+Three places described it and all three said what it does rather than where the question
+comes from: onboarding beat 4, a tutorial spotlight, and one announcement line. None
+answered the owner's actual question, which is why it exists.
+
+**The idle state and the first real Pulse**, which are the two moments a person is looking
+at it. 12.1 generates nothing for two days, so the idle state is what a curious person meets
+first, and Addendum 01 14b.10 asks every reflective surface to state plainly what it needs
+and roughly when it becomes useful. The one time line above the first real question adds the
+sentence a first time reader most needs and which nothing anywhere said: **neither answer is
+the right one.** This audience arrives having been graded by four other apps and will assume
+one of them is.
+
+It is set on the answer rather than on the draw, because somebody who opened the Pulse, read
+it and left has not finished reading it.
+
+## Two removals the owner asked for
+
+**The permission card.** The claim is right and the placement was wrong: a paragraph of
+prose at the foot of a list of controls, in the only card on a screen of rows, which is a
+shape people read as an error message. It is not lost. The gate still fails the build if a
+network permission reaches the merged manifest, the privacy sheet one row above states it in
+the same words, and `PRIVACY.md` publishes it.
+
+**The privacy policy's `Children` clause.** A children clause belongs in a policy for a
+product that could plausibly collect something from one. This app collects nothing from
+anyone, which the paragraph above it already says, so the clause was a second denial of the
+same fact under a heading that raises a question the app never poses.
+
+## Five defects found on the way that nobody asked about
+
+- **The tutorial's FAB spotlight lit the whole bottom right corner.** `tutorialTarget` sat
+  first in the modifier chain, so `onGloballyPositioned` reported the FAB plus the
+  navigation bar inset plus 20dp of end padding plus the 92dp that clears the tab bar. The
+  tab bar's own target had the same rule written above it and got it right.
+- **A cleared area asked for its first item.** `neverHeldAnything` was computed, correct,
+  and applied only to the status line, so an area with nine completions read `Add your first
+  item` directly above `Last active 2 days ago`.
+- **The promotion had no haptic.** `PROMOTE` was defined, `rememberPromotionHaptic` was
+  written to fire it, and nothing called either. The app's one moment landed in silence.
+- **`Nothing is hidden anywhere else.`** The last tutorial card, and false about the four
+  things a person is most likely to hunt for: the inbox, the archive, the area editor and
+  reordering. A tour that ends by promising there is nothing else to find is how somebody
+  stops looking.
+- **`Names and colors can come later.`** Read as covering more areas as well, which was the
+  one thing that could not come later. It says so now, because now it can.
+
+## What an agent got wrong, and how it was caught
+
+The onboarding research agent's headline finding was that four of the five tutorial spotlight
+targets were missing and the tutorial therefore never ran. It was reading a stale line in
+`docs/BUILD_STATE.md`. All five `tutorialTarget` call sites are present, and the tutorial
+had been watched running on the device twenty minutes earlier. **Recorded because the rest
+of that agent's report was excellent and was acted on**, and a report that is right about
+nine things and confidently wrong about the tenth is the ordinary case rather than the
+exception.

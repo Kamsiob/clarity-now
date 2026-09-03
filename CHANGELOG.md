@@ -5,6 +5,70 @@ Every released version, newest first. Dates are the day the version was tagged.
 The format is one section per release: what a person can now do that they could not
 before, what changed about what they already had, and what was wrong and is not any more.
 
+## 0.15.0, 2026-09-03
+
+The appeal pass. Four research agents and two usability walkthroughs went over the built
+app against the owner's report that it is at six out of ten and not fun to use. The
+reasoning for every decision is in `DECISIONS.md`.
+
+### New
+
+- **You can make a second area.** Both doors to the new area sheet were gated on having
+  none, so a person who finished setup with three areas had three forever. There is an
+  `Add an area` row at the foot of the list, `A new area` in the filing chooser, and a
+  chip in the capture sheet.
+- **The app has an opening.** The launch window is near white and onboarding is near
+  black, so the first frame anybody saw slammed from one to the other. The room dims from
+  the launch color now while the mark assembles one card at a time, which is the mechanic
+  it depicts: one card in front, two waiting behind it.
+- **Every verb an area has, in one menu.** A long press on a card opens it. `design-v3.md`
+  10.3.1 called this mandatory and the handler opened the detail sheet instead.
+- **Reordering without dragging.** `Move to the top` in that menu, which is the single
+  pointer alternative WCAG 2.2 SC 2.5.7 requires and which reordering did not have.
+- **The Pulse explains itself** where a person meets it, including the sentence nothing
+  anywhere said: neither answer is the right one.
+
+### Changed
+
+- **The tab bar.** 68dp, four equal slots, a 26dp glyph in its own indicator, and all four
+  destinations named again. Nothing moves but the indicator; the old bar pushed the other
+  three sideways on every tap.
+- **Capture fits above the keyboard.** The sheet was four stacked fields, so the line
+  saying where a thought was going and the button that puts it there were both under the
+  IME while you typed. The optional fields are behind one disclosure, and every
+  destination is a chip, so picking an area is one tap.
+- **Beat 1 says what it is**: `An example: four areas.` The sentence under the demo used
+  two coined nouns against shapes nothing had named.
+- **A rule between the anchors and the areas**, at one device pixel, fading out at both
+  margins rather than stopping.
+- **The Daylight world carries area color again.** The card wash goes to 7 percent, the
+  top of the band the spec already gives it, and shadows stop being pure black.
+- **Entrances fire once per session again**, per 8.4. Returning to Areas had been
+  re-assembling the whole screen over 748ms, every time.
+- **`Manage this area`** rather than `Area` over the archive and delete rows, with a
+  labeled `Edit this area` beside them.
+
+### Removed
+
+- **The permission card in Settings.** The claim is right and the placement was wrong. The
+  build gate, the privacy sheet one row above and `PRIVACY.md` all still carry it.
+- **The privacy policy's `Children` clause.** This app collects nothing from anyone, which
+  the paragraph above it already says.
+- `PulseChip.kt`, 108 lines nothing called.
+
+### Fixed
+
+- **The tutorial's spotlight lit the whole bottom right corner** instead of the plus
+  button, because the modifier sat before the padding rather than after it.
+- **A cleared area asked for its first item**, directly above `Last active 2 days ago`.
+- **The promotion had no haptic.** One was defined and written and never called.
+- **`Nothing is hidden anywhere else.`** False about the inbox, the archive, the area
+  editor and reordering, and the last thing the tutorial said.
+- **`Names and colors can come later.`** Read as covering more areas, which was the one
+  thing that could not.
+- **The onboarding Pulse sample looked live.** Two testers believed they had answered a
+  question. The sample answers are no longer shaped like buttons.
+
 ## 0.14.0, 2026-09-02
 
 The deferred issue pass. The polish pass ended with eight issues logged as needing a

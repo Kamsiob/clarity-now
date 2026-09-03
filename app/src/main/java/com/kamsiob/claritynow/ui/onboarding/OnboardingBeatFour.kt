@@ -236,27 +236,41 @@ private fun ColumnScope.PulseMoment() {
     Caption(stringResource(R.string.onboarding_depth_pulse_caption))
 }
 
+/**
+ * One of the two answers a real Pulse would offer, drawn so that it does not invite a tap.
+ *
+ * **The eyebrow was not enough.** This carried the resting treatment of a real
+ * `PulseResponsePill` at its real height, on a surface where a tap anywhere advances, so
+ * it looked live, tapping it appeared to work, and the moment changed underneath. Two
+ * people in usability testing came away believing they had answered a question, and a
+ * later walkthrough hit it again: a card reading `Pulse sample` did not stop anybody,
+ * because a filled pill at a touch target's height is a button in every other app on the
+ * phone.
+ *
+ * So it is not a pill here. It is the answer's own words, at the same size, with a rule
+ * under them: legible as one of two choices, and shaped like nothing a thumb reaches for.
+ * The real pills are unchanged, because this is a picture of a Pulse rather than one.
+ */
 @Composable
 private fun SamplePill(label: String, accent: Color) {
     val contemplative = LocalContemplativeColors.current
     val type = LocalClarityTypography.current
-    Box(
-        modifier = Modifier
-            .widthIn(max = 300.dp)
-            .fillMaxWidth()
-            .heightIn(min = 50.dp)
-            .clip(CircleShape)
-            .background(accent.copy(alpha = 0.14f)),
-        contentAlignment = Alignment.Center,
+    Column(
+        modifier = Modifier.widthIn(max = 300.dp).fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = label,
             style = type.bodyStrong,
-            color = contemplative.textBright,
-            modifier = Modifier.padding(
-                horizontal = 24.dp,
-                vertical = ClaritySpacing.scaled(13.dp,
-            )),
+            color = contemplative.textDim,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(vertical = ClaritySpacing.scaled(9.dp)),
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(accent.copy(alpha = 0.22f)),
         )
     }
 }
@@ -289,6 +303,19 @@ private fun ColumnScope.MomentumMoment() {
         }
     }
 
+    // **The moment names itself, like the two either side of it.** Its caption reads
+    // `It counts what you did`, and until this line there was no antecedent on the screen
+    // for `It`: fourteen dots arrived and then a sentence about them began with a pronoun.
+    // The Pulse moment and the Report moment both carry an eyebrow already; this one was
+    // the only unlabeled surface in the beat and the only caption that could not be read
+    // on its own.
+    Text(
+        text = stringResource(R.string.onboarding_depth_momentum_eyebrow),
+        style = LocalClarityTypography.current.caption,
+        color = accent,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.padding(bottom = ClaritySpacing.scaled(16.dp)),
+    )
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(RHYTHM_GAP, Alignment.CenterHorizontally),
