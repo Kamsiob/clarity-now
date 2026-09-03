@@ -12,48 +12,36 @@ Nothing in this file blocks any other work.
 
 ## What is left, in one paragraph
 
-**Everything that can be built is built and green.** Thirteen phases plus 3b, 3c, 12b and
-12c, `verifyClarity` at 1,076 tests, a release APK that builds under R8 at 5.9 MB with a
-baseline profile generated on a real phone. What remains needs a Play Console account, a
-signing keystore, and a device in somebody's hand for the two checks a unit test cannot
-make. All of it is below, with the exact steps.
+**Everything that can be built is built, green, and checked on the phone.** Thirteen
+phases plus 3b, 3c, 12b and 12c, the polish pass and the deferred issue pass;
+`verifyClarity` at 1,125 tests; a release APK that builds under R8 at 5.9 MB with a
+baseline profile generated on a real phone, **signed with the release key and verifying
+under the v3 scheme**. What remains is one thing and it is not code: a Play Console
+account, and the four owner decisions that go with it. All of it is below, with the exact
+steps.
 
 ## BLOCKED
 
-### Release signing, and it is the one thing standing between this and a real release
+### RESOLVED, 2026-09-02: release signing
 
-Added 2026-09-02, after the polish pass.
+Done in the deferred issue pass, and recorded here rather than deleted because the shape
+of it is worth keeping.
 
-The repository has **no release signing config**. `assembleRelease` produces an unsigned
-APK, so the one attached to the v0.13.0 GitHub release is signed with the Android debug
-key: it installs, it runs, and it is not shippable to anyone else.
+A 4096 bit RSA keystore was generated at `~/.clarity-keys/clarity-now-release.jks`, valid
+for 10,000 days, with its password in `~/.clarity-keys/.password` at mode 600 and the four
+properties in `~/.gradle/gradle.properties`. **None of that is in this repository and none
+of it may ever be.** `app/build.gradle.kts` reads the four properties and degrades to
+unsigned when they are absent, so a clone without the keystore still builds.
 
-Two consequences worth knowing before you fix it. A debug signed build **cannot be
-upgraded** by a properly signed one, so anybody who installed the attached APK has to
-uninstall before installing a real release. And Play will refuse the upload outright.
+`apksigner verify -v` reports **v3 only**, and that is correct rather than a gap: the
+Android Gradle Plugin drops v1 and v2 at minSdk 31, so v3 is the only scheme it emits and
+the only one a device at that level needs.
 
-To do it:
-
-1. Create a keystore and keep it somewhere that is backed up and is not this repository:
-   ```
-   keytool -genkeypair -v -keystore clarity-now-release.jks -keyalg RSA -keysize 4096 \
-     -validity 10000 -alias clarity-now
-   ```
-2. Put its path and passwords in `~/.gradle/gradle.properties`, never in the repo:
-   ```
-   CLARITY_STORE_FILE=/absolute/path/clarity-now-release.jks
-   CLARITY_STORE_PASSWORD=...
-   CLARITY_KEY_ALIAS=clarity-now
-   CLARITY_KEY_PASSWORD=...
-   ```
-3. Add a `signingConfigs.release` block to `app/build.gradle.kts` reading those four
-   properties, and reference it from `buildTypes.release`. Make it degrade to unsigned when
-   the properties are absent, so a clone without the keystore still builds.
-4. `./gradlew :app:assembleRelease` and confirm with
-   `apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk`.
-5. **Back the keystore up.** Losing it means never updating this app on Play under the same
-   package name again.
-
+**Two things the owner still has to do.** Back the keystore up somewhere that survives this
+machine, because losing it means never updating this app under the same package name
+again. And know that anybody who installed the debug signed v0.13.0 APK has to uninstall
+before installing a real release: a debug signed build cannot be upgraded by a properly
+signed one.
 
 ### RESOLVED, 2026-09-01: the phone was disconnected at the start of the polish pass
 
@@ -104,8 +92,26 @@ either is ever changed, both change in the same commit.
 ### Real device screenshots for the listing
 
 `MASTER_BUILD_PROMPT.md` 16.6 requires screenshots generated from the real app rather
-than mockups. The build can take them on the connected Pixel 8, but choosing which
-screens represent the app in a store listing is an owner's call.
+than mockups. **Five exist and are committed**, in `docs/screenshots/`, taken on the Pixel
+8 from one coherent state rather than five unrelated ones: Areas, an area sheet, the
+Report, Momentum and the Trail. They are the README's, and they are the obvious candidates
+for the listing.
+
+**Retaking them is reproducible rather than an afternoon of tapping.** The state is a
+fixture:
+
+```
+./gradlew :app:testDebugUnitTest --tests '*EdgeCaseFixtures*' \
+    -PwriteFixtures=true -PfixtureAnchor=$(date +%F)
+adb push /tmp/clarity-fixtures/readme.json /sdcard/Download/
+```
+
+then Settings, Import from a file, Replace everything. The anchor has to be the day the
+screenshots are taken, because the banner and the Report both describe a window ending
+today.
+
+What is still an owner's call is which of them represent the app in a store listing, and
+in what order.
 
 ### The Buy Me a Coffee link
 
@@ -116,8 +122,11 @@ URL. The real one has to come from the owner's account.
 
 ## Not blocked, recorded here so it is not lost
 
-Nothing currently. Items move here from BLOCKED when the owner has done their part and
-the build can pick the work back up.
+**Release signing.** Moved out of BLOCKED on 2026-09-02 and done; the record of it is in
+the RESOLVED entry above.
+
+Items move here from BLOCKED when the owner has done their part and the build can pick the
+work back up.
 
 ---
 
