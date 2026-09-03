@@ -480,7 +480,7 @@ private fun AreaRow(
     val actions = SwipeActions(
         completeLabel = stringResource(R.string.action_complete),
         swapLabel = stringResource(R.string.action_swap),
-        deleteLabel = stringResource(R.string.action_delete),
+        deleteLabel = stringResource(R.string.action_delete_area),
         onComplete = if (area.offersComplete) onComplete else null,
         // **Swap is offered on an idle area that has a queue, which is new.**
         //
@@ -557,6 +557,7 @@ private fun AreaRow(
                 area = area,
                 promotion = promotion,
                 onPromotionPlayed = onPromotionPlayed,
+                onComplete = onComplete,
                 // **The card speaks as one node.** `AreaCardSemantics` was written in
                 // phase 2, documented as "kept next to the card so the semantics and the
                 // visuals cannot drift apart", and never called from anywhere, so the
@@ -565,7 +566,15 @@ private fun AreaRow(
                 // and a status line, in that order, with no statement of what they are.
                 // It goes inside the clickable rather than above it, or
                 // `clearAndSetSemantics` would wipe the click action with them.
-                modifier = AreaCardSemantics(area),
+                //
+                // **On the text column rather than on the whole card, since the card grew
+                // a control.** `clearAndSetSemantics` wipes every descendant, so a
+                // completion control drawn inside this subtree would be invisible to
+                // TalkBack and the card would have gained an affordance for everybody
+                // except the people the mandatory clause in 10.3.1 was written for. It
+                // now covers the five text nodes it was written for and stops at the
+                // gutter, which carries its own role and its own name.
+                textSemantics = AreaCardSemantics(area),
             )
         }
     }

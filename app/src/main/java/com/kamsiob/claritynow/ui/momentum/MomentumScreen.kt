@@ -130,6 +130,23 @@ fun MomentumScreen(view: MomentumView, modifier: Modifier = Modifier) {
                 bottom = navigationBar + TabBarHeight + TabBarInset + 24.dp,
             ),
     ) {
+        // **The page says its own name now, and it never did.** See `momentum_title` for
+        // the whole of why. This is chrome and is always drawn, which is what lets the
+        // headline below it stay nullable: silence from the engine reads as silence on a
+        // page that has already told you what it is.
+        Text(
+            text = stringResource(R.string.momentum_title),
+            style = type.sidehead,
+            color = colors.inkSecondary,
+        )
+        Spacer(Modifier.height(ClaritySpacing.hair))
+        Text(
+            text = stringResource(R.string.momentum_subtitle),
+            style = type.caption,
+            color = colors.inkSecondary,
+        )
+        Spacer(Modifier.height(ClaritySpacing.scaled(SECTION_SPACING)))
+
         // The headline, and nothing in its place when the engine was silent. A fixed
         // sentence standing here would be the second path MASTER_BUILD_PROMPT 11.1 forbids.
         view.headline?.let { headline ->

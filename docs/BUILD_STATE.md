@@ -2,7 +2,7 @@
 
 Where the build actually is. Updated at the end of every phase.
 
-**Last updated:** September 3, 2026, end of the plate and palette pass.
+**Last updated:** September 3, 2026, end of the legibility pass.
 
 **Everything specified is built, installed and checked on the device.** All thirteen
 phases, the facts phase, the slot bindings phase, the rules pass, the reach passes, the
@@ -10,7 +10,7 @@ accessibility pass, the polish pass and the deferred issue pass. The one thing o
 is not code: shipping to Play needs a Play Console account, and the exact steps are in
 `HANDOFF.md` under BLOCKED.
 
-**Version:** 0.16.0, versionCode 1600. The reasoning for every number is at the top of
+**Version:** 0.17.0, versionCode 1700. The reasoning for every number is at the top of
 `app/build.gradle.kts`, one line per release, and 16.7 requires it to be a deliberate
 choice rather than an increment.
 

@@ -158,7 +158,6 @@ fun ClarityTabBar(
     } else {
         colors.raise
     }
-    val labeled = LocalDensity.current.fontScale <= LABEL_MAX_FONT_SCALE
 
     Row(
         modifier = modifier
@@ -189,7 +188,6 @@ fun ClarityTabBar(
                 tab = tab,
                 selected = tab.key == selectedKey,
                 contemplative = contemplative,
-                labeled = labeled,
                 onClick = { onSelect(tab.key) },
                 modifier = Modifier.weight(1f),
             )
@@ -211,7 +209,6 @@ private fun TabItem(
     tab: ClarityTab,
     selected: Boolean,
     contemplative: Boolean,
-    labeled: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -273,7 +270,9 @@ private fun TabItem(
             // sentence twice with one of them out of the theme's control.
             .semantics {
                 this.selected = selected
-                if (!labeled) contentDescription = tab.label
+                // The name is always drawn now, so the node always merges a `Text` and
+                // never needs a description of its own. Setting one here would make
+                // every tab say its name twice.
             },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -304,17 +303,31 @@ private fun TabItem(
                     .scale(0.94f + 0.06f * reveal),
             )
         }
-        if (labeled) {
-            Spacer(Modifier.height(3.dp))
-            Text(
-                text = tab.label,
-                style = type.label.opticallyCentered(),
-                color = tint,
-                maxLines = 1,
-                overflow = TextOverflow.Clip,
-                softWrap = false,
-            )
-        }
+        // **The name is always drawn. It used to disappear above a 1.06 combined font
+        // scale, which is one Android stop above the default.**
+        //
+        // The reason it was dropped is real: four names at 200 percent do not fit across
+        // 411dp, and a clipped label is worse than none. What was wrong was the remedy.
+        // Above that one stop a person navigated by four unlabeled glyphs, and W3C COGA
+        // asks for text with an icon precisely because some people cannot remember what
+        // an icon means (o1p07), while o4p06 asks for visible labels on controls. NN/g's
+        // own testing of an unlabeled history clock found not one participant clicked it.
+        //
+        // So the label stops **growing** rather than stopping existing: it is drawn at
+        // its own size in device pixels, held at the 1.06 cap, while everything else on
+        // the bar keeps scaling. The name stays legible, nothing clips, and the person
+        // who most needs the word is no longer the one person who does not get it.
+        Spacer(Modifier.height(3.dp))
+        val labelScale = (LABEL_MAX_FONT_SCALE / LocalDensity.current.fontScale).coerceAtMost(1f)
+        Text(
+            text = tab.label,
+            style = type.label.opticallyCentered(),
+            color = tint,
+            maxLines = 1,
+            overflow = TextOverflow.Clip,
+            softWrap = false,
+            fontSize = type.label.fontSize * labelScale,
+        )
     }
 }
 

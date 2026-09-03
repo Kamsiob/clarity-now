@@ -133,6 +133,7 @@ internal fun PulseSurface(
                 PulseQuestion(
                     pulse = state.today,
                     chosen = chosen,
+                    showIntro = state.showIntro,
                     onAnswer = { option ->
                         chosen = option
                         onAnswer(option)
@@ -173,6 +174,7 @@ internal fun PulseSurface(
 private fun PulseQuestion(
     pulse: DailyPulse,
     chosen: ResponseOption?,
+    showIntro: Boolean,
     onAnswer: (ResponseOption) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -209,6 +211,36 @@ private fun PulseQuestion(
                 )),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            // **The one time line, above the first Pulse a person is ever offered, and
+            // it had never once been drawn.**
+            //
+            // It lived in the ambient branch under the guard `showIntro &&
+            // responseLabel == null`. Ambient is `entry == null || settled ||
+            // (entry.isAnswered && chosen == null)`, and `settled` is set by a
+            // `LaunchedEffect` that returns immediately while `chosen` is null. So an
+            // unanswered Pulse never reaches ambient, and by the time it does it has an
+            // answer, which fails the second half of the guard. The window was the few
+            // frames between the settle and the projection catching up.
+            //
+            // The idle state explains the Pulse to anyone who goes looking in the first
+            // two days, and 12.1 means most people do not: they meet it on the day a
+            // question is waiting, which is this screen, with no idea where it came from.
+            // Three usability personas met their first Pulse as a serif sentence, a
+            // question and two pills with nothing saying what any of it was.
+            //
+            // Drawn only until the first answer. `showIntro` is set on the answer rather
+            // than on the draw, so seeing it does not spend it.
+            if (showIntro && !acknowledged) {
+                Text(
+                    text = stringResource(R.string.pulse_intro),
+                    style = type.caption,
+                    color = contemplative.textDim,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.widthIn(max = MEASURE),
+                )
+                Spacer(Modifier.height(ClaritySpacing.sectionGap))
+            }
+
             Text(
                 text = pulse.entry.observation,
                 style = type.readSerif,
@@ -320,12 +352,9 @@ private fun PulseAmbient(
             Spacer(Modifier.height(ClaritySpacing.sectionGap))
 
             if (entry != null) {
-                // **The one time line, above the first Pulse a person is ever offered.**
-                // The idle state explains the Pulse to anyone who goes looking in the
-                // first two days, and 12.1 means most people do not: they meet it on the
-                // day a question is actually waiting, with no idea where it came from.
-                // It is drawn only until the first answer, and `showIntro` is set on the
-                // answer rather than on the draw.
+                // **This is the answered half of the same one time line.** The unanswered
+                // half moved to `PulseQuestion`, which is where a person actually meets
+                // their first Pulse; see the note there for why it could never draw here.
                 if (state.showIntro && entry.responseLabel == null) {
                     Text(
                         text = stringResource(R.string.pulse_intro),

@@ -284,11 +284,21 @@ class OnboardingViewModel(
     fun leaveEarly(todayName: String) {
         val current = _state.value
         if (current.selections.isEmpty()) {
-            // Nothing was picked, so take the `Just start` shape: one area, no item.
-            // `justStart` is derived from the stage, so the stage is what moves. Nothing
-            // was typed on this path either, so the item title stays empty and the write
-            // is one area and nothing else.
-            _state.update { it.copy(stage = BeatTwoStage.JUST_START, firstItemTitle = "") }
+            // Nothing was picked, so take the `Just start` shape: one area, and whatever
+            // was typed.
+            //
+            // **It used to clear `firstItemTitle` here, and the comment that did it said
+            // "nothing was typed on this path either", which is false.** `Just start`
+            // opens with a field asking "What is on your mind?", and a person who types
+            // into it and then presses `Skip setup` was telling the app two things: skip
+            // the rest of the setup, and keep this. Clearing it threw away the only piece
+            // of the person's own content in the whole flow, silently, on the button most
+            // likely to be pressed by somebody in a hurry.
+            //
+            // The path with genuinely nothing typed is unaffected: the field is empty, so
+            // the copy preserves an empty string and the write is one area and nothing
+            // else, exactly as before.
+            _state.update { it.copy(stage = BeatTwoStage.JUST_START) }
         }
         commit(todayName)
     }

@@ -64,6 +64,28 @@ fun TutorialHost(
     var finished by rememberSaveable { mutableStateOf(false) }
 
     val ready = targets.ready
+
+    // **`Replay the tour` was dead inside its own session, and this latch is why.**
+    //
+    // `finished` stops the tour restarting the instant it ends, which it has to: the
+    // first run gate's `tutorialQueued` is decided once and stays true after `markSeen`
+    // writes, so without the latch the last tap of step five would begin step one again.
+    //
+    // What it could not tell apart was "still queued from before" and "queued again just
+    // now". A person tapping the row in Settings set `hasSeenTutorial` back to false, the
+    // gate re-routed with the flag raised, and `finished` was still true from the run they
+    // had already seen, so nothing happened. Both replay rows had been dead since phase 11
+    // and the welcome half was fixed in the plate pass; this is the other half.
+    //
+    // The edge is what separates them. `queued` going false to true is a fresh request and
+    // nothing else can produce it, so it clears the latch; `queued` merely being true is
+    // the state the latch exists to ignore.
+    var wasQueued by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(queued) {
+        if (queued && !wasQueued) finished = false
+        wasQueued = queued
+    }
+
     LaunchedEffect(queued, ready, finished) {
         if (queued && !finished && ready && index == NOT_STARTED) index = 0
     }

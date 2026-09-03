@@ -1,5 +1,18 @@
 package com.kamsiob.claritynow.ui.areas
 
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.core.animateFloatAsState
+import kotlinx.coroutines.delay
+import com.kamsiob.claritynow.ui.components.clarityFocusRing
+import com.kamsiob.claritynow.ui.components.clarityClickable
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.animation.core.Animatable
@@ -65,7 +78,9 @@ fun AreaCardContent(
     area: AreaCardModel,
     promotion: PromotionCue?,
     onPromotionPlayed: () -> Unit,
+    onComplete: () -> Unit,
     modifier: Modifier = Modifier,
+    textSemantics: Modifier = Modifier,
 ) {
     val colors = LocalClarityColors.current
     val type = LocalClarityTypography.current
@@ -132,7 +147,7 @@ fun AreaCardContent(
     // may never grow a hairline to divide itself. It appears only when there is state to
     // report, so a resting card is one block and a running one is two.
     Column(modifier = modifier.areaTint(accent, wash.value)) {
-        Column(
+        Row(
             modifier = Modifier.padding(
                 horizontal = ClaritySpacing.cardPaddingHorizontal,
                 // `cardPaddingVertical`, which is `scaled(12.dp)` and had no call sites
@@ -141,6 +156,14 @@ fun AreaCardContent(
                 vertical = ClaritySpacing.cardPaddingVertical,
             ),
         ) {
+        // **The leading gutter, which is the whole of why this app now reads as a to-do
+        // app.** See `CompletionControl` and the September 3 amendment to design-v3.md
+        // 10.3. It is reserved on every card and drawn only when there is something to
+        // finish, so an idle card and an active one share a left edge and the text column
+        // never moves under a thumb.
+        CompletionGutter(area = area, onComplete = onComplete)
+
+        Column(modifier = textSemantics) {
         // **The card had no right edge, and this row is where it gets one.**
         //
         // Every string on this card is leading aligned and ragged right, so the
@@ -156,7 +179,7 @@ fun AreaCardContent(
         // further than the title beneath it.
         //
         // **No badge, no pill, no color, and never a bare numeral.** `queue_waiting`
-        // reads `3 waiting`, in the card's own caption ink. CLAUDE.md rule 10 and
+        // reads `3 more`, in the card's own caption ink. CLAUDE.md rule 10 and
         // design-v3.md 10.3.
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -199,9 +222,13 @@ fun AreaCardContent(
                     text = cue.previousTitle,
                     style = type.itemTitle.copy(textDecoration = TextDecoration.LineThrough),
                     color = colors.inkPrimary,
+                    // A translation for the same reason as the incoming title below,
+                    // though this one is a tween and never went negative.
                     modifier = Modifier
                         .alpha(1f - outgoing.value)
-                        .padding(top = if (motion.reduced) 0.dp else (8 * outgoing.value).dp),
+                        .graphicsLayer {
+                            translationY = if (motion.reduced) 0f else 8.dp.toPx() * outgoing.value
+                        },
                 )
             }
             if (area.isIdle) {
@@ -247,18 +274,34 @@ fun AreaCardContent(
                     // reading happens.
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
+                    // **This crashed the app on every completion, and nothing had found
+                    // it because completing was hard to reach.**
+                    //
+                    // The rise was written as top padding of `(16 * (1 - incoming)).dp`.
+                    // `incoming` runs on `springStandard`, which is underdamped and
+                    // overshoots past 1, so the expression goes negative and Compose
+                    // throws `IllegalArgumentException: Padding must be non-negative`.
+                    // The app's single most important moment, the promotion, took the
+                    // process down whenever the spring did what that spring is for. It
+                    // surfaced the hour a visible completion control was added, which is
+                    // the whole argument for visible controls in one sentence.
+                    //
+                    // `graphicsLayer` rather than a clamp, because padding was the wrong
+                    // tool regardless: it relayouts the column on every frame of the
+                    // animation, and a translation is a draw-time offset that cannot go
+                    // out of range and cannot move anything else.
                     modifier = if (cue == null) {
                         Modifier
                     } else {
                         Modifier
                             .alpha(incoming.value)
-                            .padding(
-                                top = if (motion.reduced) {
-                                    0.dp
+                            .graphicsLayer {
+                                translationY = if (motion.reduced) {
+                                    0f
                                 } else {
-                                    (16 * (1f - incoming.value)).dp
-                                },
-                            )
+                                    16.dp.toPx() * (1f - incoming.value)
+                                }
+                            }
                     },
                 )
             }
@@ -267,9 +310,230 @@ fun AreaCardContent(
         FirstStepLine(area = area)
         StatusLine(area = area)
         }
+        }
         FocusDeck(area = area, accent = accent)
     }
 }
+
+/**
+ * The gutter the completion control sits in, reserved whether or not the control is drawn.
+ *
+ * **Reserved rather than conditional**, which is the one layout decision here worth
+ * stating. An idle card has nothing to complete and 10.16 is explicit that the app prefers
+ * a control to be absent rather than present and inert, because "a disabled control is a
+ * question the user then has to answer". Taking the *space* with it would move the text
+ * column sideways between one card and the next and again the moment a card went idle,
+ * which is COGA o4p01 and is the thing this audience is least able to absorb. So the
+ * column is fixed and only the ink is conditional.
+ *
+ * The control is top aligned rather than centered. A title runs to two lines and a first
+ * step sits under it, so a vertically centered control drifts down the card as the content
+ * grows and stops reading as belonging to the title. Sorted 3 aligns to the first title
+ * line for the same reason and it is the convention across the apps that were measured.
+ */
+@Composable
+private fun CompletionGutter(area: AreaCardModel, onComplete: () -> Unit) {
+    Box(
+        modifier = Modifier
+            // **The gutter is the target's width, not the ring's, and the first build of
+            // this got it wrong.** It was `CONTROL_SIZE + snug`, 34dp, and a `size(48.dp)`
+            // inside a 34dp parent is coerced to 34: the ring drew correctly and the touch
+            // target was 14dp short in the axis a thumb misses on, so the first tap of the
+            // new control fell through to the card underneath and opened the detail sheet.
+            //
+            // The 48dp is section 13's floor and the platform's, and it is now real.
+            .width(ClaritySpacing.minTouchTarget)
+            // Pulled back into the card's own padding so the **ring's ink** lands on the
+            // content edge rather than the target's box doing. A 22dp ring centered in a
+            // 48dp target sits 13dp inside it, which is the same correction the header
+            // glyphs make against the screen measure.
+            .offset(x = -CONTROL_INSET)
+            // The identity row sits above the title, so the control drops to land on the
+            // title's first line rather than beside the area name.
+            .padding(top = ClaritySpacing.scaled(CONTROL_DROP)),
+    ) {
+        if (area.offersComplete) {
+            CompletionControl(onComplete = onComplete)
+        }
+    }
+}
+
+/**
+ * Tap to finish the one thing this area is on.
+ *
+ * ## Why it exists, in one paragraph
+ *
+ * Until the September 3 2026 amendment to `design-v3.md` 10.3 there was no visible way to
+ * complete anything. A test user said the app looked nothing like a to-do app and that you
+ * could not tell what you were looking at; the words `task`, `to-do` and `done` appeared
+ * zero times in any user-visible string; and the only paths to Complete were a swipe, a
+ * long press and a sheet, all three invisible. A straight swipe is a path-based gesture, so
+ * that arrangement was a **WCAG 2.1 SC 2.5.1 Level A failure** matching published failure
+ * F105, and NN/g's finding on this exact interaction is that most people never find such a
+ * gesture except by accident while trying to delete something.
+ *
+ * ## Leading, and the research split on this
+ *
+ * Three research passes agreed the control had to exist and one of them argued for the
+ * **trailing** edge, on two grounds: it keeps the item title as the first thing the eye
+ * meets, which 10.3 calls the most important string on the screen, and a leading box makes
+ * a row read as a checklist, which is the shape the shame literature attaches to.
+ *
+ * It is leading, and the reasons are stronger. Material's list guidance says outright that
+ * "states and primary actions are placed on the left side of a list tile". Of the apps
+ * measured, Todoist, Apple Reminders, Things, Sorted, Sunsama, Akiflow, Amazing Marvin,
+ * Goblin Tools, Numo, Habitica and Routinery all lead; Tiimo and Structured trail. And the
+ * deciding argument is the one this whole change exists for: **the category judgment is
+ * made in about 50ms and it is made on prototypicality.** A leading circle is the single
+ * most diagnostic mark a to-do app has. Putting it anywhere else spends novelty on exactly
+ * the feature that cannot afford it, which is the mistake being corrected.
+ *
+ * The accusation argument does not reach this card, and that is the honest reason it can
+ * be set aside rather than overruled: it is about a **column** of unchecked boxes standing
+ * as a tally of what a person has not done. This screen shows one item per area and keeps
+ * the rest quiet. There is no column.
+ *
+ * ## The shape, and what each number is for
+ *
+ * A 22dp ring inside a 48dp target, which is section 13's touch floor and the platform's.
+ * The stroke is `inkSecondary`, which measures 5.78 to one on canvas and better on a card,
+ * comfortably past 13's 3.0 floor for a graphic; `inkTertiary` would have been the quieter
+ * choice and measures 2.40, which is why it is not used anywhere a person has to find
+ * something.
+ *
+ * **The ring is not a second separation device.** Rule 11 and 6.1 govern how an element is
+ * told apart from the ground it sits on, and the card has already spent its device on
+ * elevation. This stroke is not a boundary drawn around content, it is the control's own
+ * shape: remove it and there is no control, only a gap. The same reading `Interactions.kt`
+ * records for the focus ring, which belongs to a state rather than to a boundary.
+ *
+ * ## What happens on tap
+ *
+ * The write goes immediately. Immediacy is the half of the evidence that actually holds:
+ * Barkley's account of executive function asks for the gap between an action and its
+ * consequence to be compressed at the point of performance, and delay aversion in this
+ * population is a medium effect across 4,320 children. So there is no confirmation, no
+ * pending state and no held write.
+ *
+ * The ring fills and takes the check for as long as the promotion runs, and then the next
+ * item arrives in the title above it and the ring is empty again. That is the app's whole
+ * mechanic performed in one gesture, and it is what the swipe was hiding.
+ *
+ * **`positiveGreen` for the fill and `positiveInk` for the check**, which is not a choice
+ * made here: 3.1 scopes the first to "completion only, and a fill only" and lists "the
+ * completion check" as the first job of the second. The palette already had a token whose
+ * stated purpose was this glyph.
+ *
+ * Undo is the five second window the completion already had, `AreasRoute`, which is also
+ * what `SC 2.5.2` wants standing behind any control that commits on contact.
+ */
+@Composable
+private fun CompletionControl(onComplete: () -> Unit) {
+    val colors = LocalClarityColors.current
+    val motion = clarityMotion()
+    val interaction = remember { MutableInteractionSource() }
+    val label = stringResource(R.string.cd_complete_active_item)
+
+    // Local, and deliberately not derived from the model. The item is gone from this card
+    // within a frame of the write, so a checked state read back from state would never be
+    // seen. This is the acknowledgment, and it lasts exactly as long as the promotion it
+    // introduces.
+    var taken by remember { mutableStateOf(false) }
+    val fill by animateFloatAsState(
+        targetValue = if (taken) 1f else 0f,
+        animationSpec = if (motion.reduced) motion.effects() else motion.springSnappy(),
+        label = "completionFill",
+    )
+    LaunchedEffect(taken) {
+        if (!taken) return@LaunchedEffect
+        delay(motion.promotionMillis.toLong())
+        taken = false
+    }
+
+    Box(
+        modifier = Modifier
+            .size(ClaritySpacing.minTouchTarget)
+            .clip(CircleShape)
+            .clarityFocusRing(interaction, CircleShape)
+            .semantics {
+                role = Role.Checkbox
+                contentDescription = label
+            }
+            .clarityClickable(
+                interactionSource = interaction,
+                haptic = ClarityHapticEvent.TAP,
+                pressShape = CircleShape,
+                onClick = {
+                    taken = true
+                    onComplete()
+                },
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(CONTROL_SIZE)
+                .drawBehind {
+                    // The ring, and only the ring. **The fill is a `background` below
+                    // rather than a second `drawCircle`**, which is not a style
+                    // preference: `design-v3.md` 3.1 scopes `positiveGreen` to
+                    // "completion only, and a fill only", and `FaintInkTest` enforces
+                    // that by reading every `color =` and `tint =` in the app. A fill
+                    // drawn through a color parameter is indistinguishable, to that test,
+                    // from a glyph drawn in the same token. Every other fill in the app
+                    // goes through `Modifier.background`; this one does too.
+                    if (fill < 1f) {
+                        val stroke = STROKE.toPx()
+                        drawCircle(
+                            color = colors.inkSecondary,
+                            radius = (size.minDimension - stroke) / 2f,
+                            style = Stroke(width = stroke),
+                        )
+                    }
+                },
+            contentAlignment = Alignment.Center,
+        ) {
+            if (fill > 0f) {
+                Box(
+                    modifier = Modifier
+                        .size(CONTROL_SIZE * fill)
+                        .clip(CircleShape)
+                        .background(colors.positiveGreen),
+                )
+            }
+            if (fill > 0.35f) {
+                ClarityIcon(
+                    icon = ClarityIcons.check,
+                    contentDescription = null,
+                    tint = colors.positiveInk,
+                    modifier = Modifier.size(CONTROL_SIZE * 0.62f).alpha(fill),
+                )
+            }
+        }
+    }
+}
+
+/** The ring. 22dp of ink inside a 48dp target. */
+private val CONTROL_SIZE = 22.dp
+
+/** Heavy enough to read as a control rather than as a drawn outline. */
+private val STROKE = 2.dp
+
+/** Half the difference between the target and the ring, so the ink lands on the measure. */
+private val CONTROL_INSET = (ClaritySpacing.minTouchTarget - CONTROL_SIZE) / 2
+
+/**
+ * How far the 48dp target drops so the ring inside it lands on the title's first line.
+ *
+ * The identity row above is a 9dp dot beside `label` at 13.5sp on an 18sp line box, then
+ * `tight` separating it from the title, whose line box is 27sp. So the first title line
+ * centers about 35dp down and the ring, which sits 24dp into its own target, wants its
+ * target to start 11dp down.
+ *
+ * Scaled, so the control follows the text it is aligned to when a person raises their text
+ * size rather than staying where it was at the default.
+ */
+private val CONTROL_DROP = 11.dp
 
 /**
  * Row three, design-v3.md 10.3 and 10.17. The active item's first step, Addendum
@@ -508,7 +772,10 @@ fun areaCardDescription(
     if (area.queueLength > 0) {
         append(". ")
         append(area.queueLength)
-        append(if (area.queueLength == 1) " item waiting" else " items waiting")
+        // `more`, matching the visible count. See `queue_waiting` for why `waiting` was
+        // wrong: in this category it means blocked on somebody else, which is the
+        // opposite of what an item in this queue is.
+        append(if (area.queueLength == 1) " more item here" else " more items here")
     }
 }
 

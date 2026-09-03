@@ -5,6 +5,55 @@ Every released version, newest first. Dates are the day the version was tagged.
 The format is one section per release: what a person can now do that they could not
 before, what changed about what they already had, and what was wrong and is not any more.
 
+## 0.17.0, 2026-09-03
+
+A test user was handed the last build and said: "It looks nothing like a to-do app. It's
+not designed around what it's supposed to do, it's not intuitive, and you don't know what
+you're looking at." They were right, and almost none of it was taste. `DECISIONS.md` has
+the whole argument and the sources.
+
+### New
+
+- **Every area card has a circle you tap to finish what is on it.** Until now completing
+  was reachable only by a right swipe, a long press or a sheet, and all three are
+  invisible. The words `task`, `to-do` and `done` appeared **zero times** in any string a
+  person could read. A tap now writes immediately, the ring fills, and the next item in
+  that area rises into the slot: the app's whole idea, in one gesture, where it can be
+  seen.
+- **Momentum says its own name.** The word appeared nowhere in the running app except the
+  tab chip, and tab labels drop one text size above default, so an enlarged-type user
+  navigated to an untitled page of numbers through an unnamed glyph. It also says what it
+  counts, permanently rather than only while empty.
+
+### Changed
+
+- **`3 waiting` is now `3 more`.** In this product category `waiting` is a term of art
+  meaning **blocked on somebody else**. It comes from Getting Things Done, Things ships a
+  support article defining it that way, and Todoist uses `@waiting` as its canonical
+  example. Here it meant the opposite: work available right now that simply is not first.
+  That is the worst kind of wording error, because it produces a confidently wrong reader
+  rather than a confused one, and it would never have surfaced in testing.
+- **The swipe face reads `Delete area`.** It read `Delete`, on a card whose other action
+  completes an item. All three usability personas swiped what they read as a task, tapped
+  it, and were asked to destroy an area.
+
+### Fixed
+
+- **Completing an item crashed the app.** The promotion animation raised the incoming title
+  with negative padding whenever its spring overshot, which is what that spring is for.
+  Nothing had found it because completing was hard to reach.
+- **The tutorial teaches a gesture that does not work.** Step two spotlights the first area
+  card and says "swipe right to complete it", and on a first run every card is empty, so
+  the right swipe is clamped to zero travel and the card does not move a pixel. The card
+  now has a control that does work, and the step points at it.
+- **The one sentence explaining what a Pulse is had never been drawn.** Its guard could
+  only be satisfied after an answer had already been given.
+- **`Replay the tour` did nothing inside its own session.**
+- **`Skip setup` threw away a first item you had typed**, under a comment asserting that
+  nothing was typed on that path.
+- **The completion control's first touch target was 34dp**, because a 48dp control inside a
+  34dp gutter is silently made smaller. The first tap fell through to the card underneath.
+
 ## 0.16.0, 2026-09-03
 
 The plate, the swipe and the manage room. Six things the owner reported on the phone,

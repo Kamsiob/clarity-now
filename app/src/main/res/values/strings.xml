@@ -125,20 +125,49 @@
         <item quantity="other">In focus, %d minutes left</item>
     </plurals>
     <!--
-        How many items are behind the active one. Read by the area card's status line
-        and by the All Areas widget, and it is deliberately one resource rather than
-        two identical ones: the same fact stated in two places is the definition of a
-        string that drifts. Absent at zero rather than reading `0 waiting`, for the
-        reason the inbox chip is absent at zero. A direct readout of a queried number,
-        which is what CLAUDE.md rule 8 keeps in this file.
+        How many items are behind the active one. Read by the area card, the manage
+        screen, the onboarding sample card and the All Areas widget, and it is
+        deliberately one resource rather than four identical ones: the same fact stated
+        in four places is the definition of a string that drifts. Absent at zero rather
+        than reading `0 more`, for the reason the inbox chip is absent at zero. A direct
+        readout of a queried number, which is what CLAUDE.md rule 8 keeps in this file.
+
+        **`more`, and it read `waiting` until September 3 2026, which meant the opposite
+        of what this app uses it for.**
+
+        In this product category `waiting` is an established term of art and it means
+        **blocked on somebody else**. It descends from Getting Things Done's "Waiting
+        For"; Things ships a support article titled "Dealing with Waiting To-Dos" defining
+        it as "the next step depends on someone else"; Todoist's own documentation uses
+        `@waiting` as its canonical example of a label for exactly that. Here the queue is
+        the opposite: it is work that is available to this person right now and simply not
+        first.
+
+        That is the worst kind of wording error, because it does not confuse anybody. It
+        produces a confidently wrong reader who believes three of their own items are
+        blocked, and it would never surface in testing.
+
+        `more` collides with nothing, needs no glossary, and answers the question the
+        number actually raises, which is "more what". The count is still text in the
+        card's own caption ink: no badge, no dot, no color.
     -->
     <plurals name="queue_waiting">
-        <item quantity="one">%d waiting</item>
-        <item quantity="other">%d waiting</item>
+        <item quantity="one">%d more</item>
+        <item quantity="other">%d more</item>
     </plurals>
 
     <!-- Swipe and row actions, design-v3.md 10.3.1 -->
     <string name="action_complete">Complete</string>
+    <!--
+        The area card's completion control. See design-v3.md 10.3's September 3 amendment.
+
+        It names the act and the thing, because a screen reader stepping through controls
+        alone reaches a row of checkboxes with nothing between them, and this one commits
+        immediately. The area's own name is not in it: the card node beside it already
+        speaks the area, the title and the count, and repeating it here would make every
+        card say its name twice.
+    -->
+    <string name="cd_complete_active_item">Complete this item</string>
     <string name="action_swap">Swap</string>
     <!--
         Issue #62. Named for what it does to this item rather than for the surface it
@@ -147,6 +176,20 @@
     -->
     <string name="action_focus_on_this">Focus on this</string>
     <string name="action_delete">Delete</string>
+    <!--
+        **The area card's swipe face says what it destroys, and it used to say `Delete`.**
+
+        On that card `Complete` finishes the item and `Delete` removes the whole area and
+        everything in it. Same row, same size, same word class, two different subjects. All
+        three usability personas swiped left on what they read as a task, tapped `Delete`,
+        and were asked "Delete this area?"; the typed confirmation stopped every one of
+        them from losing data and one of them stopped trusting the app.
+
+        Two words rather than one is the whole fix, and it is worth the wrap: the face is
+        66dp at rest when Swap sits beside it, so this sets two centered lines under the
+        glyph. A label that fits and is wrong is not the cheaper option.
+    -->
+    <string name="action_delete_area">Delete area</string>
     <string name="action_archive">Archive</string>
     <string name="action_restore">Restore</string>
     <string name="action_move_to_front">Move to front</string>
@@ -201,7 +244,8 @@
     -->
     <string name="sidehead_area_actions">Manage this area</string>
 
-    <string name="queue_empty">Nothing waiting.</string>
+    <!-- `else`, not `waiting`, for the reason the plural above carries. -->
+    <string name="queue_empty">Nothing else here yet.</string>
     <string name="swap_demoting">This goes back to the front of the queue.</string>
     <string name="queue_choice_dismiss">Leave it idle</string>
 
@@ -693,6 +737,26 @@
         arithmetic of failure.
     -->
     <string name="momentum_active_days_none">The last %1$d days</string>
+    <!--
+        **The screen said its own name nowhere.** `MomentumScreen` was a headline that is
+        allowed to be null, a row of dots, three numbers and some insight modules: no
+        title, no eyebrow, nothing naming the page. `tab_momentum` was the only place the
+        word appeared in the running app, and the tab bar drops its labels one Android
+        text stop above default, so a person who had enlarged their type navigated to an
+        untitled page of numbers through an unnamed glyph.
+
+        The eyebrow sits above the headline rather than replacing it, because the headline
+        is the engine speaking and is allowed to be silent. This is chrome, it is always
+        there, and it is what makes the silence legible as silence rather than as a screen
+        that failed to load.
+
+        The line beneath it is the sentence onboarding already uses for this screen, moved
+        somewhere a person can read it more than once. It is not an observation and needs
+        no corpus: it says what the page counts and what it refuses to do, which are facts
+        about the app rather than about the person.
+    -->
+    <string name="momentum_title">Momentum</string>
+    <string name="momentum_subtitle">What you have done lately. There is no score anywhere in this app.</string>
     <string name="momentum_sidehead_this_week">This week</string>
     <string name="momentum_stat_completed">Completed</string>
     <string name="momentum_stat_focused">Minutes focused</string>
@@ -1423,7 +1487,22 @@
     <string name="tutorial_fab_title">Add anything</string>
     <string name="tutorial_fab_body">Write it down without deciding where it goes first. It waits in a queue until you get to it.</string>
     <string name="tutorial_area_title">One active item</string>
-    <string name="tutorial_area_body">Each area shows the one thing you are on. Swipe right to complete it, left to swap it.</string>
+    <!--
+        **It taught a gesture that does not work on the card it points at.**
+
+        This read "Each area shows the one thing you are on. Swipe right to complete it,
+        left to swap it." On a first run every card is idle, so `offersComplete` is false,
+        and `SwipeableRow` clamps the right hand drag bound to zero: the card does not move
+        a pixel. The one teaching moment in the product demonstrated a dead gesture, and
+        the only direction that did work revealed Delete.
+
+        It names the circle instead, which is drawn, which works on every card that has
+        anything to finish, and which is still there after the tour ends. The swipe is not
+        mentioned: an accelerator is something a person finds once they already know what
+        the control does, and a coach mark is charged to working memory, which is the
+        resource this audience has least of.
+    -->
+    <string name="tutorial_area_body">Each area shows the one thing you are on. Tap the circle to finish it, and the next one moves up.</string>
     <string name="tutorial_focus_title">Focus</string>
     <string name="tutorial_focus_body">A timer on one item, on a screen with nothing else on it.</string>
     <string name="tutorial_pulse_title">Pulse</string>
@@ -1478,8 +1557,8 @@
     </plurals>
     <string name="cd_widget_capture">Add anything to your inbox</string>
     <plurals name="cd_widget_capture_waiting">
-        <item quantity="one">Add anything to your inbox, %d item waiting</item>
-        <item quantity="other">Add anything to your inbox, %d items waiting</item>
+        <item quantity="one">Add anything to your inbox, %d item unfiled</item>
+        <item quantity="other">Add anything to your inbox, %d items unfiled</item>
     </plurals>
 
     <!--

@@ -600,8 +600,59 @@ Full width, parchment, 14dp radius, no border, no progress track. A bodyStrong s
 **A2 slim card, locked.** Card at the `card` token, 18dp radius, soft elevation, **no border**, 18 by 17dp padding, 11dp gaps between cards, the wash pooled toward the hashed corner. Five areas fit comfortably on screen. The card names a token rather than a hex value: this line read `#FFFFFF` and was the third statement in the pure white contradiction 3.1 resolves, and a component section repeating a color out of the token table is how that contradiction survived two phases.
 
 **Content.**
+- A **leading gutter** carrying the completion control, aligned to the first line of the
+  item title. Reserved on every card so the text column does not move; the control itself
+  is drawn only when there is an active item to complete
 - Row one: a 7dp color dot and the area name at label size in the area color
 - Row two: the active item title at itemTitle in inkPrimary. **This never shrinks.** It is the most important string on the screen
+
+> **Amended, September 3 2026. The card had no visible way to finish anything, and that
+> is why the app did not read as a to-do app.**
+>
+> A test user was handed the build and said "it looks nothing like a to-do app, it is not
+> designed around what it is supposed to do, it is not intuitive, and you don't know what
+> you're looking at." Three findings, in order of how much they explain that sentence.
+>
+> **The words `task`, `to-do` and `done` appeared zero times in any user-visible string in
+> the product.** The only occurrences anywhere were XML comments.
+>
+> **Completion was reachable only by gestures.** 10.3.1 already says the swipe is "an
+> accelerator, never the only path" and names two other routes, a long press menu and the
+> detail sheet. Both of those are also invisible, so the clause was satisfied by two more
+> undiscoverable gestures. `MASTER_BUILD_PROMPT.md` 17's checklist asks for "all three
+> reachable without swiping" and got it, in the letter.
+>
+> **The gesture the tutorial teaches is inert on the card it points at.** On a first run
+> every card is idle, so `offersComplete` is false, the right hand drag bound is clamped to
+> zero and the card does not move a pixel. The one teaching moment in the product
+> demonstrates a dead gesture, and the only face the working direction reveals is Delete.
+>
+> The evidence is not close. A straight swipe is a path-based gesture, so swipe-only
+> completion is a **WCAG 2.1 SC 2.5.1 Level A failure** and matches published failure F105,
+> whose worked example is swipe-to-reveal on a list item; because the row follows the
+> finger it engages **SC 2.5.7** at AA as well. NN/g's finding on this exact interaction is
+> that "most users won't discover these actions, or they will discover them only
+> accidentally when they attempt to delete the item", and their guidance is to limit
+> contextual swipe to destructive actions. The canonical touch gesture vocabulary maps a
+> drag across a row to **delete**; it contains no gesture meaning complete, so the swipe was
+> not borrowing a convention, it was fighting one. W3C's COGA patterns o1p02 and o1p05 ask
+> for familiar controls whose use is evident, for exactly this audience. Ten of twelve
+> mainstream to-do apps show a completion target unconditionally, the two platform defaults
+> offer no completion swipe at all, and **none of the twelve offers a way to hide it.**
+>
+> Section 15 is answered rather than dodged. The statistically common answer is a circular
+> outlined control at the leading edge, tapped to complete, and **it is taken**, on 15's own
+> escape clause. Refusing it here would not be choosing a different good answer, it would
+> be declining to speak the category's only universal word. What is not taken from the
+> convention is the column of unchecked boxes: the research that supports the control
+> equally documents the shame pathway attached to a visible tally of unfinished work, and
+> this card shows one thing per area and keeps the rest quiet. Recorded in `DECISIONS.md`.
+>
+> The four line budget is untouched. It is a budget on rows of text and the gutter adds no
+> row, which is the same reading under which the queue count already moved to the trailing
+> edge of row one.
+
+
 - Row three: the item's **first step**, 10.17, when it has one, at caption in inkSecondary, one line, ellipsized. Absent entirely when there is none. Never a placeholder and never an invitation to add one, because a card is not a form. Built in phase 3b
 - Row four: the status line, shown **only when it carries information**. Idle areas show `Last active 21 days ago`. In-session areas show the live countdown. An ordinary active area shows nothing
 

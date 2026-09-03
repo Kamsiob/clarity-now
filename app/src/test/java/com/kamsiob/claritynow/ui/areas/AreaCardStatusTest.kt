@@ -142,12 +142,12 @@ class AreaCardStatusTest {
     fun `the spoken description carries the count whatever the row chose`() {
         val idleWithQueue = model(activeItemId = null, queueLength = 3, daysSinceLastEvent = 4)
         assertEquals(
-            "Work. Pick what is next. 3 items waiting",
+            "Work. Pick what is next. 3 more items here",
             areaCardDescription(idleWithQueue, idleTitle = "Pick what is next"),
         )
         val activeWithQueue = model(activeItemId = "i1", queueLength = 1)
         assertEquals(
-            "Work. Send the deck. 1 item waiting",
+            "Work. Send the deck. 1 more item here",
             areaCardDescription(activeWithQueue, idleTitle = "Add your first item"),
         )
         val activeWithNone = model(activeItemId = "i1", queueLength = 0)

@@ -1,5 +1,6 @@
 package com.kamsiob.claritynow.ui.components
 
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -442,7 +443,16 @@ private fun SwipeActionFace(
             // Scales from 0.8 across the reveal, so it arrives rather than appears.
             modifier = Modifier.size(22.dp).scale(0.8f + 0.2f * reveal),
         )
-        Text(text = label, style = type.sidehead.opticallyCentered(), color = tint)
+        // Two lines, centered. `Delete area` names its own scope and does not fit on one
+        // line in a 66dp face, and the alternative was a one word label that was wrong
+        // about what it deletes.
+        Text(
+            text = label,
+            style = type.sidehead.opticallyCentered(),
+            color = tint,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+        )
     }
 }
 

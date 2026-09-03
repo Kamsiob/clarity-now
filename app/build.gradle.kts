@@ -147,8 +147,18 @@ plugins {
 //
 // Not a major bump. 1.0 is the release, and nothing in the event catalog, the backup
 // format or the engine contract moved.
+// 0.17.0: the card gets a way to finish things. A minor bump, and the clearest one in the
+// file: a person can now do the app's central act, complete an item, with a visible control
+// instead of a gesture nobody finds. The words `task`, `to-do` and `done` appeared zero
+// times in any user-visible string before this, and completion had no on-screen affordance
+// at all, which made it a WCAG 2.1 SC 2.5.1 Level A failure on the most frequent action in
+// an app built for disabled people.
+//
+// Not a major bump. 1.0 is the release, nothing in the event catalog, the backup format or
+// the engine contract moved, and the queue mechanic is unchanged: what changed is that it
+// is now visible.
 val versionMajor = 0
-val versionMinor = 16
+val versionMinor = 17
 val versionPatch = 0
 
 // The application id and the one suffix that changes it, written once.

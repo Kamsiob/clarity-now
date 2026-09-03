@@ -6598,3 +6598,152 @@ in it at 4.459 against a floor of 4.5.
   position that grain is landing page grammar rather than product grammar is a sourced one,
   and the ground light does the same job for two and a half percent of lightness and one
   draw call.
+
+# It looked nothing like a to-do app
+
+A test user was handed 0.16.0 and said: "It looks nothing like a to-do app. It's not
+designed around what it's supposed to do, it's not intuitive, and you don't know what
+you're looking at." Six agents went at it: a cold read of every screen, three personas
+through ten scenarios each, a full audit of what the specification permits, and three
+research passes against primary sources.
+
+The verdict was correct, and almost none of it was taste.
+
+## The three facts that settle it
+
+**The words `task`, `to-do` and `done` appeared zero times in any user-visible string.**
+The only occurrences anywhere in the product were XML comments. The Play listing records
+"The to do app that shows you one thing" as considered and deliberately rejected.
+
+**Completion had no visible control.** The paths were a right swipe, a long press and a
+sheet, and all three are invisible. `design-v3.md` 10.3.1 had already said, in its own
+words, "swipe is an accelerator, never the only path", and `MASTER_BUILD_PROMPT.md` 17's
+checklist asks for "all three reachable without swiping". Both were satisfied, in the
+letter, by two more undiscoverable gestures.
+
+**The one moment the app teaches the gesture, the gesture does not work.** Tutorial step
+two spotlights the first area card and says "swipe right to complete it, left to swap it".
+On a first run every card is idle, so `offersComplete` is false, and a null `onComplete`
+clamps the drag's upper bound to zero in `SwipeableRow`. **The card does not move a pixel.**
+The only direction that works reveals Delete, which deletes the whole area. The app spends
+its entire credibility budget with a new person being wrong about its own screen.
+
+Persona pass rates across ten scenarios: **Sam 5 of 10, Rae 9 of 10, Jo 2 of 10.** Rae is
+autistic and reads everything, including the tutorial. She is the only one the app worked
+for.
+
+## Why a checkbox, when rule 14 says the obvious answer is not the answer
+
+Because section 15 has an escape clause and this is what it is for.
+
+A straight swipe is a path-based gesture, so swipe-only completion is a **WCAG 2.1 SC
+2.5.1 Level A failure** and matches published failure technique F105, whose worked example
+is swipe-to-reveal on a list item. Because the row follows the finger it engages **SC
+2.5.7** at AA as well, and the two interlock so a second gesture cannot serve as the
+alternative for either. Apple's HIG requires a custom gesture be "not the only way to
+perform an important action". Material's list guidance says swipeable items must include
+another way to reach hidden actions.
+
+NN/g's finding on this exact interaction: "most users won't discover these actions, or they
+will discover them only accidentally when they attempt to delete the item", and their
+guidance is to limit contextual swipe to destructive actions. The canonical touch gesture
+vocabulary maps a drag across a row to **delete**. It contains no gesture meaning complete.
+The swipe was not borrowing a convention, it was fighting one.
+
+W3C's COGA patterns o1p02 and o1p05 ask for familiar controls whose use is evident, for
+precisely this audience. Prototypicality research finds category judgments are made in
+50ms and that novelty is preferred only while typicality is not sacrificed. **The
+completion control is the single most diagnostic feature of the category**, which makes it
+the one place the novelty budget cannot be spent.
+
+Ten of twelve mainstream to-do apps show the control unconditionally; the two platform
+defaults, Apple Reminders and Google Tasks, offer no completion swipe at all; and **none of
+the twelve offers a way to hide it**. The apps that did go gesture-only are the cautionary
+tale: Clear's own App Store reviews contain this complaint verbatim, and Mailbox was
+discontinued.
+
+So the obvious answer is taken, on the record, as section 15 permits.
+
+## What is not taken from the convention
+
+**The column of unchecked boxes.** The research that supports the control equally documents
+the harm on the other side: low self-esteem in adult ADHD is attributed, across 35
+qualitative studies, to "feeling unable to keep up"; interview work finds plans "abandoned,
+leading to cycles of disappointment and self-blame"; and Amabile's diary data puts setbacks
+at two to three times the weight of progress. A view showing three done and nine undone
+does not net to positive.
+
+This card shows one thing per area and keeps the rest quiet. **A queue that holds things
+rather than a list that accuses.** That is the app's premise and the evidence supports it:
+the one durable finding in a century of interruption research is not the Zeigarnik effect,
+which pools at a ratio of 0.99 across 38 publications and whose tension mechanism has been
+separately falsified, but the Ovsiankina resumption effect, which holds at 67 percent
+across 20 publications. People come back to interrupted work on their own. They do not
+remember it better, and they do not need to be shown a tally.
+
+The dopamine story is worse than unsupported, it is inverted: dopamine neurons "remain at
+baseline activity for fully predicted rewards", and a reliable checkbox is the textbook
+fully predicted event. The word stays out of this repository.
+
+What does survive is immediacy. Barkley's account asks for the gap between an action and
+its consequence to be compressed at the point of performance, and delay aversion in this
+population is a medium effect across 4,320 children. So the tap writes immediately, with no
+confirmation and no pending state, and the five second undo the completion already had
+stands behind it, which is also what SC 2.5.2 wants of a control that commits on contact.
+
+## `3 waiting` meant the opposite of what it said
+
+In this product category `waiting` is a term of art and it means **blocked on somebody
+else**. It descends from Getting Things Done's "Waiting For"; Things ships a support
+article defining it as "the next step depends on someone else"; Todoist's documentation
+uses `@waiting` as its canonical example of a label for exactly that.
+
+Here the queue is the opposite: work available to this person right now that simply is not
+first. That is the worst kind of wording error, because it does not confuse anybody. It
+produces a confidently wrong reader, and it would never have surfaced in testing.
+
+It reads `3 more`.
+
+## Two defects the control surfaced within an hour of existing
+
+**The promotion animation crashed the app on every completion.** The incoming title's rise
+was written as top padding of `(16 * (1 - incoming)).dp`, and `incoming` runs on
+`springStandard`, which is underdamped and overshoots past 1. The expression goes negative
+and Compose throws `IllegalArgumentException: Padding must be non-negative`. The app's
+single most important moment took the process down whenever its spring did what that spring
+is for, and nothing had found it because completing was hard to reach. It is a
+`graphicsLayer` translation now, which was the right tool anyway: padding relayouts the
+column on every frame.
+
+**The first version of the control had a 34dp touch target.** The gutter was sized to the
+ring plus its gap, and a `size(48.dp)` inside a 34dp parent is silently coerced to 34. The
+ring drew correctly and the very first tap fell through to the card underneath and opened
+the detail sheet. `CompletionControlTest` holds the gutter at the target's width, and was
+checked by reintroducing the bug.
+
+## Four more, found on the way and fixed
+
+- **`pulse_intro` had never once been drawn.** The only sentence in the app explaining what
+  a Pulse is sat in the ambient branch under a guard an unanswered Pulse cannot satisfy:
+  `settled` is only set after an answer is tapped. Every person who ever met their first
+  Pulse met a serif sentence, a question and two pills with nothing saying what any of it
+  was.
+- **`Replay the tour` was dead inside its own session.** A `finished` latch could not tell
+  "still queued from before" from "queued again just now".
+- **`Skip setup` discarded a typed first item**, under a comment asserting that nothing was
+  typed on that path. The Just start path opens with a text field.
+- **The swipe face said `Delete` and deleted the area.** All three personas swiped what they
+  read as a task and were asked to destroy an area. It says `Delete area`.
+
+## The systemic finding, which is bigger than any of the above
+
+**Every explanation in this app is bound to an empty state, and is therefore deleted the
+moment the person has data.** The Trail explains itself only when empty; the Report only
+when empty; the Pulse's own description only when idle; Momentum's two discovery lines only
+until discovered.
+
+The app explains itself to the person who has not used it and goes silent for the person
+who has. That is exactly inverted for somebody returning after a week having forgotten the
+vocabulary, and it is a better explanation of "you don't know what you're looking at" than
+the missing control was. Momentum now names itself and says what it does, permanently. The
+rest is open.
