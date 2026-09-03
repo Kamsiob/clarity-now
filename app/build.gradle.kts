@@ -82,8 +82,23 @@ plugins {
 // acts are composed from `ITEM_PROMOTED` and `ITEM_REOPENED`, which have existed since
 // phase 1. The visual work is large but by itself would have been a patch, because it
 // changes what the app looks like and not what it can do.
+// 0.14.0: the deferred issue pass. The polish pass logged eight issues as needing a
+// decision rather than a detail fix, and this closes all eight. A minor bump on four
+// things a person can now do that they could not: read a past Report, because nothing
+// wrote `REPORT_GENERATED` until now and the history page could never hold anything; see
+// how much is waiting behind an area's active item, which the widget printed on the home
+// screen while the app's own first screen would not say it; start a focus session on the
+// item they are looking at, and change its length without leaving the surface; and see
+// where back goes before letting go of the gesture.
+//
+// **A contract moved for the first time since 0.11.0, and it moved additively.**
+// `REPORT_GENERATED` gained `windowStartKey`, `headlineText` and a `closing` section, and
+// `docs/EVENT_FORMAT.md` moved with it. Every new field is nullable with a default, a log
+// written by an older build replays to the same state, and the golden fixture needed no
+// regeneration for the closing. Not a major bump, because 1.0 is the release and an
+// additive schema change is not a break.
 val versionMajor = 0
-val versionMinor = 13
+val versionMinor = 14
 val versionPatch = 0
 
 // The application id and the one suffix that changes it, written once.

@@ -129,6 +129,17 @@ more than the compensation. Adding it would be cargo cult.
 is the one place it would show. Deferred to the Report phase rather than applied
 blind, because it needs to be judged against real generated text.
 
+**Judged, and declined.** Counted across `CORPUS_2_REPORT.md`'s 2,357 authored lines:
+every one begins with a capital letter or with a slot, and every slot resolves to a
+name, a title, a number or a day. There is not one quotation mark in the whole report
+corpus, and the two families that quote a person's own answer render `{priorLabel}`
+unquoted. So nothing the engine can compose begins with the character this treatment is
+for. The one remaining path is a person's own text, since `{areaName}` and `{itemTitle}`
+render what they typed, and serving that means a custom paragraph layout on the app's
+most read prose for a case that arises only when somebody puts quotation marks in their
+own item title. That is the same mistake as the circle scaling above: applying a correct
+general rule where the condition it corrects does not occur.
+
 ---
 
 ## 3. What this app is betting on

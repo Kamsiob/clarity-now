@@ -5,6 +5,65 @@ Every released version, newest first. Dates are the day the version was tagged.
 The format is one section per release: what a person can now do that they could not
 before, what changed about what they already had, and what was wrong and is not any more.
 
+## 0.14.0, 2026-09-02
+
+The deferred issue pass. The polish pass ended with eight issues logged as needing a
+decision rather than a detail fix. This closes all eight, and two older confirmations that
+were waiting for something real to measure against.
+
+### New
+
+- **Past reports.** Nothing wrote `REPORT_GENERATED`, so the history page told a person
+  every report the app writes is kept there and could never contain one. One report per
+  calendar week is filed now, with the line it led with, and the page names the boundary
+  where the record starts rather than appearing to have lost the weeks before it.
+- **The home screen says how much is waiting.** With eleven things behind Work the card
+  was identical to the day there was one, while the All Areas widget printed the count on
+  the home screen. It is plain text in the card's existing line: no badge, no dot, no
+  color.
+- **A focus session starts from the item you are looking at.** The area sheet offers it,
+  and the session length is on the Focus surface rather than four screens away in
+  Settings. Arranging five minutes took eight interactions and takes three.
+- **The first step appears at the two moments it was written for**, choosing a session and
+  running one, per `ADDENDUM_01` 4b. It was on the card, in the area sheet and on a widget,
+  and on neither Focus screen.
+- **Back previews where it goes** on the Focus surface, Settings, the archive and both
+  history pages. Three sites are deliberately left without a preview and say why at their
+  own declaration.
+
+### Changed
+
+- **Onboarding shows the queue instead of asserting it.** The demo cards carry the same
+  waiting line the real card carries, and it falls by one as the next item takes its place.
+- **The Report's onboarding caption says what the app will not do**: `It notices what
+  happened and says it plainly. It does not make anything up.` That is one of the five
+  things 13.1 says onboarding must convey, and it had no carrier anywhere in the sequence.
+- **Accepting a plan leaves a record you can return to.** The Trail row said `Accepted one
+  thing` with no subject; it names the line now. Nothing anywhere gains any notion of
+  whether it was acted on, and a test holds that.
+- **A color swatch answers a thumb.** The app's 6 percent ink press is invisible when the
+  thing being pressed is itself a color. Swatches draw a ring in the ink measured against
+  that exact color, and the mood pills thicken the ring they already own.
+
+### Fixed
+
+- **`Nothing here can break.` stayed on the screen through the whole of beat 4**, drawn
+  over the Pulse sample's second answer, for anybody who tapped through beat 3 rather than
+  waiting. Found by walking the sequence on the phone rather than in a diff.
+- **A closing line could come back a week later.** A closing with no plan in it was
+  recorded nowhere, so the ninety day exclusion could never see one. Eleven persona years
+  now produce no closing repeat inside ninety days at all.
+- **A Report named two different weeks in two places.** The Trail row named the calendar
+  week and the page named the seven days described. Both name the described week now.
+
+### Confirmed, after waiting for something real to measure
+
+- **Tabular figures at weight 250**, on the focus countdown, measured across six
+  consecutive frames on the device rather than judged by eye.
+- **Hanging punctuation** was judged against the real corpus and declined. Nothing the
+  engine can compose begins with a punctuation mark, and there is not one quotation mark
+  in 2,357 authored report lines.
+
 ## 0.13.0, 2026-09-02
 
 The polish and detail pass. Eight specialists reviewed the built app, six personas ran ten

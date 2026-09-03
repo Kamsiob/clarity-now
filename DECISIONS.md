@@ -6055,3 +6055,41 @@ uniform rather than as the exclusion breaking.
 **The golden fixture does not carry one, and that is consistency rather than an omission.**
 Its one report offers a plan, so the plan is its closing and a `closing` section beside it
 would be a fixture claiming both.
+
+## Two confirmations that were waiting for something real to be measured against
+
+Both were deferred correctly. Neither could be settled by argument, and both are settled
+now by a measurement rather than by an opinion.
+
+### Tabular figures at weight 250, #17
+
+`ClarityText.TabularNumber` sets the feature and does not depend on the font, so the
+question was only ever whether it reaches the one surface where it matters: the focus
+countdown, which redraws a numeral every second at the largest size in the app.
+
+Measured on the Pixel 8, six consecutive frames of a running session with the seconds
+changing under it. The string's left edge sits at the same pixel column in all six, and the
+two gaps either side of the colon sit at the same two columns in all six. A proportional
+figure set would recenter the string every time a `1` replaced a `4`, and the left edge
+would move by a few pixels every second, which is exactly the shimmer this feature exists
+to prevent. It does not move at all.
+
+### Hanging punctuation in the Report's serif prose, #14
+
+`docs/DESIGN_RESEARCH.md` 2 deferred it "because it needs to be judged against real
+generated text", and the real generated text is the answer.
+
+**Nothing in the Report can begin with a punctuation mark.** Counted across
+`CORPUS_2_REPORT.md`'s 2,357 authored lines: every one begins with a capital letter or with
+a slot, and every slot resolves to a name, a title, a number or a day. **There is not one
+quotation mark in the entire report corpus**, which is the character hanging punctuation
+exists for. The two families that quote a person's own answer, `selfReportVsData` and
+`completionSplit`, render `{priorLabel}` unquoted.
+
+The single remaining path is a person's own text: `{areaName}` and `{itemTitle}` render
+what they typed, so an item called `"the thing"` with quotation marks would begin a
+sentence with one. Compose has no hanging punctuation, so serving that case means a custom
+paragraph layout on the app's most-read prose, to correct an optical detail that arises
+only when somebody quotes their own item title. **Declined**, and the reason is the one the
+same section gives for rejecting circle scaling: applying a correct general rule where the
+condition it corrects does not occur is cargo.

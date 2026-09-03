@@ -2,52 +2,29 @@
 
 Where the build actually is. Updated at the end of every phase.
 
-**Last updated:** August 27, 2026, end of phase 12 and of the rules pass, which ran in
-the same tree at the same time.
-**Phases 4, 5, 6, 7, 8, 10, 11 and 12, the facts phase, the slot bindings phase and the
-rules pass are all built and all awaiting the check that closes them.** Everything this
-file says about focus sessions, about the engine, about the Pulse, about Momentum, about
-the Report, about first run, about Settings, about the six widgets, the three app
-shortcuts and the quick settings tile, about the twelve facts and fourteen rules, about
-the nine families that gained a slot binding and about the pattern cooldown, the check 1
-narrowing and the fourth simulator reading is true of the source and is not yet true of
-anything installed.
-**Version:** the orchestrator chooses it at the release. `MASTER_BUILD_PROMPT.md` 16.7
-makes the number a deliberate choice and the release is the orchestrator's closing step.
-The recommendation is still **0.11.0, versionCode 1100**, one minor bump for all three
-rather than three: onboarding, the tutorial, Settings, About and the backup path all arrive
-as screens on contracts that already existed, the facts phase and the slot bindings phase
-between them change what the engine can say without adding a screen, a permission or an
-event type, the event catalog is untouched, and nothing in the log format moved. A major is not warranted before the ship phase.
-**Phase 12 argues for one more minor bump on top of that, 0.12.0, versionCode 1200.** It
-adds three surfaces outside the app that did not exist before, six widgets, three
-shortcuts and a tile, which is something a person can do that they could not do the day
-before, and that is what a minor has meant every other time in this file.
-**Installed and verified on:** Pixel 8 (`shiba`), over USB, last at the end of phase 3c.
+**Last updated:** September 2, 2026, end of the deferred issue pass, which followed the
+polish pass in the same tree.
 
-**No device check has run since phase 3c, and none of them failed: none was attempted.**
-No `adb` command was issued from phases 6, 7, 8, 10 or 11, from the facts phase, from the
-slot bindings phase or from the rules pass, and none of those three ran a Gradle task
-either, because another workflow was building in the tree. The orchestrator runs the
-closing build, install and device pass, so every claim in the phase sections below is a
-claim about source and unit tests, and the readings from the facts phase, the slot bindings
-phase and the rules pass are a claim about source alone. **The working tree also holds
-uncommitted phase 12 widget work from that other workflow**, which is not part of the rules
-pass and is not measured by anything in the rules pass section: the simulator compiles
-`domain`, `data.event` and `devtools` and reaches none of it. **Two of the three phase 6 integration gaps are
-closed**: `ClarityShell` hosts every tab, and phases 7 and 8 hung Momentum and the Report
-on the two branches that read `UnderConstruction`. The corpus is packaged by a Gradle task
-into `assets/corpus/` and all three engine surfaces read the same packaged files, so a
-session must not add a second copy. **The third is still open: `MainActivity` does not
-route `PulseIntents.opensPulse`**, so tapping the Pulse reminder opens the app at whatever
-tab it was on.
+**Everything specified is built, installed and checked on the device.** All thirteen
+phases, the facts phase, the slot bindings phase, the rules pass, the reach passes, the
+accessibility pass, the polish pass and the deferred issue pass. The one thing outstanding
+is not code: shipping to Play needs a Play Console account, and the exact steps are in
+`HANDOFF.md` under BLOCKED.
 
-**One thing phase 10 built is not reachable, and it is one line at four call sites.** The
-tutorial's five spotlight targets need `Modifier.tutorialTarget` at each of them; only the
-tab bar has it. Until the FAB, the first area card, the Focus chip and the Pulse chip wear
-it, the tutorial does not start and `hasSeenTutorial` is never written. That is by design
-rather than by accident and it fails safe, but it means **the phase 10 device check cannot
-pass as things stand.**
+**Version:** 0.14.0, versionCode 1400. The reasoning for every number is at the top of
+`app/build.gradle.kts`, one line per release, and 16.7 requires it to be a deliberate
+choice rather than an increment.
+
+**Installed and verified on:** Pixel 8 (`shiba`), over USB, throughout the polish pass and
+the deferred issue pass. `adb logcat` was checked after every device step in both, and the
+count of fatal exceptions across both is zero.
+
+**The open issues are the ones that are genuinely open.** Two are optional by the
+specification's own word or blocked on somebody else's code: #39, the two optional widgets
+13.3 marks `built if phase 12 has room`, and #13, publishing this app's springs to Material
+once `MotionScheme` is public. #18 is the permanent entry point for a session with no
+context, and #12 is the ship tracker, whose remaining half needs the Play Console account.
+Nothing else is deferred.
 
 **A note on the format of the lines above**, kept because it keeps being needed. Two
 successive edits once left this block stitched from two states, with each paragraph's
@@ -80,12 +57,72 @@ worse than either of them**, and the way to edit these is to replace the whole b
 | 9b. Guidance, layer six | done. All four readings pass and section 19's reservation is not exercised | closed |
 | 10. First run | done, device checked. All five tutorial spotlights walked | closed |
 | 11. Settings, About, data | done, device checked. Export and import need the file picker | closed |
-| 12. Widgets and notifications | built, all six routes landed, all six providers register. The picker previews need a device capture | #11 |
+| 12. Widgets and notifications | done, device checked. All six routes and all six providers | closed |
 | 12b. Design surfaces, the polish pass | done, device checked | closed |
-| 12c. The re-entry screen | built, awaiting the device check | #56 |
-| The archive view | built. Restore, the typed delete, and a row that reads nothing | closed |
+| 12c. The re-entry screen | done, device checked | closed |
+| The archive view | done. Restore, the typed delete, and a row that reads nothing | closed |
 | The reach passes, and the tenth measurement | done. Silence 65.7 to 56.0 percent, repeats 7,370 to 2,286 | no issue |
-| 13. Ship | the buildable half is done. What is left needs a Play Console account and a keystore, and is in `HANDOFF.md` | #12 |
+| The polish pass, and three consultations | done, device checked | closed |
+| The deferred issue pass | done, device checked. All eight polish pass deferrals closed, plus #60, #17 and #14 | closed |
+| 13. Ship | the buildable half is done, and the release is signed. What is left needs a Play Console account and is in `HANDOFF.md` | #12 |
+
+---
+
+## The deferred issue pass delivered
+
+Eight issues the polish pass logged as needing a decision rather than a detail fix, plus
+three older ones that had been waiting for something real to be measured against. Every
+decision and its reasoning is in `DECISIONS.md` under "Closing the deferred issues,
+September 2026"; what is recorded here is what changed and what was checked on the phone.
+
+### The event catalog moved, additively, for the first time since 0.11.0
+
+`REPORT_GENERATED` was in the catalog, the reducer folded it, the Trail drew a row for it
+and `FiringHistory` read it, and **nothing wrote it**. So the history page could never hold
+anything and the Report could not vary itself week to week. It is written now, once per
+calendar week, and the payload gained three things:
+
+- `windowStartKey`, because a report is generated in one calendar week and describes a
+  different seven days, and on any day but Sunday those are different spans. `weekStartKey`
+  is the Sunday and is the report's identity; this is what it actually described
+- `headlineText`, because the keys beside it drive the selector and cannot be turned back
+  into prose, and `design-v3.md` 5 gives past headlines the display role
+- a `closing` section, which is what puts a closing with no plan in it inside the ninety
+  day exclusion. Without it the same closing line could return in a week
+
+Every field is nullable with a default and an older log replays to the same state.
+`docs/EVENT_FORMAT.md` moved with it, because it is the contract the desktop app is built
+against.
+
+### What a person can do that they could not
+
+- Read a past Report, with its headline and its ribbon
+- See how much is waiting behind an area's active item
+- Start a focus session on the item they are looking at, in three interactions from the
+  home screen rather than eight, and change its length without leaving the surface
+- See where back goes before letting go of the gesture, on five surfaces
+- Return to what they said yes to, in the Trail, which never learns whether they did it
+
+### Checked on the Pixel 8
+
+A four week fixture imported, the Report composed and filed, the history page drawing the
+row with its headline and ribbon, and two regenerations adding nothing. The queue count at
+default and at 200 percent text, where the card holds four rows and the first step
+truncates first exactly as 10.3 says it should. The press ring on a pale swatch and a dark
+one, and again with `animator_duration_scale` at 0. Three taps to a five minute session.
+The back preview uncovering the Areas tab from the Focus surface, and doing nothing at all
+under reduce motion. The whole onboarding sequence walked twice.
+
+### Two defects found by using the app rather than by reading the diff
+
+**`Nothing here can break.` stayed on screen through the whole of beat 4**, drawn over the
+Pulse sample's second answer, for anybody who tapped through beat 3 rather than waiting.
+The line's fade runs in a child of the reveal's effect and leaving the beat cancels both,
+stranding it at whatever opacity it had reached. It only ever appeared on the fast path.
+
+**A Report named two different weeks in two places.** The Trail row named the calendar week
+the report was filed under and the page named the seven days it described. Both name the
+described week now.
 
 ---
 

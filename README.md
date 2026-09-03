@@ -12,13 +12,13 @@ all, which is a fact your phone enforces rather than a promise this file makes.
 Built by Kamsiob.
 
 <p align="center">
-  <img src="docs/screenshots/01-areas-light.png" width="260" alt="The Areas screen: one card per area, each showing its single active item">
+  <img src="docs/screenshots/01-areas-light.png" width="260" alt="The Areas screen: one card per area, each showing its single active item and how many are waiting behind it">
   <img src="docs/screenshots/02-area-sheet.png" width="260" alt="An area opened, showing its active item and the queue behind it">
   <img src="docs/screenshots/05-trail.png" width="260" alt="The Trail: every event, newest first, grouped by day">
 </p>
 
 <p align="center">
-  <em>Left: one active thing per area, everything else waiting.
+  <em>Left: one active thing per area, and how much is waiting behind it.
   Middle: open an area to see its queue and make any of it active in one tap.
   Right: everything you have done, back to the day you installed it.</em>
 </p>

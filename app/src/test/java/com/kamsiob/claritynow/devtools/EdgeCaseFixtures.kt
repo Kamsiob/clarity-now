@@ -4,6 +4,7 @@ import com.kamsiob.claritynow.data.event.AppOpened
 import com.kamsiob.claritynow.data.event.ClarityEvent
 import com.kamsiob.claritynow.data.event.FocusCompleted
 import com.kamsiob.claritynow.data.event.FocusStarted
+import com.kamsiob.claritynow.data.event.ItemAdded
 import com.kamsiob.claritynow.data.event.PulseAnswered
 import com.kamsiob.claritynow.data.event.PulseGenerated
 import com.kamsiob.claritynow.data.event.ReflectionPeriod
@@ -164,7 +165,113 @@ class EdgeCaseFixtures {
         // without one there is no honest day to count back from.
         System.getProperty("clarity.fixtureAnchor")
             ?.takeIf { it.isNotBlank() }
-            ?.let { write("recent-week", recentWeek(LocalDate.parse(it))) }
+            ?.let {
+                val anchor = LocalDate.parse(it)
+                write("recent-week", recentWeek(anchor))
+                write("readme", readme(anchor))
+            }
+    }
+
+    /**
+     * The state the README's screenshots are taken from.
+     *
+     * **A fixture rather than a hand tapped state, for the reason every other one here is
+     * a fixture:** a screenshot that has to be retaken after a change needs the state it
+     * was taken in to still exist, and two hundred taps is not a state, it is an
+     * afternoon. It is written through the app's own `BackupCodec` and imported through
+     * the app's own importer, so what is photographed is the real app holding real events.
+     *
+     * Four areas with the queue lengths the home screen now prints, one of them idle with
+     * something waiting, and a week of completions behind them so the banner has something
+     * true to say. Anchored to the day it is written, because the Areas banner and the
+     * Report both describe a window that ends today.
+     */
+    private fun readme(anchor: LocalDate): List<ClarityEvent> {
+        val log = log()
+        fun on(daysBack: Int, hour: Int = 9, minute: Int = 0): Long =
+            anchor.minusDays(daysBack.toLong())
+                .atTime(hour, minute)
+                .atZone(TEST_ZONE)
+                .toInstant()
+                .toEpochMilli()
+
+        data class Seed(
+            val id: String,
+            val name: String,
+            val color: String,
+            val order: String,
+            val active: String?,
+            val step: String?,
+            val queue: List<String>,
+        )
+
+        val seeds = listOf(
+            Seed(
+                "work", "Work", "#2D7FF9", "a0",
+                "Send the revised deck", "Open the deck and read slide one",
+                listOf("Book the follow up call", "Reply to the landlord", "Draft the handover note"),
+            ),
+            Seed(
+                "health", "Health", "#D8453A", "a1",
+                "Walk before the call", null,
+                listOf("Book the eye test"),
+            ),
+            Seed(
+                "family", "Family", "#F59E0B", "a2",
+                "Plan the weekend", null,
+                emptyList(),
+            ),
+            Seed(
+                "reading", "Reading", "#7C3AED", "a3",
+                null, null,
+                listOf("Finish chapter three", "Start the second essay"),
+            ),
+        )
+
+        seeds.forEachIndexed { index, seed ->
+            log.area(on(21, 8, index), seed.id, seed.name, seed.color, seed.order)
+        }
+
+        // **The week's completions run first, and the order is the whole of why.** An
+        // area holds one active item, so promoting a second is a conflict and the app
+        // says so on a card. A fixture that promoted the standing item first and then
+        // completed five others would import into three `While you were away` cards,
+        // which is the app being right about a fixture that was wrong.
+        listOf(
+            Triple(6, "work", "Send the quarterly update"),
+            Triple(5, "health", "Refill the prescription"),
+            Triple(4, "work", "Chase the invoice"),
+            Triple(3, "family", "Order the tickets"),
+            Triple(2, "reading", "Read the first essay"),
+        ).forEachIndexed { index, (back, area, title) ->
+            val name = seeds.first { it.id == area }.name
+            val id = "done-$index"
+            log.item(on(back, 9, index), id, area, title, "c$index", name)
+            log.promote(on(back, 9, index + 10), id, area, title, name)
+            log.complete(on(back, 16), id, area, title, name)
+        }
+
+        // Then the standing item, into an area whose slot the completion above emptied,
+        // and the queue behind it after that so nothing is promoted out of it.
+        seeds.forEachIndexed { index, seed ->
+            seed.active?.let { title ->
+                log.add(
+                    on(1, 9, index),
+                    ItemAdded("${seed.id}-a", seed.id, title, null, "a0", seed.name, null, seed.step),
+                )
+                log.promote(on(1, 9, index + 30), "${seed.id}-a", seed.id, title, seed.name)
+            }
+            seed.queue.forEachIndexed { q, title ->
+                log.item(on(1, 10, index * 5 + q), "${seed.id}-q$q", seed.id, title, "b$q", seed.name)
+            }
+        }
+
+        log.add(on(1, 14), FocusStarted("readme-s1", "work", "work-a", 1_500))
+        log.add(on(1, 14, 25), FocusCompleted("readme-s1", 1_500))
+        (1..7).forEach { back ->
+            log.add(on(back, 7), AppOpened(anchor.minusDays(back.toLong()).toString()))
+        }
+        return log.events()
     }
 
     /**
