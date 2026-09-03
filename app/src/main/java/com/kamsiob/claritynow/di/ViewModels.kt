@@ -71,6 +71,7 @@ object ClarityViewModelFactory : ViewModelProvider.Factory {
                 repository = ClarityGraph.repository,
                 coordinator = ClarityGraph.pulse,
                 clock = ClarityGraph.clock,
+                preferences = ClarityGraph.preferences,
             ) as T
 
             ReportViewModel::class.java -> ReportViewModel(

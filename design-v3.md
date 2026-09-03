@@ -980,7 +980,7 @@ The second is that **no color could have carried it, and that is a proof rather 
 
 **Settings. Built, phase 11.** Rows on canvas under sideheads. Order: Daily routine, Focus, After completing, Appearance, Your data, Privacy, Help, then the support block, then the version line.
 
-**The one card on the screen is the permission card**, which `MASTER_BUILD_PROMPT.md` 14.1 asks for by name. It is not a row and it is not a container for rows, so 10.11's no card containers rule survives it.
+**There is no card on this screen**, and 10.11's no card containers rule now holds without an exception to explain. The permission card was the one, and `MASTER_BUILD_PROMPT.md` 14.1 records why it was removed: a paragraph of prose at the foot of a list of controls, in the only card on a screen of rows, which is a shape a person reads as an error message. The claim it made survives in the privacy sheet one row above it, in the build gate, and in the published policy.
 
 **One thing is not as 10.15 describes it.** Settings is hosted from inside the Areas tab rather than from `ClarityShell`, so it does not cover the floating tab bar the way a pushed screen should; it reserves room at the foot instead. The shell draws that bar as a sibling above the tab content, so covering it means hosting the surface there, and the remedy is one branch beside the Focus surface. `ui/settings/PushedScreen.kt` and `ui/settings/SettingsSurface.kt` both carry the note, and `docs/BUILD_STATE.md` carries it as owed work.
 

@@ -211,7 +211,7 @@ fun AreasRoute(
             },
             onSwapArea = { sheet = AreaSheet.Swap(it.id) },
             onDeleteArea = { sheet = AreaSheet.DeleteArea(it.id) },
-            onLongPressArea = { sheet = AreaSheet.Detail(it.id) },
+            onLongPressArea = { sheet = AreaSheet.LongPressMenu(it.id) },
             onMoveArea = { areaId, index -> viewModel.moveArea(areaId, index) },
             onPromotionPlayed = { viewModel.promotionPlayed(it) },
             onDismissConflict = { viewModel.dismissConflict(it) },
@@ -245,6 +245,10 @@ fun AreasRoute(
                     else -> AreaSheet.AddItem(areaId = null)
                 }
             },
+            // The one door that makes a second area. It was missing entirely: the sheet
+            // existed, the ViewModel call existed, and the only thing that opened it was
+            // gated on there being no areas at all.
+            onNewArea = { sheet = AreaSheet.NewArea },
         )
 
         UndoSnackbar(
@@ -335,23 +339,22 @@ fun AreasRoute(
         }
 
         is AreaSheet.AddItem -> {
-            val areaId = current.areaId
-            val area = areaId?.let { id -> state.areas.firstOrNull { it.id == id } }
-            // An area that vanished under an open sheet is a dismissal. A capture with
-            // no area is not: it has nothing to lose.
-            if (areaId != null && area == null) {
-                sheet = null
-            } else {
-                AddItemSheet(
-                    areaName = area?.name,
-                    landsActive = area != null && viewModel.wouldBecomeActive(area.id),
-                    onAdd = { title, note, firstStep, estimateMinutes ->
-                        viewModel.addItem(area?.id, title, note, firstStep, estimateMinutes)
-                        sheet = null
-                    },
-                    onDismiss = { sheet = null },
-                )
-            }
+            // **The sheet no longer dismisses when its area goes.** The destination is a
+            // control on the sheet now rather than a fact about how it was opened, so an
+            // area deleted underneath it takes the selection back to the inbox and the
+            // half typed capture survives, which is the whole reason those fields are
+            // `rememberSaveable` in the first place.
+            AddItemSheet(
+                areas = state.areas,
+                initialAreaId = current.areaId,
+                landsActive = { id -> id != null && viewModel.wouldBecomeActive(id) },
+                onAdd = { areaId, title, note, firstStep, estimateMinutes ->
+                    viewModel.addItem(areaId, title, note, firstStep, estimateMinutes)
+                    sheet = null
+                },
+                onNewArea = { sheet = AreaSheet.NewArea },
+                onDismiss = { sheet = null },
+            )
         }
 
         is AreaSheet.EditItem -> {
@@ -466,7 +469,53 @@ fun AreasRoute(
             }
         }
 
-        is AreaSheet.LongPressMenu -> sheet = AreaSheet.Detail(current.areaId)
+        is AreaSheet.LongPressMenu -> {
+            val area = state.areas.firstOrNull { it.id == current.areaId }
+            if (area == null) {
+                sheet = null
+            } else {
+                val index = state.areas.indexOfFirst { it.id == area.id }
+                AreaMenuSheet(
+                    area = area,
+                    onAddItem = { sheet = AreaSheet.AddItem(areaId = area.id) },
+                    onComplete = {
+                        area.activeItemId?.let { itemId ->
+                            viewModel.completeItem(area.id, itemId)
+                            undo = UndoRequest(
+                                id = itemId,
+                                message = undoCompleted,
+                                actionLabel = undoAction,
+                                onCommit = {},
+                                onUndo = { viewModel.reopenItemAsActive(itemId) },
+                            )
+                        }
+                        sheet = null
+                    },
+                    onSwap = { sheet = AreaSheet.Swap(area.id) },
+                    // Null on the first card, because a control that does nothing is
+                    // worse than one that is not there. The same rule the swipe faces use.
+                    onMoveToTop = if (index <= 0) {
+                        null
+                    } else {
+                        { viewModel.moveArea(area.id, 0); sheet = null }
+                    },
+                    onEdit = { sheet = AreaSheet.EditArea(area.id) },
+                    onArchive = {
+                        viewModel.archiveArea(area.id)
+                        undo = UndoRequest(
+                            id = area.id,
+                            message = undoArchived,
+                            actionLabel = undoAction,
+                            onCommit = {},
+                            onUndo = { viewModel.unarchiveArea(area.id) },
+                        )
+                        sheet = null
+                    },
+                    onDelete = { sheet = AreaSheet.DeleteArea(area.id) },
+                    onDismiss = { sheet = null },
+                )
+            }
+        }
 
         AreaSheet.Inbox -> InboxSheet(
             items = viewModel.inboxItems(),

@@ -83,17 +83,54 @@ private const val MAX_STAGGER_STEPS = 8
 private const val ENTRANCE_WINDOW_MILLIS = 380L + MAX_STAGGER_STEPS * 46L
 
 /**
- * Plays the choreography every time the screen is entered, which is the change from the
- * shipping build's once per session. A tab a person opens forty times a day is the
- * surface that most needs to feel alive, and a 380ms settle that a thumb outruns is not
- * a cost a person pays; it is what tells them the page is new.
+ * Every tab that has already played its entrance in this process.
+ *
+ * **Process lifetime is the definition, not an approximation of it.** `design-v3.md` 8.4:
+ * "An app session begins at process start and ends when the process ends. A configuration
+ * change, a rotation or a theme switch, is not a new session and does not re-arm
+ * anything." A plain object outlives every composition, every rotation and every tab
+ * switch, and dies with the process, which is that sentence exactly.
+ */
+private object EntrancesPlayed {
+    val keys = mutableSetOf<String>()
+}
+
+/**
+ * Plays the choreography on the first open of [key]'s tab in this app session, and not
+ * again. `design-v3.md` 8.4.
+ *
+ * **This was every entry, and it was a departure from the specification rather than an
+ * amendment to it.** The comment that stood here argued that "a tab a person opens forty
+ * times a day is the surface that most needs to feel alive". 8.4 answers it directly, and
+ * the authority order in `CLAUDE.md` gives 8.4 the last word on anything visual:
+ *
+ * > A screen opened twenty times a day is not new, and an entrance that fires every time
+ * > is not delight, it is a toll: it delays the content by its own duration, every time,
+ * > for the reader least able to afford the wait.
+ *
+ * The usability pass measured what that costs. Returning to Areas re-assembled the whole
+ * screen over 748ms: the header fell 10dp, the banner rose 8dp and scaled from 0.94, the
+ * anchors rose 18dp, and each card rose 18dp behind them. The transform is a spring that
+ * outlives its own 200ms opacity tween, so the page was still moving under text a reader
+ * had already started. For the person this app is built for, that is not liveliness; it is
+ * the screen refusing to hold still.
+ *
+ * Two things stay as they were. The tab content crossfade in 8.2 item 24 is a transition
+ * rather than an entrance and still fires on every switch, which is how the app says the
+ * content underneath has been replaced. And an empty state's own fade is a guard against
+ * a flash rather than an announcement, so it fires whenever an empty state appears.
  */
 @Composable
-fun TabEntrance(content: @Composable () -> Unit) {
+fun TabEntrance(key: String, content: @Composable () -> Unit) {
     var generation by remember { mutableIntStateOf(0) }
-    var playing by remember { mutableStateOf(true) }
+    var playing by remember { mutableStateOf(!EntrancesPlayed.keys.contains(key)) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(key) {
+        if (EntrancesPlayed.keys.contains(key)) {
+            playing = false
+            return@LaunchedEffect
+        }
+        EntrancesPlayed.keys += key
         generation += 1
         playing = true
         delay(ENTRANCE_WINDOW_MILLIS)

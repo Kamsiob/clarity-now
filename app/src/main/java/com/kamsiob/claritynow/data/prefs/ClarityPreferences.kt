@@ -101,6 +101,7 @@ class ClarityPreferences(private val context: Context) {
         val pulseReminderHour = intPreferencesKey("pulseReminderHour")
         val hasCompletedOnboarding = booleanPreferencesKey("hasCompletedOnboarding")
         val hasSeenTutorial = booleanPreferencesKey("hasSeenTutorial")
+        val hasSeenPulseIntro = booleanPreferencesKey("hasSeenPulseIntro")
         val reEntrySettledOn = stringPreferencesKey("reEntrySettledOn")
         val originId = stringPreferencesKey("originId")
         val lamportCounter = longPreferencesKey("lamportCounter")
@@ -217,6 +218,20 @@ class ClarityPreferences(private val context: Context) {
         context.store.data.map { it[Keys.hasSeenTutorial] ?: false }
 
     /**
+     * Whether the one time line above the first real Pulse has been shown.
+     *
+     * **Local, and rule 6 in `CLAUDE.md` is worth checking this against**, for the reason
+     * [reEntrySettledOn] gives at greater length: this is a fact about one install rather
+     * than engine state, and two phones should disagree about it, because reading an
+     * explanation on one of them is not reading it on the other.
+     *
+     * It is set when the person answers, not when the line is drawn. Somebody who opens
+     * the Pulse, reads it and leaves without answering has not finished reading it.
+     */
+    val hasSeenPulseIntro: Flow<Boolean> =
+        context.store.data.map { it[Keys.hasSeenPulseIntro] ?: false }
+
+    /**
      * The return this device has already offered the re-entry state for, as the date
      * key of that return. Null until one has been answered. MASTER_BUILD_PROMPT 14b.4.
      *
@@ -274,6 +289,8 @@ class ClarityPreferences(private val context: Context) {
     suspend fun setPulseReminderHour(value: Int) = put(Keys.pulseReminderHour, value)
     suspend fun setHasCompletedOnboarding(value: Boolean) = put(Keys.hasCompletedOnboarding, value)
     suspend fun setHasSeenTutorial(value: Boolean) = put(Keys.hasSeenTutorial, value)
+
+    suspend fun setHasSeenPulseIntro(value: Boolean) = put(Keys.hasSeenPulseIntro, value)
     suspend fun setReEntrySettledOn(returnedOn: String) = put(Keys.reEntrySettledOn, returnedOn)
     suspend fun setLastExportAt(value: Long) = put(Keys.lastExportAt, value)
 

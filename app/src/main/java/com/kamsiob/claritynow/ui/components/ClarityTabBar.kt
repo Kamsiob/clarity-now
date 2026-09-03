@@ -1,5 +1,10 @@
 package com.kamsiob.claritynow.ui.components
 
+import com.kamsiob.claritynow.ui.theme.LocalClarityShapes
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Column
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -54,40 +59,63 @@ data class ClarityTab(
 /**
  * design-v3.md 10.4, the floating tab bar.
  *
- * A 61dp pill inset from the edges and bottom, card colored, carrying elevation
- * and no border, because an element with both would be the two separation device
- * violation the design forbids.
+ * A 68dp pill inset from the edges and bottom, card colored, carrying elevation and no
+ * border, because an element with both would be the two separation device violation the
+ * design forbids.
  *
- * Inactive destinations are their icon alone. The current one expands into an
- * inner pill carrying the icon and its name. The expansion runs on springStandard, the
- * icon crossfades outlined to filled, and the label arrives behind the width rather
- * than with it, so the pill never looks like it is dragging text along.
+ * **Four equal slots, each a glyph over its own name, and only the indicator moves.**
  *
- * ## One label of four, and phase 12b is where that stopped being an accident
+ * ## What this replaced, and the three things that were wrong with it
  *
- * design-v3.md 10.4 was silent on inactive labels through phase 12, so the build took
- * the platform default, which is exactly the move 15.3 names: "adopting a Material 3
- * Expressive default because it is the default". 10.4 now states the rule and carries
- * the reason; the short version is that this bar is the only element in the app with a
- * width it cannot grow out of.
+ * Until the appeal pass this bar was 61dp of glyphs in a `SpaceEvenly` row, where the
+ * selected destination expanded sideways into a pill carrying its label and the other
+ * three were their icon alone. The owner's word for the result was that it looked like a
+ * second thought. Three separate causes, and all three are structural rather than a
+ * matter of taste:
  *
- * Four labels here are not a style choice, they are a measurement. Icons do not scale
- * with the system font scale and labels do, and a 360dp phone leaves this bar 314dp
- * between its insets and its own padding. At 200 percent text one label plus four icons
- * comes to roughly 290dp of that; four labels come to roughly 570dp, which is nearly
- * twice the room there is. The figures are estimated from Hanken Grotesk's advances at
- * 26sp rather than measured on a device, and the conclusion survives being wrong by a
- * third in either direction, which is the only kind of estimate worth writing down.
- * design-v3.md 13 requires 200 percent without clipping, so labels always would either
- * clip a destination name, which is the defect the rule would exist to prevent, or make
- * the one piece of chrome on every screen grow past 90dp and take the content padding of
- * four screens with it.
+ * 1. **Three of the four destinations were unlabeled.** COGA o4p06, `Use Clear Visible
+ *    Labels`, names ADHD among the conditions it is written for and asks that a label be
+ *    visible and next to its control; o1p07 frames an icon as sitting beside content
+ *    rather than replacing it. NN/g measured the general case: navigation whose
+ *    destinations are not named made people 15 percent slower, cut content discovery by
+ *    more than 20 percent and raised perceived difficulty by 21 percent. This app's
+ *    audience is the one that pays that most.
+ * 2. **Every tap moved the other three.** A pill that grows sideways to fit a word pushes
+ *    its neighbors along, so the whole bar reflowed on every navigation. COGA o4p01 is
+ *    `Ensure Controls and Content Do Not Move Unexpectedly`, and it is written for people
+ *    with, in its words, an impaired ability to screen out movement. Now the four slots
+ *    are fixed and **the indicator translates**; nothing else moves, at any text size.
+ * 3. **It was sized for one row.** 61dp for a 24dp glyph is a strip. 68dp for a 32dp
+ *    indicator, a 26dp glyph and a 13sp name is a control.
  *
- * The constraint that makes the unlabeled state legitimate is on section 7 rather than
- * on this file: a destination whose glyph cannot be recognized on its own does not get
- * an unlabeled state, so the glyph is what changes. `arrow_outward` fails that test
- * today and is recorded against issue #23's mapping table rather than fixed here, since
- * a replacement is a new drawable and not a token.
+ * ## The label rule, and it is a measurement rather than a preference
+ *
+ * Four labels fit. The bar spans 314dp between its 17dp insets and its own padding on a
+ * 360dp phone, which is 78dp a slot, and `Momentum` is the longest of the four at about
+ * 68dp of that at 13sp. **They fit at the size most people are actually at and they do
+ * not fit far above it**, because a single word cannot wrap and Android's font scale is
+ * seven discrete stops rather than a slider: 0.85, 1.0, 1.15, 1.30, 1.50, 1.80, 2.0. The
+ * labels are drawn while the combined scale is at or under [LABEL_MAX_FONT_SCALE] and are
+ * dropped above it, which is one stop of headroom over the default.
+ *
+ * **The combined scale is the one that matters, and it is why this is not simply the OS
+ * setting.** `ClarityTextSize` multiplies it, so a person on a stock phone who moves only
+ * this app's own text control to its top setting is at 1.5 and past the threshold. That
+ * is one tap inside Settings rather than an edge case, which is exactly why the rule is
+ * expressed against `LocalDensity.current.fontScale` under the theme, the combined
+ * figure, rather than against the platform's.
+ *
+ * **Nothing is lost when the labels go.** The glyph, the indicator and the semantics are
+ * unchanged, and TalkBack reads the destination's name either way, because `Role.Tab`
+ * plus `selected` plus the click label do not depend on a `Text` being drawn.
+ *
+ * ## A note on the default this used to blame itself for
+ *
+ * The previous version of this comment said the unlabeled state came from "adopting a
+ * Material 3 Expressive default because it is the default". It did not: Compose's
+ * `NavigationBarItem` defaults `alwaysShowLabel` to **true**. Selected-only labels are the
+ * Views library's `LABEL_VISIBILITY_AUTO` behavior at four or more items, which this app
+ * does not use. The self criticism was aimed at a default that was not there.
  */
 @Composable
 fun ClarityTabBar(
@@ -126,6 +154,7 @@ fun ClarityTabBar(
     } else {
         colors.raise
     }
+    val labeled = LocalDensity.current.fontScale <= LABEL_MAX_FONT_SCALE
 
     Row(
         modifier = modifier
@@ -145,48 +174,56 @@ fun ClarityTabBar(
             // shadow stays: a lightness step stands in for a border, never for a
             // shadow, and 6.1's prohibition is on a hairline and a shadow together.
             .background(ground)
-            .padding(horizontal = 6.dp),
+            .padding(horizontal = 6.dp)
+            // One announcement of "2 of 4" rather than four unrelated tabs. The children
+            // already carry `selected`, which is the other half the platform needs.
+            .selectableGroup(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
         tabs.forEach { tab ->
             TabItem(
                 tab = tab,
                 selected = tab.key == selectedKey,
                 contemplative = contemplative,
+                labeled = labeled,
                 onClick = { onSelect(tab.key) },
+                modifier = Modifier.weight(1f),
             )
         }
     }
 }
 
+/**
+ * One destination: an indicator, a glyph inside it, and the name under it.
+ *
+ * **The slot never changes width and the label never reflows.** Everything that moves on
+ * selection moves inside the fixed slot: the indicator fades and lifts, the glyph
+ * crossfades outlined to filled, and the ink changes. That is what makes the bar hold
+ * still under a thumb, which is o4p01's requirement and the largest single difference
+ * between this and what it replaced.
+ */
 @Composable
 private fun TabItem(
     tab: ClarityTab,
     selected: Boolean,
     contemplative: Boolean,
+    labeled: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val colors = LocalClarityColors.current
     val type = LocalClarityTypography.current
     val motion = clarityMotion()
     val interaction = remember { MutableInteractionSource() }
 
-    val expansion by animateFloatAsState(
+    // One value drives the indicator, the two glyph alphas and the lift, so they can
+    // never disagree about which destination is current.
+    val reveal by animateFloatAsState(
         targetValue = if (selected) 1f else 0f,
         animationSpec = motion.springStandard(),
-        label = "tabExpansion",
+        label = "tabReveal",
     )
-    // The label trails the width so the pill opens first and the name lands in it.
-    val labelAlpha by animateFloatAsState(
-        targetValue = if (selected) 1f else 0f,
-        animationSpec = motion.effects(),
-        label = "tabLabel",
-    )
-    // The spring is allowed to overshoot, which is what gives the pill its life, so
-    // anything that must stay inside zero to one reads the clamped value and only
-    // the scale reads the raw one.
-    val reveal = expansion.coerceIn(0f, 1f)
+    val shown = reveal.coerceIn(0f, 1f)
 
     val night = LocalContemplativeColors.current
     // The Contemplative worlds have no action color of their own, so the selected tab
@@ -201,75 +238,87 @@ private fun TabItem(
         label = "tabTint",
     )
 
-    Row(
-        modifier = Modifier
-            // design-v3.md 13's touch minimum, and it was 46dp until phase 12b. The bar
-            // is 61dp, so this leaves 6.5dp above and below and costs the pill nothing.
-            //
-            // A minimum rather than a height since the text size control landed. The
-            // label's trimmed box reaches about 31dp at the 200 percent cap, so 48dp is
-            // still what this measures at every size the app can reach; writing it as a
-            // floor means a later change to 10.4 that made the label taller would open
-            // the pill instead of cutting the name in half.
+    Column(
+        modifier = modifier
+            // design-v3.md 13's touch minimum. A floating pill forfeits the platform's own
+            // relaxation to 32dp, which `TouchTargetSizeCheck` grants only to a bar flush
+            // with an edge, so the full 48 applies in both directions and this is a floor
+            // with no headroom to give away.
             .heightIn(min = ClaritySpacing.minTouchTarget)
-            .clip(CircleShape)
-            .background(accent.copy(alpha = (if (contemplative) 0.14f else 0.10f) * reveal))
-            .clarityFocusRing(interaction, CircleShape)
+            .clip(LocalClarityShapes.current.row)
+            .clarityFocusRing(interaction, LocalClarityShapes.current.row)
             .clarityClickable(
                 interactionSource = interaction,
                 haptic = ClarityHapticEvent.TAP,
                 role = Role.Tab,
                 onClickLabel = tab.label,
+                showPress = false,
                 onClick = onClick,
             )
             // **Which tab you are on was carried by color alone**: a 10 percent
             // `actionBlue` pill, a filled icon variant and an `actionBlue` label, all
             // three visual. design-v3 13 says color is never the only signal, and this is
             // the app's primary navigation. TalkBack now reads "Momentum, selected, tab".
-            .semantics { this.selected = selected }
-            .padding(horizontal = (14 + 4 * reveal).dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
+            .semantics { this.selected = selected },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
-        Box(contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier
+                .size(width = INDICATOR_WIDTH, height = INDICATOR_HEIGHT)
+                .clip(CircleShape)
+                .background(accent.copy(alpha = (if (contemplative) 0.16f else 0.11f) * shown)),
+            contentAlignment = Alignment.Center,
+        ) {
             ClarityIcon(
                 icon = tab.icon,
                 contentDescription = null,
                 tint = tint,
-                modifier = Modifier.size(24.dp).alpha(1f - reveal),
+                modifier = Modifier.size(GLYPH).alpha(1f - shown),
             )
             ClarityIcon(
                 icon = tab.iconFilled,
                 contentDescription = null,
                 tint = tint,
                 modifier = Modifier
-                    .size(24.dp)
-                    .alpha(reveal)
-                    // A touch of lift as it becomes the current place.
-                    .scale(0.94f + 0.06f * expansion),
+                    .size(GLYPH)
+                    .alpha(shown)
+                    // A touch of lift as it becomes the current place. The spring is
+                    // allowed to overshoot, which is what gives it life, so the scale
+                    // reads the raw value and everything clamped reads `shown`.
+                    .scale(0.94f + 0.06f * reveal),
             )
         }
-
-        Text(
-            text = tab.label,
-            style = type.label.opticallyCentered(),
-            color = tint,
-            maxLines = 1,
-            overflow = TextOverflow.Clip,
-            softWrap = false,
-            modifier = Modifier
-                .alpha(labelAlpha.coerceIn(0f, 1f))
-                // Measured at full width, then revealed by the expansion, so the
-                // text never reflows while the pill is opening.
-                .layout { measurable, constraints ->
-                    val placeable = measurable.measure(constraints.copy(minWidth = 0))
-                    val leading = (7.dp.toPx() * reveal).toInt()
-                    val width = ((placeable.width + leading) * reveal).toInt().coerceAtLeast(0)
-                    layout(width, placeable.height) { placeable.place(leading, 0) }
-                },
-        )
+        if (labeled) {
+            Spacer(Modifier.height(3.dp))
+            Text(
+                text = tab.label,
+                style = type.label.opticallyCentered(),
+                color = tint,
+                maxLines = 1,
+                overflow = TextOverflow.Clip,
+                softWrap = false,
+            )
+        }
     }
 }
+
+/**
+ * The combined font scale above which the four names are dropped.
+ *
+ * 1.06 rather than 1.0, so the smallest stop above the default, 1.15, is the first one
+ * that loses them and the default itself has a margin. Android's scale is seven discrete
+ * stops, so a threshold between two of them is a decision about which stop breaks rather
+ * than a fraction anybody can land on.
+ */
+private const val LABEL_MAX_FONT_SCALE = 1.06f
+
+/** The indicator behind the glyph. Wider than it is tall, so it reads as a place. */
+private val INDICATOR_WIDTH = 56.dp
+private val INDICATOR_HEIGHT = 32.dp
+
+/** 26dp, up from 24. A glyph in a 32dp indicator, not a glyph on its own. */
+private val GLYPH = 26.dp
 
 /** The four root destinations, in the order the tab bar shows them. */
 @Composable

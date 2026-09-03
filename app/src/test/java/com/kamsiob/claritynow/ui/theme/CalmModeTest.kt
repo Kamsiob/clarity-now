@@ -256,8 +256,18 @@ class CalmModeTest {
             // an action label is not one of them, and the card being swiped already
             // carries the dot and the area's name. One fewer place is the best outcome
             // this census can have.
-            // The 9dp identity dot in the detail sheet header. Excluded.
-            "ui/areas/AreaSheets.kt" to 1,
+            // Three, and all three are identity, so all three are excluded.
+            //
+            // The 9dp dot in the detail sheet header, the 9dp dot in the long press
+            // menu's header, and the 9dp dot on each area in the capture sheet's
+            // `Goes to` row. The second arrived with the destination
+            // picker: a person choosing where a thought lands recognizes an area by the
+            // same mark the card, the archive row and the filing sheet use, which is
+            // 3.4's first permitted form. Calm mode desaturates atmosphere and never
+            // identity, and a dot that changed color between this row and the card it
+            // files into would be the one place the transform made an area harder to
+            // recognize rather than quieter.
+            "ui/areas/AreaSheets.kt" to 3,
             // The archive row's 7dp dot, design-v3.md 10.20. **Identity, so excluded**,
             // and it is the clearest case the split has: it is the first of 16.2's two
             // exclusions by name, and on this screen it is the only thing on the row

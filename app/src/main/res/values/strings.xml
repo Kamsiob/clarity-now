@@ -61,7 +61,59 @@
     -->
     <string name="area_idle_title">Add your first item</string>
     <string name="area_idle_queued_title">Pick what is next</string>
+    <!--
+        An area that has held things and finished all of them. It used to read `Add your
+        first item`, which told somebody who had completed nine things there that they had
+        not started. An invitation rather than a report, and it claims nothing about how
+        long the area has been empty: the status line one row down already says that.
+    -->
+    <string name="area_idle_cleared_title">Add what is next</string>
     <string name="area_add_item">Add an item</string>
+    <!--
+        The foot of the area list. Creating a second area was impossible before this:
+        the only door was gated on having none. `Add an area` and not `New area`,
+        because every other invitation in this app is a verb and a noun, and because a
+        person looking for how to make one is looking for the word add.
+    -->
+    <string name="areas_new_area">Add an area</string>
+    <!--
+        The long press menu on an area card, design-v3.md 10.3.1, which calls it mandatory
+        and which the build redirected to the detail sheet for eleven phases. Every verb an
+        area has, in one labeled list, because every one of them was reachable and none of
+        them was findable: editing behind an unlabeled corner glyph, archiving and deleting
+        under a sidehead reading `Area` below the whole queue.
+
+        `Move to top` is here for WCAG 2.2 SC 2.5.7. Reordering was a long press and drag
+        with a TalkBack custom action as its only alternative, which serves a screen reader
+        user and nobody else.
+    -->
+    <string name="area_edit">Edit this area</string>
+    <string name="area_delete">Delete this area</string>
+    <string name="area_move_to_top">Move to the top</string>
+    <!-- The same door, on the sheet that asks which area an inbox item belongs in. -->
+    <string name="inbox_file_new_area">A new area</string>
+    <!--
+        The capture sheet's destination row. `Goes to` and not `Area`, because the row
+        includes the inbox, which is not one, and because a person is choosing where a
+        thought lands rather than labeling it.
+    -->
+    <string name="field_destination">Goes to</string>
+    <string name="destination_inbox">Inbox</string>
+    <!--
+        The disclosure over the note, the first step and the estimate. One word, because
+        naming the three fields behind it would be the prompt Addendum 01 4b forbids:
+        nothing may ask a person for a first step or an estimate.
+    -->
+    <string name="add_item_more">More</string>
+    <!--
+        The opening moment, before beat 1. One line about the reader's time rather than
+        about the app: somebody deciding whether to begin a setup whose end they cannot
+        see is the case the anxiety guidance names by name. The count is the four beats
+        and the minute is the measured 71 seconds of copy in `ONBOARDING_VARIANTS.md`,
+        rounded down rather than up, because a promise of about a minute that takes
+        eighty seconds is a small lie told at the first opportunity.
+    -->
+    <string name="onboarding_opening_duration">Four screens, about a minute. Nothing is saved until you finish.</string>
     <string name="fab_add_item">Add an item</string>
     <string name="fab_add_area">Create an area</string>
 
@@ -507,7 +559,36 @@
     -->
     <string name="pulse_answered_label">You answered</string>
     <string name="pulse_idle_title">Nothing to answer today</string>
-    <string name="pulse_idle_body">The Pulse asks once a day, and some days it stays quiet.</string>
+    <!--
+        **What the Pulse is, at the moment somebody is looking for it.**
+
+        The owner's words: it `doesn't make any sense right now unless someone
+        understands it and how the whole system works`. Three places described it and all
+        three said what it does rather than why it exists or where the question comes
+        from: onboarding beat 4, a tutorial spotlight, and one announcement line.
+
+        This is the idle state, which is what a curious person meets on their first two
+        days, because 12.1 generates nothing before then. Addendum 01 14b.10 asks every
+        reflective surface to state plainly what it needs and roughly when it becomes
+        useful, and the shipped line did neither.
+
+        Four sentences, in this order for a reason. What it reads, so the question is
+        not coming from nowhere. What it costs, so nobody braces for a form. When it
+        starts, so the empty screen is explained rather than suspicious. And that neither
+        answer is the right one, because a first time reader assumes one of them is, and
+        this audience arrives having been graded by four other apps.
+    -->
+    <string name="pulse_idle_body">The Pulse reads what you have already done in the app and asks one question about it. One tap answers it, and neither answer is the right one.\n\nIt needs a few days of use before it has anything to ask about.</string>
+    <!--
+        Above the first Pulse a person is ever offered, and never again after they answer.
+
+        The sentence a first time reader needs is not what the Pulse does, which the
+        anchor and the tutorial already say, but where the question came from and whether
+        there is a right answer. Both, in two short sentences, in the register the rest of
+        the app uses: it describes the app, not the reader, and it makes no claim about
+        why they might find one answer easier than the other.
+    -->
+    <string name="pulse_intro">This is the Pulse. It reads what you have done in the app and asks one question about it. Neither answer is the right one.</string>
     <string name="pulse_history_row">History</string>
     <string name="pulse_history_title">Past pulses</string>
     <string name="pulse_history_empty_title">Nothing here yet</string>
@@ -1008,22 +1089,10 @@
     <string name="privacy_body_3">This app does not declare the internet permission. Android will refuse any attempt it makes to open a connection. You can verify this yourself in the app info screen.</string>
     <string name="privacy_lead_4">Deleting your data.</string>
     <string name="privacy_body_4">Erase all data in Settings removes everything permanently. Uninstalling the app does the same. There is no copy anywhere else, and no request to make of anyone.</string>
-    <string name="privacy_lead_5">Children.</string>
-    <string name="privacy_body_5">Clarity Now is not directed at children and collects no data from anyone, of any age.</string>
-    <string name="privacy_lead_6">Changes.</string>
-    <string name="privacy_body_6">If this policy ever changes, the updated version ships with the app and is dated. Previous versions remain in the public repository history.</string>
-    <string name="privacy_lead_7">Contact.</string>
-    <string name="privacy_body_7">hello@kamsiob.com. The full source is public, so every claim on this page can be checked rather than trusted.</string>
-
-    <!--
-        The permission card, MASTER_BUILD_PROMPT 14.1, verbatim.
-
-        This is the claim `verifyNoInternetPermission` exists to keep true, on
-        the merged manifest of every variant, on every build. If the gate ever
-        has to be relaxed, this card comes off the screen first.
-    -->
-    <string name="permission_card_heading">This app has no internet permission.</string>
-    <string name="permission_card_body">Not a promise, a fact your phone enforces. Clarity Now cannot open a network connection even if it wanted to. Check it in Android settings.</string>
+    <string name="privacy_lead_5">Changes.</string>
+    <string name="privacy_body_5">If this policy ever changes, the updated version ships with the app and is dated. Previous versions remain in the public repository history.</string>
+    <string name="privacy_lead_6">Contact.</string>
+    <string name="privacy_body_6">hello@kamsiob.com. The full source is public, so every claim on this page can be checked rather than trusted.</string>
 
     <!-- Open source licenses, MASTER_BUILD_PROMPT 14.1 -->
     <string name="licenses_title">Open source licenses</string>
@@ -1120,6 +1189,21 @@
         unable to say where everything else went, because the word queue appears nowhere
         in onboarding and beat 1 draws four cards with nothing visibly behind them.
     -->
+    <!--
+        The frame over beat 1's demo, and the reason it exists.
+
+        The owner's complaint about onboarding was `I don't know exactly what I'm looking
+        at`, and this is the diagnosis: four colored rectangles arrive with no title and
+        no frame, and the sentence underneath then uses two coined nouns, `area` and
+        `item`, against shapes that have not been identified as either. A reader is asked
+        to bind two new words to two new shapes and a causal rule at once.
+
+        Two words fix it. `An example` says these are not your things, which nothing
+        anywhere said and which a first time reader cannot know. `four areas` gives the
+        sentence below an antecedent, so `Each area holds one item` now refers to
+        something the reader has already been shown.
+    -->
+    <string name="onboarding_beat_one_frame">An example: four areas.</string>
     <string name="onboarding_beat_one_line">Each area holds one item. The rest wait in line behind it.</string>
     <string name="onboarding_demo_area_one">Work</string>
     <string name="onboarding_demo_item_one">Send the quarterly update</string>
@@ -1141,7 +1225,14 @@
     -->
     <string name="onboarding_beat_two_question">How do you want to start?</string>
     <string name="onboarding_just_start_title">Just start</string>
-    <string name="onboarding_just_start_detail">One area called Today. Names and colors can come later.</string>
+    <!--
+        `More areas` and not `Names and colors`, because the second reads as covering
+        both and only one of them was true. A person in testing took this as a promise
+        that more areas could be added later, which they could not: creating a second
+        one was impossible in the shipped build. The door exists now, so the sentence
+        can say so.
+    -->
+    <string name="onboarding_just_start_detail">One area called Today. More areas, names and colors can come later.</string>
     <string name="onboarding_pick_areas_title">Pick a few areas</string>
     <string name="onboarding_pick_areas_detail">Two to four parts of your life to keep track of.</string>
 
@@ -1243,7 +1334,14 @@
     <string name="tutorial_pulse_title">Pulse</string>
     <string name="tutorial_pulse_body">One question a day, once there are a few days for it to read.</string>
     <string name="tutorial_tabs_title">Four views</string>
-    <string name="tutorial_tabs_body">Areas, Momentum, Report and Trail. Nothing is hidden anywhere else.</string>
+    <!--
+        The second sentence used to read `Nothing is hidden anywhere else.` It was the
+        one first run sentence that taught a wrong model, and it was wrong about the
+        four things a person is most likely to go looking for: the inbox, the archive,
+        the area editor and reordering. None of the four is on a tab. A tour that ends
+        by promising there is nothing else to find is how somebody stops looking.
+    -->
+    <string name="tutorial_tabs_body">Areas, Momentum, Report and Trail. Everything else lives inside one of them.</string>
 
     <!--
         Widgets: Quick Capture, Focus Countdown and Rhythm. MASTER_BUILD_PROMPT 13.3 and

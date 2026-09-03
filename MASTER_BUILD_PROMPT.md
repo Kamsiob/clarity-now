@@ -840,10 +840,9 @@ A Daylight screen, rows on canvas under sentence-case sideheads, **no card conta
 
 **One thing on this screen is not what it should be, and it is recorded rather than worked around.** Settings was also hosted from inside the Areas tab rather than from `ClarityShell`, so it did not cover the floating tab bar; **phase 12c closed that** by registering pushed screens in a composition local rather than by moving them, so the shell stops composing the bar while one is up, which reaches the same result without three navigation rewrites. **And changing `After completing` now writes `SETTING_CHANGED`**, which it did not for four phases: the event type, the reducer fold and the Trail row all existed, and what was missing was a method on the only writer in the app, because `ClarityRepository.commit` is private and phase 11 correctly refused to reach around it. `recordSettingChanged` is that method, and it is deliberately not a general one: it says at its own declaration which preferences belong in the log and which do not. **A text size, a theme and a reminder hour do not.** They are facts about one install rather than about a life, they already live in DataStore where a second device is supposed to disagree with them, and a row in the Trail every time somebody drags a slider is not what rule 9 asks for. `After completing` does, because it changes what completing an item does, and a Trail that does not record the change cannot explain why two completions on the same day behaved differently.
 
-**Privacy.** `Privacy policy` opening the in-app sheet with the text in 14.3. `Open source licenses` listing AGPL-3.0 for the app, SIL OFL for Newsreader and Hanken Grotesk, Apache 2.0 for Material Symbols and AndroidX. Then the permission card:
+**Privacy.** `Privacy policy` opening the in-app sheet with the text in 14.3. `Open source licenses` listing AGPL-3.0 for the app, SIL OFL for Newsreader and Hanken Grotesk, Apache 2.0 for Material Symbols and AndroidX.
 
-> **This app has no internet permission.**
-> Not a promise, a fact your phone enforces. Clarity Now cannot open a network connection even if it wanted to. Check it in Android settings.
+> **The permission card is removed, and this is the amendment.** It read `This app has no internet permission. Not a promise, a fact your phone enforces. Clarity Now cannot open a network connection even if it wanted to. Check it in Android settings.`, and it was the only card on a screen of rows, a paragraph of prose at the foot of a list of controls, arriving unannounced under two rows that were about something else. The owner's word for it was that it looked out of place, and it did: **the claim is right and the placement was wrong.** It is not lost. `verifyNoInternetPermission` still fails the build if a network permission reaches the merged manifest of either variant, the privacy sheet one row above still states it in the same words under `Network access`, and `PRIVACY.md` publishes that same sentence at a URL. What was deleted is a second copy of a claim the screen already carries, not the claim.
 
 **Help.** `Replay the tour`. `Replay the welcome`. `About Clarity Now`.
 
@@ -875,7 +874,7 @@ Ship this exact text in app. The builder publishes the identical text at a URL u
 >
 > **Deleting your data.** Erase all data in Settings removes everything permanently. Uninstalling the app does the same. There is no copy anywhere else, and no request to make of anyone.
 >
-> **Children.** Clarity Now is not directed at children and collects no data from anyone, of any age.
+> **The `Children` paragraph is removed, and this is the amendment.** It read `Clarity Now is not directed at children and collects no data from anyone, of any age.` A children clause belongs in a policy for a product that could plausibly collect something from one. This app collects nothing from anyone, which the paragraph above it already says in those words, so the clause was a second denial of the same fact with a heading that raises a question the app never poses. Play's target audience answer is still 18 and over, in `store-assets/LISTING.md`, where it is asked.
 >
 > **Changes.** If this policy ever changes, the updated version ships with the app and is dated. Previous versions remain in the public repository history.
 >

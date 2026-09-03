@@ -1,5 +1,7 @@
 package com.kamsiob.claritynow.ui.onboarding
 
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.zIndex
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -117,6 +119,8 @@ fun OnboardingRoute(
         val scope = rememberCoroutineScope()
 
         var moment by rememberSaveable { mutableIntStateOf(0) }
+        // `rememberSaveable`, so a rotation during the opening does not replay it.
+        var openingDone by rememberSaveable { mutableStateOf(false) }
         val reveal = remember { Animatable(0f) }
         val closing = remember { Animatable(0f) }
 
@@ -178,7 +182,9 @@ fun OnboardingRoute(
         val goBackNow by rememberUpdatedState<() -> Unit>({
             if (state.canGoBack) viewModel.back()
         })
-        val tapAdvances = state.beat != OnboardingBeat.YOUR_AREAS
+        // Nothing underneath the opening takes a tap: a person who taps to skip the
+        // title card would otherwise skip beat 1 with the same gesture.
+        val tapAdvances = openingDone && state.beat != OnboardingBeat.YOUR_AREAS
 
         // **Not predictive, issue #63.** Back inside onboarding goes to the previous
         // beat, which is a step in a sequence rather than a screen behind this one, and
@@ -197,6 +203,18 @@ fun OnboardingRoute(
         // press scale either, so tapping one answered with nothing at all.
         CompositionLocalProvider(LocalIsContemplative provides true) {
             Box(modifier = modifier.fillMaxSize()) {
+                // **The opening moment, and it is drawn over the sequence rather than
+                // before it.** Beat 1 composes underneath and runs its own arrival on its
+                // own schedule, so what a person sees when the opening clears is a stack
+                // that has already settled rather than one that starts assembling at the
+                // moment they are first asked to look at it. `OnboardingOpening` says why
+                // the app has one at all.
+                if (!openingDone) {
+                    OnboardingOpening(
+                        onDone = { openingDone = true },
+                        modifier = Modifier.zIndex(1f),
+                    )
+                }
                 // Everything behind onboarding is untouchable, which matters from beat 3
                 // onward, when the live Areas screen is composed under it and part of this
                 // surface is transparent. A sibling drawn behind the content rather than an

@@ -254,8 +254,6 @@ internal fun SettingsScreen(
                 title = stringResource(R.string.settings_licenses),
                 onClick = onOpenLicenses,
             )
-            Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
-            PermissionCard()
         }
 
         GroupGap()
@@ -300,39 +298,6 @@ internal fun SettingsScreen(
                 color = colors.inkSecondary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
-            )
-        }
-    }
-}
-
-/**
- * The permission card, MASTER_BUILD_PROMPT 14.1.
- *
- * The one card on this screen, and the one claim in the app that a person is invited to
- * go and check for themselves. `verifyNoInternetPermission` is what keeps it true, on
- * the merged manifest of every variant, on every build.
- */
-@Composable
-private fun PermissionCard() {
-    val colors = LocalClarityColors.current
-    val type = LocalClarityTypography.current
-    ClarityCard(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(
-                horizontal = ClaritySpacing.cardPaddingHorizontal,
-                vertical = ClaritySpacing.cardPaddingVertical,
-            ),
-        ) {
-            Text(
-                text = stringResource(R.string.permission_card_heading),
-                style = type.bodyStrong,
-                color = colors.inkPrimary,
-            )
-            Spacer(Modifier.height(ClaritySpacing.scaled(8.dp)))
-            Text(
-                text = stringResource(R.string.permission_card_body),
-                style = type.bodySerif,
-                color = colors.inkSecondary,
             )
         }
     }

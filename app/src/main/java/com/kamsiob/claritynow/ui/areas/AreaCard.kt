@@ -85,11 +85,20 @@ fun AreaCardContent(
     var playing by remember { mutableStateOf<PromotionCue?>(null) }
     val played by rememberUpdatedState(onPromotionPlayed)
 
+    // **The app's one moment, and it had no haptic for eleven phases.** `PROMOTE` was
+    // defined in `ClarityHaptics`, `rememberPromotionHaptic` was written to fire it, and
+    // nothing called either: an item completing and the next one rising, which is the
+    // whole mechanic happening in front of somebody, landed in silence. It fires as the
+    // new title arrives rather than when the cue is handed over, so the feeling and the
+    // movement are the same event.
+    val promotionHaptic = rememberPromotionHaptic()
+
     LaunchedEffect(promotion?.id) {
         val cue = promotion ?: return@LaunchedEffect
         playing = cue
         outgoing.snapTo(0f)
         incoming.snapTo(0f)
+        promotionHaptic()
         if (motion.reduced) {
             // A crossfade, not a snap. design-v3.md 8.3 turns an animation into a
             // crossfade under reduced motion and calm mode; it does not delete it.
@@ -168,13 +177,7 @@ fun AreaCardContent(
                     // which is what dismissing the swap chooser, completing inside a focus
                     // session with `Choose from queue` set, and the re-entry screen's
                     // second option all produce, the last of them on every card at once.
-                    text = stringResource(
-                        if (area.queueLength > 0) {
-                            R.string.area_idle_queued_title
-                        } else {
-                            R.string.area_idle_title
-                        },
-                    ),
+                    text = stringResource(idleTitleFor(area)),
                     // 500 rather than itemTitle's 650, design-v3.md 10.3. The
                     // invitation is the same string at the same size as a real item
                     // title, one step lighter, so an empty card reads as a place
@@ -323,6 +326,25 @@ private fun FocusDeck(area: AreaCardModel, accent: Color) {
 }
 
 /**
+ * Which invitation an idle card carries, in one place because it is read twice.
+ *
+ * Three states, and the third was missing. An area with a queue is asked to pick what is
+ * next. An area that has **never held anything** is asked for a first item. An area that
+ * has held things and finished them all was asked for a first item too, which is the app
+ * telling somebody who has completed nine things in that area that they have not started:
+ * `Add your first item` sitting directly above `Last active 2 days ago`.
+ *
+ * `neverHeldAnything` was already computed and already correct, and was applied only to
+ * the status line. This is the same fact governing the title it was always about.
+ */
+@Composable
+private fun idleTitleFor(area: AreaCardModel): Int = when {
+    area.queueLength > 0 -> R.string.area_idle_queued_title
+    area.neverHeldAnything -> R.string.area_idle_title
+    else -> R.string.area_idle_cleared_title
+}
+
+/**
  * Row four, `design-v3.md` 10.3: the status line, drawn only when it carries information.
  *
  * > Idle areas show `Last active 21 days ago`. In-session areas show the live countdown.
@@ -429,7 +451,7 @@ fun AreaCardSemantics(area: AreaCardModel, modifier: Modifier = Modifier): Modif
     // card said "Pick what is next" and the description said "Add your first item", which
     // is the bug this pass fixed visually reappearing in speech.
     val idleTitle = stringResource(
-        if (area.queueLength > 0) R.string.area_idle_queued_title else R.string.area_idle_title,
+        idleTitleFor(area),
     )
     val minutes = area.focusMinutesRemaining
     val focusStatus = if (minutes == null) {

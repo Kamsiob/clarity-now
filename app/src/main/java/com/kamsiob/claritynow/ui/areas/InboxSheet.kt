@@ -1,5 +1,12 @@
 package com.kamsiob.claritynow.ui.areas
 
+import androidx.compose.foundation.layout.width
+import com.kamsiob.claritynow.ui.theme.ClarityHapticEvent
+import com.kamsiob.claritynow.ui.components.ClarityIcons
+import com.kamsiob.claritynow.ui.components.ClarityIcon
+import androidx.compose.ui.semantics.Role
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -271,6 +278,12 @@ fun FileItemSheet(
                 areas.forEach { area ->
                     FileTargetRow(area = area, onClick = { onChoose(area) })
                 }
+                // **A new area, from the one screen where wanting one is explicit.**
+                // `onCreateArea` existed and was reachable only when there were no areas
+                // at all, so the screen that asks "which area does this belong in" had no
+                // answer for "a different one". The handler is unchanged; what was wrong
+                // was the branch it sat in.
+                NewAreaTargetRow(onClick = onCreateArea)
                 Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
                 Column(modifier = Modifier.padding(horizontal = ClaritySpacing.screenPadding)) {
                     ClarityButton(
@@ -281,6 +294,51 @@ fun FileItemSheet(
                 }
             }
         }
+    }
+}
+
+/**
+ * `A new area`, at the foot of the file targets.
+ *
+ * Deliberately shaped like the rows above it rather than like a button: it is one more
+ * destination in the same list, and a person choosing where something goes is choosing,
+ * not committing. It carries the `add` glyph where an area carries its dot, which is the
+ * one place in this list a mark stands in for identity.
+ */
+@Composable
+private fun NewAreaTargetRow(onClick: () -> Unit) {
+    val colors = LocalClarityColors.current
+    val type = LocalClarityTypography.current
+    val interaction = remember { MutableInteractionSource() }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = ClaritySpacing.minTouchTarget)
+            .clarityClickable(
+                interactionSource = interaction,
+                haptic = ClarityHapticEvent.TAP,
+                role = Role.Button,
+                onClick = onClick,
+            )
+            .padding(
+                horizontal = ClaritySpacing.screenPadding,
+                vertical = ClaritySpacing.scaled(12.dp),
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ClarityIcon(
+            icon = ClarityIcons.add,
+            contentDescription = null,
+            tint = colors.inkSecondary,
+            modifier = Modifier.size(ClaritySpacing.areaDot + 9.dp),
+        )
+        Spacer(Modifier.width(ClaritySpacing.snug))
+        Text(
+            text = stringResource(R.string.inbox_file_new_area),
+            style = type.bodyStrong,
+            color = colors.inkSecondary,
+        )
     }
 }
 

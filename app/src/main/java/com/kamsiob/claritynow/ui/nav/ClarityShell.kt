@@ -327,7 +327,7 @@ fun ClarityShell(
                 label = "tabContent",
             ) { tab ->
                 tabStates.SaveableStateProvider(tab) {
-                    TabEntrance {
+                    TabEntrance(key = tab) {
                         when (tab) {
                             TAB_AREAS -> AreasRoute(
                                 viewModel = areasViewModel,

@@ -1,5 +1,11 @@
 package com.kamsiob.claritynow.ui.areas
 
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import com.kamsiob.claritynow.ui.components.clarityFocusRing
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
@@ -73,30 +79,57 @@ private val SheetPadding = 20.dp
 /**
  * Capture. MASTER_BUILD_PROMPT 8.2 and 14b.1, design-v3.md 10.17.
  *
- * **Capture must never require a decision.** A null [areaName] is the ordinary case
- * and not a degraded one: the item is written with no area, it exists, and the
- * thought is out of the person's head, which is the entire job of this path. Filing
- * is a separate, later, optional act, and the inbox sheet is where it happens.
+ * **Capture must never require a decision, and it must never require a scroll either.**
  *
- * The sheet states where the item will land before the person commits, in all three
- * cases, because an item that silently becomes active is a surprise, an item that
+ * ## What was wrong with this sheet, measured
+ *
+ * The taps were already right: two, the plus and the keyboard's Done. What was wrong was
+ * the height. Four stacked fields, a destination line and a button came to about 520dp,
+ * and the software keyboard takes roughly half a phone. **So while a person was typing,
+ * the line saying where the thought was about to go and the button that puts it there
+ * were both below the fold.** At 200 percent text it was around 800dp and scrolled badly.
+ * Somebody who types and taps Done never saw either. That is why five of six people in
+ * testing lost track of their first capture: not because the app failed to say where it
+ * went, but because it said so underneath the keyboard.
+ *
+ * The three optional fields are the reason it was that tall, and they are the three
+ * things Addendum 01 4b is blunt that nothing may prompt for. **Order is the quietest
+ * form of prompting there is**, and four fields in a column is a form. They are behind
+ * one disclosure now. Nothing is removed and nothing is renamed; what changes is that a
+ * person who wants to write one line and leave never passes a field they did not ask for.
+ *
+ * ## The destination is a choice on the sheet rather than a fact about how it was opened
+ *
+ * It used to be decided entirely by the route in: from an area's own sheet it went to
+ * that area, from the plus with one area to that area, and from the plus with several to
+ * the inbox, with no way to say otherwise without backing out and starting again in a
+ * different place. **Now every destination is on the sheet**, one tap each, with the
+ * route's own answer preselected.
+ *
+ * The inbox is still what an untouched sheet does, which is Addendum 01 4a and is the
+ * whole point of an unfiled capture: no decision at the moment of writing. The change is
+ * that not deciding is now visibly a choice among others rather than the only thing on
+ * offer.
+ *
+ * **It does not remember the last one used.** `MASTER_BUILD_PROMPT.md` 13.5 refuses
+ * adaptive ordering in the same words for the app shortcuts: "a shortcut list that
+ * reordered itself around what the user did most would be a measurement of the user".
+ * A destination row that rearranged itself would be the same measurement on the surface a
+ * person touches most, and none of the apps this was checked against does it either.
+ *
+ * The sheet still states where the item will land before the person commits, in all
+ * three cases, because an item that silently becomes active is a surprise, an item that
  * silently joins a queue is a different surprise, and an item that silently goes
- * somewhere the person has not seen yet is the worst of the three.
- *
- * **The two optional fields are last on purpose.** design-v3.md 10.17 puts the first
- * step and the estimate on this sheet and Addendum 01 4b is blunt that nothing may
- * prompt for either. Order is the quietest form of prompting there is: a field
- * directly beneath the title reads as the next thing to fill in. These sit below the
- * note, in decreasing order of how often they will be used, so a person who types a
- * title and taps Add never passes through them at all. Nothing here is required,
- * nothing is marked incomplete, and the primary action is live from the first
- * character of the title.
+ * somewhere the person has not seen yet is the worst of the three. It is above the
+ * button now instead of under three fields.
  */
 @Composable
 fun AddItemSheet(
-    areaName: String?,
-    landsActive: Boolean,
-    onAdd: (String, String?, String?, Int?) -> Unit,
+    areas: List<AreaCardModel>,
+    initialAreaId: String?,
+    landsActive: (String?) -> Boolean,
+    onAdd: (String?, String, String?, String?, Int?) -> Unit,
+    onNewArea: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val colors = LocalClarityColors.current
@@ -112,10 +145,29 @@ fun AddItemSheet(
     var note by rememberSaveable { mutableStateOf("") }
     var firstStep by rememberSaveable { mutableStateOf("") }
     var estimate by rememberSaveable { mutableStateOf("") }
+    var destination by rememberSaveable { mutableStateOf(initialAreaId) }
+    var moreOpen by rememberSaveable { mutableStateOf(false) }
     val focus = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(Unit) { focus.requestFocus() }
+
+    // An area deleted under an open sheet takes its selection with it rather than
+    // committing the item into an id that no longer resolves.
+    LaunchedEffect(areas) {
+        if (destination != null && areas.none { it.id == destination }) destination = null
+    }
+
+    val commit = {
+        keyboard?.hide()
+        onAdd(
+            destination,
+            title,
+            note.ifBlank { null },
+            firstStep.ifBlank { null },
+            estimate.toMinutes(),
+        )
+    }
 
     ClaritySheet(onDismiss = onDismiss, title = stringResource(R.string.sheet_add_item_title)) {
         Column(
@@ -124,19 +176,6 @@ fun AddItemSheet(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = SheetPadding),
         ) {
-            // Nothing stands here when there is no area. The destination line below
-            // says where the item goes, and a second line naming the inbox would be
-            // the app mentioning the inbox twice on the way to writing one sentence.
-            if (areaName != null) {
-                Text(text = areaName, style = type.label, color = colors.inkSecondary)
-                Spacer(Modifier.height(ClaritySpacing.scaled(16.dp)))
-            }
-            // **Capped on input, not on save.** `ClarityRepository.addItem` refuses a
-            // title over `MAX_ITEM_TITLE` by returning null, so a long capture was
-            // silently destroyed at the moment a person tapped Add: no message, no
-            // recovery, and the sheet closed as though it had worked. `EstimateField`
-            // one screen down already argues for capping at the field, and this is the
-            // field where losing the text costs the most.
             // **Done, not Next, and it commits.** The capture sheet is the one screen in
             // this app that promises to require no decisions, and the keyboard's action
             // key walked into the note field, which is multi line and whose own action key
@@ -144,41 +183,34 @@ fun AddItemSheet(
             // keyboard at all: every one line thought ended with a thumb moving past
             // three more fields to a button. The edit sheet keeps Next, because there the
             // decision has already been made and moving between fields is the job.
+            //
+            // **Capped on input, not on save.** `ClarityRepository.addItem` refuses a
+            // title over `MAX_ITEM_TITLE` by returning null, so a long capture was
+            // silently destroyed at the moment a person tapped Add: no message, no
+            // recovery, and the sheet closed as though it had worked.
             ClarityTextField(
                 value = title,
                 onValueChange = { title = it.take(ClarityRepository.MAX_ITEM_TITLE) },
                 label = stringResource(R.string.field_title),
                 focusRequester = focus,
                 imeAction = ImeAction.Done,
-                onImeAction = {
-                    if (title.isNotBlank()) {
-                        keyboard?.hide()
-                        onAdd(
-                            title,
-                            note.ifBlank { null },
-                            firstStep.ifBlank { null },
-                            estimate.toMinutes(),
-                        )
-                    }
-                },
+                onImeAction = { if (title.isNotBlank()) commit() },
             )
-            Spacer(Modifier.height(ClaritySpacing.scaled(20.dp)))
-            ClarityTextField(
-                value = note,
-                onValueChange = { note = it },
-                label = stringResource(R.string.field_note_optional),
-                singleLine = false,
-            )
-            Spacer(Modifier.height(ClaritySpacing.scaled(20.dp)))
-            FirstStepField(value = firstStep, onValueChange = { firstStep = it })
-            Spacer(Modifier.height(ClaritySpacing.scaled(20.dp)))
-            EstimateField(value = estimate, onValueChange = { estimate = it })
+
             Spacer(Modifier.height(ClaritySpacing.scaled(18.dp)))
+            DestinationRow(
+                areas = areas,
+                selected = destination,
+                onSelect = { destination = it },
+                onNewArea = onNewArea,
+            )
+
+            Spacer(Modifier.height(ClaritySpacing.scaled(14.dp)))
             Text(
                 text = stringResource(
                     when {
-                        areaName == null -> R.string.add_item_lands_inbox
-                        landsActive -> R.string.add_item_lands_active
+                        destination == null -> R.string.add_item_lands_inbox
+                        landsActive(destination) -> R.string.add_item_lands_active
                         else -> R.string.add_item_lands_queue
                     },
                 ),
@@ -186,21 +218,187 @@ fun AddItemSheet(
                 // design-v3.md 3.1: `inkTertiary` carries no text anywhere in this
                 // app, and this line tells a person where the thing they are typing
                 // will end up. The caption size is what makes it quieter than the
-                // fields above it; the color is not asked to do that job. Same
-                // correction as 10.3 and 10.19, and every other one in this file.
+                // fields above it; the color is not asked to do that job.
                 color = colors.inkSecondary,
             )
-            Spacer(Modifier.height(ClaritySpacing.scaled(22.dp)))
+
+            Spacer(Modifier.height(ClaritySpacing.scaled(16.dp)))
             ClarityButton(
                 label = stringResource(R.string.action_add),
                 enabled = title.isNotBlank(),
-                onClick = {
-                    keyboard?.hide()
-                    onAdd(title, note.ifBlank { null }, firstStep.ifBlank { null }, estimate.toMinutes())
-                },
+                onClick = commit,
             )
+
+            // The three optional fields, behind one disclosure. Closed, this sheet is
+            // about 250dp and sits entirely above the keyboard on a Pixel 8.
+            Spacer(Modifier.height(ClaritySpacing.scaled(12.dp)))
+            MoreFieldsDisclosure(open = moreOpen, onToggle = { moreOpen = !moreOpen })
+            AnimatedVisibility(visible = moreOpen) {
+                Column {
+                    Spacer(Modifier.height(ClaritySpacing.scaled(16.dp)))
+                    ClarityTextField(
+                        value = note,
+                        onValueChange = { note = it },
+                        label = stringResource(R.string.field_note_optional),
+                        singleLine = false,
+                    )
+                    Spacer(Modifier.height(ClaritySpacing.scaled(20.dp)))
+                    FirstStepField(value = firstStep, onValueChange = { firstStep = it })
+                    Spacer(Modifier.height(ClaritySpacing.scaled(20.dp)))
+                    EstimateField(value = estimate, onValueChange = { estimate = it })
+                }
+            }
             Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
         }
+    }
+}
+
+/**
+ * Where the item goes. One row, one tap, and the inbox is one of the choices rather than
+ * the absence of one.
+ *
+ * The inbox leads because it is what an untouched sheet does, and a person scanning left
+ * to right should meet the default first. Each area carries its own 7dp dot, which is
+ * `design-v3.md` 3.4's first permitted form and the same mark the card and the tab bar
+ * use, so an area is recognized here by the thing that identifies it everywhere else.
+ *
+ * `A new area` is last, because it is the rarest and because a chooser that opened with
+ * a way to make a new option would be asking a question before offering the answers.
+ */
+@Composable
+private fun DestinationRow(
+    areas: List<AreaCardModel>,
+    selected: String?,
+    onSelect: (String?) -> Unit,
+    onNewArea: () -> Unit,
+) {
+    val type = LocalClarityTypography.current
+    Column {
+        Text(
+            text = stringResource(R.string.field_destination),
+            style = type.sidehead,
+            color = LocalClarityColors.current.inkSecondary,
+        )
+        Spacer(Modifier.height(ClaritySpacing.scaled(8.dp)))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(ClaritySpacing.tight),
+        ) {
+            DestinationChip(
+                label = stringResource(R.string.destination_inbox),
+                dot = null,
+                selected = selected == null,
+                onClick = { onSelect(null) },
+            )
+            areas.forEach { area ->
+                DestinationChip(
+                    label = area.name,
+                    dot = parseAreaColor(area.colorHex),
+                    selected = selected == area.id,
+                    onClick = { onSelect(area.id) },
+                )
+            }
+            DestinationChip(
+                label = stringResource(R.string.inbox_file_new_area),
+                dot = null,
+                selected = false,
+                onClick = onNewArea,
+            )
+        }
+    }
+}
+
+/** One destination. Selected is a filled ground and a weight, never color alone. */
+@Composable
+private fun DestinationChip(
+    label: String,
+    dot: Color?,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val colors = LocalClarityColors.current
+    val type = LocalClarityTypography.current
+    val interaction = remember { MutableInteractionSource() }
+    val shape = LocalClarityShapes.current.pill
+
+    Row(
+        modifier = Modifier
+            .heightIn(min = ClaritySpacing.minTouchTarget)
+            .clip(shape)
+            .background(if (selected) colors.actionBlue.copy(alpha = 0.11f) else colors.raise)
+            .clarityFocusRing(interaction, shape)
+            .clarityClickable(
+                interactionSource = interaction,
+                haptic = ClarityHapticEvent.TAP,
+                role = Role.Button,
+                pressShape = shape,
+                onClick = onClick,
+            )
+            .semantics { this.selected = selected }
+            .padding(horizontal = ClaritySpacing.snug + 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (dot != null) {
+            Box(
+                modifier = Modifier
+                    .size(ClaritySpacing.areaDot)
+                    .clip(CircleShape)
+                    .background(dot),
+            )
+            Spacer(Modifier.width(ClaritySpacing.tight))
+        }
+        Text(
+            text = label,
+            style = type.label,
+            color = if (selected) colors.actionBlue else colors.inkSecondary,
+            maxLines = 1,
+        )
+    }
+}
+
+/**
+ * `More` and nothing else, because the three fields behind it have nothing in common
+ * except being optional and a heading that named them would be the prompt 4b forbids.
+ */
+@Composable
+private fun MoreFieldsDisclosure(open: Boolean, onToggle: () -> Unit) {
+    val colors = LocalClarityColors.current
+    val type = LocalClarityTypography.current
+    val motion = clarityMotion()
+    val interaction = remember { MutableInteractionSource() }
+    val turn by animateFloatAsState(
+        targetValue = if (open) 180f else 0f,
+        animationSpec = motion.springStandard(),
+        label = "moreChevron",
+    )
+
+    Row(
+        modifier = Modifier
+            .heightIn(min = ClaritySpacing.minTouchTarget)
+            .clip(LocalClarityShapes.current.row)
+            .clarityFocusRing(interaction, LocalClarityShapes.current.row)
+            .clarityClickable(
+                interactionSource = interaction,
+                haptic = ClarityHapticEvent.TAP,
+                role = Role.Button,
+                onClick = onToggle,
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(R.string.add_item_more),
+            style = type.label,
+            color = colors.inkSecondary,
+        )
+        Spacer(Modifier.width(ClaritySpacing.hair))
+        ClarityIcon(
+            icon = ClarityIcons.expand,
+            contentDescription = null,
+            tint = colors.inkSecondary,
+            modifier = Modifier.size(18.dp).rotate(turn),
+        )
     }
 }
 
@@ -865,6 +1063,120 @@ fun AreaEditorSheet(
                 )
             }
             Spacer(Modifier.height(ClaritySpacing.scaled(12.dp)))
+        }
+    }
+}
+
+/**
+ * The long press menu on an area card. `design-v3.md` 10.3.1, and it was never built.
+ *
+ * **The specification calls it mandatory and the code redirected it to the detail
+ * sheet.** 10.3.1: "All three actions must also be reachable from a long press context
+ * menu on the card **and** from the area detail sheet. Swipe is invisible to TalkBack and
+ * is an accelerator, never the only path." `AreaSheet.LongPressMenu` existed as a type
+ * and its one handler read `sheet = AreaSheet.Detail(current.areaId)`.
+ *
+ * ## It carries the area operations too, and that is the point rather than a bonus
+ *
+ * The owner's report was that he designed this app and could not work out how to manage
+ * an area. Editing lived behind an unlabeled 44dp pencil in the corner of a sheet;
+ * archiving and deleting lived under a sidehead reading `Area`, below the active item,
+ * the whole queue, an add row and the completed list, which on a full area is off the
+ * bottom of a 620dp scrolling sheet. Every one of them was reachable and none of them was
+ * findable.
+ *
+ * This is one labeled list of every verb an area has, and a long press is a second path
+ * to it rather than the only one.
+ *
+ * ## `Move to top` is here because dragging is not an accessible way to reorder
+ *
+ * WCAG 2.2 SC 2.5.7 requires a single pointer alternative to any drag operation.
+ * Reordering was a long press and drag, with a TalkBack custom action as the only
+ * alternative, which serves a screen reader user and nobody else: a person with a tremor,
+ * a person using a stylus, and the person in testing who never discovered the gesture all
+ * had no path at all. One tap does it now.
+ */
+@Composable
+fun AreaMenuSheet(
+    area: AreaCardModel,
+    onAddItem: () -> Unit,
+    onComplete: () -> Unit,
+    onSwap: () -> Unit,
+    onMoveToTop: (() -> Unit)?,
+    onEdit: () -> Unit,
+    onArchive: () -> Unit,
+    onDelete: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val colors = LocalClarityColors.current
+    val type = LocalClarityTypography.current
+    val accent = parseAreaColor(area.colorHex)
+    val close = LocalSheetClose.current
+
+    ClaritySheet(onDismiss = onDismiss) {
+        Column(modifier = Modifier.padding(bottom = ClaritySpacing.scaled(10.dp))) {
+            Row(
+                modifier = Modifier.padding(
+                    horizontal = SheetPadding,
+                    vertical = ClaritySpacing.scaled(6.dp),
+                ),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(ClaritySpacing.areaDot)
+                        .clip(CircleShape)
+                        .background(accent),
+                )
+                Spacer(Modifier.width(ClaritySpacing.snug))
+                Text(text = area.name, style = type.itemTitle, color = colors.inkPrimary)
+            }
+            Spacer(Modifier.height(ClaritySpacing.scaled(10.dp)))
+
+            SheetActionRow(
+                icon = ClarityIcons.add,
+                label = stringResource(R.string.area_add_item),
+                onClick = { close(); onAddItem() },
+            )
+            // The two item verbs, on the same conditions the swipe faces use, so a
+            // control that does nothing is never offered. `AreasViewModel` holds both.
+            if (area.offersComplete) {
+                SheetActionRow(
+                    icon = ClarityIcons.completed,
+                    label = stringResource(R.string.action_complete),
+                    onClick = { close(); onComplete() },
+                )
+            }
+            if (area.offersSwap) {
+                SheetActionRow(
+                    icon = ClarityIcons.swap,
+                    label = stringResource(R.string.action_swap),
+                    onClick = { close(); onSwap() },
+                )
+            }
+            if (onMoveToTop != null) {
+                SheetActionRow(
+                    icon = ClarityIcons.moveToFront,
+                    label = stringResource(R.string.area_move_to_top),
+                    onClick = { close(); onMoveToTop() },
+                )
+            }
+            SheetActionRow(
+                icon = ClarityIcons.edit,
+                label = stringResource(R.string.area_edit),
+                onClick = { close(); onEdit() },
+            )
+            SheetActionRow(
+                icon = ClarityIcons.archive,
+                label = stringResource(R.string.action_archive),
+                onClick = { close(); onArchive() },
+            )
+            SheetActionRow(
+                icon = ClarityIcons.deleteSwipe,
+                label = stringResource(R.string.area_delete),
+                onClick = { close(); onDelete() },
+                tint = colors.deleteMuted,
+            )
         }
     }
 }

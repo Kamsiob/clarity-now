@@ -320,6 +320,22 @@ private fun PulseAmbient(
             Spacer(Modifier.height(ClaritySpacing.sectionGap))
 
             if (entry != null) {
+                // **The one time line, above the first Pulse a person is ever offered.**
+                // The idle state explains the Pulse to anyone who goes looking in the
+                // first two days, and 12.1 means most people do not: they meet it on the
+                // day a question is actually waiting, with no idea where it came from.
+                // It is drawn only until the first answer, and `showIntro` is set on the
+                // answer rather than on the draw.
+                if (state.showIntro && entry.responseLabel == null) {
+                    Text(
+                        text = stringResource(R.string.pulse_intro),
+                        style = type.caption,
+                        color = contemplative.textDim,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.widthIn(max = MEASURE),
+                    )
+                    Spacer(Modifier.height(ClaritySpacing.scaled(22.dp)))
+                }
                 Text(
                     text = entry.observation,
                     style = type.bodySerif,

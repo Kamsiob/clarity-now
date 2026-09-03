@@ -122,6 +122,17 @@ internal fun OnboardingBeatOne(onAdvance: () -> Unit, modifier: Modifier = Modif
             .onboardingLift(),
         verticalArrangement = Arrangement.Center,
     ) {
+        // **The frame, and it arrives before the demo rather than with it.** Four cards
+        // with no title were the whole of the owner's `I don't know what I'm looking at`,
+        // and the sentence under them uses `area` and `item` against shapes nothing has
+        // named. It is at the same opacity as the cards' own entrance so it is part of
+        // the arrival rather than an announcement over it.
+        Text(
+            text = stringResource(R.string.onboarding_beat_one_frame),
+            style = type.sidehead,
+            color = contemplative.textDim,
+            modifier = Modifier.padding(bottom = ClaritySpacing.scaled(14.dp)),
+        )
         cards.forEachIndexed { index, card ->
             DemoCard(
                 card = card,

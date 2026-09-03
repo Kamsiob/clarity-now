@@ -1,5 +1,6 @@
 package com.kamsiob.claritynow.ui.pulse
 
+import com.kamsiob.claritynow.data.prefs.ClarityPreferences
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -78,6 +79,8 @@ data class PulseUiState(
     val rhythm: List<PulseMark> = emptyList(),
     val past: List<PulsePastEntry> = emptyList(),
     val timeOfDay: PulseTimeOfDay = PulseTimeOfDay.MIDDAY,
+    /** True until the first Pulse has been answered on this install. */
+    val showIntro: Boolean = false,
 )
 
 /**
@@ -106,6 +109,7 @@ class PulseViewModel(
     private val repository: ClarityRepository,
     private val coordinator: PulseCoordinator,
     private val clock: ClarityClock,
+    private val preferences: ClarityPreferences,
 ) : ViewModel() {
 
     /**
@@ -146,7 +150,8 @@ class PulseViewModel(
         loaded,
         today,
         repository.state,
-    ) { ready, date, projection ->
+        preferences.hasSeenPulseIntro,
+    ) { ready, date, projection, seenIntro ->
         val dateKey = FactDates.keyOf(date)
         if (!ready) {
             PulseUiState(dateKey = dateKey, loading = true, timeOfDay = timeOfDayNow())
@@ -161,6 +166,7 @@ class PulseViewModel(
                 rhythm = rhythmOf(date, projection),
                 past = pastOf(projection),
                 timeOfDay = timeOfDayNow(),
+                showIntro = !seenIntro,
             )
         }
     }.stateIn(
@@ -195,7 +201,12 @@ class PulseViewModel(
      */
     fun answer(option: ResponseOption) {
         val dateKey = state.value.dateKey
-        viewModelScope.launch { coordinator.answer(dateKey, option) }
+        viewModelScope.launch {
+            coordinator.answer(dateKey, option)
+            // Set on the answer rather than on the draw. Somebody who opened the Pulse,
+            // read the line and left without answering has not finished with it.
+            preferences.setHasSeenPulseIntro(true)
+        }
     }
 
     /**

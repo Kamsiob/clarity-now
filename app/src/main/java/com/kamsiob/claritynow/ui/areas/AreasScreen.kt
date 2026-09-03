@@ -1,5 +1,6 @@
 package com.kamsiob.claritynow.ui.areas
 
+import androidx.compose.ui.graphics.Brush
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.EaseOutCubic
@@ -137,6 +138,7 @@ fun AreasScreen(
     onOpenFocus: () -> Unit,
     onOpenPulse: () -> Unit,
     onFabClick: () -> Unit,
+    onNewArea: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalClarityColors.current
@@ -221,6 +223,14 @@ fun AreasScreen(
             // app session and never again. Everything about when it fires, and whether
             // it fires at all, is inside Modifier.clarityEntrance.
             //
+            // **This comment was false for two passes and is true again.** `TabEntrance`
+            // had been changed to replay on every entry, so returning to this tab
+            // re-assembled the whole screen over 748ms, every time. 8.4 is explicit that
+            // an entrance which fires on every open is a toll rather than delight, and
+            // the authority order gives it the last word. A comment that asserts the
+            // opposite of what ships is the worse half of that defect, because the next
+            // reader reasons from it.
+            //
             // The conflict cards deliberately take no entrance index. A conflict card is
             // an interruption that arrives when a merge produced one, carrying its own
             // reveal, rather than part of the screen's resting content.
@@ -303,6 +313,24 @@ fun AreasScreen(
                     )
                 }
             }
+
+            // **The door that was not there.** Until now nothing in the app created a
+            // second area: `AreaSheet.NewArea` had one trigger and it was gated on there
+            // being no areas at all, and the inbox's own `Create an area` was gated the
+            // same way. A person who finished onboarding with three areas had three
+            // forever, and the only recoveries were deleting all of them or replaying
+            // the welcome, which silently made a second area with the same name.
+            //
+            // At the foot of the list rather than in the header, and that is the
+            // deliberate choice rather than the obvious one. A glyph beside the archive
+            // and settings icons would be one more unlabeled 24dp target in a corner,
+            // which is the shape the two people in testing who read labels never find.
+            // The end of a list is where every list app on this platform puts `add one
+            // more`, it is reached by the scroll a person is already doing, and it can
+            // carry a word.
+            if (!state.isEmpty) {
+                item(key = "newArea") { NewAreaRow(onClick = onNewArea) }
+            }
         }
 
         ClarityFab(
@@ -311,12 +339,19 @@ fun AreasScreen(
                 if (state.isEmpty) R.string.fab_add_area else R.string.fab_add_item,
             ),
             modifier = Modifier
-                .tutorialTarget(TutorialStep.FAB)
                 .align(Alignment.BottomEnd)
                 .navigationBarsPadding()
                 // Clears the floating tab bar: its own 17dp inset, its height, and
                 // a gap so the two never read as one control.
-                .padding(end = 20.dp, bottom = TabBarHeight + 17.dp + 14.dp),
+                .padding(end = 20.dp, bottom = TabBarHeight + 17.dp + 14.dp)
+                // **After the padding, and that is the whole of the fix.** A modifier to
+                // the left of another wraps it, so `onGloballyPositioned` reports the node
+                // including everything to its right. Registered first, this reported the
+                // FAB plus the navigation bar inset plus 20dp of end padding plus the
+                // 92dp that clears the tab bar, and the tutorial lit the entire bottom
+                // right corner of the screen instead of the button. `ClarityShell` states
+                // the same rule at the tab bar's own target, where it was got right.
+                .tutorialTarget(TutorialStep.FAB),
         )
 
         // Above everything this screen draws, including the FAB. It is not above the
@@ -501,7 +536,64 @@ private fun AreasHeader(
             onOpenPulse = onOpenPulse,
             onOpenInbox = onOpenInbox,
         )
+        SectionRule(
+            modifier = Modifier.clarityEntrance(3, ClarityEntranceRole.ROW),
+        )
     }
+}
+
+/**
+ * The rule between the two standing invitations and the areas themselves.
+ *
+ * **Why there is one at all.** Above it are two controls that open other rooms; below it
+ * are the places this person's work actually lives. Those are different kinds of thing
+ * drawn on the same ground with the same gap, and the screen read as one undifferentiated
+ * column. `design-v3.md` 6.1 permits exactly one separation device per element, and this
+ * one's is the rule; it carries no fill, no shadow and no second edge.
+ *
+ * ## It is not a line across the screen, and that is the whole of the treatment
+ *
+ * A solid rule from margin to margin has two hard ends, and two hard ends on a page with
+ * no other verticals is the single most common way a divider reads as cheap: it looks
+ * ruled rather than composed. This one is a **horizontal gradient**, transparent at both
+ * margins, at its full value across the middle 80 percent. The ends do not stop, they
+ * stop being.
+ *
+ * **One physical pixel, not one dp.** A hairline is a hairline: `1.toDp()` is 0.38dp on
+ * this phone, and a 1dp rule is nearly three device pixels, which is a line rather than a
+ * hair. This is the difference between the treatment reading as drawn and reading as
+ * printed, and it is the same reason the value is `hairline`, ink at 8 percent, rather
+ * than any ink a person could name a color for.
+ *
+ * **More air above than below**, 24 against the list's own 11: the rule belongs to the
+ * block it closes rather than to the one it opens, so it sits nearer the cards it
+ * introduces. Symmetric spacing would make it a thing in its own right, which it is not.
+ */
+@Composable
+private fun SectionRule(modifier: Modifier = Modifier) {
+    val colors = LocalClarityColors.current
+    val hairline = with(LocalDensity.current) { 1.toDp() }
+    // **Not the `hairline` token, and the difference is the ground.** That token is ink at
+    // 8 percent and every one of its call sites draws it on `card`, which is the lightest
+    // surface in the app. This draws on `canvas`, which is four steps darker, where the
+    // same ink at the same alpha is most of the way to invisible. 13 percent measures on
+    // canvas about what 8 measures on a card, which is what keeping one value would have
+    // been trying to achieve.
+    val ink = colors.inkPrimary.copy(alpha = if (colors.isDark) 0.16f else 0.13f)
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = ClaritySpacing.scaled(24.dp))
+            .height(hairline)
+            .background(
+                Brush.horizontalGradient(
+                    0f to Color.Transparent,
+                    0.1f to ink,
+                    0.9f to ink,
+                    1f to Color.Transparent,
+                ),
+            ),
+    )
 }
 
 @Composable
@@ -535,7 +627,7 @@ private fun HeaderGlyph(
  * phase 3c moved app chrome down one step of the value ladder, so an unselected chip
  * sits at `raise` rather than at `card` and this row inherits that from the component
  * rather than restating it. The one dot is the warnAmber Pulse dot in 10.1, which 3.1
- * scopes to that single use; it lives in [PulseChip] and nothing else in this row may
+ * scopes to that single use; it lives in the Pulse anchor and nothing else in this row may
  * grow one. The inbox chip in particular carries a count in its label and never a
  * badge, per 10.16 and Addendum 01 4a.
  *
@@ -729,6 +821,60 @@ private fun ConflictCard(conflict: ConflictCardModel, onDismiss: () -> Unit) {
                 )
             }
         }
+    }
+}
+
+/**
+ * `Add an area`, at the foot of the list. Issue: creating a second area was impossible.
+ *
+ * **A row and not a card.** Every card on this screen is a place that holds work, and a
+ * card that held an invitation instead would be the one card whose title is not an item.
+ * `design-v3.md` 6.1 gives an element one separation device and this one's is whitespace:
+ * no fill, no elevation, no hairline, dashed or otherwise. A dashed outline is the tell
+ * that a placeholder is standing in for content, and nothing is missing here.
+ *
+ * It reads as quieter than a card and louder than a caption, which is what an invitation
+ * at the end of a list is. The glyph is the same `add` the FAB uses, so the two controls
+ * that make something new share a mark.
+ */
+@Composable
+private fun NewAreaRow(onClick: () -> Unit) {
+    val colors = LocalClarityColors.current
+    val type = LocalClarityTypography.current
+    val interaction = remember { MutableInteractionSource() }
+    val shape = LocalClarityShapes.current.card
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = ClaritySpacing.minTouchTarget)
+            .clip(shape)
+            .clarityFocusRing(interaction, shape)
+            .clarityClickable(
+                interactionSource = interaction,
+                haptic = ClarityHapticEvent.TAP,
+                role = Role.Button,
+                pressShape = shape,
+                onClick = onClick,
+            )
+            .padding(
+                horizontal = ClaritySpacing.cardPaddingHorizontal,
+                vertical = ClaritySpacing.scaled(14.dp),
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ClarityIcon(
+            icon = ClarityIcons.add,
+            contentDescription = null,
+            tint = colors.inkSecondary,
+            modifier = Modifier.size(20.dp),
+        )
+        Spacer(Modifier.width(ClaritySpacing.snug))
+        Text(
+            text = stringResource(R.string.areas_new_area),
+            style = type.label,
+            color = colors.inkSecondary,
+        )
     }
 }
 

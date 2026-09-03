@@ -80,7 +80,7 @@ class StoreTextTest {
     @Test
     fun `every paragraph of the published policy is a string the app renders`() {
         val published = oneLine(privacy())
-        val missing = (1..7).flatMap { n ->
+        val missing = (1..6).flatMap { n ->
             listOfNotNull(
                 if (n > 1) string("privacy_lead_$n") else null,
                 string("privacy_body_$n"),

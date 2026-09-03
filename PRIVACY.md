@@ -3,7 +3,7 @@
 This is the policy Clarity Now ships, word for word. The same text is in the app under
 Settings, Privacy policy, and `StoreTextTest` fails the build if the two ever differ.
 
-**Effective from version 0.14.0.** Earlier versions of this file remain in this
+**Effective from version 0.15.0.** Earlier versions of this file remain in this
 repository's history.
 
 ---
@@ -23,10 +23,6 @@ This app does not declare the internet permission. Android will refuse any attem
 **Deleting your data.**
 
 Erase all data in Settings removes everything permanently. Uninstalling the app does the same. There is no copy anywhere else, and no request to make of anyone.
-
-**Children.**
-
-Clarity Now is not directed at children and collects no data from anyone, of any age.
 
 **Changes.**
 

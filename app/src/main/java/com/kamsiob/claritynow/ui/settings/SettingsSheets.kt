@@ -532,7 +532,6 @@ internal fun PrivacySheet(onDismiss: () -> Unit) {
                 R.string.privacy_lead_4 to R.string.privacy_body_4,
                 R.string.privacy_lead_5 to R.string.privacy_body_5,
                 R.string.privacy_lead_6 to R.string.privacy_body_6,
-                R.string.privacy_lead_7 to R.string.privacy_body_7,
             ).forEach { (lead, body) ->
                 Column(verticalArrangement = Arrangement.spacedBy(ClaritySpacing.scaled(4.dp))) {
                     Text(

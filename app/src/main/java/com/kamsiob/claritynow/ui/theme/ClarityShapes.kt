@@ -121,13 +121,19 @@ object ClaritySpacing {
 
     /**
      * Fixed. design-v3.md 10.4 gives the floating bar 61dp and `ClarityTabBar` measures
-     * its contents against the 200 percent condition: a 24dp glyph that does not scale
+     * its contents against the 200 percent condition: a 26dp glyph that does not scale
      * at all, and one 13sp label whose trimmed box reaches about 31dp at the cap. Both
      * clear the 48dp item inside the bar with room over, so there is nothing here for a
      * larger text size to rescue, and a bar that grew would take the reserved bottom
      * padding of four screens with it.
+     *
+     * **68dp, up from 61.** The bar became a stacked layout in the appeal pass: a 32dp
+     * indicator with a 26dp glyph centered in it, 3dp, and a 13sp label under it. That is
+     * 51dp of content, and 68 gives it 8dp of air top and bottom while staying under
+     * Material 3's own 80dp navigation bar. The old 61 was sized for a single row of
+     * glyphs and was the largest single reason the bar read as an afterthought.
      */
-    val tabBarHeight: Dp = 61.dp
+    val tabBarHeight: Dp = 68.dp
 
     /** Fixed, as [tabBarHeight]. The bar's distance from the edge, not a gap in text. */
     val tabBarInset: Dp = 17.dp
