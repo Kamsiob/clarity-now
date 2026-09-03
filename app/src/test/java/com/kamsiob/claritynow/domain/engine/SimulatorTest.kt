@@ -206,6 +206,43 @@ class SimulatorTest {
      * restated here. A second copy of a list this delicate is a second copy to disagree
      * with the first, and the first one is the one the report prints.
      */
+    /**
+     * The closing bench's own repetition, measured. Issue #60.
+     *
+     * A closing with no plan in it was recorded nowhere, so `FiringHistory` could never
+     * hold a `cls.*` key, `VariantChoice` always took its fresh branch, and the same line
+     * came back inside a week. It is a section on `REPORT_GENERATED` now, which is what
+     * `FiringHistory` already reads, so the exclusion applies to closings for the first
+     * time.
+     *
+     * **The measurement was better than the arithmetic predicted, and the arithmetic is
+     * worth stating because it is what a failure here would mean.** 4.6 holds 24 closings
+     * across four sub benches and a person meets one at a time: `trustThePace` is eight
+     * lines, `letItBe` seven, `noRhythmYet` four, `review` five. Weekly, a bench of four is
+     * spent in four weeks, so a year spent entirely inside one sub bench could not avoid a
+     * repeat inside ninety days however correct the code was. Eleven persona years produce
+     * **none**, because which sub bench a week reaches is a fact about the week's shape and
+     * a life changes shape often enough to keep rotating them.
+     *
+     * So this asserts the issue's own criterion rather than a weaker one. If it ever fails,
+     * the first question is whether a persona has been made too uniform rather than whether
+     * the exclusion broke: the count is printed for exactly that reason.
+     */
+    @Test
+    fun `a recorded closing is never offered again inside ninety days`() {
+        val outcome = SimulationChecks.run(runs).checks.first { it.id == "variantRepetition" }
+        val closings = outcome.failures.filter { "cls." in it }
+        val gaps = closings
+            .mapNotNull { Regex("""repeated after (\d+) days""").find(it)?.groupValues?.get(1)?.toInt() }
+        println("closing repeats inside ninety days: ${closings.size}, tightest ${gaps.minOrNull()}")
+        assertEquals(
+            "a closing came back inside ninety days, which is what recording it exists to " +
+                "prevent",
+            emptyList<String>(),
+            closings,
+        )
+    }
+
     @Test
     fun `the persona who accepts every plan and completes none is never told about it`() {
         val outcome = SimulationChecks.run(runs).checks.first { it.id == "nonCompliance" }

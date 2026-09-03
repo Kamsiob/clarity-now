@@ -150,6 +150,7 @@ data class ClarityReport(
         reportId: String,
         cadenceWeekStartKey: String,
         patternSidehead: String,
+        closingSidehead: String,
         sidehead: (ReportSection) -> String,
     ): ReportGenerated = ReportGenerated(
         reportId = reportId,
@@ -161,6 +162,22 @@ data class ClarityReport(
         renderedSections = buildList {
             observations.forEach { add(it.snapshot(sidehead(it.section))) }
             pattern?.let { add(snapshotOf(PATTERN_SECTION_KEY, patternSidehead, it)) }
+            // **A closing with no plan in it, issue #60.** `FiringHistory.from` walks
+            // these sections and notes every variant it finds, so recording the line here
+            // is the whole of the ninety day exclusion for closings: without it
+            // `variantsUsed` could never hold a `cls.*` key, `VariantChoice` always took
+            // its fresh branch, and a person whose weeks keep their shape met the same
+            // eight line bench every week and saw a repeat about one week in eight.
+            //
+            // **A plan's closing is deliberately not here.** Its keys are on
+            // `PLAN_OFFERED`, which is where 7.6 already reads them from, and a second
+            // copy would be a second record of the same offer. It also keeps this list
+            // free of any sentence about a plan, which is what stops the history page
+            // showing somebody an offer they declined: 10.5 says a decline is never
+            // counted and never referenced, and a section entry is a reference.
+            (closing as? GuidanceResult.Closing)?.let {
+                add(snapshotOf(CLOSING_SECTION_KEY, closingSidehead, it.line.meta))
+            }
         },
         factSnapshot = numbers.entries
             .sortedBy { it.key.toString() }
@@ -174,6 +191,17 @@ data class ClarityReport(
 
         /** The pattern is its own section and its sidehead is the one word `Pattern`. */
         const val PATTERN_SECTION_KEY = "pattern"
+
+        /**
+         * A closing with no plan in it. Issue #60.
+         *
+         * It is a section on the payload rather than a field of its own, and rather than
+         * an event of its own, which the issue is explicit about: a `CLOSING_SHOWN` event
+         * would be a per report record of what layer 6 said, and that is one field away
+         * from a record of what a person did about it. A section entry costs nothing new
+         * because `FiringHistory` already reads every section's variant.
+         */
+        const val CLOSING_SECTION_KEY = "closing"
     }
 }
 

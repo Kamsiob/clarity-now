@@ -312,6 +312,7 @@ class CapacityGatePersonaTest {
                         reportId = "report-${persona.key}-$day",
                         cadenceWeekStartKey = weekKey,
                         patternSidehead = "pattern",
+                        closingSidehead = "One thing",
                     ) { it.key },
                 )
             } else if (open is ReportOutcome.Composed) {

@@ -6016,3 +6016,42 @@ the frame that caused it and one stranded frame is still a stranded frame.
 It is worth recording as a shape rather than as a bug. **An animation that owns a piece of
 state has to put that state back on every exit, not only on the exit it was written for**,
 and the exit it was written for is always the slow one somebody watched while building it.
+
+## A closing with no plan in it is recorded, #60
+
+`REPORT_GENERATED` carried the observations and the pattern and not the closing, so
+`FiringHistory.variantsUsed` could never hold a `cls.*` key, `VariantChoice` always took
+its fresh branch, and the same closing line could come back inside a week. The simulator
+found exactly that: `heavySingleArea` repeated `cls.trust` lines at seven day gaps four
+times in a year.
+
+**It is a section on the payload rather than a field or an event.** A section costs nothing
+new because `FiringHistory` already walks every section and notes its variant, so the
+exclusion arrives for free. A `CLOSING_SHOWN` event was refused for the reason the issue
+gives: a per report record of what layer 6 said is one field away from a record of what a
+person did about it, and 10.6 is emphatic about what layer 6 may hold.
+
+**A plan's closing is deliberately not recorded there.** Its frame, cue and action keys are
+on `PLAN_OFFERED`, which is where 7.6 already reads them from, and a second copy would be a
+second record of the same offer. It also keeps `renderedSections` free of any sentence about
+a plan, which is what stops the history page ever showing somebody an offer they declined:
+10.5 says a decline is never counted and never referenced, and a section entry is a
+reference.
+
+**The simulator had the same defect in the same direction and it had to be fixed for the
+measurement to mean anything.** It wrote `REPORT_GENERATED` before composing the closing,
+so the closing's key could not have been in it. The order is reversed and the closing's
+candidate travels back to the write.
+
+Measured across eleven persona years: **no closing repeats inside ninety days at all**,
+against 2,328 total variant repeats before and 2,318 after. The arithmetic predicted worse.
+4.6's smallest sub bench is four lines and a report is weekly, so a year spent inside one
+sub bench could not avoid a repeat however correct the code was; what saves it is that
+which sub bench a week reaches is a fact about the week's shape, and a life changes shape
+often enough to keep rotating them. `SimulatorTest` asserts the criterion the issue wrote
+and prints the count, so a future failure is read first as a persona that has become too
+uniform rather than as the exclusion breaking.
+
+**The golden fixture does not carry one, and that is consistency rather than an omission.**
+Its one report offers a plan, so the plan is its closing and a `closing` section beside it
+would be a fixture claiming both.

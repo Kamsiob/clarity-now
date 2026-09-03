@@ -131,8 +131,8 @@ data class ReportHistory(
  * class will not hold a `Context`, so the seam is a function type declared here and given
  * its Android half in `ClarityGraph`, the one file allowed to know both.
  *
- * A data class rather than four parameters, because three of the four are looked up by
- * enum and one is not, and a caller that passed them positionally would eventually pass
+ * A data class rather than five parameters, because three of the five are looked up by
+ * enum and two are not, and a caller that passed them positionally would eventually pass
  * them in the wrong order and store `Focus` over the pattern break.
  */
 @Immutable
@@ -141,6 +141,8 @@ data class ReportSideheads(
     val whatYouSaid: String,
     val focus: String,
     val pattern: String,
+    /** The closing block's eyebrow, `One thing`. Issue #60. */
+    val closing: String,
 ) {
     /** The label a section is read under. */
     fun of(section: ReportSection): String = when (section) {
@@ -284,6 +286,7 @@ class ReportCoordinator(
                 reportId = "report:${week.currentWeekStartKey}",
                 cadenceWeekStartKey = week.currentWeekStartKey,
                 patternSidehead = sideheads.pattern,
+                closingSidehead = sideheads.closing,
                 sidehead = sideheads::of,
             ),
             weekBeganAtMillis = week.currentWeekStartMillis,

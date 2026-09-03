@@ -108,6 +108,7 @@ class ReportPersonaTest {
                                 reportId = "report-${persona.key}-$day",
                                 cadenceWeekStartKey = report.weekStartKey,
                                 patternSidehead = "pattern",
+                                closingSidehead = "One thing",
                             ) { it.key },
                         )
                     }

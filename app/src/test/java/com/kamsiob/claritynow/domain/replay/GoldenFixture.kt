@@ -268,6 +268,14 @@ object GoldenFixture {
                         subjectId = null,
                         subjectKind = null,
                     ),
+                    // **No `closing` section here, and that is the fixture being
+                    // consistent rather than an omission.** Issue #60 records a closing
+                    // with no plan in it as a section under the key `closing`, and this
+                    // report offers a plan: the `PLAN_OFFERED` below is its closing, its
+                    // three keys are where the ninety day exclusion reads them from, and a
+                    // report cannot have both. The section key is exercised by the
+                    // simulator across eleven persona years instead, where a majority of
+                    // weeks close without one.
                 ),
                 factSnapshot = mapOf("completions" to "3", "additions" to "2", "focusMinutes" to "25"),
                 // headlineKey names the family; the 90 day exclusion in

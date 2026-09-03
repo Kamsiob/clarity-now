@@ -117,6 +117,7 @@ object ClarityGraph {
                 whatYouSaid = appContext.getString(R.string.report_sidehead_what_you_said),
                 focus = appContext.getString(R.string.report_sidehead_focus),
                 pattern = appContext.getString(R.string.report_sidehead_pattern),
+                closing = appContext.getString(R.string.report_closing_eyebrow),
             ),
         )
     }

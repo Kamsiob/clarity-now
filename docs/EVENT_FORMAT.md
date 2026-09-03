@@ -342,7 +342,16 @@ cheaper side of that trade.
 
 `renderedSections` is a list of `{ sectionKey, sidehead, text, familyKey, variantKey,
 escalationStage, register, subjectId, subjectKind }`, where the last two are nullable
-and the rest are not. `weekStartKey` is the `yyyy-MM-dd` of the Sunday that starts the
+and the rest are not.
+
+**A closing with no plan in it is one of these sections, under the key `closing`.** It is
+recorded because the ninety day variant exclusion is derived from these sections and from
+nothing else, so a closing that was written nowhere could never be excluded and the same
+line came back inside a week. **A plan's closing is deliberately not recorded here**: its
+frame, cue and action keys are on `PLAN_OFFERED`, which is where the exclusion already
+reads them from, and a second copy would be a second record of the same offer. It is also
+what keeps this list free of any sentence about a plan, which is what stops a reader
+showing somebody an offer they declined. `weekStartKey` is the `yyyy-MM-dd` of the Sunday that starts the
 week.
 
 **A report is generated in one week and describes another, and both are on the event.**

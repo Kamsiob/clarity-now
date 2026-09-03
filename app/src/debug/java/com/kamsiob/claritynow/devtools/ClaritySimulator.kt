@@ -6,6 +6,7 @@ import com.kamsiob.claritynow.data.event.PulseAnswered
 import com.kamsiob.claritynow.data.event.PulseGenerated
 import com.kamsiob.claritynow.data.event.ReflectionPeriod
 import com.kamsiob.claritynow.data.event.ReportGenerated
+import com.kamsiob.claritynow.domain.report.ClarityReport
 import com.kamsiob.claritynow.data.event.ReportSectionSnapshot
 import com.kamsiob.claritynow.data.event.SubjectKind
 import com.kamsiob.claritynow.domain.engine.CandidateValidator
@@ -304,8 +305,12 @@ class ClaritySimulator(
         }
 
         val pattern = (patternResult as? EngineResult.Spoke)?.output
-        writeReport(log, day, headline.spoken, observations, pattern)
-        out += closing(
+        // **The closing is composed before the report is written, issue #60.** It used to
+        // be the other way round, and the order was the whole defect: a closing with no
+        // plan in it was recorded nowhere, so `FiringHistory` could never hold a `cls.*`
+        // key, `VariantChoice` always took its fresh branch, and a person whose weeks kept
+        // their shape met the same eight line bench every week.
+        val closing = closing(
             persona = persona,
             log = log,
             day = day,
@@ -315,6 +320,8 @@ class ClaritySimulator(
             plans = plans,
             history = history,
         )
+        writeReport(log, day, headline.spoken, observations, pattern, closing.recorded)
+        out += closing.invocations
         return out
     }
 
@@ -340,7 +347,7 @@ class ClaritySimulator(
         observations: List<RenderedOutput>,
         plans: PlanHistory,
         history: FiringHistory,
-    ): List<SimulatedInvocation> {
+    ): ClosingOutcome {
         val weekStartKey = log.dateKey(day - REPORT_WINDOW_DAYS)
         val result = guidance.compose(
             headline = headline?.let { minted(facts, it) },
@@ -353,7 +360,7 @@ class ClaritySimulator(
         val line = when (result) {
             is GuidanceResult.Plan -> result.plan.offeredLine
             is GuidanceResult.Closing -> result.line.text
-            is GuidanceResult.Nothing -> return emptyList()
+            is GuidanceResult.Nothing -> return ClosingOutcome.NONE
         }
         // The real corpus key, so 7.6's ninety day repetition reading is about the line a
         // person would recognize rather than about a constant. A plan is three authored
@@ -362,7 +369,7 @@ class ClaritySimulator(
             is GuidanceResult.Plan ->
                 "${result.plan.frameKey}+${result.plan.cueKey}+${result.plan.actionKey}"
             is GuidanceResult.Closing -> result.line.meta.variantKey
-            is GuidanceResult.Nothing -> return emptyList()
+            is GuidanceResult.Nothing -> return ClosingOutcome.NONE
         }
         val plan = (result as? GuidanceResult.Plan)?.plan
         if (plan != null && persona.acceptsEveryPlan) writeAcceptedPlan(log, day, plan)
@@ -371,18 +378,38 @@ class ClaritySimulator(
         // the hook fired as often as the dump has entries, so a surface recorded without
         // it makes that harvest quietly incomplete.
         onFacts(day, SimulatedSurface.REPORT_CLOSING, facts)
-        return listOf(
-            SimulatedInvocation(
-                day = day,
-                dateKey = log.dateKey(day),
-                surface = SimulatedSurface.REPORT_CLOSING,
-                ordinal = CLOSING_ORDINAL,
-                spoken = closingLine(line, variantKey, plan),
-                silence = null,
-                vetoes = emptyList(),
-                areaEventsInWindow = facts.areas.mapValues { it.value.eventsInWindow },
+        return ClosingOutcome(
+            invocations = listOf(
+                SimulatedInvocation(
+                    day = day,
+                    dateKey = log.dateKey(day),
+                    surface = SimulatedSurface.REPORT_CLOSING,
+                    ordinal = CLOSING_ORDINAL,
+                    spoken = closingLine(line, variantKey, plan),
+                    silence = null,
+                    vetoes = emptyList(),
+                    areaEventsInWindow = facts.areas.mapValues { it.value.eventsInWindow },
+                ),
             ),
+            recorded = (result as? GuidanceResult.Closing)?.line?.meta,
         )
+    }
+
+    /**
+     * What layer 6 produced, and the half of it that goes into the log. Issue #60.
+     *
+     * [recorded] is the candidate behind a closing with no plan in it, and null for a plan
+     * or for silence. A plan's keys reach `FiringHistory` through `PLAN_OFFERED`, which the
+     * simulator already writes; a closing had no route into the log at all, which is the
+     * defect this type exists to close.
+     */
+    private data class ClosingOutcome(
+        val invocations: List<SimulatedInvocation>,
+        val recorded: Candidate?,
+    ) {
+        companion object {
+            val NONE = ClosingOutcome(invocations = emptyList(), recorded = null)
+        }
     }
 
     /** Layer 5's proof that [candidate] may be shown, which is what layer 6 takes. */
@@ -467,11 +494,16 @@ class ClaritySimulator(
         headline: SpokenLine?,
         observations: List<RenderedOutput>,
         pattern: RenderedOutput?,
+        closing: Candidate?,
     ) {
         val weekStartKey = log.dateKey(day - REPORT_WINDOW_DAYS)
         val sections = buildList<ReportSectionSnapshot> {
             observations.forEach { add(sectionOf("observation", it.meta)) }
             pattern?.let { add(sectionOf("pattern", it.meta)) }
+            // Issue #60, and only a closing with no plan in it. A plan's three keys are on
+            // `PLAN_OFFERED`, which is where 7.6 already reads them from, and this is the
+            // same rule `ClarityReport.payload` states at the same place in the app.
+            closing?.let { add(sectionOf(ClarityReport.CLOSING_SECTION_KEY, it)) }
         }
         log.add(
             log.at(day, REPORT_HOUR),
